@@ -29,7 +29,7 @@ export function initAgentChat() {
     body: root.querySelector('[data-chat-body]'),
     toggle: root.querySelector('[data-chat-toggle]'),
     edgeCollapse: root.querySelector('[data-chat-edge-collapse]'),
-    agentSelect: root.querySelector('[data-agent-select]'),
+    agentOptions: root.querySelector('[data-agent-options]'),
     messages: root.querySelector('[data-chat-messages]'),
     form: root.querySelector('[data-chat-form]'),
     input: root.querySelector('[data-chat-input]'),
@@ -77,6 +77,8 @@ export function initAgentChat() {
           <div class="agent-chat-welcome__avatar">
             ${robotAvatarImg('agent-chat-robot-img--welcome')}
           </div>
+          <p class="agent-chat-welcome__eyebrow">AI Spatial Assistant</p>
+          <h4 class="agent-chat-welcome__title">${escapeHtml(agent.name)}</h4>
           <p class="agent-chat-welcome__text">${agent.greeting}</p>
         </div>`
       return
@@ -113,7 +115,11 @@ export function initAgentChat() {
     els.quick.innerHTML = agent.quickPrompts
       .map(
         (p) =>
-          `<button type="button" class="agent-chat-quick-btn" data-quick="${escapeAttr(p)}">${escapeHtml(p)}</button>`
+          `<button type="button" class="agent-chat-quick-btn" data-quick="${escapeAttr(p)}">
+            <span class="material-symbols-outlined">auto_awesome</span>
+            <strong>${escapeHtml(p)}</strong>
+            <small>点击快速开始咨询</small>
+          </button>`
       )
       .join('')
 
@@ -125,11 +131,30 @@ export function initAgentChat() {
     })
   }
 
+  function renderAgentOptions() {
+    els.agentOptions.innerHTML = AGENTS.map((agent) => {
+      const isActive = agent.id === currentAgentId
+      return `
+        <button
+          type="button"
+          class="agent-chat-agent-tab${isActive ? ' is-active' : ''}"
+          data-agent-option="${escapeAttr(agent.id)}"
+        >
+          <span class="material-symbols-outlined">${agent.icon}</span>
+          <span>${escapeHtml(agent.name)}</span>
+        </button>`
+    }).join('')
+
+    els.agentOptions.querySelectorAll('[data-agent-option]').forEach((btn) => {
+      btn.addEventListener('click', () => switchAgent(btn.dataset.agentOption))
+    })
+  }
+
   function switchAgent(agentId) {
     if (agentId === currentAgentId) return
     currentAgentId = agentId
     messages = []
-    els.agentSelect.value = agentId
+    renderAgentOptions()
     renderMessages()
     renderQuickPrompts()
     persist()
@@ -178,10 +203,7 @@ export function initAgentChat() {
   }
 
   // 初始化 UI
-  els.agentSelect.innerHTML = AGENTS.map(
-    (a) => `<option value="${a.id}">${a.name} · ${a.role}</option>`
-  ).join('')
-  els.agentSelect.value = currentAgentId
+  renderAgentOptions()
   renderMessages()
   renderQuickPrompts()
   setOpen(isOpen)
@@ -197,9 +219,6 @@ export function initAgentChat() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isOpen) collapse()
   })
-
-  els.agentSelect.addEventListener('change', (e) => switchAgent(e.target.value))
-
   els.form.addEventListener('submit', (e) => {
     e.preventDefault()
     handleSend(els.input.value)
@@ -212,10 +231,12 @@ export function initAgentChat() {
     }
   })
 
-  root.querySelector('[data-chat-clear]')?.addEventListener('click', () => {
-    messages = []
-    renderMessages()
-    persist()
+  root.querySelectorAll('[data-chat-clear]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      messages = []
+      renderMessages()
+      persist()
+    })
   })
 }
 
@@ -256,41 +277,59 @@ function renderShell(state) {
       </button>
 
       <div class="agent-chat-panel__inner" data-chat-body>
-        <header class="agent-chat-header">
-          <div class="agent-chat-header__info">
-            <span class="agent-chat-header__robot">${robot}</span>
-            <div>
-              <h3 class="agent-chat-header__title">智能体对话</h3>
-              <p class="agent-chat-header__sub" data-chat-status>描述您的空间需求，我来协助梳理方案</p>
-            </div>
+        <div class="agent-chat-sidebar">
+          <div class="agent-chat-sidebar__brand">
+            <span class="agent-chat-sidebar__mark">${robot}</span>
+            <strong>Atuo AI</strong>
           </div>
-        </header>
-
-        <div class="agent-chat-agent-picker">
-          <label class="agent-chat-agent-picker__label" for="agent-select">选择智能体</label>
-          <select id="agent-select" class="agent-chat-agent-picker__select" data-agent-select></select>
+          <button type="button" class="agent-chat-new-btn" data-chat-clear>
+            <span class="material-symbols-outlined">add</span>
+            新建对话
+          </button>
+          <div class="agent-chat-sidebar__label">智能体</div>
+          <nav class="agent-chat-agent-tabs" data-agent-options aria-label="选择智能体"></nav>
+          <div class="agent-chat-sidebar__foot">
+            <span class="material-symbols-outlined">verified</span>
+            <span>空间智能服务助手</span>
+          </div>
         </div>
 
-        <div class="agent-chat-messages" data-chat-messages role="log" aria-live="polite"></div>
+        <main class="agent-chat-main">
+          <header class="agent-chat-header">
+            <div class="agent-chat-header__info">
+              <span class="agent-chat-header__robot">${robot}</span>
+              <div>
+                <h3 class="agent-chat-header__title">智能体对话</h3>
+                <p class="agent-chat-header__sub" data-chat-status>描述您的空间需求，我来协助梳理方案</p>
+              </div>
+            </div>
+          </header>
 
-        <div class="agent-chat-quick" data-quick-prompts></div>
+          <div class="agent-chat-messages" data-chat-messages role="log" aria-live="polite"></div>
 
-        <form class="agent-chat-input-area" data-chat-form>
-          <textarea
-            class="agent-chat-input"
-            data-chat-input
-            rows="2"
-            placeholder="例如：我们有一栋 3 万平的总部大楼，想做智慧化改造…"
-            maxlength="2000"
-          ></textarea>
-          <div class="agent-chat-input-actions">
-            <button type="button" class="agent-chat-clear-btn" data-chat-clear>清空对话</button>
-            <button type="submit" class="agent-chat-send-btn" data-chat-send>
-              <span class="material-symbols-outlined">send</span>
-              发送
-            </button>
+          <div class="agent-chat-compose">
+            <form class="agent-chat-input-area" data-chat-form>
+              <textarea
+                class="agent-chat-input"
+                data-chat-input
+                rows="3"
+                placeholder="请输入任务、交给我来帮你完成"
+                maxlength="2000"
+              ></textarea>
+              <div class="agent-chat-input-actions">
+                <button type="button" class="agent-chat-clear-btn" data-chat-clear>
+                  <span class="material-symbols-outlined">delete_sweep</span>
+                  清空
+                </button>
+                <button type="submit" class="agent-chat-send-btn" data-chat-send aria-label="发送">
+                  <span class="material-symbols-outlined">arrow_upward</span>
+                </button>
+              </div>
+            </form>
+            <div class="agent-chat-quick-head">推荐</div>
+            <div class="agent-chat-quick" data-quick-prompts></div>
           </div>
-        </form>
+        </main>
       </div>
     </aside>
   `
