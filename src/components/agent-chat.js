@@ -308,8 +308,8 @@ function renderRobotModel(extraClass = '') {
         src="${ROBOT_MODEL_SRC}"
         autoplay
         animation-name="Idle_Loop"
-        camera-orbit="0deg 70deg 3.2m"
-        field-of-view="28deg"
+        camera-orbit="0deg 72deg 4.8m"
+        field-of-view="34deg"
         shadow-intensity="0.45"
         exposure="1"
         interaction-prompt="none"

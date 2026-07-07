@@ -1634,9 +1634,9 @@ body.demo-modal-open {
 
 .agent-chat-model {
   position: absolute;
-  inset: -18%;
-  width: 136%;
-  height: 136%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   display: block;
   border: 0;
@@ -1682,8 +1682,8 @@ body.demo-modal-open {
   bottom: auto;
   transform: translateY(-50%);
   z-index: 50;
-  width: 76px;
-  height: 76px;
+  width: 136px;
+  height: 136px;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -2102,8 +2102,8 @@ body.demo-modal-open {
     right: 16px;
     top: 50%;
     bottom: auto;
-    width: 68px;
-    height: 68px;
+    width: 112px;
+    height: 112px;
   }
 }
 
