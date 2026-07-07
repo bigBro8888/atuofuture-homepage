@@ -1629,6 +1629,7 @@ body.demo-modal-open {
   height: 100%;
   overflow: visible;
   border-radius: 0;
+  background: transparent;
 }
 
 .agent-chat-model {
@@ -1637,7 +1638,19 @@ body.demo-modal-open {
   width: 136%;
   height: 136%;
   pointer-events: none;
+  display: block;
+  border: 0;
+  outline: 0;
+  background: transparent !important;
   --poster-color: transparent;
+  --progress-bar-color: transparent;
+  --progress-mask: transparent;
+}
+
+.agent-chat-model::part(default-progress-bar),
+.agent-chat-model::part(default-progress-mask),
+.agent-chat-model::part(interaction-prompt) {
+  display: none;
 }
 
 .agent-chat-model-fallback {
