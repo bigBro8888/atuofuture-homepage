@@ -8153,3 +8153,407 @@ body.demo-modal-open {
     height: 90dvh;
   }
 }
+
+/* Mobile-first redesign for complex home modules */
+@media (max-width: 768px) {
+  .pai-arch {
+    padding: 62px 0 66px;
+  }
+
+  .pai-arch__head {
+    margin-bottom: 26px;
+    text-align: left;
+  }
+
+  .pai-arch__eyebrow {
+    max-width: 100%;
+    padding: 6px 12px;
+    gap: 6px;
+    font-size: 10px;
+    line-height: 1.35;
+    letter-spacing: 0.06em;
+  }
+
+  .pai-arch__title {
+    margin: 18px 0 12px;
+    font-size: clamp(28px, 8vw, 34px);
+    line-height: 1.16;
+    letter-spacing: -0.04em;
+  }
+
+  .pai-arch__sub {
+    margin: 0;
+    max-width: 100%;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .pai-orbit {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    height: auto;
+    margin: 0 0 22px;
+  }
+
+  .pai-orbit__lines,
+  .pai-core__ring,
+  .pai-core__note {
+    display: none;
+  }
+
+  .pai-core,
+  .pai-orbit.is-active .pai-core {
+    position: static;
+    width: auto;
+    height: auto;
+    opacity: 1;
+    transform: none;
+    margin: 0 0 8px;
+  }
+
+  .pai-core__inner {
+    position: relative;
+    inset: auto;
+    min-height: 112px;
+    padding: 22px 20px;
+    border-radius: 24px;
+    align-items: flex-start;
+    text-align: left;
+    background:
+      radial-gradient(130px 120px at 90% 0%, rgba(255, 255, 255, 0.22), transparent 70%),
+      linear-gradient(135deg, #1769ff, #1e3a8a);
+  }
+
+  .pai-core__inner .material-symbols-outlined {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  .pai-core__inner strong {
+    font-size: 18px;
+  }
+
+  .pai-core__inner em {
+    font-size: 11px;
+  }
+
+  .pai-agent,
+  .pai-orbit.is-active .pai-agent {
+    position: static;
+    width: 100%;
+    max-width: none;
+    opacity: 1;
+    transform: none !important;
+    padding: 13px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 14px 34px -28px rgba(23, 105, 255, 0.55);
+  }
+
+  .pai-agent__icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .pai-agent__icon .material-symbols-outlined {
+    font-size: 22px;
+  }
+
+  .pai-agent__text strong {
+    font-size: 14px;
+  }
+
+  .pai-agent__text small {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.45;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  .pai-loop {
+    margin-top: 18px;
+    padding: 20px 16px;
+    border-radius: 22px;
+  }
+
+  .pai-loop__title {
+    left: auto;
+    transform: none;
+    margin: 0 0 18px;
+    padding: 7px 14px;
+    font-size: 13px;
+  }
+
+  .pai-loop__track {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .pai-loop__track::before,
+  .pai-loop__track::after,
+  .pai-node__arrow {
+    display: none;
+  }
+
+  .pai-node {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: center;
+    max-width: none;
+    padding: 10px 8px;
+    text-align: left;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.58);
+  }
+
+  .pai-node__dot {
+    width: 42px;
+    height: 42px;
+    margin: 0;
+    border-width: 1px;
+  }
+
+  .pai-node__dot::after {
+    top: -5px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+  }
+
+  .pai-node__dot .material-symbols-outlined {
+    font-size: 21px;
+  }
+
+  .pai-node strong,
+  .pai-node small {
+    grid-column: 2;
+  }
+
+  .pai-node strong {
+    margin-bottom: 2px;
+    font-size: 14px;
+  }
+
+  .pai-node small {
+    max-width: none;
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .token-base-section {
+    padding: 62px 0 66px;
+  }
+
+  .tokrt-head {
+    margin: 0 0 26px;
+    text-align: left;
+  }
+
+  .tokrt-head .token-title {
+    margin-top: 14px;
+    font-size: clamp(28px, 8vw, 34px);
+    line-height: 1.16;
+  }
+
+  .tokrt-head .token-title span {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .tokrt-head .token-sub {
+    margin: 12px 0 0;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .tokrt {
+    padding: 16px;
+    border-radius: 24px;
+    box-shadow: 0 28px 70px -46px rgba(24, 46, 130, 0.82);
+  }
+
+  .tokrt::before {
+    background-size: 28px 28px;
+  }
+
+  .tokrt__flow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .tokrt-link {
+    display: none;
+  }
+
+  .tokrt-col {
+    gap: 8px;
+  }
+
+  .tokrt-col__head {
+    padding: 2px 2px 0;
+  }
+
+  .tokrt-col__head b {
+    font-size: 12px;
+  }
+
+  .tokrt-col__head small {
+    font-size: 11px;
+  }
+
+  .tokrt-col--engine {
+    order: -1;
+  }
+
+  .tokrt-engine {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .tokrt-engine__title {
+    margin-bottom: 10px;
+  }
+
+  .tokrt-engine__title b {
+    font-size: 15px;
+  }
+
+  .tokrt-engine__title small {
+    font-size: 11px;
+  }
+
+  .tokrt-layer {
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: 12px;
+  }
+
+  .tokrt-layer__idx,
+  .tokrt-layer__ic {
+    display: none;
+  }
+
+  .tokrt-layer h6 {
+    font-size: 12px;
+  }
+
+  .tokrt-layer p {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 10.5px;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  .tokrt-req,
+  .tokrt-result {
+    padding: 10px 11px;
+    border-radius: 12px;
+  }
+
+  .tokrt-req h6,
+  .tokrt-result h6 {
+    font-size: 12px;
+  }
+
+  .tokrt-req p,
+  .tokrt-result p {
+    font-size: 10.5px;
+  }
+
+  .tokrt-pool {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px;
+  }
+
+  .tokrt-cap {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .tokrt-cap .material-symbols-outlined {
+    font-size: 16px;
+  }
+
+  .tokrt-cap h6 {
+    font-size: 11.5px;
+  }
+
+  .tokrt-cap p {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 10px;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .tokrt-gov {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 18px;
+    gap: 12px;
+  }
+
+  .tokrt-gov__head {
+    width: 100%;
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .tokrt-gov__items {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+
+  .tokrt-gov__items span {
+    grid-template-columns: 22px minmax(0, 1fr);
+  }
+
+  .tokrt-gov__items span .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  .tokrt-gov__items b {
+    font-size: 12px;
+  }
+
+  .tokrt-gov__items em {
+    font-size: 10.5px;
+  }
+
+  .tokrt-deliver {
+    margin-top: 20px;
+  }
+
+  .tokrt-deliver__title {
+    margin-bottom: 12px;
+    text-align: left;
+  }
+
+  .tokrt-deliver__card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .pai-agent__text small,
+  .tokrt-layer p,
+  .tokrt-cap p {
+    -webkit-line-clamp: 1;
+  }
+
+  .tokrt-pool {
+    grid-template-columns: 1fr !important;
+  }
+}
