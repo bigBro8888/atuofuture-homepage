@@ -167,7 +167,7 @@ export function initAgentDetail() {
         </div>
         <div class="agent-detail-cta__actions">
           <button type="button" class="site-header__btn site-header__btn--primary bg-white text-primary border-white px-8 py-3">预约方案演示</button>
-          <a href="../ai-token/" class="site-header__btn site-header__btn--ghost bg-white/10 text-white border-white px-8 py-3 inline-flex items-center justify-center">了解 AItoken</a>
+          <a href="../ai-token/" class="site-header__btn site-header__btn--ghost bg-white/10 text-white border-white px-8 py-3 inline-flex items-center justify-center">了解 AIToken</a>
         </div>
       </div>
     </section>
