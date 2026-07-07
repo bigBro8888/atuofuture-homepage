@@ -101,7 +101,7 @@ function updateNavLinks(html, activeNav, depth) {
     aiToken: `${prefix}ai-token/`,
     solutions: `${prefix}solutions/smart-hq/`,
     about: `${prefix}about/`,
-    cases: `${prefix}#cases`,
+    cases: `${prefix}#solutions`,
   }
 
   html = html.replace(/<a([^>]*?)href="[^"]*"([^>]*?)>([\s\S]*?)<\/a>/g, (match, before, after, text) => {
