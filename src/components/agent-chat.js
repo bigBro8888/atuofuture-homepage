@@ -4,7 +4,12 @@ import { cuteRobotIcon } from './robot-icon.js'
 
 const STORAGE_KEY = 'atuo_agent_chat_state'
 const ROBOT_MODEL_SRC = '/assets/ai-assistant-robot.glb'
+const ROBOT_AVATAR_SRC = '/assets/robot-avatar.png'
 const MODEL_VIEWER_SRC = 'https://unpkg.com/@google/model-viewer@4.1.0/dist/model-viewer.min.js'
+
+function robotAvatarImg(extraClass = '') {
+  return `<img class="agent-chat-robot-img ${extraClass}" src="${ROBOT_AVATAR_SRC}" alt="智能体头像" loading="lazy" />`
+}
 
 export function initAgentChat() {
   if (document.getElementById('agent-chat-root')) return
@@ -70,7 +75,7 @@ export function initAgentChat() {
       els.messages.innerHTML = `
         <div class="agent-chat-welcome">
           <div class="agent-chat-welcome__avatar">
-            ${cuteRobotIcon('cute-robot-icon cute-robot-icon--welcome')}
+            ${robotAvatarImg('agent-chat-robot-img--welcome')}
           </div>
           <p class="agent-chat-welcome__text">${agent.greeting}</p>
         </div>`
@@ -215,7 +220,7 @@ export function initAgentChat() {
 }
 
 function renderShell(state) {
-  const robot = cuteRobotIcon('cute-robot-icon')
+  const robot = robotAvatarImg('agent-chat-robot-img--header')
 
   return `
     <button
@@ -308,8 +313,8 @@ function renderRobotModel(extraClass = '') {
         src="${ROBOT_MODEL_SRC}"
         autoplay
         animation-name="Idle_Loop"
-        camera-orbit="0deg 72deg 6.4m"
-        field-of-view="30deg"
+        camera-orbit="0deg 78deg auto"
+        camera-target="auto auto auto"
         shadow-intensity="0.45"
         exposure="1"
         interaction-prompt="none"
