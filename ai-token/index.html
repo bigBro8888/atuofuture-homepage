@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Geist:wght@400;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../src/styles/main.css"/>
+<title>Atuo Future | AItoken 服务购买</title>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden" data-page="ai-token" data-nav-depth="1">
+<div id="site-header"></div>
+<!-- Hero Section -->
+<header class="token-hero">
+<div class="token-hero__bg" aria-hidden="true"></div>
+<div class="max-w-max-width mx-auto px-margin-desktop relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div class="space-y-7">
+<div class="token-hero__eyebrow">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+                    AI TOKEN STORE · 按需购买空间 AI 能力
+                </div>
+<h1 class="token-hero__title">AI Token 服务</h1>
+<p class="token-hero__subtitle">
+                    像购买云服务一样购买空间 AI 能力。统一计量、透明计费、开箱即用——套餐订阅与按量充值自由组合，覆盖文本、视觉、语音全模态调用。
+                </p>
+<div class="flex flex-wrap gap-4">
+<a href="#pricing" class="token-hero__cta token-hero__cta--primary">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+                        立即购买 Token
+                    </a>
+<a href="#price-sheet" class="token-hero__cta token-hero__cta--ghost">
+<span class="material-symbols-outlined text-[20px]">sell</span>
+                        查看计费定价
+                    </a>
+</div>
+<div class="token-hero__trust">
+<span><span class="material-symbols-outlined text-[16px]">verified</span> 无预付门槛</span>
+<span><span class="material-symbols-outlined text-[16px]">bolt</span> 秒级开通</span>
+<span><span class="material-symbols-outlined text-[16px]">shield</span> 企业级安全合规</span>
+</div>
+</div>
+<!-- 控制台 / 商城面板 -->
+<div class="token-console">
+<div class="token-console__head">
+<div class="token-console__brand">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<div>
+<strong>Token 账户</strong>
+<small>Atuo Future Console</small>
+</div>
+</div>
+<span class="token-console__status"><i></i> 实时计费中</span>
+</div>
+<div class="token-console__balance">
+<span>当前可用余额</span>
+<div class="token-console__amount"><b>8,240,500</b> Tokens</div>
+<div class="token-console__value">≈ ¥ 9,412 · 有效期至 2026-12-31</div>
+</div>
+<div class="token-console__meter">
+<div class="token-console__meter-top">
+<span>本月已用</span>
+<span>4.68M / 6.0M</span>
+</div>
+<div class="token-console__bar"><i style="width:78%"></i></div>
+</div>
+<div class="token-console__rows">
+<div><span class="material-symbols-outlined text-[18px]">psychology</span> 文本推理<em>2.41M</em></div>
+<div><span class="material-symbols-outlined text-[18px]">visibility</span> 视觉识别<em>1.64M</em></div>
+<div><span class="material-symbols-outlined text-[18px]">graphic_eq</span> 语音交互<em>0.63M</em></div>
+</div>
+<div class="token-console__quick">
+<button type="button" data-quick>¥500</button>
+<button type="button" data-quick class="is-active">¥2,000</button>
+<button type="button" data-quick>¥10,000</button>
+<button type="button" class="token-console__buy">充值</button>
+</div>
+</div>
+</div>
+</header>
+<!-- Trust / Models Bar -->
+<section class="token-metrics-band">
+<div class="max-w-max-width mx-auto px-margin-desktop">
+<div class="token-metrics-band__stats">
+<div><strong data-count="20">20+</strong><span>接入大模型</span></div>
+<div><strong>99.95%</strong><span>服务可用性 SLA</span></div>
+<div><strong>&lt;200ms</strong><span>平均调度时延</span></div>
+<div><strong>120亿+</strong><span>累计服务 Token</span></div>
+</div>
+<div class="token-metrics-band__logos">
+<span>兼容主流模型</span>
+<div>
+<em>GPT 系列</em><em>Claude</em><em>Gemini</em><em>通义千问</em><em>DeepSeek</em><em>豆包</em>
+</div>
+</div>
+</div>
+</section>
+<!-- Token Purchase Plans -->
+<section id="pricing" class="py-24 bg-surface-container-low scroll-mt-24">
+<div class="max-w-max-width mx-auto px-margin-desktop">
+<div class="text-center mb-10">
+<span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-label-sm uppercase tracking-wider mb-4">Subscription Plans</span>
+<h2 class="font-headline-lg text-headline-lg mb-3">选择适合您的 Token 套餐</h2>
+<p class="text-on-surface-variant font-body-md">月付订阅或年付立省，配额用尽后可无缝转按量计费，企业客户享阶梯折扣</p>
+</div>
+<div class="token-billing-toggle" role="group" aria-label="计费周期">
+<button type="button" data-billing="monthly" class="is-active">按月付费</button>
+<button type="button" data-billing="annual">按年付费<span>省 20%</span></button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10 items-stretch">
+<article class="token-plan-card">
+<div class="token-plan-card__badge">体验</div>
+<h3>入门版</h3>
+<div class="token-plan-card__price"><strong data-price data-monthly="¥999" data-annual="¥799">¥999</strong><span data-period>/月</span></div>
+<p class="token-plan-card__quota">50 万 Token / 月</p>
+<ul>
+<li>LLM + 语音基础能力</li>
+<li>单空间接入</li>
+<li>标准 SLA 支持</li>
+</ul>
+<a href="../order/?type=plan&plan=starter" data-plan-link="starter" class="token-plan-card__btn text-center">立即购买</a>
+</article>
+<article class="token-plan-card token-plan-card--featured">
+<div class="token-plan-card__badge">推荐</div>
+<h3>标准版</h3>
+<div class="token-plan-card__price"><strong data-price data-monthly="¥4,999" data-annual="¥3,999">¥4,999</strong><span data-period>/月</span></div>
+<p class="token-plan-card__quota">500 万 Token / 月</p>
+<ul>
+<li>全模态能力调用</li>
+<li>最多 5 个空间节点</li>
+<li>用量看板与告警</li>
+<li>专属客户成功经理</li>
+</ul>
+<a href="../order/?type=plan&plan=standard" data-plan-link="standard" class="token-plan-card__btn token-plan-card__btn--primary text-center">立即购买</a>
+</article>
+<article class="token-plan-card">
+<div class="token-plan-card__badge">企业</div>
+<h3>旗舰版</h3>
+<div class="token-plan-card__price"><strong>定制</strong><span>按需</span></div>
+<p class="token-plan-card__quota">千万级 Token 池</p>
+<ul>
+<li>私有化部署可选</li>
+<li>多租户治理与审计</li>
+<li>专属模型路由优化</li>
+<li>7×24 技术支持</li>
+</ul>
+<a href="../order/?type=plan&plan=flagship" class="token-plan-card__btn text-center">联系销售</a>
+</article>
+</div>
+</div>
+</section>
+<!-- Model Price Sheet -->
+<section id="price-sheet" class="py-24 bg-white scroll-mt-24">
+<div class="max-w-max-width mx-auto px-margin-desktop">
+<div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+<div>
+<span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-label-sm uppercase tracking-wider mb-4">Pay As You Go</span>
+<h2 class="font-headline-lg text-headline-lg mb-2">按量计费 · 模型定价表</h2>
+<p class="text-on-surface-variant font-body-md">价格以每 1K Token 计，输入/输出分别计量，秒级出账、用多少付多少</p>
+</div>
+<div class="token-tabs" role="tablist">
+<button type="button" data-tab="text" class="is-active">文本推理</button>
+<button type="button" data-tab="vision">视觉识别</button>
+<button type="button" data-tab="voice">语音交互</button>
+</div>
+</div>
+<div class="token-price-table">
+<div class="token-price-table__head">
+<span>模型 / 能力</span>
+<span>能力说明</span>
+<span>输入价格</span>
+<span>输出价格</span>
+<span></span>
+</div>
+<div id="price-rows"></div>
+</div>
+<p class="text-on-surface-variant text-sm mt-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">info</span>
+                    实际用量以控制台账单为准，套餐内配额优先抵扣，超出部分自动按上表按量计费。
+                </p>
+</div>
+</section>
+<!-- Cost Calculator -->
+<section class="py-24 bg-surface-container-low">
+<div class="max-w-max-width mx-auto px-margin-desktop">
+<div class="text-center mb-12">
+<span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-label-sm uppercase tracking-wider mb-4">Cost Estimator</span>
+<h2 class="font-headline-lg text-headline-lg mb-3">用量成本估算器</h2>
+<p class="text-on-surface-variant font-body-md">按业务规模拖动滑块，实时估算月度 Token 消耗与费用</p>
+</div>
+<div class="token-calc">
+<div class="token-calc__controls">
+<div class="token-calc__field">
+<div class="token-calc__label"><span>文本推理</span><b data-calc-out="text">120 万 Token</b></div>
+<input type="range" data-calc="text" min="0" max="500" value="120" step="10"/>
+</div>
+<div class="token-calc__field">
+<div class="token-calc__label"><span>视觉识别</span><b data-calc-out="vision">60 万 Token</b></div>
+<input type="range" data-calc="vision" min="0" max="500" value="60" step="10"/>
+</div>
+<div class="token-calc__field">
+<div class="token-calc__label"><span>语音交互</span><b data-calc-out="voice">30 万 Token</b></div>
+<input type="range" data-calc="voice" min="0" max="500" value="30" step="10"/>
+</div>
+</div>
+<div class="token-calc__result">
+<span>预计月度费用</span>
+<div class="token-calc__amount">¥ <b data-calc-total>0</b></div>
+<div class="token-calc__meta" data-calc-tokens>合计 210 万 Token / 月</div>
+<div class="token-calc__hint" data-calc-tip>推荐搭配「标准版」套餐更划算</div>
+<a href="../order/?type=calc" data-calc-quote class="token-plan-card__btn token-plan-card__btn--primary mt-2 text-center">生成方案报价</a>
+</div>
+</div>
+</div>
+</section>
+<!-- Capability Grid -->
+<section class="py-32 bg-white">
+<div class="max-w-max-width mx-auto px-margin-desktop">
+<div class="flex justify-between items-end mb-16">
+<div>
+<span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-label-sm uppercase tracking-wider mb-4">Capability Catalog</span>
+<h2 class="font-headline-lg text-headline-lg">能力货架 · 即开即用</h2>
+<p class="text-on-surface-variant font-body-md mt-2">按需上架空间场景所需的智能能力，一个 Token 池统一调用</p>
+</div>
+<button class="text-primary font-semibold flex items-center gap-1 hover:underline">
+                    查看全部 24 项能力 <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Capability Card 1 -->
+<div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">psychology</span>
+<h4 class="font-headline-md text-headline-md mb-2">大语言模型 (LLM)</h4>
+<p class="text-on-surface-variant text-sm">多模态对话、逻辑推理与场景剧本自动生成。</p>
+</div>
+<!-- Capability Card 2 -->
+<div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">settings_voice</span>
+<h4 class="font-headline-md text-headline-md mb-2">语音交互 (Voice)</h4>
+<p class="text-on-surface-variant text-sm">毫秒级低延迟语音识别与自然拟人合成。</p>
+</div>
+<!-- Capability Card 3 -->
+<div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">visibility</span>
+<h4 class="font-headline-md text-headline-md mb-2">视觉识别 (Vision)</h4>
+<p class="text-on-surface-variant text-sm">空间物体监测、轨迹追踪及行为分析。</p>
+</div>
+<!-- Capability Card 4 -->
+<div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">database</span>
+<h4 class="font-headline-md text-headline-md mb-2">动态知识库</h4>
+<p class="text-on-surface-variant text-sm">企业级私有数据挂载，实时更新专家系统。</p>
+</div>
+<!-- Capability Card 5 -->
+<div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">assignment_turned_in</span>
+<h4 class="font-headline-md text-headline-md mb-2">智能工单 (Order)</h4>
+<p class="text-on-surface-variant text-sm">自动化任务分发、进度跟踪与结果闭环。</p>
+</div>
+<!-- Capability Card 6 -->
+<div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">analytics</span>
+<h4 class="font-headline-md text-headline-md mb-2">数据分析 (Data)</h4>
+<p class="text-on-surface-variant text-sm">基于时空维度的大数据深度洞察与预测。</p>
+</div>
+<!-- Capability Card 7 -->
+<div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">shield</span>
+<h4 class="font-headline-md text-headline-md mb-2">合规拦截 (Safety)</h4>
+<p class="text-on-surface-variant text-sm">全流程内容安全审计与违规实时熔断。</p>
+</div>
+<!-- Capability Card 8 -->
+<div class="glass-card p-6 rounded-2xl hover:-translate-y-2 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">rocket_launch</span>
+<h4 class="font-headline-md text-headline-md mb-2">极速预调度</h4>
+<p class="text-on-surface-variant text-sm">针对突发高峰的 Token 算力池弹性预热。</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Enablement / Use Case Section -->
+<section class="py-32 bg-primary">
+<div class="max-w-max-width mx-auto px-margin-desktop">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div class="text-white space-y-8">
+<h2 class="font-hero-md text-hero-md">从 Token 到执行：<br/>安防智能体案例</h2>
+<p class="text-primary-fixed font-body-lg">
+                        看 AI Token 如何在实战场景中完成从“感知”到“调用能力”再到“闭环执行”的全过程。
+                    </p>
+<div class="space-y-6">
+<div class="flex gap-4 items-start">
+<div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">1</div>
+<div>
+<p class="font-headline-md">触发感知</p>
+<p class="opacity-70 text-sm">摄像头识别到陌生面孔徘徊，消耗 50 Vision Tokens 发起初步研判。</p>
+</div>
+</div>
+<div class="flex gap-4 items-start">
+<div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">2</div>
+<div>
+<p class="font-headline-md">能力增强</p>
+<p class="opacity-70 text-sm">联动私有知识库 (Knowledge Tokens) 匹配白名单，识别确认为非法闯入。</p>
+</div>
+</div>
+<div class="flex gap-4 items-start">
+<div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">3</div>
+<div>
+<p class="font-headline-md">闭环执行</p>
+<p class="opacity-70 text-sm">自动生成告警工单 (Order Tokens)，并播报语音劝离 (Voice Tokens)。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="relative">
+<div class="bg-white rounded-3xl p-4 shadow-2xl overflow-hidden aspect-square">
+<img class="w-full h-full object-cover rounded-2xl" data-alt="A clean, isometric concept illustration of an intelligent security agent operating in a modern smart office environment. Multiple semi-transparent data streams and Token usage icons flow from various sensors into a central processing node. The aesthetic is high-key with soft primary blue glowing lines connecting a security robot to high-tech ceiling cameras and digital control panels. Professional enterprise style with bright, airy lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuApPnXvZCkPqFBRi1GUeVQLf4ich8-lDRpxfeSOu_NLOSfLFL_lNz3lQVOuFx7Y-9FQXNbkRnT76Xq0UiGwD0lifcwLvdoBEj5Z768vNf1MLndK_yrgsrFFX6S1rqqkhZKqNH8syIf7hAT73SNZ4oto5HJ88YcIXpeumPFOjhStw8NPHqReT6YBtQo73KbDi9av39A0MYGgma0uh5gnyLuXXU2KzRhS4D4ePhJKuLhG-spx77BW0_ut8Q"/>
+<div class="absolute bottom-12 right-12 glass-card p-6 rounded-xl border border-primary/20 animate-pulse">
+<div class="flex items-center gap-3">
+<div class="w-3 h-3 rounded-full bg-green-500"></div>
+<span class="font-headline-md text-primary">Token 实时调度中</span>
+</div>
+<div class="mt-2 text-xs text-on-surface-variant">Vision: 12.4k / Knowledge: 3.2k</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-surface-container-low pt-20 pb-10 rounded-t-xl">
+<div class="max-w-max-width mx-auto px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-24 mb-16">
+<div class="col-span-1 md:col-span-1">
+<div class="font-headline-md text-headline-md font-bold text-on-surface mb-6">Atuo Future</div>
+<p class="text-on-surface-variant font-body-md leading-relaxed">
+                        专注 AI 原生空间智能解决方案，用科技重塑未来空间价值。
+                    </p>
+</div>
+<div>
+<h5 class="font-headline-md mb-6">产品与服务</h5>
+<ul class="space-y-4">
+<li><a class="text-on-surface-variant hover:text-primary transition-all font-body-md" href="../agents/">场景化智能体</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-all font-body-md" href="../ai-token/">AItoken服务</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-all font-body-md" href="../hardware/">硬件商城</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-headline-md mb-6">资源中心</h5>
+<ul class="space-y-4">
+<li><a class="text-on-surface-variant hover:text-primary transition-all font-body-md" href="../#cases">案例中心</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-all font-body-md" href="#">开发者文档</a></li>
+<li><a class="text-on-surface-variant hover:text-primary transition-all font-body-md" href="#">服务与交付</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-headline-md mb-6">联系我们</h5>
+<div class="space-y-4">
+<p class="text-on-surface-variant font-body-md">市场咨询：contact@atuofuture.com</p>
+<p class="text-on-surface-variant font-body-md">合作预约：400-888-9999</p>
+<div class="flex gap-4 mt-6">
+<div class="w-10 h-10 rounded-full bg-outline-variant flex items-center justify-center hover:bg-primary transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-white">public</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-outline-variant flex items-center justify-center hover:bg-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-white">chat</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-8 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="text-on-surface-variant text-sm">© 2024 Atuo Future. AI原生空间智能解决方案服务商</div>
+<div class="flex gap-8 text-sm text-on-surface-variant">
+<a class="hover:text-primary" href="#">隐私政策</a>
+<a class="hover:text-primary" href="#">服务条款</a>
+</div>
+</div>
+</div>
+</footer>
+<script type="module" src="../src/scripts/main.js"></script>
+</body></html>
