@@ -105,6 +105,21 @@
   }
 
   .site-header__logo {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .site-header__logo-img {
+    display: block;
+    width: auto;
+    height: 44px;
+    object-fit: contain;
+  }
+
+  .site-mobile-drawer__logo {
+    display: inline-flex;
+    align-items: center;
     flex-shrink: 0;
   }
 

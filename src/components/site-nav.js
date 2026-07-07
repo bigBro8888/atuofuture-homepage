@@ -23,7 +23,9 @@ export function renderSiteNav(activeId) {
   return `
     <header class="site-header w-full sticky top-0 z-50 bg-white/70 backdrop-blur-3xl shadow-[0_8px_32px_rgba(23,105,255,0.08)]">
       <div class="site-header__inner max-w-max-width mx-auto px-margin-desktop">
-        <a href="${root}" class="site-header__logo font-headline-md text-headline-md font-bold text-primary">Atuo Future</a>
+        <a href="${root}" class="site-header__logo" aria-label="Artink 首页">
+          <img src="${root}assets/artink-logo.png" alt="Artink" class="site-header__logo-img" />
+        </a>
         <nav class="site-header__nav hidden lg:flex items-center" aria-label="主导航">
           ${links}
         </nav>
@@ -38,7 +40,9 @@ export function renderSiteNav(activeId) {
       <div class="site-mobile-drawer translate-x-full" id="mobile-drawer" aria-hidden="true">
         <div class="site-mobile-drawer__panel">
           <div class="site-mobile-drawer__head">
-            <a href="${root}" class="font-headline-md text-headline-md font-bold text-primary">Atuo Future</a>
+            <a href="${root}" class="site-mobile-drawer__logo" aria-label="Artink 首页">
+              <img src="${root}assets/artink-logo.png" alt="Artink" class="site-header__logo-img" />
+            </a>
             <button type="button" id="menu-close" aria-label="关闭菜单">
               <span class="material-symbols-outlined">close</span>
             </button>
