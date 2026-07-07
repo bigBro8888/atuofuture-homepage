@@ -282,12 +282,43 @@ function renderShell(state) {
             <span class="agent-chat-sidebar__mark">${robot}</span>
             <strong>Atuo AI</strong>
           </div>
-          <button type="button" class="agent-chat-new-btn" data-chat-clear>
-            <span class="material-symbols-outlined">add</span>
-            新建对话
-          </button>
-          <div class="agent-chat-sidebar__label">智能体</div>
+          <label class="agent-chat-sidebar__search" aria-label="搜索">
+            <span class="material-symbols-outlined">search</span>
+            <input type="search" placeholder="搜索" />
+          </label>
+          <div class="agent-chat-sidebar__primary">
+            <button type="button" class="agent-chat-new-btn" data-chat-clear>
+              <span class="material-symbols-outlined">add_box</span>
+              <span>新建对话</span>
+            </button>
+            <button type="button" class="agent-chat-side-link">
+              <span class="material-symbols-outlined">schedule</span>
+              <span>自动任务</span>
+            </button>
+            <button type="button" class="agent-chat-side-link">
+              <span class="material-symbols-outlined">construction</span>
+              <span>技能广场</span>
+            </button>
+          </div>
+          <div class="agent-chat-sidebar__label">空间智能体</div>
           <nav class="agent-chat-agent-tabs" data-agent-options aria-label="选择智能体"></nav>
+          <div class="agent-chat-sidebar__label">本地知识库</div>
+          <div class="agent-chat-sidebar__knowledge">
+            <button type="button" class="agent-chat-side-link">
+              <span class="material-symbols-outlined">apps</span>
+              <span>应用</span>
+            </button>
+            <button type="button" class="agent-chat-side-link">
+              <span class="material-symbols-outlined">description</span>
+              <span>文档</span>
+              <span class="material-symbols-outlined agent-chat-side-link__chev">expand_more</span>
+            </button>
+            <button type="button" class="agent-chat-side-link">
+              <span class="material-symbols-outlined">image</span>
+              <span>图库</span>
+              <span class="material-symbols-outlined agent-chat-side-link__chev">expand_more</span>
+            </button>
+          </div>
           <div class="agent-chat-sidebar__foot">
             <span class="material-symbols-outlined">verified</span>
             <span>空间智能服务助手</span>
