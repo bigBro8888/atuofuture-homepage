@@ -1682,8 +1682,8 @@ body.demo-modal-open {
   bottom: auto;
   transform: translateY(-50%);
   z-index: 50;
-  width: 136px;
-  height: 136px;
+  width: 118px;
+  height: 118px;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -2102,8 +2102,8 @@ body.demo-modal-open {
     right: 16px;
     top: 50%;
     bottom: auto;
-    width: 112px;
-    height: 112px;
+    width: 96px;
+    height: 96px;
   }
 }
 
