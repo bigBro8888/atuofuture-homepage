@@ -3,9 +3,13 @@ import { sendMessage } from '../services/agent-chat-api.js'
 import { cuteRobotIcon } from './robot-icon.js'
 
 const STORAGE_KEY = 'atuo_agent_chat_state'
+const ROBOT_MODEL_SRC = '/assets/ai-assistant-robot.glb'
+const MODEL_VIEWER_SRC = 'https://unpkg.com/@google/model-viewer@4.1.0/dist/model-viewer.min.js'
 
 export function initAgentChat() {
   if (document.getElementById('agent-chat-root')) return
+
+  ensureModelViewer()
 
   const state = loadState()
   const root = document.createElement('div')
@@ -212,7 +216,6 @@ export function initAgentChat() {
 
 function renderShell(state) {
   const robot = cuteRobotIcon('cute-robot-icon')
-  const robotAvatar = cuteRobotIcon('cute-robot-icon cute-robot-icon--avatar')
 
   return `
     <button
@@ -222,7 +225,7 @@ function renderShell(state) {
       aria-label="打开智能体对话"
       aria-expanded="${state.isOpen}"
     >
-      ${robotAvatar}
+      ${renderRobotModel('agent-chat-model--toggle')}
     </button>
 
     <div
@@ -285,6 +288,37 @@ function renderShell(state) {
         </form>
       </div>
     </aside>
+  `
+}
+
+function ensureModelViewer() {
+  if (customElements.get('model-viewer') || document.querySelector('script[data-model-viewer]')) return
+  const script = document.createElement('script')
+  script.type = 'module'
+  script.src = MODEL_VIEWER_SRC
+  script.dataset.modelViewer = 'true'
+  document.head.appendChild(script)
+}
+
+function renderRobotModel(extraClass = '') {
+  return `
+    <span class="agent-chat-model-shell ${extraClass}">
+      <model-viewer
+        class="agent-chat-model"
+        src="${ROBOT_MODEL_SRC}"
+        autoplay
+        animation-name="Idle_Loop"
+        camera-orbit="0deg 70deg 3.2m"
+        field-of-view="28deg"
+        shadow-intensity="0.45"
+        exposure="1"
+        interaction-prompt="none"
+        disable-zoom
+      ></model-viewer>
+      <span class="agent-chat-model-fallback" aria-hidden="true">
+        ${cuteRobotIcon('cute-robot-icon cute-robot-icon--avatar')}
+      </span>
+    </span>
   `
 }
 
