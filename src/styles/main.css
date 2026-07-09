@@ -2369,6 +2369,37 @@ body.demo-modal-open {
   font-size: 18px;
 }
 
+.agent-section-divider {
+  position: relative;
+  max-width: 1180px;
+  height: 76px;
+  margin: 0 auto;
+  padding: 0 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agent-section-divider::before {
+  content: '';
+  position: absolute;
+  left: 64px;
+  right: 64px;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 82, 209, 0.18), rgba(56, 166, 253, 0.32), rgba(0, 82, 209, 0.18), transparent);
+}
+
+.agent-section-divider span {
+  position: relative;
+  z-index: 1;
+  width: 92px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(0, 82, 209, 0.08), rgba(56, 166, 253, 0.26), rgba(0, 82, 209, 0.08));
+  box-shadow: 0 0 24px rgba(23, 105, 255, 0.18);
+}
+
 @media (max-width: 768px) {
   #agent-chat-root {
     --chat-width: 96vw;
@@ -2420,6 +2451,16 @@ body.demo-modal-open {
 
   .agent-chat-msg__bubble {
     max-width: 84%;
+  }
+
+  .agent-section-divider {
+    height: 48px;
+    padding: 0 16px;
+  }
+
+  .agent-section-divider::before {
+    left: 16px;
+    right: 16px;
   }
 
   .agent-chat-edge-collapse {
