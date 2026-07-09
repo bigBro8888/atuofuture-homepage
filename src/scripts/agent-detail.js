@@ -91,10 +91,18 @@ function renderReceptionDetail(a) {
         </div>
       </section>
 
-      <section class="reception-section">
+      <section class="reception-section reception-pain-section">
+        <div class="reception-problem-burst" aria-hidden="true">
+          <span>车位未预留</span>
+          <span>门禁权限缺失</span>
+          <span>会议室未准备</span>
+          <span>派梯未同步</span>
+          <span>访客信息分散</span>
+          <span>服务无人响应</span>
+        </div>
         <div class="max-w-max-width mx-auto px-margin-desktop">
           <div class="reception-section__head">
-            <span class="reception-kicker">Pain Points</span>
+            <span class="reception-kicker">Pain Points · 问题诊断</span>
             <h2>传统会务接待为什么效率低？</h2>
           </div>
           <div class="reception-pain-grid">
