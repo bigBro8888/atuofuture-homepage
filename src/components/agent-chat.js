@@ -14,13 +14,14 @@ function robotAvatarImg(extraClass = '') {
 export function initAgentChat() {
   if (document.getElementById('agent-chat-root')) return
 
-  ensureModelViewer()
-
   const state = loadState()
   const root = document.createElement('div')
   root.id = 'agent-chat-root'
   root.innerHTML = renderShell(state)
   document.body.appendChild(root)
+
+  // 3D 模型与 model-viewer 延后加载，避免阻塞首屏
+  scheduleRobotModelUpgrade(root)
 
   const els = {
     root,
@@ -251,7 +252,9 @@ function renderShell(state) {
       aria-label="打开智能体对话"
       aria-expanded="${state.isOpen}"
     >
-      ${renderRobotModel('agent-chat-model--toggle')}
+      <span class="agent-chat-model-shell agent-chat-model--toggle" data-robot-mount>
+        ${robotAvatarImg('agent-chat-robot-img--toggle')}
+      </span>
     </button>
 
     <div
@@ -367,34 +370,64 @@ function renderShell(state) {
 }
 
 function ensureModelViewer() {
-  if (customElements.get('model-viewer') || document.querySelector('script[data-model-viewer]')) return
-  const script = document.createElement('script')
-  script.type = 'module'
-  script.src = MODEL_VIEWER_SRC
-  script.dataset.modelViewer = 'true'
-  document.head.appendChild(script)
+  if (customElements.get('model-viewer')) return Promise.resolve()
+  const existing = document.querySelector('script[data-model-viewer]')
+  if (existing) {
+    return customElements.whenDefined('model-viewer').catch(() => {})
+  }
+  return new Promise((resolve) => {
+    const script = document.createElement('script')
+    script.type = 'module'
+    script.src = MODEL_VIEWER_SRC
+    script.dataset.modelViewer = 'true'
+    script.onload = () => customElements.whenDefined('model-viewer').then(resolve).catch(resolve)
+    script.onerror = resolve
+    document.head.appendChild(script)
+  })
 }
 
-function renderRobotModel(extraClass = '') {
+function renderRobotModelMarkup() {
   return `
-    <span class="agent-chat-model-shell ${extraClass}">
-      <model-viewer
-        class="agent-chat-model"
-        src="${ROBOT_MODEL_SRC}"
-        autoplay
-        animation-name="Idle_Loop"
-        camera-orbit="0deg 78deg auto"
-        camera-target="auto auto auto"
-        shadow-intensity="0.45"
-        exposure="1"
-        interaction-prompt="none"
-        disable-zoom
-      ></model-viewer>
-      <span class="agent-chat-model-fallback" aria-hidden="true">
-        ${cuteRobotIcon('cute-robot-icon cute-robot-icon--avatar')}
-      </span>
+    <model-viewer
+      class="agent-chat-model"
+      src="${ROBOT_MODEL_SRC}"
+      autoplay
+      animation-name="Idle_Loop"
+      camera-orbit="0deg 78deg auto"
+      camera-target="auto auto auto"
+      shadow-intensity="0.45"
+      exposure="1"
+      interaction-prompt="none"
+      disable-zoom
+    ></model-viewer>
+    <span class="agent-chat-model-fallback" aria-hidden="true">
+      ${cuteRobotIcon('cute-robot-icon cute-robot-icon--avatar')}
     </span>
   `
+}
+
+function scheduleRobotModelUpgrade(root) {
+  const mount = root.querySelector('[data-robot-mount]')
+  if (!mount) return
+
+  const upgrade = async () => {
+    if (mount.dataset.upgraded === 'true') return
+    mount.dataset.upgraded = 'true'
+    await ensureModelViewer()
+    if (!customElements.get('model-viewer')) return
+    mount.innerHTML = renderRobotModelMarkup()
+  }
+
+  const start = () => {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(() => { void upgrade() }, { timeout: 2500 })
+    } else {
+      window.setTimeout(() => { void upgrade() }, 1200)
+    }
+  }
+
+  if (document.readyState === 'complete') start()
+  else window.addEventListener('load', start, { once: true })
 }
 
 function loadState() {

@@ -7,7 +7,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/assets/fonts/material-symbols-outlined.ttf') format('truetype');
+  src: url('/assets/fonts/material-symbols-outlined.woff2') format('woff2');
 }
 
 .material-symbols-outlined {
@@ -1693,6 +1693,12 @@ body.demo-modal-open {
   height: 56px;
 }
 
+.agent-chat-robot-img--toggle {
+  width: 88px;
+  height: 88px;
+  margin: 22px auto 0;
+}
+
 .agent-chat-model-shell {
   position: absolute;
   left: 50%;
@@ -1705,6 +1711,13 @@ body.demo-modal-open {
   background: transparent;
   transform: translate(-50%, -50%) scale(0.62);
   transform-origin: center;
+}
+
+.agent-chat-model-shell:has(.agent-chat-robot-img--toggle) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .agent-chat-model {
