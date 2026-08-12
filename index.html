@@ -361,35 +361,11 @@
 <filter id="smTrailCore" x="-55%" y="-110%" width="210%" height="320%">
 <feGaussianBlur stdDeviation="4"/>
 </filter>
-<filter id="smBridgeGlow" x="-40%" y="-80%" width="180%" height="260%">
-<feGaussianBlur stdDeviation="3.5" result="b"/>
-<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-</filter>
-<path id="smInfinityPath" d="M50 60C50 32 92 22 140 60C188 98 230 88 230 60C230 32 188 22 140 60C92 98 50 88 50 60Z"/>
-<!-- 下层蒙版：挖空 SW→NE 交叉，避免用黑色描边硬擦 -->
-<mask id="smInfinityUnderMask" maskUnits="userSpaceOnUse">
-<rect width="280" height="120" fill="#fff"/>
-<path d="M108 76C122 68 158 52 172 44" stroke="#000" stroke-width="26" stroke-linecap="round"/>
-</mask>
-<!-- 上层交叉带蒙版：只露出 NW→SE -->
-<mask id="smInfinityBridgeMask" maskUnits="userSpaceOnUse">
-<path d="M108 44C122 52 158 68 172 76" stroke="#fff" stroke-width="30" stroke-linecap="round"/>
-</mask>
 </defs>
-<!-- 底层环带（交叉处透明镂空） -->
-<g mask="url(#smInfinityUnderMask)">
-<use href="#smInfinityPath" class="sm-infinity__base" stroke="url(#smInfinityBase)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
-<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--soft" filter="url(#smTrailSoft)" stroke="#00e5c0" stroke-width="28" stroke-linecap="round"/>
-<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--mid" filter="url(#smTrailMid)" stroke="#7dffd4" stroke-width="16" stroke-linecap="round"/>
-<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--core" filter="url(#smTrailCore)" stroke="#e8fff8" stroke-width="7" stroke-linecap="round"/>
-</g>
-<!-- 上层桥：青绿环带盖住交叉，形成立体穿插 -->
-<path class="sm-infinity__bridge" filter="url(#smBridgeGlow)" d="M108 44C122 52 158 68 172 76" stroke="url(#smInfinityBase)" stroke-width="22" stroke-linecap="round"/>
-<g mask="url(#smInfinityBridgeMask)">
-<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--soft" filter="url(#smTrailSoft)" stroke="#00e5c0" stroke-width="28" stroke-linecap="round"/>
-<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--mid" filter="url(#smTrailMid)" stroke="#7dffd4" stroke-width="16" stroke-linecap="round"/>
-<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--core" filter="url(#smTrailCore)" stroke="#e8fff8" stroke-width="7" stroke-linecap="round"/>
-</g>
+<path class="sm-infinity__base" stroke="url(#smInfinityBase)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M50 60C50 32 92 22 140 60C188 98 230 88 230 60C230 32 188 22 140 60C92 98 50 88 50 60Z"/>
+<path class="sm-infinity__trail sm-infinity__trail--soft" filter="url(#smTrailSoft)" stroke="#00e5c0" stroke-width="28" stroke-linecap="round" d="M50 60C50 32 92 22 140 60C188 98 230 88 230 60C230 32 188 22 140 60C92 98 50 88 50 60Z"/>
+<path class="sm-infinity__trail sm-infinity__trail--mid" filter="url(#smTrailMid)" stroke="#7dffd4" stroke-width="16" stroke-linecap="round" d="M50 60C50 32 92 22 140 60C188 98 230 88 230 60C230 32 188 22 140 60C92 98 50 88 50 60Z"/>
+<path class="sm-infinity__trail sm-infinity__trail--core" filter="url(#smTrailCore)" stroke="#e8fff8" stroke-width="7" stroke-linecap="round" d="M50 60C50 32 92 22 140 60C188 98 230 88 230 60C230 32 188 22 140 60C92 98 50 88 50 60Z"/>
 </svg>
 </div>
 </div>
