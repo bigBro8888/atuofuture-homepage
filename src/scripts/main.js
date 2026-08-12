@@ -638,7 +638,6 @@ export function initDemoRequestModal() {
       <div class="demo-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="demo-title">
         <button type="button" class="demo-modal__close" data-demo-modal-close aria-label="关闭"><span class="material-symbols-outlined">close</span></button>
         <div class="demo-modal__intro">
-          <span class="demo-modal__eyebrow">BOOK A DEMO</span>
           <h3 id="demo-title">预约方案演示</h3>
           <p>留下需求与联系方式，我们会尽快与您对接。</p>
         </div>

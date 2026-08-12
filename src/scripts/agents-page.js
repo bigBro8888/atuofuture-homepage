@@ -8,7 +8,6 @@ export function initAgentsPage() {
     (a) => `
     <article class="sx-agent-card" data-agent-card>
       <div class="sx-agent-card__icon"><span class="material-symbols-outlined">${a.icon}</span></div>
-      <small>${a.kicker}</small>
       <h3>${a.name}</h3>
       <p>${a.summary}</p>
       <ul>${a.points.map((p) => `<li>${p}</li>`).join('')}</ul>

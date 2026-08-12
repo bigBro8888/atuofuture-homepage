@@ -45,7 +45,6 @@ function renderDetail(id) {
         </nav>
         <div class="sx-sol-list__media mb-8" style="height:280px;background-image:url('${s.image}')"></div>
         <div class="sx-section-head">
-          <span>SOLUTION</span>
           <h2>${esc(s.name)}</h2>
           <p>${esc(s.summary)}</p>
         </div>

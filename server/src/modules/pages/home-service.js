@@ -3,25 +3,25 @@ import { db } from '../../lib/store.js'
 
 export const defaultHomeContent = {
   hero: {
-    eyebrow: 'AI Space Service Mesh',
+    eyebrow: '',
     title: '让每一座空间，拥有 AI 原生运营能力',
     subtitle: '数字孪生 · 场景智能体 · AI Token 服务底座',
     posterUrl: '',
     videoUrl: '',
   },
   core: {
-    kicker: 'Core AI Capabilities',
+    kicker: '',
     title: '四类核心能力，交付 AI 原生智能空间',
     subtitle: '安托未来面向楼宇、园区、商业资产，提供从 AI 能力接入、场景智能体构建，到空间系统联动和持续运营服务的一体化解决方案。',
     items: [
-      { icon: 'token', title: 'AI Token 服务', description: '统一接入通义千问、DeepSeek、即梦、视觉识别、语音交互、IoT 控制与业务系统 API，将 AI 能力封装成可调用、可计量、可治理的标准化服务。', label: 'AI Token Service' },
-      { icon: 'smart_toy', title: '场景智能体', description: '围绕会议、访客、资产、能耗、安防、招商运营等高频场景，构建可配置、可执行、可持续优化的专业智能体，让空间服务自动响应。', label: 'Spatial Agents' },
-      { icon: 'device_hub', title: '空间系统联动', description: '打通门禁、电梯、灯光、空调、摄像头、能耗表、资产标签、工单系统等软硬件，让人、设备、资产、事件和服务形成统一联动。', label: 'Space System Integration' },
-      { icon: 'support_agent', title: '持续运营服务', description: '提供智能体配置、模型能力接入、策略调优、数据分析、系统运维和长期服务支持，让 AI 能力持续嵌入客户日常运营。', label: 'AI Managed Service' },
+      { icon: 'token', title: 'AI Token 服务', description: '统一接入通义千问、DeepSeek、即梦、视觉识别、语音交互、IoT 控制与业务系统 API，将 AI 能力封装成可调用、可计量、可治理的标准化服务。', label: '' },
+      { icon: 'smart_toy', title: '场景智能体', description: '围绕会议、访客、资产、能耗、安防、招商运营等高频场景，构建可配置、可执行、可持续优化的专业智能体，让空间服务自动响应。', label: '' },
+      { icon: 'device_hub', title: '空间系统联动', description: '打通门禁、电梯、灯光、空调、摄像头、能耗表、资产标签、工单系统等软硬件，让人、设备、资产、事件和服务形成统一联动。', label: '' },
+      { icon: 'support_agent', title: '持续运营服务', description: '提供智能体配置、模型能力接入、策略调优、数据分析、系统运维和长期服务支持，让 AI 能力持续嵌入客户日常运营。', label: '' },
     ],
   },
   partners: {
-    kicker: 'Partner Network',
+    kicker: '',
     title: '历史合作单位与标杆客户',
     subtitle: '沉淀在总部大楼、产业园区、商业综合体、医疗冷链等多类高价值空间中的交付经验。',
     metrics: [
@@ -32,7 +32,7 @@ export const defaultHomeContent = {
     ],
   },
   solutions: {
-    eyebrow: 'INDUSTRY SOLUTIONS',
+    eyebrow: '',
     title: 'AI 原生行业解决方案矩阵',
     subtitle: '围绕楼宇、园区与商业资产，安托未来以 AI Token 服务、场景智能体、空间系统联动与持续运营服务，构建可复制的行业解决方案。',
     moreLabel: '查看全部解决方案',

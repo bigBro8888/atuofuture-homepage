@@ -23,7 +23,6 @@ function renderRelated(currentId) {
           <span class="material-symbols-outlined">${a.icon}</span>
           <div>
             <strong>${esc(a.name)}</strong>
-            <small>${esc(a.eyebrow)}</small>
           </div>
           <span class="material-symbols-outlined agent-detail-related__arrow">arrow_forward</span>
         </a>`
@@ -277,9 +276,8 @@ export function initAgentDetail() {
         </nav>
         <div class="agent-detail-hero__grid">
           <div>
-            <span class="agent-detail-eyebrow">
+            <span class="agent-detail-eyebrow" aria-hidden="true">
               <span class="material-symbols-outlined">${a.icon}</span>
-              ${esc(a.eyebrow)}
             </span>
             <h1 class="agent-detail-title">${esc(a.name)}</h1>
             <p class="agent-detail-tagline">${esc(a.tagline)}</p>

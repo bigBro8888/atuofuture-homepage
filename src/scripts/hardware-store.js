@@ -6,7 +6,6 @@ function renderAllSections() {
     <section class="sx-hw-section" id="${section.id}">
       <div class="max-w-max-width mx-auto px-margin-desktop">
         <div class="sx-section-head">
-          <span>${section.id.toUpperCase()}</span>
           <h2>${section.title}</h2>
           <p>${section.desc}</p>
         </div>

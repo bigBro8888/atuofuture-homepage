@@ -78,7 +78,6 @@ export function initAgentChat() {
           <div class="agent-chat-welcome__avatar">
             ${robotAvatarImg('agent-chat-robot-img--welcome')}
           </div>
-          <p class="agent-chat-welcome__eyebrow">AI Spatial Assistant</p>
           <h4 class="agent-chat-welcome__title">${escapeHtml(agent.name)}</h4>
           <p class="agent-chat-welcome__text">${agent.greeting}</p>
         </div>`
