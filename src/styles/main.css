@@ -11007,6 +11007,7 @@ body.demo-modal-open {
   .sm-pitch__head { grid-template-columns: 1fr; }
   .sm-pitch__mark { justify-self: start; width: 200px; }
   .sm-pitch__grid { grid-template-columns: 1fr 1fr; min-height: 0; }
+  .sm-pitch__grid > .sm-pitch__tile { min-height: 360px; }
   .sm-pitch__stack { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
   .sm-news-grid { grid-template-columns: 1fr 1fr; }
   .sm-sol-card { flex-basis: calc((100% - 32px) / 2); }
