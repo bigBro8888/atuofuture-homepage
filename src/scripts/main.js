@@ -677,7 +677,9 @@ export function initDemoRequestModal() {
 
   document.addEventListener('click', (event) => {
     const opener = event.target.closest('[data-demo-modal-open]')
-    if (opener) open()
+    if (!opener) return
+    if (opener.tagName === 'A') event.preventDefault()
+    open()
   })
 
   document.addEventListener('keydown', (event) => {
