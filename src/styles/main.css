@@ -35,13 +35,13 @@
   body {
     min-height: max(884px, 100dvh);
     overflow-x: hidden;
-    padding-top: 5rem;
+    padding-top: 4rem;
   }
 
   /* 导航栏高度固定，滚动时不收缩 */
   header,
   nav.w-full.sticky {
-    min-height: 5rem;
+    min-height: 4rem;
   }
 
   header.nav-scrolled,
@@ -128,7 +128,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    height: 5rem;
+    height: 4rem;
   }
 
   .site-header__logo {
@@ -140,7 +140,7 @@
   .site-header__logo-img {
     display: block;
     width: auto;
-    height: 44px;
+    height: 36px;
     object-fit: contain;
   }
 
