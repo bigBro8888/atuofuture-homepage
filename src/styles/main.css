@@ -10874,10 +10874,6 @@ body.demo-modal-open {
   opacity: 0.92;
 }
 
-.sm-infinity__bridge {
-  fill: none;
-}
-
 .sm-infinity__trail {
   fill: none;
   animation: sm-infinity-flow 3.2s linear infinite;
