@@ -27,10 +27,9 @@ function initHeroCarousel() {
   const pauseBtn = root.querySelector('[data-sm-hero-pause]')
   if (!slides.length || !dotsWrap) return
 
-  const INTERVAL = 7000
+  const INTERVAL = 5000
   let index = 0
   let paused = false
-  let timer = 0
   let raf = 0
   let startedAt = 0
 
