@@ -96,7 +96,7 @@ export function renderSiteNav(activeId) {
     <header class="site-header w-full sticky top-0 z-50" id="site-header">
       <div class="site-header__inner max-w-max-width mx-auto px-margin-desktop">
         <a href="${root}" class="site-header__logo" aria-label="安托未来首页">
-          <img src="${root}assets/artink-logo.png" alt="安托未来" class="site-header__logo-img" />
+          <img src="${root}assets/artink-logo-light.png" alt="安托未来" class="site-header__logo-img" />
         </a>
         <nav class="site-header__nav hidden lg:flex items-center" aria-label="主导航">
           ${renderDesktopNav(activeId, root)}
@@ -115,7 +115,7 @@ export function renderSiteNav(activeId) {
         <div class="site-mobile-drawer__panel">
           <div class="site-mobile-drawer__head">
             <a href="${root}" class="site-mobile-drawer__logo" aria-label="安托未来首页">
-              <img src="${root}assets/artink-logo.png" alt="安托未来" class="site-header__logo-img" />
+              <img src="${root}assets/artink-logo-light.png" alt="安托未来" class="site-header__logo-img" />
             </a>
             <button type="button" id="menu-close" aria-label="关闭菜单">
               <span class="material-symbols-outlined">close</span>
