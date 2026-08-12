@@ -349,23 +349,43 @@
 <defs>
 <linearGradient id="smInfinityBase" x1="40" y1="60" x2="240" y2="60">
 <stop offset="0%" stop-color="#0a5552"/>
-<stop offset="50%" stop-color="#0f7a72"/>
+<stop offset="50%" stop-color="#129688"/>
 <stop offset="100%" stop-color="#0a5552"/>
 </linearGradient>
-<filter id="smTrailSoft" x="-60%" y="-120%" width="220%" height="340%">
+<filter id="smTrailSoft" x="-80%" y="-160%" width="260%" height="420%">
+<feGaussianBlur stdDeviation="14"/>
+</filter>
+<filter id="smTrailMid" x="-70%" y="-140%" width="240%" height="380%">
 <feGaussianBlur stdDeviation="8"/>
 </filter>
-<filter id="smTrailMid" x="-50%" y="-100%" width="200%" height="300%">
-<feGaussianBlur stdDeviation="4.5"/>
+<filter id="smTrailCore" x="-55%" y="-110%" width="210%" height="320%">
+<feGaussianBlur stdDeviation="4"/>
 </filter>
-<filter id="smTrailCore" x="-40%" y="-80%" width="180%" height="260%">
-<feGaussianBlur stdDeviation="2.2"/>
+<filter id="smBridgeGlow" x="-40%" y="-80%" width="180%" height="260%">
+<feGaussianBlur stdDeviation="3.5" result="b"/>
+<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
 </filter>
+<path id="smInfinityPath" d="M50 60C50 32 92 22 140 60C188 98 230 88 230 60C230 32 188 22 140 60C92 98 50 88 50 60Z"/>
+<!-- 上层交叉带蒙版：只露出 NW→SE 这段 -->
+<mask id="smInfinityBridgeMask" maskUnits="userSpaceOnUse">
+<path d="M108 44C122 52 158 68 172 76" stroke="#fff" stroke-width="34" stroke-linecap="round"/>
+</mask>
 </defs>
-<path class="sm-infinity__base" stroke="url(#smInfinityBase)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" d="M50 60C50 32 92 22 140 60C188 98 230 88 230 60C230 32 188 22 140 60C92 98 50 88 50 60Z"/>
-<path class="sm-infinity__trail sm-infinity__trail--soft" filter="url(#smTrailSoft)" stroke="#00e5c0" stroke-width="18" stroke-linecap="round" d="M50 60C50 32 92 22 140 60C188 98 230 88 230 60C230 32 188 22 140 60C92 98 50 88 50 60Z"/>
-<path class="sm-infinity__trail sm-infinity__trail--mid" filter="url(#smTrailMid)" stroke="#7dffd4" stroke-width="10" stroke-linecap="round" d="M50 60C50 32 92 22 140 60C188 98 230 88 230 60C230 32 188 22 140 60C92 98 50 88 50 60Z"/>
-<path class="sm-infinity__trail sm-infinity__trail--core" filter="url(#smTrailCore)" stroke="#e8fff8" stroke-width="4" stroke-linecap="round" d="M50 60C50 32 92 22 140 60C188 98 230 88 230 60C230 32 188 22 140 60C92 98 50 88 50 60Z"/>
+<!-- 底层环带 + 流动光 -->
+<use href="#smInfinityPath" class="sm-infinity__base" stroke="url(#smInfinityBase)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--soft" filter="url(#smTrailSoft)" stroke="#00e5c0" stroke-width="28" stroke-linecap="round"/>
+<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--mid" filter="url(#smTrailMid)" stroke="#7dffd4" stroke-width="16" stroke-linecap="round"/>
+<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--core" filter="url(#smTrailCore)" stroke="#e8fff8" stroke-width="7" stroke-linecap="round"/>
+<!-- 擦掉下层交叉（SW→NE），做出前后遮挡 -->
+<path class="sm-infinity__cut" d="M108 76C122 68 158 52 172 44" stroke="#000028" stroke-width="36" stroke-linecap="round"/>
+<!-- 上层桥：固定环带 -->
+<path class="sm-infinity__bridge" filter="url(#smBridgeGlow)" d="M108 44C122 52 158 68 172 76" stroke="url(#smInfinityBase)" stroke-width="22" stroke-linecap="round"/>
+<!-- 上层桥：同步流动光（蒙版裁切整环光带） -->
+<g mask="url(#smInfinityBridgeMask)">
+<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--soft" filter="url(#smTrailSoft)" stroke="#00e5c0" stroke-width="28" stroke-linecap="round"/>
+<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--mid" filter="url(#smTrailMid)" stroke="#7dffd4" stroke-width="16" stroke-linecap="round"/>
+<use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--core" filter="url(#smTrailCore)" stroke="#e8fff8" stroke-width="7" stroke-linecap="round"/>
+</g>
 </svg>
 </div>
 </div>
