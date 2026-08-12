@@ -1,6 +1,7 @@
 import { initAgentChat } from '../components/agent-chat.js'
 import { initAppDownloadModal } from '../components/app-download-modal.js'
 import { initSiteNav } from '../components/site-nav.js'
+import { initSiteFooter } from '../components/site-footer.js'
 import { TOKEN_SITE_URL } from '../data/site-links.js'
 import { initHardwareStore } from './hardware-store.js'
 import { initAgentDetail } from './agent-detail.js'
@@ -734,6 +735,7 @@ function bootstrap() {
 
   initNavScroll('header, .site-header')
   initSiteNav()
+  initSiteFooter()
   initMobileDrawer()
   initAppDownloadModal()
   initAgentChat()
