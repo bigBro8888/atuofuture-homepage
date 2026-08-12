@@ -1,9 +1,21 @@
 import { initAgentChat } from '../components/agent-chat.js'
+import { initAppDownloadModal } from '../components/app-download-modal.js'
 import { initSiteNav } from '../components/site-nav.js'
+import { TOKEN_SITE_URL } from '../data/site-links.js'
 import { initHardwareStore } from './hardware-store.js'
 import { initAgentDetail } from './agent-detail.js'
+import { initAgentsPage } from './agents-page.js'
+import { initSolutionsPage } from './solutions-page.js'
+import { initNewsPage } from './news-page.js'
 import { initAiTokenStore } from './ai-token-store.js'
 import { initOrder } from './order.js'
+import { loadAndApplyHomeContent } from './home-content.js'
+
+function initTokenLinks() {
+  document.querySelectorAll('[data-token-link]').forEach((el) => {
+    if (el.tagName === 'A') el.setAttribute('href', TOKEN_SITE_URL)
+  })
+}
 
 /** 共享交互脚本：导航滚动、移动端菜单、入场动画 */
 
@@ -108,7 +120,7 @@ export function initButtonHover() {
 export function initHeroVideoSound() {
   const video = document.querySelector('[data-hero-video]')
   const toggle = document.querySelector('[data-hero-sound-toggle]')
-  if (!video || !toggle) return
+  if (!video || !toggle || video.hidden) return
 
   const icon = toggle.querySelector('.material-symbols-outlined')
   let initialCycleHandled = false
@@ -613,10 +625,34 @@ export function initScrollReveal() {
 
 /** 预约方案演示弹窗 */
 export function initDemoRequestModal() {
-  const modal = document.getElementById('demo-modal')
+  let modal = document.getElementById('demo-modal')
+  if (!modal) {
+    modal = document.createElement('div')
+    modal.id = 'demo-modal'
+    modal.className = 'demo-modal'
+    modal.setAttribute('aria-hidden', 'true')
+    modal.innerHTML = `
+      <div class="demo-modal__backdrop" data-demo-modal-close></div>
+      <div class="demo-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="demo-title">
+        <button type="button" class="demo-modal__close" data-demo-modal-close aria-label="关闭"><span class="material-symbols-outlined">close</span></button>
+        <div class="demo-modal__intro">
+          <span class="demo-modal__eyebrow">BOOK A DEMO</span>
+          <h3 id="demo-title">预约方案演示</h3>
+          <p>留下需求与联系方式，我们会尽快与您对接。</p>
+        </div>
+        <form id="demo-request-form" class="demo-form">
+          <label>您的姓名<input name="name" required placeholder="怎么称呼您"/></label>
+          <label>联系方式<input name="contact" required placeholder="手机或邮箱"/></label>
+          <label>需求说明<textarea name="requirement" rows="4" required placeholder="空间类型、规模、关注场景等"></textarea></label>
+          <p class="demo-form__tip" id="demo-form-tip"></p>
+          <button type="submit" class="site-header__btn site-header__btn--primary w-full">提交预约</button>
+        </form>
+      </div>`
+    document.body.appendChild(modal)
+  }
+
   const form = document.getElementById('demo-request-form')
-  const openers = document.querySelectorAll('[data-demo-modal-open]')
-  if (!modal || !form || !openers.length) return
+  if (!modal || !form) return
 
   const tip = document.getElementById('demo-form-tip')
   const closeButtons = modal.querySelectorAll('[data-demo-modal-close]')
@@ -635,8 +671,12 @@ export function initDemoRequestModal() {
     document.body.classList.remove('demo-modal-open')
   }
 
-  openers.forEach((btn) => btn.addEventListener('click', open))
   closeButtons.forEach((btn) => btn.addEventListener('click', close))
+
+  document.addEventListener('click', (event) => {
+    const opener = event.target.closest('[data-demo-modal-open]')
+    if (opener) open()
+  })
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && modal.classList.contains('is-open')) close()
@@ -685,42 +725,56 @@ export function initDemoRequestModal() {
 // 根据页面 data-page 属性自动初始化
 const page = document.body.dataset.page
 
-initNavScroll('header, .site-header')
-initSiteNav()
-initMobileDrawer()
-initAgentChat()
-initDemoRequestModal()
+function bootstrap() {
+  // 首页 CMS 内容不阻塞首屏初始化（线上无 API 时最多会卡 2.5s）
+  if (page === 'home') {
+    void loadAndApplyHomeContent()
+  }
 
-if (page === 'agent-detail') {
-  initAgentDetail()
+  initNavScroll('header, .site-header')
+  initSiteNav()
+  initMobileDrawer()
+  initAppDownloadModal()
+  initAgentChat()
+  initDemoRequestModal()
+  initTokenLinks()
+
+  if (page === 'agent-detail') {
+    initAgentDetail()
+  }
+
+  if (page === 'order') {
+    initOrder()
+  }
+
+  initScrollReveal()
+  initBackToTop()
+
+  if (page === 'agents') {
+    initAgentsPage()
+    initAgentCardHover()
+  }
+
+  if (page === 'solutions') {
+    initSolutionsPage()
+  }
+
+  if (page === 'news') {
+    initNewsPage()
+  }
+
+  if (page === 'home') {
+    initButtonHover()
+    initHeroVideoSound()
+  }
+
+  if (page === 'hardware') {
+    initHardwareStore()
+  }
+
+  if (page === 'ai-token') {
+    initAiTokenStore()
+  }
 }
 
-if (page === 'order') {
-  initOrder()
-}
-
-initScrollReveal()
-initBackToTop()
-
-if (page === 'agents') {
-  initAgentCardHover()
-}
-
-if (page === 'home') {
-  initButtonHover()
-  initStatCounters()
-  initHeroVideoSound()
-  initHeroCaptionReveal()
-  initPainParticles()
-  initArchNetwork()
-  initTokenRuntime()
-  initSolutionsImax()
-}
-
-if (page === 'hardware') {
-  initHardwareStore()
-}
-
-if (page === 'ai-token') {
-  initAiTokenStore()
-}
+bootstrap()

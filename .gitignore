@@ -16,6 +16,8 @@ __pycache__/
 Thumbs.db
 *.log
 *.local
+server/data/
+server/uploads/
 
 credentials.json
 service-account.json

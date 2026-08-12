@@ -51,7 +51,7 @@ function renderReceptionDetail(a) {
           <nav class="agent-detail-breadcrumb">
             <a href="../">首页</a>
             <span class="material-symbols-outlined">chevron_right</span>
-            <a href="../agents/">场景化智能体</a>
+            <a href="../agents/">智能体</a>
             <span class="material-symbols-outlined">chevron_right</span>
             <span>${esc(a.name)}</span>
           </nav>
@@ -65,7 +65,7 @@ function renderReceptionDetail(a) {
                 ${r.heroTags.map((tag) => `<span>${esc(tag)}</span>`).join('')}
               </div>
               <div class="reception-hero__actions">
-                <button type="button" class="site-header__btn site-header__btn--primary px-8 py-3">预约方案演示</button>
+                <button type="button" class="site-header__btn site-header__btn--primary px-8 py-3" data-demo-modal-open>预约方案演示</button>
                 <a href="#reception-flow" class="site-header__btn site-header__btn--ghost px-8 py-3 inline-flex items-center justify-center">查看接待流程</a>
               </div>
             </div>
@@ -245,7 +245,7 @@ function renderReceptionDetail(a) {
             <p>我们可以基于现有门禁、停车、电梯、会议室和工单系统，快速梳理一套会务接待智能体方案。</p>
           </div>
           <div class="reception-cta__actions">
-            <button type="button" class="site-header__btn site-header__btn--primary bg-white text-primary border-white px-8 py-3">预约方案演示</button>
+            <button type="button" class="site-header__btn site-header__btn--primary bg-white text-primary border-white px-8 py-3" data-demo-modal-open>预约方案演示</button>
             <a href="../#solutions" class="site-header__btn site-header__btn--ghost bg-white/10 text-white border-white px-8 py-3 inline-flex items-center justify-center">查看智慧总部案例</a>
           </div>
         </div>
@@ -263,10 +263,6 @@ export function initAgentDetail() {
   document.title = `${a.name} | Atuo Future`
 
   mount.style.setProperty('--accent', a.accent)
-  if (id === 'reception') {
-    mount.innerHTML = renderReceptionDetail(a)
-    return
-  }
 
   mount.innerHTML = `
     <section class="agent-detail-hero">
@@ -275,7 +271,7 @@ export function initAgentDetail() {
         <nav class="agent-detail-breadcrumb">
           <a href="../">首页</a>
           <span class="material-symbols-outlined">chevron_right</span>
-          <a href="../agents/">场景化智能体</a>
+          <a href="../agents/">智能体</a>
           <span class="material-symbols-outlined">chevron_right</span>
           <span>${esc(a.name)}</span>
         </nav>
@@ -288,7 +284,7 @@ export function initAgentDetail() {
             <h1 class="agent-detail-title">${esc(a.name)}</h1>
             <p class="agent-detail-tagline">${esc(a.tagline)}</p>
             <div class="agent-detail-hero__actions">
-              <button type="button" class="site-header__btn site-header__btn--primary px-8 py-3">预约方案演示</button>
+              <button type="button" class="site-header__btn site-header__btn--primary px-8 py-3" data-demo-modal-open>预约方案演示</button>
               <a href="../agents/#agent-matrix" class="site-header__btn site-header__btn--ghost px-8 py-3 inline-flex items-center justify-center">返回矩阵</a>
             </div>
           </div>
@@ -394,8 +390,8 @@ export function initAgentDetail() {
           <p>预约专属方案演示，了解该智能体如何与您的业务场景深度融合。</p>
         </div>
         <div class="agent-detail-cta__actions">
-          <button type="button" class="site-header__btn site-header__btn--primary bg-white text-primary border-white px-8 py-3">预约方案演示</button>
-          <a href="../ai-token/" class="site-header__btn site-header__btn--ghost bg-white/10 text-white border-white px-8 py-3 inline-flex items-center justify-center">了解 AIToken</a>
+          <button type="button" class="site-header__btn site-header__btn--primary bg-white text-primary border-white px-8 py-3" data-demo-modal-open>预约方案演示</button>
+          <a href="https://token.atuofuture.com" class="site-header__btn site-header__btn--ghost bg-white/10 text-white border-white px-8 py-3 inline-flex items-center justify-center" target="_blank" rel="noopener noreferrer" data-token-link>了解 AI Token</a>
         </div>
       </div>
     </section>
