@@ -1,0 +1,15 @@
+---
+description: 本仓库改动完成后自动按 GitHub 推送标准提交并推送
+alwaysApply: true
+---
+
+# 自动推送
+
+对本仓库完成功能/页面改动后，**无需用户再确认**，直接：
+
+1. 按 `f:\应用开发\github项目\GITHUB平台推送标准说明文档.md` 执行检查、提交、推送
+2. 远程使用 `github`（`https://github.com/bigBro8888/atuofuture-homepage.git`），分支 `main`
+3. 不改全局 git config；作者用临时环境变量 `bigBro8888 <bigBro8888@users.noreply.github.com>`
+4. 推送遇代理/证书问题时，用单次 `-c http.proxy=` / `-c https.proxy=` + `http.sslCAInfo` + `gh auth token` 推送
+5. 不要提交 `.env`、密钥、以及未要求纳入的设计稿目录（如 `app download/`）
+6. 推送完成后简短告知 commit 与仓库链接
