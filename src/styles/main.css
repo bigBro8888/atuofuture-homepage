@@ -9993,7 +9993,7 @@ body.demo-modal-open {
 .sx-biz-card span { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.7); }
 
 .sx-page-hero {
-  padding: 120px 0 64px;
+  padding: 48px 0 48px;
   background: linear-gradient(180deg, #f3f7fc 0%, #fff 100%);
 }
 .sx-page-hero h1 {
