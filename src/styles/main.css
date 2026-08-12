@@ -11123,7 +11123,7 @@ body.demo-modal-open {
 }
 @media (max-width: 720px) {
   .sm-hero { min-height: 560px; height: auto; }
-  .sm-hero__content { padding: 120px 0 100px; }
+  .sm-hero__content { padding: 96px 0 132px; align-items: flex-start; }
   .sm-mini-banner__inner {
     grid-template-columns: 1fr;
     justify-items: start;
