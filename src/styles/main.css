@@ -10382,8 +10382,8 @@ body.demo-modal-open {
   opacity: 0.45;
   transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
-.sm-hero__nav--prev { left: max(16px, calc((100vw - 1280px) / 2 + 8px)); }
-.sm-hero__nav--next { right: max(16px, calc((100vw - 1280px) / 2 + 8px)); }
+.sm-hero__nav--prev { left: 4px; }
+.sm-hero__nav--next { right: 4px; }
 .sm-hero__nav:hover,
 .sm-hero:hover .sm-hero__nav {
   opacity: 1;
