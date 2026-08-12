@@ -93,7 +93,7 @@ function renderMobileNav(activeId, root) {
 export function renderSiteNav(activeId) {
   const root = getRootPrefix()
   return `
-    <header class="site-header w-full sticky top-0 z-50" id="site-header">
+    <header class="site-header w-full fixed top-0 left-0 right-0 z-50" id="site-header">
       <div class="site-header__inner max-w-max-width mx-auto px-margin-desktop">
         <a href="${root}" class="site-header__logo" aria-label="安托未来首页">
           <img src="${root}assets/artink-logo-light.png" alt="安托未来" class="site-header__logo-img" />

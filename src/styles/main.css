@@ -35,6 +35,7 @@
   body {
     min-height: max(884px, 100dvh);
     overflow-x: hidden;
+    padding-top: 5rem;
   }
 
   /* 导航栏高度固定，滚动时不收缩 */
@@ -150,6 +151,12 @@
   }
 
   .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 50;
     background: #000028;
     backdrop-filter: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -9261,6 +9268,10 @@ body.demo-modal-open {
   .site-header__inner {
     height: 64px;
     gap: 12px;
+  }
+
+  body {
+    padding-top: 64px;
   }
 
   .site-header__logo-img {
