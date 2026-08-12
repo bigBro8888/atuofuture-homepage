@@ -89,19 +89,57 @@ function initSolutionsCarousel() {
   if (!root) return
 
   const track = root.querySelector('[data-sm-sol-track]')
+  const dotsWrap = root.querySelector('[data-sm-sol-dots]')
   const prev = root.querySelector('[data-sm-sol-prev]')
   const next = root.querySelector('[data-sm-sol-next]')
-  if (!track) return
+  const cards = [...root.querySelectorAll('.sm-sol-card')]
+  if (!track || !dotsWrap || !cards.length) return
 
-  const step = () => {
-    const card = track.querySelector('.sm-sol-card')
-    return card ? card.getBoundingClientRect().width + 24 : 360
+  let page = 0
+
+  function perPage() {
+    if (window.innerWidth <= 720) return 1
+    if (window.innerWidth <= 1100) return 2
+    return 3
   }
 
-  prev?.addEventListener('click', () => {
-    track.scrollBy({ left: -step(), behavior: 'smooth' })
+  function pageCount() {
+    return Math.max(1, Math.ceil(cards.length / perPage()))
+  }
+
+  function renderDots() {
+    const count = pageCount()
+    dotsWrap.innerHTML = ''
+    for (let i = 0; i < count; i += 1) {
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'sm-sol-pager__dot'
+      btn.setAttribute('aria-label', `第 ${i + 1} 组`)
+      btn.addEventListener('click', () => go(i))
+      dotsWrap.appendChild(btn)
+    }
+  }
+
+  function go(i) {
+    const count = pageCount()
+    page = Math.max(0, Math.min(i, count - 1))
+    const first = cards[page * perPage()]
+    const offset = first ? first.offsetLeft : 0
+    track.style.transform = `translateX(-${offset}px)`
+    dotsWrap.querySelectorAll('.sm-sol-pager__dot').forEach((dot, n) => {
+      dot.classList.toggle('is-active', n === page)
+    })
+    if (prev) prev.disabled = page === 0
+    if (next) next.disabled = page >= count - 1
+  }
+
+  prev?.addEventListener('click', () => go(page - 1))
+  next?.addEventListener('click', () => go(page + 1))
+  window.addEventListener('resize', () => {
+    renderDots()
+    go(Math.min(page, pageCount() - 1))
   })
-  next?.addEventListener('click', () => {
-    track.scrollBy({ left: step(), behavior: 'smooth' })
-  })
+
+  renderDots()
+  go(0)
 }
