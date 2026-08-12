@@ -217,14 +217,14 @@
   .site-mega {
     position: absolute;
     left: 50%;
-    top: calc(100% + 10px);
+    top: 100%;
     z-index: 60;
     width: min(720px, 72vw);
-    padding-top: 8px;
+    padding-top: 12px;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translate(-50%, 6px);
+    transform: translate(-50%, 4px);
     transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
   }
 
@@ -233,6 +233,16 @@
     visibility: visible;
     pointer-events: auto;
     transform: translate(-50%, 0);
+  }
+
+  /* 透明桥接区，避免导航和菜单之间空隙导致 hover 中断 */
+  .site-mega::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 12px;
   }
 
   .site-mega__inner {

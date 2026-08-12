@@ -138,7 +138,10 @@ function initMegaMenu(header) {
   const items = header.querySelectorAll('[data-nav-item]')
   items.forEach((item) => {
     const trigger = item.querySelector('[data-nav-trigger]')
+    let closeTimer = 0
+
     const open = () => {
+      window.clearTimeout(closeTimer)
       items.forEach((other) => {
         if (other !== item) {
           other.classList.remove('is-open')
@@ -149,8 +152,11 @@ function initMegaMenu(header) {
       trigger?.setAttribute('aria-expanded', 'true')
     }
     const close = () => {
-      item.classList.remove('is-open')
-      trigger?.setAttribute('aria-expanded', 'false')
+      window.clearTimeout(closeTimer)
+      closeTimer = window.setTimeout(() => {
+        item.classList.remove('is-open')
+        trigger?.setAttribute('aria-expanded', 'false')
+      }, 120)
     }
     item.addEventListener('mouseenter', open)
     item.addEventListener('mouseleave', close)
