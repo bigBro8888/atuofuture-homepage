@@ -10,6 +10,7 @@ import { initNewsPage } from './news-page.js'
 import { initAiTokenStore } from './ai-token-store.js'
 import { initOrder } from './order.js'
 import { loadAndApplyHomeContent } from './home-content.js'
+import { initSiemensHome } from './home-siemens.js'
 
 function initTokenLinks() {
   document.querySelectorAll('[data-token-link]').forEach((el) => {
@@ -764,6 +765,7 @@ function bootstrap() {
   }
 
   if (page === 'home') {
+    initSiemensHome()
     initButtonHover()
     initHeroVideoSound()
   }

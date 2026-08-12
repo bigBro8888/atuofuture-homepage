@@ -9,117 +9,342 @@
 <body class="bg-background text-on-surface font-body-md" data-page="home" data-nav-depth="0">
 <div id="site-header"></div>
 
-<section class="hero-ai sx-hero relative min-h-[680px] h-[calc(100vh-80px)] max-h-[820px] w-full overflow-hidden flex items-end pb-16">
-<div class="absolute inset-0 z-0">
-<div class="absolute inset-0 bg-cover bg-center scale-[1.02]" aria-hidden="true" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAh5tZCAPkDmFWuhQj7knIBijOzEhYbOPGf8iahSKseYqkUAJ3502Wwqak8Y2-RbTEQAWEn3lkucxr9xywKh-U9lQF0PHNvr1oyz99fgUehk_pxN8uknwW0VhtZ0ON3hGfwEJ_c-OiHcEkVuFsoJ4i7OkR8kPw_1G6Q9HYqMmMsiZBSbIkGwSM9a-716aUOx6LSdNTcqY0DhP7WcwWErFqTzCDwVu8mNwlwewoLoTotnx9mxw1kPUKFRA')"></div>
-<video class="hero-video-bg" data-hero-video autoplay muted loop playsinline preload="metadata" poster="https://lh3.googleusercontent.com/aida-public/AB6AXuAh5tZCAPkDmFWuhQj7knIBijOzEhYbOPGf8iahSKseYqkUAJ3502Wwqak8Y2-RbTEQAWEn3lkucxr9xywKh-U9lQF0PHNvr1oyz99fgUehk_pxN8uknwW0VhtZ0ON3hGfwEJ_c-OiHcEkVuFsoJ4i7OkR8kPw_1G6Q9HYqMmMsiZBSbIkGwSM9a-716aUOx6LSdNTcqY0DhP7WcwWErFqTzCDwVu8mNwlwewoLoTotnx9mxw1kPUKFRA">
-<source src="https://atuofuture-assets-1318285546.cos.ap-guangzhou.myqcloud.com/jimeng-2026-07-06-6237-%E7%BD%91%E7%AB%99%E8%83%8C%E6%99%AF%E8%A7%86%E9%A2%91%E8%84%9A%E6%9C%AC%EF%BC%9A%20%E3%80%8A%E7%A9%BA%E9%97%B4%E9%86%92%E6%9D%A5%E4%B9%8B%E5%89%8D%E3%80%8B%20%E6%97%B6%E9%95%BF%EF%BC%9A15%E7%A7%92%20%E9%A3%8E%E6%A0%BC%EF%BC%9A%E7%94%B5%E5%BD%B1%E6%84%9F%E3%80%81%E5%85%8B%E5%88%B6%E3%80%81%E9%AB%98%E7%BA%A7%E3%80%81%E6%9C%AA....mp4" type="video/mp4"/>
-</video>
-<div class="absolute inset-0 bg-gradient-to-r from-[#0b1c3a]/72 via-[#0b1c3a]/35 to-transparent"></div>
-<div class="absolute inset-0 bg-gradient-to-t from-[#0b1c3a]/55 via-transparent to-transparent"></div>
-</div>
-<button type="button" class="hero-sound-toggle" data-hero-sound-toggle aria-label="关闭视频声音" aria-pressed="true" title="关闭视频声音">
-<span class="material-symbols-outlined" aria-hidden="true">volume_up</span>
-</button>
-<div class="relative z-10 w-full">
-<div class="max-w-max-width mx-auto px-margin-desktop sx-hero__copy">
-<p class="sx-hero__eyebrow">安托未来 · AI 原生空间智能</p>
-<h1>开放接口 · 智能体编排 · 软硬一体<br/>让每一座空间可感知、可调度、可运营</h1>
-<p class="sx-hero__sub">面向楼宇、园区、商业与酒店公寓，交付场景智能体、智能硬件与开放 API，支持自闭环运行，也可接入您现有系统。</p>
-<div class="sx-hero__actions">
-<button type="button" class="site-header__btn site-header__btn--primary" data-demo-modal-open>预约方案演示</button>
-<a href="#architecture" class="site-header__btn site-header__btn--ghost sx-btn-light">查看系统架构</a>
-<a href="https://token.atuofuture.com" class="sx-text-link" target="_blank" rel="noopener noreferrer" data-token-link>了解 AI Token →</a>
+<!-- 1. Hero 轮播（西门子式） -->
+<section class="sm-hero" data-sm-hero aria-roledescription="轮播" aria-label="首页主视觉">
+<div class="sm-hero__track" data-sm-hero-track>
+<article class="sm-hero__slide is-active" data-sm-hero-slide>
+<div class="sm-hero__media" style="background-image:url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=2400&q=80')"></div>
+<div class="sm-hero__gradient"></div>
+<div class="sm-hero__content max-w-max-width mx-auto px-margin-desktop">
+<div class="sm-hero__copy">
+<h1>当空间被智能体编排，运营能释放多大潜能？</h1>
+<p>面向楼宇与园区的 AI 原生空间智能：感知、网关中控、七大场景智能体与开放接口一体交付，可自闭环，也可接入您现有系统。</p>
+<div class="sm-hero__actions">
+<button type="button" class="sm-btn sm-btn--primary" data-demo-modal-open>预约方案演示</button>
+<a href="#upgrade" class="sm-btn sm-btn--outline">查看能力矩阵</a>
 </div>
 </div>
+</div>
+</article>
+<article class="sm-hero__slide" data-sm-hero-slide>
+<div class="sm-hero__media" style="background-image:url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=2400&q=80')"></div>
+<div class="sm-hero__gradient"></div>
+<div class="sm-hero__content max-w-max-width mx-auto px-margin-desktop">
+<div class="sm-hero__copy">
+<strong class="sm-kicker">SYSTEM ARCHITECTURE</strong>
+<h2>开放接口 · 智能体架构 · 软硬一体</h2>
+<p>感知层到边缘网关、中控屏，再到智能体编排与第三方协议桥接，一屏看清我们能做什么。</p>
+<div class="sm-hero__actions">
+<a href="#upgrade" class="sm-btn sm-btn--primary">了解系统架构</a>
+<a href="hardware/" class="sm-btn sm-btn--outline">查看智能硬件</a>
+</div>
+</div>
+</div>
+</article>
+<article class="sm-hero__slide" data-sm-hero-slide>
+<div class="sm-hero__media" style="background-image:url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=2400&q=80')"></div>
+<div class="sm-hero__gradient"></div>
+<div class="sm-hero__content max-w-max-width mx-auto px-margin-desktop">
+<div class="sm-hero__copy">
+<strong class="sm-kicker">CASE STUDY</strong>
+<h2>会务接待从邀约到离场自动编排</h2>
+<p>访客、通行、会议中控与空间准备联动，让每一次来访都可执行、可复盘。</p>
+<div class="sm-hero__actions">
+<a href="solutions/?id=meeting" class="sm-btn sm-btn--primary">探索会务方案</a>
+<a href="agent-detail/?id=visitor" class="sm-btn sm-btn--outline">访客智能体</a>
+</div>
+</div>
+</div>
+</article>
+<article class="sm-hero__slide" data-sm-hero-slide>
+<div class="sm-hero__media" style="background-image:url('https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=2400&q=80')"></div>
+<div class="sm-hero__gradient"></div>
+<div class="sm-hero__content max-w-max-width mx-auto px-margin-desktop">
+<div class="sm-hero__copy">
+<strong class="sm-kicker">ENERGY</strong>
+<h2>毫米波有无人感知，把空耗说清楚</h2>
+<p>按区域与功能分项计量，结合占用感知调节照明与空调，支撑可持续运营。</p>
+<div class="sm-hero__actions">
+<a href="solutions/?id=energy" class="sm-btn sm-btn--primary">能源能耗方案</a>
+<a href="agent-detail/?id=energy" class="sm-btn sm-btn--outline">能耗智能体</a>
+</div>
+</div>
+</div>
+</article>
+</div>
+<div class="sm-hero__controls max-w-max-width mx-auto px-margin-desktop">
+<button type="button" class="sm-hero__nav" data-sm-hero-prev aria-label="上一页"><span class="material-symbols-outlined">chevron_left</span></button>
+<div class="sm-hero__dots" data-sm-hero-dots></div>
+<button type="button" class="sm-hero__nav" data-sm-hero-next aria-label="下一页"><span class="material-symbols-outlined">chevron_right</span></button>
 </div>
 </section>
 
-<section id="architecture" class="sx-arch scroll-mt-24">
+<!-- 2. 迷你 Banner -->
+<section class="sm-mini-banner">
+<div class="max-w-max-width mx-auto px-margin-desktop sm-mini-banner__inner">
+<div class="sm-mini-banner__media" style="background-image:url('https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=400&q=70')"></div>
+<div class="sm-mini-banner__text">
+<h3>七大场景智能体现已开放方案咨询</h3>
+<p>空间、能耗、会议、展厅、访客、酒店公寓、资产——按场景组合交付。</p>
+</div>
+<a href="agents/" class="sm-btn sm-btn--outline sm-btn--dark">查看智能体</a>
+</div>
+</section>
+
+<!-- 3. Tab + Bento（升级现实） -->
+<section id="upgrade" class="sm-tabs-section scroll-mt-24">
 <div class="max-w-max-width mx-auto px-margin-desktop">
-<div class="sx-section-head">
-<span>SYSTEM ARCHITECTURE</span>
-<h2>一屏看清我们能做什么</h2>
-<p>从传感与计量，到网关中控、智能体编排与开放接口，安托未来提供可自闭环、也可对外开放的空间智能架构。</p>
+<div class="sm-section-intro">
+<strong class="sm-kicker sm-kicker--blue">能力</strong>
+<h2>升级空间</h2>
+<p>应对空间运营挑战，需要可感知、可编排、可开放的技术升级。我们用智能体、硬件与接口，把数字蓝图变成可落地的运营能力。</p>
 </div>
-<div class="sx-arch__stage">
-<div class="sx-arch__layers" aria-label="系统分层架构">
-<article class="sx-layer"><small>01 感知层</small><strong>传感与计量</strong><p>毫米波、PIR、温湿度、光照、定位标签、电表水表</p></article>
-<span class="sx-layer__arrow material-symbols-outlined">south</span>
-<article class="sx-layer"><small>02 边缘层</small><strong>网关 / 中控屏</strong><p>无线网关、多功能网关、蓝牙+IoT 中控，直连自有设备</p></article>
-<span class="sx-layer__arrow material-symbols-outlined">south</span>
-<article class="sx-layer sx-layer--core"><small>03 智能体层</small><strong>AI 智能体编排</strong><p>空间、能耗、会议、展厅、访客、酒店公寓、资产</p></article>
-<span class="sx-layer__arrow material-symbols-outlined">south</span>
-<article class="sx-layer"><small>04 开放与闭环</small><strong>开放 API · 自闭环业务</strong><p>分层接口对外开放；也可独立形成业务自闭环</p></article>
-<span class="sx-layer__arrow material-symbols-outlined">south</span>
-<article class="sx-layer"><small>05 场景层</small><strong>行业落地</strong><p>楼宇、园区、商业、会务、能源、安防资产</p></article>
+<div class="sm-tabs" data-sm-tabs>
+<div class="sm-tabs__nav" role="tablist" aria-orientation="vertical">
+<button type="button" class="sm-tabs__tab is-active" role="tab" aria-selected="true" data-sm-tab="agents">场景智能体</button>
+<button type="button" class="sm-tabs__tab" role="tab" aria-selected="false" data-sm-tab="hardware">智能硬件</button>
+<button type="button" class="sm-tabs__tab" role="tab" aria-selected="false" data-sm-tab="open">开放接口</button>
+<button type="button" class="sm-tabs__tab" role="tab" aria-selected="false" data-sm-tab="energy">能源能耗</button>
+<button type="button" class="sm-tabs__tab" role="tab" aria-selected="false" data-sm-tab="industry">行业方案</button>
+<button type="button" class="sm-tabs__tab" role="tab" aria-selected="false" data-sm-tab="token">AI Token</button>
 </div>
-<aside class="sx-arch__advantages">
-<h3>五大优势</h3>
-<ol>
-<li><strong>接口开放</strong><span>不同层级提供开放接口，便于与现有系统集成</span></li>
-<li><strong>AI 智能体架构</strong><span>以场景智能体编排任务流，而不是孤立功能点</span></li>
-<li><strong>大规模无线接入</strong><span>面向大规模无线终端与传感设备的工程经验</span></li>
-<li><strong>开放 + 自闭环</strong><span>既能被调用，也能独立形成可运行业务闭环</span></li>
-<li><strong>硬件优势</strong><span>自有终端、网关与中控一体，并可桥接第三方协议</span></li>
-</ol>
-<div class="sx-hw-mini" aria-label="硬件架构示意">
-<div class="sx-hw-mini__node">终端设备</div>
-<span class="material-symbols-outlined">arrow_forward</span>
-<div class="sx-hw-mini__node">网关 / 中控</div>
-<span class="material-symbols-outlined">arrow_forward</span>
-<div class="sx-hw-mini__node">智能体 / 服务器</div>
-<span class="material-symbols-outlined">arrow_forward</span>
-<div class="sx-hw-mini__node">KNX / BUS / 第三方</div>
+<div class="sm-tabs__panels">
+<div class="sm-tabs__panel is-active" data-sm-panel="agents" role="tabpanel">
+<div class="sm-bento">
+<a class="sm-bento__card sm-bento__card--large" href="agents/">
+<div class="sm-bento__img" style="background-image:url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=70')"></div>
+<strong class="sm-kicker">导读</strong>
+<h3>七大智能体矩阵</h3>
+<p>不是单一功能点，而是能感知状态、编排设备与流程并持续优化的场景执行系统。</p>
+<span class="sm-text-link">查看全部智能体 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--dark" href="agent-detail/?id=meeting">
+<strong class="sm-kicker">会议运维</strong>
+<h3>预约、签到、中控与云视频</h3>
+<p>面向会议室运维的一站式编排，减少人工协调。</p>
+<span class="sm-text-link">了解详情 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--sand" href="agent-detail/?id=space">
+<strong class="sm-kicker">空间控制</strong>
+<h3>空调照明 · 工单 · 信息发布</h3>
+<p>统一调度空间设备与运营流程。</p>
+<span class="sm-text-link">了解详情 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
 </div>
-</aside>
-</div>
-</div>
-</section>
-
-<section class="sx-guide">
-<div class="max-w-max-width mx-auto px-margin-desktop sx-guide__inner">
+<a class="sm-banner-box" href="agents/">
+<div class="sm-banner-box__img" style="background-image:url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=640&q=70')"></div>
 <div>
-<span>WHAT IS AN AGENT</span>
-<h2>智能体是什么？</h2>
-<p>智能体不是单一 App 或大屏功能，而是能感知空间状态、理解业务规则、编排设备与流程、并持续优化的场景执行系统。安托未来围绕高频空间场景，交付可配置、可联动、可运营的专业智能体。</p>
+<h3>用场景智能体解锁更智能的空间运营</h3>
 </div>
-<a href="agents/" class="site-header__btn site-header__btn--primary">查看 7 大智能体</a>
+<span class="sm-btn sm-btn--outline">了解更多</span>
+</a>
+</div>
+<div class="sm-tabs__panel" data-sm-panel="hardware" role="tabpanel" hidden>
+<div class="sm-bento">
+<a class="sm-bento__card sm-bento__card--large" href="hardware/">
+<div class="sm-bento__img" style="background-image:url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=70')"></div>
+<strong class="sm-kicker">硬件体系</strong>
+<h3>端 · 边 · 云 · 第三方协议</h3>
+<p>终端、传感计量、网关中控与音视频分组交付，中控可直连蓝牙并桥接 KNX/BUS。</p>
+<span class="sm-text-link">查看硬件架构 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--dark" href="hardware/#gateway">
+<strong class="sm-kicker">网关中控</strong>
+<h3>无线网关 · 多功能网关 · 中控屏</h3>
+<p>边缘汇聚与本地联动能力。</p>
+<span class="sm-text-link">了解更多 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--sand" href="hardware/#sensor">
+<strong class="sm-kicker">传感计量</strong>
+<h3>毫米波 · 温湿度 · 水电表</h3>
+<p>支撑智能体决策的感知底座。</p>
+<span class="sm-text-link">了解更多 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+</div>
+</div>
+<div class="sm-tabs__panel" data-sm-panel="open" role="tabpanel" hidden>
+<div class="sm-bento">
+<a class="sm-bento__card sm-bento__card--large" href="#upgrade">
+<div class="sm-bento__img" style="background-image:url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=900&q=70')"></div>
+<strong class="sm-kicker">开放能力</strong>
+<h3>分层接口开放，也可自闭环</h3>
+<p>不同层级提供开放 API，便于集成；也可独立形成可运行业务闭环。</p>
+<span class="sm-text-link">预约技术对接 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--dark" href="hardware/#gateway">
+<strong class="sm-kicker">协议接入</strong>
+<h3>KNX / BUS / 第三方系统</h3>
+<p>经服务器对接既有楼控与业务系统。</p>
+<span class="sm-text-link">查看硬件 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--sand" data-demo-modal-open href="#">
+<strong class="sm-kicker">五大优势</strong>
+<h3>接口开放 · 无线接入经验 · 软硬一体</h3>
+<p>预约演示，获取完整架构说明。</p>
+<span class="sm-text-link">预约演示 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+</div>
+</div>
+<div class="sm-tabs__panel" data-sm-panel="energy" role="tabpanel" hidden>
+<div class="sm-bento">
+<a class="sm-bento__card sm-bento__card--large" href="solutions/?id=energy">
+<div class="sm-bento__img" style="background-image:url('https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=900&q=70')"></div>
+<strong class="sm-kicker">方案实践</strong>
+<h3>分项计量 + 有无人节能</h3>
+<p>把照明与空调的用时、能耗用在真正有人的时刻。</p>
+<span class="sm-text-link">查看方案 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--dark" href="agent-detail/?id=energy">
+<strong class="sm-kicker">智能体</strong>
+<h3>能源能耗智能体</h3>
+<p>区域计量、用时分析与异常告警。</p>
+<span class="sm-text-link">了解详情 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--sand" href="hardware/#sensor">
+<strong class="sm-kicker">硬件</strong>
+<h3>毫米波人数 / 人存传感</h3>
+<p>支撑节能策略的占用感知。</p>
+<span class="sm-text-link">查看传感 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+</div>
+</div>
+<div class="sm-tabs__panel" data-sm-panel="industry" role="tabpanel" hidden>
+<div class="sm-bento">
+<a class="sm-bento__card sm-bento__card--large" href="solutions/">
+<div class="sm-bento__img" style="background-image:url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=900&q=70')"></div>
+<strong class="sm-kicker">行业</strong>
+<h3>楼宇 · 园区 · 商业 · 会务 · 能源 · 安防</h3>
+<p>用图文说清我们在各行业能做什么，以及联动哪些智能体与硬件。</p>
+<span class="sm-text-link">全部方案 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--dark" href="solutions/?id=building">
+<strong class="sm-kicker">智慧楼宇</strong>
+<h3>会议、访客、能耗与安防一体</h3>
+<p>可感知、可联动、可持续优化。</p>
+<span class="sm-text-link">了解方案 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--sand" href="solutions/?id=campus">
+<strong class="sm-kicker">园区运营</strong>
+<h3>多楼栋联动与运维调度</h3>
+<p>统一调度、能耗看板与安防联控。</p>
+<span class="sm-text-link">了解方案 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+</div>
+</div>
+<div class="sm-tabs__panel" data-sm-panel="token" role="tabpanel" hidden>
+<div class="sm-bento">
+<a class="sm-bento__card sm-bento__card--large" href="https://token.atuofuture.com" target="_blank" rel="noopener noreferrer" data-token-link>
+<div class="sm-bento__img" style="background-image:url('https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=900&q=70')"></div>
+<strong class="sm-kicker">独立站点</strong>
+<h3>AI Token：模型与工具能力计量交付</h3>
+<p>Token 业务不挂一级导航，通过独立站获取可计量的 AI 能力服务。</p>
+<span class="sm-text-link">访问 Token 站点 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--dark" href="https://token.atuofuture.com" target="_blank" rel="noopener noreferrer" data-token-link>
+<strong class="sm-kicker">能力</strong>
+<h3>支撑智能体持续调用</h3>
+<p>与空间智能体编排协同。</p>
+<span class="sm-text-link">了解更多 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+<a class="sm-bento__card sm-bento__card--sand" data-demo-modal-open href="#">
+<strong class="sm-kicker">咨询</strong>
+<h3>需要空间方案 + Token？</h3>
+<p>预约顾问，统一梳理交付路径。</p>
+<span class="sm-text-link">预约演示 <span class="material-symbols-outlined">arrow_forward</span></span>
+</a>
+</div>
+</div>
+</div>
+</div>
 </div>
 </section>
 
-<section class="sx-solutions">
+<!-- 4. 解决方案横滑 -->
+<section class="sm-sol-carousel-section">
 <div class="max-w-max-width mx-auto px-margin-desktop">
-<div class="sx-section-head sx-section-head--row">
-<div>
-<span>INDUSTRY SOLUTIONS</span>
-<h2>行业解决方案</h2>
-<p>用图文说清我们在各行业能做什么，快速匹配您的场景。</p>
+<div class="sm-section-intro">
+<strong class="sm-kicker sm-kicker--blue">行业方案</strong>
+<h2>探索产品与解决方案</h2>
+<p>覆盖楼宇、园区、商业、会务、能源与安防资产，按场景组合智能体与硬件交付。</p>
+<a href="solutions/" class="sm-btn sm-btn--outline sm-btn--dark">查看全部方案</a>
 </div>
-<a href="solutions/" class="sx-text-link">查看全部 →</a>
 </div>
-<div class="sx-sol-grid" data-home-solutions>
-<!-- filled optionally; static below for reliability -->
-<article class="sx-sol-card"><div class="sx-sol-card__media" style="background-image:url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=70')"></div><div class="sx-sol-card__body"><h3>智慧楼宇</h3><p>会议、访客、能耗与安防一体联动</p><a href="solutions/?id=building">了解方案</a></div></article>
-<article class="sx-sol-card"><div class="sx-sol-card__media" style="background-image:url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=900&q=70')"></div><div class="sx-sol-card__body"><h3>园区运营</h3><p>多楼栋运维调度与能耗安全管理</p><a href="solutions/?id=campus">了解方案</a></div></article>
-<article class="sx-sol-card"><div class="sx-sol-card__media" style="background-image:url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=900&q=70')"></div><div class="sx-sol-card__body"><h3>会务接待</h3><p>邀约到离场的接待流程自动编排</p><a href="solutions/?id=meeting">了解方案</a></div></article>
-<article class="sx-sol-card"><div class="sx-sol-card__media" style="background-image:url('https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=900&q=70')"></div><div class="sx-sol-card__body"><h3>能源能耗</h3><p>分项计量 + 有无人节能策略</p><a href="solutions/?id=energy">了解方案</a></div></article>
+<div class="sm-sol-carousel" data-sm-sol-carousel>
+<button type="button" class="sm-carousel-nav sm-carousel-nav--prev" data-sm-sol-prev aria-label="上一组"><span class="material-symbols-outlined">chevron_left</span></button>
+<div class="sm-sol-carousel__viewport">
+<div class="sm-sol-carousel__track" data-sm-sol-track>
+<article class="sm-sol-card"><div class="sm-sol-card__media" style="background-image:url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=70')"></div><div class="sm-sol-card__body"><h3>智慧楼宇</h3><p>会议、访客、空间、能耗与安防一体联动，打造可运营的 AI 原生楼宇。</p><a href="solutions/?id=building">了解更多信息 <span class="material-symbols-outlined">arrow_forward</span></a></div></article>
+<article class="sm-sol-card"><div class="sm-sol-card__media" style="background-image:url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=800&q=70')"></div><div class="sm-sol-card__body"><h3>园区运营</h3><p>多楼栋统一调度、运维工单协同与园区能耗安全管理。</p><a href="solutions/?id=campus">了解更多信息 <span class="material-symbols-outlined">arrow_forward</span></a></div></article>
+<article class="sm-sol-card"><div class="sm-sol-card__media" style="background-image:url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=70')"></div><div class="sm-sol-card__body"><h3>商业资产</h3><p>招商带看、空间可视化与资产精细化运营。</p><a href="solutions/?id=commercial">了解更多信息 <span class="material-symbols-outlined">arrow_forward</span></a></div></article>
+<article class="sm-sol-card"><div class="sm-sol-card__media" style="background-image:url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=70')"></div><div class="sm-sol-card__body"><h3>会务接待</h3><p>从邀约、到访、通行到会议联动与离场自动编排。</p><a href="solutions/?id=meeting">了解更多信息 <span class="material-symbols-outlined">arrow_forward</span></a></div></article>
+<article class="sm-sol-card"><div class="sm-sol-card__media" style="background-image:url('https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=800&q=70')"></div><div class="sm-sol-card__body"><h3>能源能耗</h3><p>分项计量与毫米波有无人节能策略。</p><a href="solutions/?id=energy">了解更多信息 <span class="material-symbols-outlined">arrow_forward</span></a></div></article>
+<article class="sm-sol-card"><div class="sm-sol-card__media" style="background-image:url('https://images.unsplash.com/photo-1557597774-9c82bde5d0f9?auto=format&fit=crop&w=800&q=70')"></div><div class="sm-sol-card__body"><h3>安防资产</h3><p>盘点、预警与全生命周期管理。</p><a href="solutions/?id=security">了解更多信息 <span class="material-symbols-outlined">arrow_forward</span></a></div></article>
 </div>
+</div>
+<button type="button" class="sm-carousel-nav sm-carousel-nav--next" data-sm-sol-next aria-label="下一组"><span class="material-symbols-outlined">chevron_right</span></button>
 </div>
 </section>
 
-<section class="sx-business-band">
+<!-- 5. 新闻三列 -->
+<section class="sm-news-section">
 <div class="max-w-max-width mx-auto px-margin-desktop">
-<div class="sx-business-band__head">
-<span>WHAT WE DO</span>
-<h2>我们做什么</h2>
-<p>安托未来帮助企业把物理空间升级为可感知、可调度、可执行的智能运营系统——覆盖行业方案、场景智能体、智能硬件，并以 AI Token 能力服务支撑持续调用。</p>
+<div class="sm-section-intro">
+<strong class="sm-kicker sm-kicker--blue">新闻</strong>
+<h2>新闻动态</h2>
+<p>公司动态、产品更新与方案实践，带您了解正积极塑造更智能空间运营的技术进展。</p>
 </div>
-<div class="sx-business-band__grid">
-<a class="sx-biz-card" href="solutions/"><strong>行业解决方案</strong><span>楼宇 / 园区 / 商业 / 会务 / 能源 / 安防</span></a>
-<a class="sx-biz-card" href="agents/"><strong>场景智能体</strong><span>空间、能耗、会议、展厅、访客、酒店、资产</span></a>
-<a class="sx-biz-card" href="hardware/"><strong>智能硬件</strong><span>终端、传感计量、网关中控、音视频</span></a>
-<a class="sx-biz-card" href="https://token.atuofuture.com" target="_blank" rel="noopener noreferrer" data-token-link><strong>AI Token 服务</strong><span>独立站点 · 模型与工具能力计量交付</span></a>
+<div class="sm-news-grid">
+<a class="sm-news-card" href="news/">
+<div class="sm-news-card__media" style="background-image:url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=70')"></div>
+<strong class="sm-kicker">公司动态</strong>
+<h3>安托未来发布 AI 原生空间智能架构</h3>
+<p>以智能体编排为核心，打通传感、网关、中控与开放接口。</p>
+</a>
+<a class="sm-news-card" href="news/">
+<div class="sm-news-card__media" style="background-image:url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=70')"></div>
+<strong class="sm-kicker">产品更新</strong>
+<h3>会议运维智能体支持云视频与中控联动</h3>
+<p>预约、签到、中控与云视频形成运维闭环。</p>
+</a>
+<a class="sm-news-card" href="news/">
+<div class="sm-news-card__media" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=70')"></div>
+<strong class="sm-kicker">方案实践</strong>
+<h3>毫米波有无人感知助力楼宇节能落地</h3>
+<p>按真实占用调节照明与空调策略。</p>
+</a>
+</div>
+<p class="sm-news-more"><a href="news/" class="sm-text-link sm-text-link--blue">进入新闻中心 <span class="material-symbols-outlined">arrow_forward</span></a></p>
+</div>
+</section>
+
+<!-- 6. 深蓝探索带 -->
+<section class="sm-explore">
+<div class="max-w-max-width mx-auto px-margin-desktop">
+<div class="sm-explore__head">
+<strong class="sm-kicker">探索安托未来</strong>
+<h2>让每一座空间，具备 AI 原生运营能力</h2>
+</div>
+<div class="sm-explore__grid">
+<a class="sm-explore__card" href="about/" style="background-image:url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=70')">
+<span>关于我们</span>
+<strong>了解是什么驱使我们升级空间</strong>
+<em>阅读更多 <span class="material-symbols-outlined">arrow_forward</span></em>
+</a>
+<a class="sm-explore__card" href="agents/" style="background-image:url('https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=900&q=70')">
+<span>智能体</span>
+<strong>七大场景智能体如何改变运营</strong>
+<em>阅读更多 <span class="material-symbols-outlined">arrow_forward</span></em>
+</a>
+<a class="sm-explore__card sm-explore__card--accent" href="#" data-demo-modal-open>
+<span>预约演示</span>
+<strong>变革从一次方案沟通开始</strong>
+<em>立即预约 <span class="material-symbols-outlined">arrow_forward</span></em>
+</a>
+<a class="sm-explore__card" href="hardware/" style="background-image:url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=70')">
+<span>智能硬件</span>
+<strong>端边云一体，开放可集成</strong>
+<em>阅读更多 <span class="material-symbols-outlined">arrow_forward</span></em>
+</a>
 </div>
 </div>
 </section>
@@ -150,7 +375,7 @@
 <div class="site-footer__brand">
 <span class="site-footer__logo"><em>安托未来</em><strong>atuofuture</strong></span>
 <h3>让空间具备 AI 原生运营能力</h3>
-<p>聚焦楼宇、园区与商业资产，提供场景智能体、智能硬件与开放接口能力，并可通过 AI Token 独立站获取可计量的模型与工具服务。</p>
+<p>聚焦楼宇、园区与商业资产，提供场景智能体、智能硬件与开放接口能力。</p>
 </div>
 <div class="site-footer__links">
 <div>
@@ -181,9 +406,7 @@
 </div>
 </div>
 </div>
-<div class="site-footer__bottom">
-<p><span>© 2026 atuofuture. All rights reserved.</span></p>
-</div>
+<div class="site-footer__bottom"><p><span>© 2026 atuofuture. All rights reserved.</span></p></div>
 </div>
 </footer>
 <script type="module" src="/src/scripts/main.js"></script>
