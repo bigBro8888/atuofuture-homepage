@@ -10159,7 +10159,7 @@ body.demo-modal-open {
 }
 .sx-sol-list__body { padding: 22px; }
 .sx-sol-list__body h3 { margin: 0 0 10px; font-size: 20px; }
-.sx-sol-list__body > p { margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #5b6b7c; }
+.sx-sol-list__body > p { margin: 0 0 8px; font-size: 14px; line-height: 1.6; color: #5b6b7c; }
 .sx-sol-list__body .sx-tags { margin: 0 0 24px; }
 .sx-sol-list__body > p:last-child { margin-bottom: 0; }
 .sx-tags { display: flex; flex-wrap: wrap; gap: 8px; }
