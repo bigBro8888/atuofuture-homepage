@@ -10419,58 +10419,89 @@ body.demo-modal-open {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 28px;
+  bottom: 2rem;
   z-index: 3;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 2.5rem;
+  padding: 0 max(24px, 5vw);
   pointer-events: none;
 }
+/* 西门子 .de-carousel-navigation-button：圆形半透明底 + 白箭头 */
 .sm-hero__nav {
-  position: absolute;
-  top: 50%;
-  z-index: 3;
-  width: 44px;
-  height: 44px;
-  border: 1px solid rgba(255,255,255,0.55);
-  background: transparent;
+  position: static;
+  z-index: 2;
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 50%;
+  background: hsla(240, 100%, 8%, 0.25);
   color: #fff;
   display: grid;
   place-items: center;
   cursor: pointer;
-  transform: translateY(-50%);
-  opacity: 0.45;
-  transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  transform: none;
+  opacity: 1;
+  line-height: 0;
+  pointer-events: auto;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
-.sm-hero__nav--prev { left: max(48px, 16vw); }
-.sm-hero__nav--next { right: max(48px, 16vw); }
+.sm-hero__nav .material-symbols-outlined {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+.sm-hero__nav--prev,
+.sm-hero__nav--next {
+  left: auto;
+  right: auto;
+}
 .sm-hero__nav:hover,
 .sm-hero:hover .sm-hero__nav {
   opacity: 1;
+  background: hsla(240, 100%, 8%, 0.4);
+  color: #fff;
 }
-.sm-hero__nav:hover { background: rgba(255,255,255,0.12); }
+.sm-hero__nav:focus {
+  outline: none;
+  box-shadow: none;
+}
+.sm-hero__nav:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.7);
+}
 .sm-hero__dots {
-  display: flex;
-  gap: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 2.5rem;
+  padding: 0 14px;
+  border-radius: 1.25rem;
+  background: hsla(240, 100%, 8%, 0.25);
   pointer-events: auto;
-  opacity: 0.45;
-  transition: opacity 0.2s ease;
+  opacity: 1;
+  transition: background-color 0.3s ease;
 }
 .sm-hero__dots:hover,
 .sm-hero:hover .sm-hero__dots {
   opacity: 1;
+  background: hsla(240, 100%, 8%, 0.4);
 }
 .sm-hero__dot {
-  width: 28px;
-  height: 3px;
+  width: 8px;
+  height: 8px;
   border: 0;
-  background: rgba(255,255,255,0.45);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
   cursor: pointer;
   padding: 0;
-  transition: background 0.2s ease, width 0.2s ease;
+  transition: background 0.2s ease, width 0.2s ease, border-radius 0.2s ease;
 }
 .sm-hero__dot.is-active {
-  width: 36px;
+  width: 18px;
+  border-radius: 999px;
   background: #fff;
 }
 
