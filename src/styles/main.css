@@ -10416,20 +10416,64 @@ body.demo-modal-open {
   gap: 12px;
 }
 .sm-hero__controls {
+  --sm-hero-control-bg: rgba(179, 179, 190, 0.45);
+  --sm-hero-autoplay-progress: 0;
   position: absolute;
   left: 0;
   right: 0;
   bottom: 2rem;
-  z-index: 3;
+  z-index: 15;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  height: 2.5rem;
-  padding: 0 max(24px, 5vw);
+  justify-content: center;
+  gap: 0.5rem;
   pointer-events: none;
 }
-/* 西门子 .de-carousel-navigation-button：圆形半透明底 + 白箭头 */
+/* 西门子：中间分页胶囊用 margin:auto 把左右箭头顶到两侧 */
+.sm-hero__controls > :first-child {
+  margin: 0 auto;
+  order: 2;
+  pointer-events: auto;
+}
+.sm-hero__nav--prev { order: 1; }
+.sm-hero__nav--next { order: 3; }
+
+.sm-hero__pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 2.5rem;
+  padding: 0 0.5rem 0 0.75rem;
+  border-radius: 1.5rem;
+  background: var(--sm-hero-control-bg);
+}
+
+.sm-hero__pause {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: #000028;
+  cursor: pointer;
+  line-height: 0;
+  flex-shrink: 0;
+}
+.sm-hero__pause-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  fill: currentColor;
+  display: none;
+}
+.sm-hero__pause-icon--pause { display: block; }
+.sm-hero__pause.is-paused .sm-hero__pause-icon--pause { display: none; }
+.sm-hero__pause.is-paused .sm-hero__pause-icon--play { display: block; }
+
+/* 西门子 .de-carousel-navigation-button */
 .sm-hero__nav {
   position: static;
   z-index: 2;
@@ -10438,7 +10482,7 @@ body.demo-modal-open {
   height: 2.5rem;
   border: 0;
   border-radius: 50%;
-  background: hsla(240, 100%, 8%, 0.25);
+  background: var(--sm-hero-control-bg);
   color: #fff;
   display: grid;
   place-items: center;
@@ -10449,9 +10493,10 @@ body.demo-modal-open {
   pointer-events: auto;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
-.sm-hero__nav .material-symbols-outlined {
-  font-size: 1.75rem;
-  line-height: 1;
+.sm-hero__nav-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: block;
 }
 .sm-hero__nav--prev,
 .sm-hero__nav--next {
@@ -10461,7 +10506,7 @@ body.demo-modal-open {
 .sm-hero__nav:hover,
 .sm-hero:hover .sm-hero__nav {
   opacity: 1;
-  background: hsla(240, 100%, 8%, 0.4);
+  background: rgba(179, 179, 190, 0.62);
   color: #fff;
 }
 .sm-hero__nav:focus {
@@ -10471,38 +10516,67 @@ body.demo-modal-open {
 .sm-hero__nav:focus-visible {
   outline: 1px solid rgba(255, 255, 255, 0.7);
 }
+
 .sm-hero__dots {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 0.5rem;
   height: 2.5rem;
-  padding: 0 14px;
-  border-radius: 1.25rem;
-  background: hsla(240, 100%, 8%, 0.25);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   pointer-events: auto;
   opacity: 1;
-  transition: background-color 0.3s ease;
 }
 .sm-hero__dots:hover,
 .sm-hero:hover .sm-hero__dots {
   opacity: 1;
-  background: hsla(240, 100%, 8%, 0.4);
+  background: transparent;
 }
 .sm-hero__dot {
-  width: 8px;
-  height: 8px;
+  display: grid;
+  place-items: center;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0.5rem;
   border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.45);
+  background: transparent;
   cursor: pointer;
-  padding: 0;
-  transition: background 0.2s ease, width 0.2s ease, border-radius 0.2s ease;
+  line-height: 0;
+}
+.sm-hero__dot::before {
+  content: "";
+  display: block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 0.5rem;
+  background: #fff;
+  transition: width 0.3s ease, height 0.3s ease, background 0.3s ease;
 }
 .sm-hero__dot.is-active {
-  width: 18px;
-  border-radius: 999px;
-  background: #fff;
+  width: auto;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.75rem;
+  background: transparent;
+}
+.sm-hero__dot.is-active::before {
+  width: 3.25rem;
+  height: 1rem;
+  background: linear-gradient(
+    to right,
+    #c8ced6 0%,
+    #c8ced6 calc(var(--sm-hero-autoplay-progress, 0) * 100%),
+    #fff calc(var(--sm-hero-autoplay-progress, 0) * 100%),
+    #fff 100%
+  );
+}
+
+@media (max-width: 767px) {
+  .sm-hero__nav { display: none; }
+  .sm-hero__controls > :first-child { margin: 0 auto; }
 }
 
 /* Mini banner */

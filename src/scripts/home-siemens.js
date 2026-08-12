@@ -19,14 +19,20 @@ function initHeroCarousel() {
   const root = document.querySelector('[data-sm-hero]')
   if (!root) return
 
+  const controls = root.querySelector('.sm-hero__controls')
   const slides = [...root.querySelectorAll('[data-sm-hero-slide]')]
   const dotsWrap = root.querySelector('[data-sm-hero-dots]')
   const prev = root.querySelector('[data-sm-hero-prev]')
   const next = root.querySelector('[data-sm-hero-next]')
+  const pauseBtn = root.querySelector('[data-sm-hero-pause]')
   if (!slides.length || !dotsWrap) return
 
+  const INTERVAL = 7000
   let index = 0
-  let timer = null
+  let paused = false
+  let timer = 0
+  let raf = 0
+  let startedAt = 0
 
   slides.forEach((_, i) => {
     const btn = document.createElement('button')
@@ -39,22 +45,65 @@ function initHeroCarousel() {
 
   const dots = [...dotsWrap.querySelectorAll('.sm-hero__dot')]
 
+  function setProgress(value) {
+    const v = Math.max(0, Math.min(1, value))
+    root.style.setProperty('--sm-hero-autoplay-progress', String(v))
+    controls?.style.setProperty('--sm-hero-autoplay-progress', String(v))
+  }
+
+  function stopProgress() {
+    cancelAnimationFrame(raf)
+    raf = 0
+  }
+
+  function tickProgress(now) {
+    if (paused) return
+    const elapsed = now - startedAt
+    setProgress(elapsed / INTERVAL)
+    if (elapsed >= INTERVAL) {
+      go(index + 1)
+      return
+    }
+    raf = requestAnimationFrame(tickProgress)
+  }
+
+  function startProgress() {
+    stopProgress()
+    if (paused) {
+      setProgress(0)
+      return
+    }
+    startedAt = performance.now()
+    setProgress(0)
+    raf = requestAnimationFrame(tickProgress)
+  }
+
   function go(i) {
     index = (i + slides.length) % slides.length
     slides.forEach((s, n) => s.classList.toggle('is-active', n === index))
-    dots.forEach((d, n) => d.classList.toggle('is-active', n === index))
-    restart()
+    dots.forEach((d, n) => {
+      d.classList.toggle('is-active', n === index)
+      d.toggleAttribute('aria-current', n === index)
+    })
+    startProgress()
   }
 
-  function restart() {
-    clearInterval(timer)
-    timer = setInterval(() => go(index + 1), 7000)
+  function setPaused(nextPaused) {
+    paused = nextPaused
+    pauseBtn?.classList.toggle('is-paused', paused)
+    pauseBtn?.setAttribute('aria-pressed', paused ? 'true' : 'false')
+    pauseBtn?.setAttribute('aria-label', paused ? '播放自动轮播' : '暂停自动轮播')
+    if (paused) stopProgress()
+    else startProgress()
   }
 
-  prev?.addEventListener('click', () => go(index - 1))
-  next?.addEventListener('click', () => go(index + 1))
-  root.addEventListener('mouseenter', () => clearInterval(timer))
-  root.addEventListener('mouseleave', restart)
+  prev?.addEventListener('click', () => {
+    go(index - 1)
+  })
+  next?.addEventListener('click', () => {
+    go(index + 1)
+  })
+  pauseBtn?.addEventListener('click', () => setPaused(!paused))
 
   go(0)
 }
