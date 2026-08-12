@@ -10711,7 +10711,29 @@ body.demo-modal-open {
   justify-self: end;
   width: min(280px, 100%);
 }
-.sm-pitch__mark svg { width: 100%; height: auto; display: block; }
+.sm-pitch__mark svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+.sm-infinity__base {
+  opacity: 0.85;
+}
+
+.sm-infinity__dash {
+  stroke-dasharray: 48 420;
+  animation: sm-infinity-flow 2.6s linear infinite;
+}
+
+.sm-infinity__flow {
+  opacity: 0.95;
+}
+
+@keyframes sm-infinity-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -468; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sm-infinity__dash { animation: none; stroke-dasharray: none; opacity: 0.55; }
+}
 
 .sm-pitch__grid {
   display: grid;
