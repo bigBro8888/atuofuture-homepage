@@ -424,6 +424,10 @@
     margin-bottom: 2rem;
   }
 
+  .site-mobile-drawer__head button {
+    color: #fff;
+  }
+
   .site-mobile-drawer__nav {
     display: flex;
     flex-direction: column;
