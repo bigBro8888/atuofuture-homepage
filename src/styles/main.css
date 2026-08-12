@@ -10471,11 +10471,30 @@ body.demo-modal-open {
   align-items: start;
 }
 .sm-tabs__nav {
+  position: relative;
   display: flex;
   flex-direction: column;
   border-left: 1px solid rgba(0,0,40,0.1);
 }
+.sm-tabs__indicator {
+  position: absolute;
+  top: 0;
+  left: -1px;
+  z-index: 2;
+  width: 3px;
+  height: 48px;
+  border-radius: 2px;
+  background: var(--sm-blue);
+  pointer-events: none;
+  will-change: transform, width, height;
+  transition:
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
 .sm-tabs__tab {
+  position: relative;
+  z-index: 1;
   text-align: left;
   padding: 14px 18px;
   border: 0;
@@ -10486,13 +10505,49 @@ body.demo-modal-open {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    color 0.28s ease,
+    background-color 0.28s ease;
+}
+.sm-tabs__tab:hover {
+  color: var(--sm-navy);
+  background: rgba(0,82,209,0.03);
 }
 .sm-tabs__tab.is-active {
   color: var(--sm-navy);
-  border-left-color: var(--sm-blue);
   background: rgba(0,82,209,0.04);
 }
+.sm-tabs__panels {
+  position: relative;
+  min-height: 320px;
+}
+.sm-tabs__panel {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sm-tabs__panel.is-active {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+.sm-tabs__panel.is-leaving {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  opacity: 0;
+  transform: translate3d(0, -8px, 0);
+  pointer-events: none;
+}
 .sm-tabs__panel[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .sm-tabs__indicator,
+  .sm-tabs__tab,
+  .sm-tabs__panel {
+    transition: none !important;
+  }
+}
 .sm-bento {
   display: grid;
   grid-template-columns: 1.35fr 1fr;
@@ -10878,6 +10933,10 @@ body.demo-modal-open {
     border-left: 0;
     border-bottom: 1px solid rgba(0,0,40,0.1);
   }
+  .sm-tabs__indicator {
+    left: 0;
+    border-radius: 2px 2px 0 0;
+  }
   .sm-tabs__tab {
     white-space: nowrap;
     border-left: 0;
@@ -10885,8 +10944,7 @@ body.demo-modal-open {
     margin-left: 0;
   }
   .sm-tabs__tab.is-active {
-    border-bottom-color: var(--sm-blue);
-    border-left-color: transparent;
+    border-bottom-color: transparent;
   }
   .sm-bento { grid-template-columns: 1fr 1fr; }
   .sm-bento__card--large { grid-row: auto; min-height: 280px; }

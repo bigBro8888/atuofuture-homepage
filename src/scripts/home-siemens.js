@@ -63,24 +63,93 @@ function initCapabilityTabs() {
   const root = document.querySelector('[data-sm-tabs]')
   if (!root) return
 
+  const nav = root.querySelector('.sm-tabs__nav')
   const tabs = [...root.querySelectorAll('[data-sm-tab]')]
   const panels = [...root.querySelectorAll('[data-sm-panel]')]
+  let indicator = root.querySelector('.sm-tabs__indicator')
+  let activeId = tabs.find((tab) => tab.classList.contains('is-active'))?.dataset.smTab || tabs[0]?.dataset.smTab
+  let leaveTimer = 0
 
-  function activate(id) {
+  if (nav && !indicator) {
+    indicator = document.createElement('span')
+    indicator.className = 'sm-tabs__indicator'
+    indicator.setAttribute('aria-hidden', 'true')
+    nav.prepend(indicator)
+  }
+
+  function moveIndicator(tab, instant = false) {
+    if (!indicator || !nav || !tab) return
+    const navRect = nav.getBoundingClientRect()
+    const tabRect = tab.getBoundingClientRect()
+    const horizontal = window.getComputedStyle(nav).flexDirection === 'row'
+
+    if (instant) indicator.style.transition = 'none'
+    if (horizontal) {
+      indicator.style.width = `${tabRect.width}px`
+      indicator.style.height = '3px'
+      indicator.style.transform = `translate3d(${tabRect.left - navRect.left}px, ${tabRect.bottom - navRect.top - 3}px, 0)`
+    } else {
+      indicator.style.width = '3px'
+      indicator.style.height = `${tabRect.height}px`
+      indicator.style.transform = `translate3d(0, ${tabRect.top - navRect.top}px, 0)`
+    }
+    if (instant) {
+      indicator.offsetHeight
+      indicator.style.transition = ''
+    }
+  }
+
+  function activate(id, { instant = false } = {}) {
+    if (!id || (id === activeId && !instant)) return
+    const nextTab = tabs.find((tab) => tab.dataset.smTab === id)
+    const nextPanel = panels.find((panel) => panel.dataset.smPanel === id)
+    const prevPanel = panels.find((panel) => panel.classList.contains('is-active'))
+    if (!nextTab || !nextPanel) return
+
+    activeId = id
+    clearTimeout(leaveTimer)
+
     tabs.forEach((tab) => {
-      const on = tab.dataset.smTab === id
+      const on = tab === nextTab
       tab.classList.toggle('is-active', on)
       tab.setAttribute('aria-selected', on ? 'true' : 'false')
     })
+    moveIndicator(nextTab, instant)
+
+    if (prevPanel && prevPanel !== nextPanel) {
+      prevPanel.classList.remove('is-active')
+      prevPanel.classList.add('is-leaving')
+      leaveTimer = window.setTimeout(() => {
+        prevPanel.classList.remove('is-leaving')
+        prevPanel.hidden = true
+      }, 280)
+    }
+
     panels.forEach((panel) => {
-      const on = panel.dataset.smPanel === id
-      panel.classList.toggle('is-active', on)
-      panel.hidden = !on
+      if (panel === nextPanel || panel === prevPanel) return
+      panel.classList.remove('is-active', 'is-leaving')
+      panel.hidden = true
     })
+
+    nextPanel.hidden = false
+    nextPanel.classList.remove('is-leaving')
+    if (instant) {
+      nextPanel.classList.add('is-active')
+      return
+    }
+    nextPanel.classList.remove('is-active')
+    nextPanel.offsetHeight
+    requestAnimationFrame(() => nextPanel.classList.add('is-active'))
   }
 
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => activate(tab.dataset.smTab))
+  })
+
+  activate(activeId, { instant: true })
+  window.addEventListener('resize', () => {
+    const current = tabs.find((tab) => tab.dataset.smTab === activeId)
+    moveIndicator(current, true)
   })
 }
 
