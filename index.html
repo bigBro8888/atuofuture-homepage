@@ -366,21 +366,25 @@
 <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
 </filter>
 <path id="smInfinityPath" d="M50 60C50 32 92 22 140 60C188 98 230 88 230 60C230 32 188 22 140 60C92 98 50 88 50 60Z"/>
-<!-- 上层交叉带蒙版：只露出 NW→SE 这段 -->
+<!-- 下层蒙版：挖空 SW→NE 交叉，避免用黑色描边硬擦 -->
+<mask id="smInfinityUnderMask" maskUnits="userSpaceOnUse">
+<rect width="280" height="120" fill="#fff"/>
+<path d="M108 76C122 68 158 52 172 44" stroke="#000" stroke-width="26" stroke-linecap="round"/>
+</mask>
+<!-- 上层交叉带蒙版：只露出 NW→SE -->
 <mask id="smInfinityBridgeMask" maskUnits="userSpaceOnUse">
-<path d="M108 44C122 52 158 68 172 76" stroke="#fff" stroke-width="34" stroke-linecap="round"/>
+<path d="M108 44C122 52 158 68 172 76" stroke="#fff" stroke-width="30" stroke-linecap="round"/>
 </mask>
 </defs>
-<!-- 底层环带 + 流动光 -->
+<!-- 底层环带（交叉处透明镂空） -->
+<g mask="url(#smInfinityUnderMask)">
 <use href="#smInfinityPath" class="sm-infinity__base" stroke="url(#smInfinityBase)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
 <use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--soft" filter="url(#smTrailSoft)" stroke="#00e5c0" stroke-width="28" stroke-linecap="round"/>
 <use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--mid" filter="url(#smTrailMid)" stroke="#7dffd4" stroke-width="16" stroke-linecap="round"/>
 <use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--core" filter="url(#smTrailCore)" stroke="#e8fff8" stroke-width="7" stroke-linecap="round"/>
-<!-- 擦掉下层交叉（SW→NE），做出前后遮挡 -->
-<path class="sm-infinity__cut" d="M108 76C122 68 158 52 172 44" stroke="#000028" stroke-width="36" stroke-linecap="round"/>
-<!-- 上层桥：固定环带 -->
+</g>
+<!-- 上层桥：青绿环带盖住交叉，形成立体穿插 -->
 <path class="sm-infinity__bridge" filter="url(#smBridgeGlow)" d="M108 44C122 52 158 68 172 76" stroke="url(#smInfinityBase)" stroke-width="22" stroke-linecap="round"/>
-<!-- 上层桥：同步流动光（蒙版裁切整环光带） -->
 <g mask="url(#smInfinityBridgeMask)">
 <use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--soft" filter="url(#smTrailSoft)" stroke="#00e5c0" stroke-width="28" stroke-linecap="round"/>
 <use href="#smInfinityPath" class="sm-infinity__trail sm-infinity__trail--mid" filter="url(#smTrailMid)" stroke="#7dffd4" stroke-width="16" stroke-linecap="round"/>
