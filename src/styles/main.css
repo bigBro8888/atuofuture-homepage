@@ -10260,11 +10260,17 @@ body.demo-modal-open {
   color: #fff;
 }
 .sm-btn--outline:hover { background: rgba(255,255,255,0.12); }
-.sm-btn--dark {
+.sm-btn--dark,
+.sm-btn--outline.sm-btn--dark {
   border-color: var(--sm-navy);
   color: var(--sm-navy);
 }
-.sm-btn--dark:hover { background: rgba(0,0,40,0.06); }
+.sm-btn--dark:hover,
+.sm-btn--outline.sm-btn--dark:hover {
+  background: rgba(0,0,40,0.06);
+  color: var(--sm-navy);
+  border-color: var(--sm-navy);
+}
 .sm-btn--ghost {
   background: transparent;
   border-color: #1b1b1b;
@@ -10616,6 +10622,20 @@ body.demo-modal-open {
 .sm-banner-box h3 {
   margin: 0;
   font-size: 18px;
+  color: var(--sm-navy);
+}
+/* 浅色横幅内强制深色描边按钮，避免白字白边看不清 */
+.sm-banner-box .sm-btn,
+.sm-banner-box .sm-btn--outline {
+  border-color: var(--sm-navy);
+  color: var(--sm-navy);
+  background: transparent;
+}
+.sm-banner-box .sm-btn:hover,
+.sm-banner-box .sm-btn--outline:hover {
+  background: rgba(0,0,40,0.06);
+  color: var(--sm-navy);
+  border-color: var(--sm-navy);
 }
 
 /* Solutions carousel — Siemens-like: gray canvas, no card chrome, bottom pager */
