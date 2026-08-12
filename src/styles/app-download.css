@@ -234,7 +234,7 @@
 .app-download-modal__actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .app-download-modal__actions a { height: 64px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #cbd2df; border-radius: 12px; color: var(--dl-ink); text-decoration: none; font-size: 13px; font-weight: 600; }
 .app-download-modal__actions a .material-symbols-outlined { font-size: 28px; line-height: 1; flex-shrink: 0; }
-.app-download-modal__actions a:first-child { color: #fff; border-color: var(--dl-primary); background: var(--dl-primary); box-shadow: 0 10px 22px rgba(0,86,198,.2); }
+.app-download-modal__actions a:first-child { color: #fff; border-color: var(--dl-primary); background: var(--dl-primary); box-shadow: none; }
 .app-download-modal__actions a[aria-disabled="true"] { pointer-events: none; opacity: .45; }
 .app-download-modal__qr { margin-top: 35px; }
 .app-download-modal__qr img { width: 132px; height: 132px; padding: 10px; border: 1px solid var(--dl-line); border-radius: 14px; background: #fff; }
