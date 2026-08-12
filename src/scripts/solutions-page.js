@@ -21,7 +21,7 @@ function renderList() {
                 <h3>${esc(s.name)}</h3>
                 <p>${esc(s.summary)}</p>
                 <div class="sx-tags">${s.canDo.slice(0, 3).map((t) => `<span>${esc(t)}</span>`).join('')}</div>
-                <p class="mt-4"><a class="sx-text-link" href="./?id=${s.id}">查看方案 →</a></p>
+                <p><a class="sx-text-link" href="./?id=${s.id}">查看方案 →</a></p>
               </div>
             </article>`
           ).join('')}
