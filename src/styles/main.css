@@ -10689,6 +10689,15 @@ body.demo-modal-open {
   .sm-hero__diagram { max-width: 560px; }
 }
 
+@media (max-width: 767px) {
+  .sm-hero__nav { display: none; }
+  .sm-hero__controls > :first-child { margin: 0 auto; }
+  .sm-hero__slide--split .sm-hero__content { gap: 20px; }
+  .sm-hero__arch { grid-template-columns: 1fr; }
+  .sm-hero__arch-arrow { transform: rotate(90deg); }
+  .sm-hero__dual { grid-template-columns: 1fr; }
+}
+
 /* Mini banner */
 .sm-mini-banner {
   background: var(--sm-sand);
