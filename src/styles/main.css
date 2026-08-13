@@ -12845,13 +12845,13 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 }
 .ag-eco__orbit-link {
   stroke: #00D5BE;
-  stroke-width: 2;
+  stroke-width: 1;
   transition: stroke .2s ease, opacity .2s ease, stroke-width .2s ease;
   opacity: 1;
 }
 .ag-eco__orbit-link.is-active {
   stroke: #00D5BE;
-  stroke-width: 2;
+  stroke-width: 1;
   opacity: 1;
 }
 .ag-eco__orbit-slot {
