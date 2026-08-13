@@ -37,12 +37,13 @@ function initHeroCarousel() {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const INTERVAL = HOME_ADVANTAGES_INTERVAL_MS
   let index = 0
-  let paused = reduceMotion
   let hoverPaused = false
   let offscreenPaused = false
   let userPaused = reduceMotion
   let raf = 0
   let startedAt = 0
+  /** 本段计时开始时已有的进度 0~1（悬停冻结后从此续播） */
+  let baseProgress = 0
   let touchStartX = 0
   let touchStartY = 0
   let touchActive = false
@@ -63,10 +64,16 @@ function initHeroCarousel() {
     return userPaused || hoverPaused || offscreenPaused || reduceMotion
   }
 
-  function setProgress(value) {
+  function paintProgress(value) {
     const v = Math.max(0, Math.min(1, value))
     root.style.setProperty('--sm-hero-autoplay-progress', String(v))
     controls?.style.setProperty('--sm-hero-autoplay-progress', String(v))
+    return v
+  }
+
+  function currentProgress() {
+    if (!raf) return baseProgress
+    return Math.min(1, baseProgress + (performance.now() - startedAt) / INTERVAL)
   }
 
   function stopProgress() {
@@ -74,30 +81,37 @@ function initHeroCarousel() {
     raf = 0
   }
 
+  function freezeProgress() {
+    baseProgress = paintProgress(currentProgress())
+    stopProgress()
+  }
+
   function tickProgress(now) {
     if (isAutoplayBlocked()) return
-    const elapsed = now - startedAt
-    setProgress(elapsed / INTERVAL)
-    if (elapsed >= INTERVAL) {
+    const next = baseProgress + (now - startedAt) / INTERVAL
+    paintProgress(next)
+    if (next >= 1) {
       go(index + 1)
       return
     }
     raf = requestAnimationFrame(tickProgress)
   }
 
-  function startProgress() {
+  function startProgress({ reset = false } = {}) {
     stopProgress()
+    if (reset) {
+      baseProgress = 0
+      paintProgress(0)
+    }
     if (isAutoplayBlocked()) {
-      setProgress(userPaused || reduceMotion ? 0 : 0)
+      paintProgress(baseProgress)
       return
     }
     startedAt = performance.now()
-    setProgress(0)
     raf = requestAnimationFrame(tickProgress)
   }
 
   function syncPauseUi() {
-    paused = isAutoplayBlocked()
     pauseBtn?.classList.toggle('is-paused', userPaused)
     pauseBtn?.setAttribute('aria-pressed', userPaused ? 'true' : 'false')
     pauseBtn?.setAttribute('aria-label', userPaused ? '播放自动轮播' : '暂停自动轮播')
@@ -128,14 +142,14 @@ function initHeroCarousel() {
     root.setAttribute('aria-live', 'polite')
     preloadNeighbor(index)
     syncPauseUi()
-    startProgress()
+    startProgress({ reset: true })
   }
 
   function setUserPaused(nextPaused) {
     userPaused = nextPaused
     syncPauseUi()
-    if (isAutoplayBlocked()) stopProgress()
-    else startProgress()
+    if (userPaused) freezeProgress()
+    else startProgress({ reset: false })
   }
 
   prev?.addEventListener('click', () => go(index - 1))
@@ -144,11 +158,11 @@ function initHeroCarousel() {
 
   root.addEventListener('mouseenter', () => {
     hoverPaused = true
-    stopProgress()
+    freezeProgress()
   })
   root.addEventListener('mouseleave', () => {
     hoverPaused = false
-    if (!isAutoplayBlocked()) startProgress()
+    if (!isAutoplayBlocked()) startProgress({ reset: false })
   })
 
   root.addEventListener(
@@ -194,12 +208,13 @@ function initHeroCarousel() {
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver(
       ([entry]) => {
+        const wasOff = offscreenPaused
         offscreenPaused = !entry.isIntersecting
         root.classList.toggle('is-offscreen', offscreenPaused)
-        if (offscreenPaused) stopProgress()
-        else if (!isAutoplayBlocked()) startProgress()
+        if (offscreenPaused) freezeProgress()
+        else if (wasOff && !isAutoplayBlocked()) startProgress({ reset: false })
       },
-      { threshold: 0.2 }
+      { threshold: 0.15 }
     )
     io.observe(root)
   }
