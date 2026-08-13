@@ -13112,12 +13112,12 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .hwc-hero {
   position: relative;
   isolation: isolate;
-  min-height: clamp(480px, 56vh, 600px);
+  min-height: clamp(420px, 48vh, 560px);
   padding: 0;
   overflow: hidden;
   background: #f5f7fa;
 }
-.hwc-hero__bg {
+.hwc-hero__visual {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -13125,21 +13125,13 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   align-items: center;
   justify-content: flex-end;
   pointer-events: none;
-  background: #f5f7fa;
+  padding: 24px clamp(12px, 3vw, 48px) 20px 0;
 }
-.hwc-hero__bg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, #f5f7fa 0%, #f5f7fa 28%, rgba(245, 247, 250, .55) 42%, rgba(245, 247, 250, 0) 58%);
-  pointer-events: none;
-}
-.hwc-hero__bg img {
+.hwc-hero__visual img {
   display: block;
-  width: auto;
-  height: 92%;
-  max-width: min(64vw, 920px);
-  margin-right: clamp(8px, 2vw, 40px);
+  width: min(62vw, 980px);
+  height: auto;
+  max-height: calc(100% - 16px);
   object-fit: contain;
   object-position: right center;
 }
@@ -13148,7 +13140,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   z-index: 1;
   display: flex;
   align-items: center;
-  min-height: clamp(480px, 56vh, 600px);
+  min-height: clamp(420px, 48vh, 560px);
   padding: 96px 0 40px;
 }
 .hwc-hero__copy {
@@ -13458,20 +13450,14 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
     padding-top: 100px;
     padding-bottom: 36px;
   }
-  .hwc-hero__bg {
+  .hwc-hero__visual {
     align-items: flex-end;
     justify-content: center;
+    padding: 0 16px 12px;
   }
-  .hwc-hero__bg img {
+  .hwc-hero__visual img {
     width: min(92%, 720px);
-    height: auto;
-    max-width: none;
     max-height: 46%;
-    margin: 0 auto 12px;
-  }
-  .hwc-hero__bg::after {
-    background:
-      linear-gradient(180deg, #f5f7fa 0%, rgba(245, 247, 250, .96) 38%, rgba(245, 247, 250, .55) 58%, rgba(245, 247, 250, 0) 78%);
   }
   .hwc-hero__copy { max-width: 560px; }
   .hwc-lines__grid { grid-template-columns: 1fr; }
@@ -13495,7 +13481,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   .hwc-shell { width: min(1440px, calc(100% - 32px)); }
   .hwc-hero__content { padding: 92px 0 24px; }
   .hwc-hero__copy h1 { font-size: 34px; }
-  .hwc-hero__bg img {
+  .hwc-hero__visual img {
     width: min(96%, 520px);
     max-height: 42%;
   }
