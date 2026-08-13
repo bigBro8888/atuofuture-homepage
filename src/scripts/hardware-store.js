@@ -60,7 +60,10 @@ function linePreviewItems(lineId) {
 function renderHero() {
   return `
     <section class="hwc-hero">
-      <div class="hwc-shell hwc-hero__grid">
+      <div class="hwc-hero__bg" aria-hidden="true">
+        <img src="/images/hardware/hero-bg.png" alt="" width="1920" height="1080" />
+      </div>
+      <div class="hwc-shell hwc-hero__content">
         <div class="hwc-hero__copy">
           <h1>连接空间、商品与真实业务</h1>
           <p>安托未来以空间智能、电子纸与边缘连接能力，构建覆盖企业空间、新零售与智能终端的硬件产品体系。</p>
@@ -68,9 +71,6 @@ function renderHero() {
             <a class="hwc-btn hwc-btn--cyan hwc-btn--hero" href="#hwc-browser">浏览全部产品</a>
             <button type="button" class="hwc-btn hwc-btn--outline-dark" data-demo-modal-open>获取选型建议</button>
           </div>
-        </div>
-        <div class="hwc-hero__visual" aria-hidden="true">
-          <img src="/images/hardware/hero-family.png" alt="" width="1270" height="662" />
         </div>
       </div>
     </section>`
