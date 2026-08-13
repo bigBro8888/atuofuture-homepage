@@ -1,4 +1,4 @@
-import { NEWS_ITEMS, getNewsById } from '../data/news.js'
+import { NEWS_ITEMS, getNewsById, formatNewsDate } from '../data/news.js'
 
 function esc(str = '') {
   return String(str)
@@ -11,75 +11,94 @@ function esc(str = '') {
 function renderNotFound(rawId) {
   document.title = '新闻未找到 | 安托未来'
   return `
-    <section class="pb-24">
-      <div class="max-w-max-width mx-auto px-margin-desktop">
-        <nav class="agent-detail-breadcrumb mb-8">
-          <a href="../">首页</a>
-          <span class="material-symbols-outlined">chevron_right</span>
-          <a href="../news/">新闻中心</a>
-          <span class="material-symbols-outlined">chevron_right</span>
-          <span>未找到</span>
-        </nav>
-        <h1>未找到该新闻</h1>
-        <p class="mt-4" style="color:#5b6b7c">${rawId ? `编号「${esc(rawId)}」不存在或已下线。` : '请从新闻中心选择一篇内容。'}</p>
-        <p class="mt-8"><a class="site-header__btn site-header__btn--primary" href="../news/">返回新闻中心</a></p>
+    <article class="sx-news-article">
+      <nav class="sx-news-article__crumb">
+        <a href="../">首页</a><span>/</span>
+        <a href="../news/">全部新闻</a><span>/</span>
+        <span>未找到</span>
+      </nav>
+      <h1>未找到该新闻</h1>
+      <p class="sx-news-article__lead">${rawId ? `编号「${esc(rawId)}」不存在或已下线。` : '请从新闻中心选择一篇内容。'}</p>
+      <a class="sx-news-article__back" href="../news/">← 返回新闻列表</a>
+    </article>`
+}
+
+function renderSections(n) {
+  return (n.sections || [])
+    .map((section) => {
+      const paras = (section.paragraphs || []).map((p) => `<p>${esc(p)}</p>`).join('')
+      const figure = section.showCover
+        ? `<figure class="sx-news-article__figure">
+            <img src="${esc(n.cover)}" alt="${esc(n.title)}" loading="lazy" decoding="async" />
+          </figure>`
+        : ''
+      return `
+        <h3>${esc(section.heading)}</h3>
+        ${paras}
+        ${figure}`
+    })
+    .join('')
+}
+
+function renderTags(tags = []) {
+  if (!tags.length) return ''
+  return `
+    <div class="sx-news-article__tags">
+      ${tags.map((t) => `<span>#${esc(t)}</span>`).join('')}
+    </div>`
+}
+
+function renderRelated(currentId) {
+  const others = NEWS_ITEMS.filter((item) => item.id !== currentId).slice(0, 4)
+  if (!others.length) return ''
+  return `
+    <aside class="sx-news-article__related">
+      <h2>相关阅读</h2>
+      <div class="sx-news-article__related-grid">
+        ${others
+          .map(
+            (item) => `
+          <a class="sx-news-article__related-card" href="./?id=${encodeURIComponent(item.id)}">
+            <span class="sx-news-article__related-cat">${esc(item.category)}</span>
+            <strong>${esc(item.title)}</strong>
+            <time datetime="${esc(item.date)}">${esc(formatNewsDate(item.date))}</time>
+          </a>`
+          )
+          .join('')}
       </div>
-    </section>`
+    </aside>`
 }
 
 function renderDetail(n) {
   document.title = `${n.title} | 安托未来`
-  const others = NEWS_ITEMS.filter((item) => item.id !== n.id).slice(0, 3)
+  const author = n.author || '安托未来'
   return `
-    <article class="sx-news-detail">
-      <div class="max-w-max-width mx-auto px-margin-desktop">
-        <nav class="agent-detail-breadcrumb mb-8">
-          <a href="../">首页</a>
-          <span class="material-symbols-outlined">chevron_right</span>
-          <a href="../news/">新闻中心</a>
-          <span class="material-symbols-outlined">chevron_right</span>
-          <span>${esc(n.title)}</span>
-        </nav>
+    <article class="sx-news-article">
+      <nav class="sx-news-article__crumb" aria-label="面包屑">
+        <a href="../">首页</a><span>/</span>
+        <a href="../news/">全部新闻</a><span>/</span>
+        <span>${esc(n.title)}</span>
+      </nav>
 
-        <header class="sx-news-detail__head">
-          <div class="sx-news-item__meta">
-            <span>${esc(n.category)}</span>
-            <time datetime="${esc(n.date)}">${esc(n.date)}</time>
-          </div>
-          <h1>${esc(n.title)}</h1>
-          <p class="sx-news-detail__lead">${esc(n.summary)}</p>
-        </header>
-
-        <div class="sx-news-detail__cover" style="background-image:url('${esc(n.cover)}')" role="img" aria-label="${esc(n.title)}"></div>
-
-        <div class="sx-news-detail__content">
-          ${n.body.map((p) => `<p>${esc(p)}</p>`).join('')}
+      <header class="sx-news-article__header">
+        <a class="sx-news-article__badge" href="../news/">${esc(n.category)}</a>
+        <h1>${esc(n.title)}</h1>
+        <div class="sx-news-article__meta">
+          <span>作者 ${esc(author)}</span>
+          <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
         </div>
+        <p class="sx-news-article__lead">${esc(n.summary)}</p>
+      </header>
 
-        <div class="sx-news-detail__actions">
-          <a class="site-header__btn site-header__btn--ghost" href="../news/">返回新闻中心</a>
-          <button type="button" class="site-header__btn site-header__btn--primary" data-demo-modal-open>预约方案演示</button>
-        </div>
+      <div class="sx-news-article__content">
+        ${renderSections(n)}
+      </div>
 
-        ${
-          others.length
-            ? `<aside class="sx-news-detail__more">
-          <h2>相关阅读</h2>
-          <div class="sx-news-detail__more-grid">
-            ${others
-              .map(
-                (item) => `
-              <a class="sx-news-detail__more-card" href="./?id=${encodeURIComponent(item.id)}">
-                <div class="sx-news-detail__more-cover" style="background-image:url('${esc(item.cover)}')" aria-hidden="true"></div>
-                <strong>${esc(item.title)}</strong>
-                <span>${esc(item.date)}</span>
-              </a>`
-              )
-              .join('')}
-          </div>
-        </aside>`
-            : ''
-        }
+      ${renderTags(n.tags)}
+      ${renderRelated(n.id)}
+
+      <div class="sx-news-article__footer">
+        <a class="sx-news-article__back" href="../news/">← 返回新闻列表</a>
       </div>
     </article>`
 }
