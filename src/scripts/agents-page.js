@@ -6,6 +6,7 @@ import {
 import {
   renderAgentEcosystemMap,
   syncAgentEcosystemMap,
+  layoutAgentOrbitLinks,
 } from '../components/agents/ecosystem-map.js'
 import {
   renderAgentTaskStory,
@@ -174,6 +175,8 @@ export function initAgentsPage() {
   `
 
   bindInteractions(root, state)
+  layoutAgentOrbitLinks(root)
+  window.addEventListener('resize', () => layoutAgentOrbitLinks(root))
 
   const hash = window.location.hash.replace(/^#/, '')
   const hashMap = {

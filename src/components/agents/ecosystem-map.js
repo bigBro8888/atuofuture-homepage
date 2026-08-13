@@ -116,42 +116,81 @@ function renderAgentButton(a, selectedId) {
     </button>`
 }
 
+function renderOrbitSlot(a, selectedId, side, row) {
+  return `
+    <div class="ag-eco__orbit-slot ag-eco__orbit-slot--${side}" style="--orbit-row:${row}">
+      ${renderAgentButton(a, selectedId)}
+    </div>`
+}
+
 function renderAgentsOrbit(selectedId) {
   const left = AGENT_LEFT_IDS.map((id) => AGENTS_OVERVIEW.find((a) => a.id === id)).filter(Boolean)
   const right = AGENT_RIGHT_IDS.map((id) => AGENTS_OVERVIEW.find((a) => a.id === id)).filter(Boolean)
-  const ys = [48, 128, 208, 288]
-  const leftPaths = ys.map((y) => `M 292 ${y} C 360 ${y}, 420 180, 500 180`)
-  const rightPaths = ys.map((y) => `M 708 ${y} C 640 ${y}, 580 180, 500 180`)
-  const links = [
-    ...left.map((a, i) => ({ id: a.id, d: leftPaths[i] })),
-    ...right.map((a, i) => ({ id: a.id, d: rightPaths[i] })),
-  ]
+  const linkIds = [...left, ...right].map((a) => a.id)
 
   return `
     <div class="ag-eco__orbit" data-ag-eco>
-      <svg class="ag-eco__orbit-svg" viewBox="0 0 1000 360" preserveAspectRatio="none" aria-hidden="true">
-        ${links
+      <svg class="ag-eco__orbit-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+        ${linkIds
           .map(
-            (p) => `
+            (id) => `
           <path
-            class="ag-eco__orbit-link${p.id === selectedId ? ' is-active' : ''}"
-            data-ag-link="${esc(p.id)}"
-            d="${p.d}"
+            class="ag-eco__orbit-link${id === selectedId ? ' is-active' : ''}"
+            data-ag-link="${esc(id)}"
+            d=""
             fill="none"
           />`
           )
           .join('')}
       </svg>
-      <div class="ag-eco__orbit-col ag-eco__orbit-col--left">
-        ${left.map((a) => renderAgentButton(a, selectedId)).join('')}
-      </div>
+      ${left.map((a, i) => renderOrbitSlot(a, selectedId, 'left', i + 1)).join('')}
       <div class="ag-eco__orbit-core" aria-hidden="true">
         <span>八大空间智能体</span>
       </div>
-      <div class="ag-eco__orbit-col ag-eco__orbit-col--right">
-        ${right.map((a) => renderAgentButton(a, selectedId)).join('')}
-      </div>
+      ${right.map((a, i) => renderOrbitSlot(a, selectedId, 'right', i + 1)).join('')}
     </div>`
+}
+
+/** 按实际节点位置绘制中心圆到各智能体的连线 */
+export function layoutAgentOrbitLinks(root) {
+  const orbit = root.querySelector('.ag-eco__orbit')
+  const svg = orbit?.querySelector('.ag-eco__orbit-svg')
+  const core = orbit?.querySelector('.ag-eco__orbit-core')
+  if (!orbit || !svg || !core) return
+  if (getComputedStyle(svg).display === 'none') return
+
+  const ob = orbit.getBoundingClientRect()
+  if (ob.width < 8 || ob.height < 8) return
+
+  const cb = core.getBoundingClientRect()
+  const cx = (cb.left + cb.right) / 2 - ob.left
+  const cy = (cb.top + cb.bottom) / 2 - ob.top
+  const cr = Math.min(cb.width, cb.height) / 2 - 1
+
+  svg.setAttribute('viewBox', `0 0 ${ob.width} ${ob.height}`)
+  svg.setAttribute('width', String(ob.width))
+  svg.setAttribute('height', String(ob.height))
+
+  orbit.querySelectorAll('[data-ag-select]').forEach((btn) => {
+    const path = svg.querySelector(`[data-ag-link="${CSS.escape(btn.dataset.agSelect)}"]`)
+    if (!path) return
+    const bb = btn.getBoundingClientRect()
+    const midY = (bb.top + bb.bottom) / 2 - ob.top
+    const towardRight = (bb.left + bb.right) / 2 - ob.left < cx
+    const ex = towardRight ? bb.right - ob.left + 2 : bb.left - ob.left - 2
+    const ey = midY
+    const dx = ex - cx
+    const dy = ey - cy
+    const len = Math.hypot(dx, dy) || 1
+    const sx = cx + (dx / len) * cr
+    const sy = cy + (dy / len) * cr
+    const mx = sx + (ex - sx) * 0.55
+    const my = sy + (ey - sy) * 0.55
+    path.setAttribute(
+      'd',
+      `M ${sx.toFixed(1)} ${sy.toFixed(1)} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`
+    )
+  })
 }
 
 function renderHubPill() {
@@ -308,4 +347,6 @@ export function syncAgentEcosystemMap(root, selectedId) {
   root.querySelectorAll('[data-ag-link]').forEach((link) => {
     link.classList.toggle('is-active', link.dataset.agLink === selected.id)
   })
+
+  layoutAgentOrbitLinks(root)
 }
