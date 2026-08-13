@@ -386,19 +386,29 @@ function renderShell(state) {
   `
 }
 
+function supportsWebGL() {
+  try {
+    const canvas = document.createElement('canvas')
+    return Boolean(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+  } catch {
+    return false
+  }
+}
+
 function ensureModelViewer() {
-  if (customElements.get('model-viewer')) return Promise.resolve()
+  if (!supportsWebGL()) return Promise.resolve(false)
+  if (customElements.get('model-viewer')) return Promise.resolve(true)
   const existing = document.querySelector('script[data-model-viewer]')
   if (existing) {
-    return customElements.whenDefined('model-viewer').catch(() => {})
+    return customElements.whenDefined('model-viewer').then(() => true).catch(() => false)
   }
   return new Promise((resolve) => {
     const script = document.createElement('script')
     script.type = 'module'
     script.src = MODEL_VIEWER_SRC
     script.dataset.modelViewer = 'true'
-    script.onload = () => customElements.whenDefined('model-viewer').then(resolve).catch(resolve)
-    script.onerror = resolve
+    script.onload = () => customElements.whenDefined('model-viewer').then(() => resolve(true)).catch(() => resolve(false))
+    script.onerror = () => resolve(false)
     document.head.appendChild(script)
   })
 }
@@ -430,9 +440,17 @@ function scheduleRobotModelUpgrade(root) {
   const upgrade = async () => {
     if (mount.dataset.upgraded === 'true') return
     mount.dataset.upgraded = 'true'
-    await ensureModelViewer()
-    if (!customElements.get('model-viewer')) return
-    mount.innerHTML = renderRobotModelMarkup()
+    const ok = await ensureModelViewer()
+    if (!ok || !customElements.get('model-viewer')) return
+    try {
+      mount.innerHTML = renderRobotModelMarkup()
+      const viewer = mount.querySelector('model-viewer')
+      viewer?.addEventListener('error', () => {
+        mount.innerHTML = `<span class="agent-chat-model-fallback" aria-hidden="true">${cuteRobotIcon('cute-robot-icon cute-robot-icon--avatar')}</span>`
+      }, { once: true })
+    } catch {
+      mount.innerHTML = `<span class="agent-chat-model-fallback" aria-hidden="true">${cuteRobotIcon('cute-robot-icon cute-robot-icon--avatar')}</span>`
+    }
   }
 
   const start = () => {
