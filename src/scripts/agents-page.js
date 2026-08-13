@@ -29,7 +29,10 @@ function esc(str = '') {
 function renderHero() {
   return `
     <section class="ag-hero">
-      <div class="ag-shell ag-hero__grid">
+      <div class="ag-hero__bg" aria-hidden="true">
+        <img src="/images/agents/hero-bleed.jpg" alt="" width="1920" height="1080" decoding="async" fetchpriority="high" />
+      </div>
+      <div class="ag-shell ag-hero__content">
         <div class="ag-hero__copy">
           <h1>让空间智能体感知现场、调用设备、完成任务</h1>
           <p>不只是回答问题，而是连接软件系统、智能硬件与业务流程，让空间能够自主感知、判断、执行并持续反馈。</p>
@@ -38,19 +41,6 @@ function renderHero() {
             <button type="button" class="ag-btn ag-btn--ghost" data-demo-modal-open>预约方案演示</button>
           </div>
         </div>
-        <div class="ag-hero__visual" aria-hidden="true">
-          <div class="ag-hero__photo" style="background-image:url('/images/agents/hero.jpg')"></div>
-          <div class="ag-hero__hub">
-            <span class="material-symbols-outlined">memory</span>
-            <strong>空间智能中枢</strong>
-          </div>
-          <span class="ag-hero__node ag-hero__node--a"><i class="material-symbols-outlined">sensors</i>传感</span>
-          <span class="ag-hero__node ag-hero__node--b"><i class="material-symbols-outlined">lightbulb</i>照明</span>
-          <span class="ag-hero__node ag-hero__node--c"><i class="material-symbols-outlined">thermostat</i>空调</span>
-          <span class="ag-hero__node ag-hero__node--d"><i class="material-symbols-outlined">tv</i>中控</span>
-        </div>
-      </div>
-      <div class="ag-shell">
         <ol class="ag-chain" aria-label="能力链">
           ${AGENTS_CAPABILITY_CHAIN.map(
             (step, i) => `
