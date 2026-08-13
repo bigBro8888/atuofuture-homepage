@@ -164,8 +164,8 @@ function renderList() {
           <h2>选择您的行业场景</h2>
         </header>
         <div class="sol-scene__layout">
-          ${renderScene(active)}
           ${renderNav(active.id)}
+          ${renderScene(active)}
         </div>
       </div>
     </section>

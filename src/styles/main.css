@@ -11508,7 +11508,7 @@ body.demo-modal-open {
 }
 .sol-scene__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.68fr) minmax(280px, 0.82fr);
+  grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.68fr);
   gap: 18px;
   align-items: stretch;
   min-height: 420px;
