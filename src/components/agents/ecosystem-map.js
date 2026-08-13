@@ -1,5 +1,4 @@
 import { AGENTS_OVERVIEW } from '../../data/agents-overview.js'
-import { SHOW_TOKEN_ENTRY, TOKEN_SITE_URL } from '../../data/site-links.js'
 
 function esc(str = '') {
   return String(str)
@@ -259,23 +258,6 @@ function renderValueBar() {
     </div>`
 }
 
-function renderFoot(selected) {
-  return `
-    <div class="ag-eco__foot">
-      ${
-        SHOW_TOKEN_ENTRY
-          ? `<a class="ag-eco__token" href="${esc(TOKEN_SITE_URL)}" target="_blank" rel="noopener noreferrer" data-token-link>了解 AI Token</a>`
-          : '<span></span>'
-      }
-      <button type="button" class="ag-eco__jump" data-ag-jump-story>
-        <span data-ag-jump-label>查看「${esc(selected.name)}」如何完成一项真实任务</span>
-        <svg class="ag-eco__jump-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-          <path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>
-        </svg>
-      </button>
-    </div>`
-}
-
 /**
  * AgentEcosystemMap — 业务目标 → 八大智能体 → 自主执行 → 人/系统/设备 → 客户价值
  * @param {{ selectedId: string }} props
@@ -293,7 +275,6 @@ export function renderAgentEcosystemMap({ selectedId }) {
         ${renderHubPill()}
         ${renderResources()}
         ${renderValueBar()}
-        ${renderFoot(selected)}
       </div>
     </section>`
 }
@@ -306,7 +287,4 @@ export function syncAgentEcosystemMap(root, selectedId) {
     btn.classList.toggle('is-selected', on)
     btn.setAttribute('aria-pressed', on ? 'true' : 'false')
   })
-
-  const label = root.querySelector('[data-ag-jump-label]')
-  if (label) label.textContent = `查看「${selected.name}」如何完成一项真实任务`
 }
