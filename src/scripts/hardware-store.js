@@ -61,7 +61,7 @@ function renderHero() {
   return `
     <section class="hwc-hero">
       <div class="hwc-hero__bg" aria-hidden="true">
-        <img src="/images/hardware/hero-bg.png" alt="" width="1920" height="527" />
+        <img src="/images/hardware/hero-bg-3840.png" alt="" width="3840" height="1054" decoding="async" fetchpriority="high" />
       </div>
       <div class="hwc-shell hwc-hero__content">
         <div class="hwc-hero__copy">
