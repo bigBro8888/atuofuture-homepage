@@ -16,6 +16,7 @@ export default defineConfig({
         about: resolve(__dirname, 'about/index.html'),
         solutions: resolve(__dirname, 'solutions/index.html'),
         news: resolve(__dirname, 'news/index.html'),
+        newsDetail: resolve(__dirname, 'news-detail/index.html'),
         appDownload: resolve(__dirname, 'app-download/index.html'),
         adminApps: resolve(__dirname, 'admin/apps/index.html'),
       },

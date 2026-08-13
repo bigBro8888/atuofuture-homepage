@@ -1,5 +1,13 @@
 import { NEWS_ITEMS } from '../data/news.js'
 
+function esc(str = '') {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
 export function initNewsPage() {
   const list = document.getElementById('news-list')
   const filters = document.getElementById('news-filters')
@@ -12,27 +20,26 @@ export function initNewsPage() {
     list.innerHTML = items
       .map(
         (n) => `
-      <article class="sx-news-item">
-        <time datetime="${n.date}">${n.date}</time>
-        <div>
-          <div class="sx-news-item__meta">${n.category}</div>
-          <h3>${n.title}</h3>
-          <p>${n.summary}</p>
+      <a class="sx-news-item" href="../news-detail/?id=${encodeURIComponent(n.id)}">
+        <div class="sx-news-item__cover" style="background-image:url('${esc(n.cover)}')" role="img" aria-hidden="true"></div>
+        <div class="sx-news-item__body">
+          <div class="sx-news-item__meta">
+            <span>${esc(n.category)}</span>
+            <time datetime="${esc(n.date)}">${esc(n.date)}</time>
+          </div>
+          <h3>${esc(n.title)}</h3>
+          <p>${esc(n.summary)}</p>
         </div>
-        <span class="material-symbols-outlined text-primary">arrow_forward</span>
-      </article>`
+        <span class="material-symbols-outlined sx-news-item__arrow" aria-hidden="true">arrow_forward</span>
+      </a>`
       )
       .join('')
 
     filters.querySelectorAll('[data-news-cat]').forEach((btn) => {
-      btn.classList.toggle('is-active', btn.dataset.newsCat === active)
-      if (btn.dataset.newsCat === active) {
-        btn.classList.add('site-header__btn--primary')
-        btn.classList.remove('site-header__btn--ghost')
-      } else {
-        btn.classList.remove('site-header__btn--primary')
-        btn.classList.add('site-header__btn--ghost')
-      }
+      const on = btn.dataset.newsCat === active
+      btn.classList.toggle('is-active', on)
+      btn.classList.toggle('site-header__btn--primary', on)
+      btn.classList.toggle('site-header__btn--ghost', !on)
     })
   }
 

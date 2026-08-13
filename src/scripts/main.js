@@ -8,6 +8,7 @@ import { initAgentDetail } from './agent-detail.js'
 import { initAgentsPage } from './agents-page.js'
 import { initSolutionsPage } from './solutions-page.js'
 import { initNewsPage } from './news-page.js'
+import { initNewsDetailPage } from './news-detail.js'
 import { initAiTokenStore } from './ai-token-store.js'
 import { initOrder } from './order.js'
 import { loadAndApplyHomeContent } from './home-content.js'
@@ -765,6 +766,10 @@ function bootstrap() {
 
   if (page === 'news') {
     initNewsPage()
+  }
+
+  if (page === 'news-detail') {
+    initNewsDetailPage()
   }
 
   if (page === 'home') {
