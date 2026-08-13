@@ -17,6 +17,7 @@ function buildHref(item, root) {
 function isActiveNav(item, activeId) {
   if (item.id === activeId) return true
   if (activeId === 'agent-detail' && item.id === 'agents') return true
+  if (activeId === 'hardware-product' && item.id === 'hardware') return true
   if (activeId === 'news-detail' && item.id === 'news') return true
   if (activeId?.startsWith('sol-') && item.id === 'solutions') return true
   return false

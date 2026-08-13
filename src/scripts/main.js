@@ -4,6 +4,7 @@ import { initSiteNav } from '../components/site-nav.js'
 import { initSiteFooter } from '../components/site-footer.js'
 import { TOKEN_SITE_URL } from '../data/site-links.js'
 import { initHardwareStore } from './hardware-store.js'
+import { initHardwareProductPage } from './hardware-product.js'
 import { initAgentDetail } from './agent-detail.js'
 import { initAgentsPage } from './agents-page.js'
 import { initSolutionsPage } from './solutions-page.js'
@@ -780,6 +781,10 @@ function bootstrap() {
 
   if (page === 'hardware') {
     initHardwareStore()
+  }
+
+  if (page === 'hardware-product') {
+    initHardwareProductPage()
   }
 
   if (page === 'ai-token') {
