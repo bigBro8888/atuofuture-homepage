@@ -60,8 +60,8 @@ function linePreviewItems(lineId) {
 function renderHero() {
   return `
     <section class="hwc-hero">
-      <div class="hwc-hero__visual" aria-hidden="true">
-        <img src="/images/hardware/hero-products.png" alt="" width="1002" height="534" />
+      <div class="hwc-hero__bg" aria-hidden="true">
+        <img src="/images/hardware/hero-bg.png" alt="" width="1920" height="527" />
       </div>
       <div class="hwc-shell hwc-hero__content">
         <div class="hwc-hero__copy">

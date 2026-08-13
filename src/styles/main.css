@@ -13112,36 +13112,34 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .hwc-hero {
   position: relative;
   isolation: isolate;
-  min-height: clamp(420px, 48vh, 560px);
+  width: 100%;
+  aspect-ratio: 1920 / 527;
+  min-height: 0;
   padding: 0;
   overflow: hidden;
   background: #f5f7fa;
 }
-.hwc-hero__visual {
+.hwc-hero__bg {
   position: absolute;
   inset: 0;
   z-index: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
   pointer-events: none;
-  padding: 24px clamp(12px, 3vw, 48px) 20px 0;
 }
-.hwc-hero__visual img {
+.hwc-hero__bg img {
   display: block;
-  width: min(62vw, 980px);
-  height: auto;
-  max-height: calc(100% - 16px);
-  object-fit: contain;
-  object-position: right center;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
 }
 .hwc-hero__content {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
-  min-height: clamp(420px, 48vh, 560px);
-  padding: 96px 0 40px;
+  height: 100%;
+  min-height: 0;
+  padding: 96px 0 32px;
 }
 .hwc-hero__copy {
   position: relative;
@@ -13443,21 +13441,19 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 }
 
 @media (max-width: 1100px) {
-  .hwc-hero,
-  .hwc-hero__content { min-height: 0; }
+  .hwc-hero {
+    aspect-ratio: auto;
+    min-height: 360px;
+  }
   .hwc-hero__content {
     align-items: flex-start;
+    height: auto;
+    min-height: 360px;
     padding-top: 100px;
-    padding-bottom: 36px;
+    padding-bottom: 220px;
   }
-  .hwc-hero__visual {
-    align-items: flex-end;
-    justify-content: center;
-    padding: 0 16px 12px;
-  }
-  .hwc-hero__visual img {
-    width: min(92%, 720px);
-    max-height: 46%;
+  .hwc-hero__bg img {
+    object-position: 78% center;
   }
   .hwc-hero__copy { max-width: 560px; }
   .hwc-lines__grid { grid-template-columns: 1fr; }
@@ -13479,12 +13475,13 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 }
 @media (max-width: 720px) {
   .hwc-shell { width: min(1440px, calc(100% - 32px)); }
-  .hwc-hero__content { padding: 92px 0 24px; }
-  .hwc-hero__copy h1 { font-size: 34px; }
-  .hwc-hero__visual img {
-    width: min(96%, 520px);
-    max-height: 42%;
+  .hwc-hero { min-height: 320px; }
+  .hwc-hero__content {
+    min-height: 320px;
+    padding: 92px 0 200px;
   }
+  .hwc-hero__copy h1 { font-size: 34px; }
+  .hwc-hero__bg img { object-position: 82% center; }
   .hwc-lines__item { flex: 0 0 calc(50% - 8px); }
   .hwc-cats__list { display: none; }
   .hwc-cats__mobile { display: block; }
