@@ -1,0 +1,424 @@
+/* 首页五大技术优势首屏：布局、遮罩、视觉动效、响应式 */
+
+:root {
+  --ha-orange: #e86e28;
+  --ha-cyan: #6eb6ff;
+  --ha-navy: #000028;
+}
+
+.sm-hero.ha-hero,
+.sm-hero {
+  height: clamp(620px, 78vh, 900px);
+  min-height: 620px;
+  background:
+    radial-gradient(120% 90% at 80% 20%, rgba(20, 70, 150, 0.35), transparent 55%),
+    linear-gradient(160deg, #000028 0%, #061038 48%, #020617 100%);
+}
+
+.ha-media {
+  background-color: #000028;
+  overflow: hidden;
+  transform: none;
+}
+
+.ha-media__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 68% center;
+  display: block;
+  transform: scale(1.03);
+  transition: transform 8s ease, opacity 0.6s ease;
+  opacity: 0.55;
+}
+
+.sm-hero__slide.is-active .ha-media__img {
+  transform: scale(1);
+  opacity: 0.72;
+}
+
+.ha-mask {
+  background:
+    linear-gradient(90deg, rgba(0, 0, 40, 0.94) 0%, rgba(0, 0, 40, 0.78) 34%, rgba(0, 0, 40, 0.35) 62%, rgba(0, 0, 40, 0.08) 82%, transparent 100%),
+    linear-gradient(0deg, rgba(0, 0, 40, 0.55) 0%, transparent 42%);
+}
+
+.ha-content {
+  display: grid;
+  grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: center;
+  padding-top: 88px;
+  padding-bottom: 132px;
+}
+
+.ha-copy {
+  max-width: 560px;
+  position: relative;
+  z-index: 3;
+}
+
+.ha-kicker {
+  color: rgba(220, 228, 240, 0.78);
+}
+
+.ha-kicker__num {
+  color: var(--ha-orange);
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-title,
+.sm-hero__copy .ha-title,
+.sm-hero__copy h1.ha-title,
+.sm-hero__copy h2.ha-title {
+  margin: 0 0 16px;
+  font-size: clamp(30px, 3.6vw, 54px);
+  line-height: 1.18;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.ha-desc,
+.sm-hero__copy .ha-desc {
+  margin: 0 0 28px;
+  font-size: 18px;
+  line-height: 1.7;
+  color: rgba(230, 236, 246, 0.88);
+  max-width: 34em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
+}
+
+.ha-actions .sm-btn {
+  border-radius: 2px;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.ha-actions .sm-btn:hover {
+  transform: translateY(-2px);
+}
+
+.ha-actions .sm-btn--outline:hover {
+  border-color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ha-visual {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 560px);
+  margin-left: auto;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.7s ease 0.28s, transform 0.7s ease 0.28s;
+  pointer-events: none;
+}
+
+.sm-hero__slide.is-active .ha-visual {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ha-viz {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* 文案依次入场 */
+.ha-copy .ha-kicker,
+.ha-copy .ha-title,
+.ha-copy .ha-desc,
+.ha-copy .ha-actions {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.sm-hero__slide.is-active .ha-copy .ha-kicker,
+.sm-hero__slide.is-active .ha-copy .ha-title,
+.sm-hero__slide.is-active .ha-copy .ha-desc,
+.sm-hero__slide.is-active .ha-copy .ha-actions {
+  animation: ha-rise 0.65s ease forwards;
+}
+
+.sm-hero__slide.is-active .ha-copy .ha-kicker { animation-delay: 0.05s; }
+.sm-hero__slide.is-active .ha-copy .ha-title { animation-delay: 0.14s; }
+.sm-hero__slide.is-active .ha-copy .ha-desc { animation-delay: 0.24s; }
+.sm-hero__slide.is-active .ha-copy .ha-actions { animation-delay: 0.34s; }
+
+@keyframes ha-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- 通用动效 ---- */
+.ha-viz__core-glow,
+.ha-viz__breath {
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.sm-hero__slide.is-active .ha-viz__breath {
+  animation: ha-breathe 4.8s ease-in-out infinite;
+}
+
+.sm-hero__slide.is-active .ha-viz__breath-ring,
+.sm-hero__slide.is-active .ha-viz__core-ring {
+  animation: ha-ring 5.5s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.sm-hero__slide.is-active .ha-viz__flow {
+  stroke-dasharray: 8 14;
+  animation: ha-dash 6s linear infinite;
+}
+
+.sm-hero__slide.is-active .ha-viz__flow--delay {
+  animation-delay: 1.2s;
+}
+
+.sm-hero__slide.is-active .ha-viz__flow--delay2 {
+  animation-delay: 2.4s;
+}
+
+.sm-hero__slide.is-active .ha-viz__node {
+  animation: ha-fade-in 0.8s ease both;
+}
+
+.sm-hero__slide.is-active .ha-viz__node:nth-child(2) { animation-delay: 0.15s; }
+.sm-hero__slide.is-active .ha-viz__node:nth-child(3) { animation-delay: 0.3s; }
+.sm-hero__slide.is-active .ha-viz__node:nth-child(4) { animation-delay: 0.45s; }
+.sm-hero__slide.is-active .ha-viz__node:nth-child(5) { animation-delay: 0.6s; }
+.sm-hero__slide.is-active .ha-viz__node:nth-child(6) { animation-delay: 0.75s; }
+.sm-hero__slide.is-active .ha-viz__node:nth-child(7) { animation-delay: 0.9s; }
+.sm-hero__slide.is-active .ha-viz__node:nth-child(8) { animation-delay: 1.05s; }
+
+.sm-hero__slide.is-active .ha-viz__wave {
+  animation: ha-wave 5s ease-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.sm-hero__slide.is-active .ha-viz__wave--delay {
+  animation-delay: 1.6s;
+}
+
+.sm-hero__slide.is-active .ha-viz__mini-loop circle {
+  animation: ha-dash 8s linear infinite;
+}
+
+.sm-hero__slide.is-active .ha-viz__layer--platform {
+  animation: ha-platform-dim 10s ease-in-out infinite;
+}
+
+.sm-hero__slide.is-active .ha-viz__pulse-dot {
+  animation: ha-dot-travel 5.5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.sm-hero__slide.is-active .ha-viz__pulse-dot--down {
+  animation-name: ha-dot-travel-rev;
+}
+
+.sm-hero__slide.is-active .ha-viz__hw-row {
+  animation: ha-fade-in 0.7s ease both;
+}
+
+.sm-hero__slide.is-active .ha-viz__hw-row:nth-child(5) { animation-delay: 0.05s; }
+.sm-hero__slide.is-active .ha-viz__hw-row:nth-child(4) { animation-delay: 0.2s; }
+.sm-hero__slide.is-active .ha-viz__hw-row:nth-child(3) { animation-delay: 0.35s; }
+.sm-hero__slide.is-active .ha-viz__hw-row:nth-child(2) { animation-delay: 0.5s; }
+.sm-hero__slide.is-active .ha-viz__hw-row:nth-child(1) { animation-delay: 0.65s; }
+
+@keyframes ha-breathe {
+  0%, 100% { opacity: 0.88; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes ha-ring {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.06); }
+}
+
+@keyframes ha-dash {
+  to { stroke-dashoffset: -80; }
+}
+
+@keyframes ha-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ha-wave {
+  0% { opacity: 0.5; transform: scale(0.7); }
+  70% { opacity: 0; transform: scale(1.35); }
+  100% { opacity: 0; transform: scale(1.35); }
+}
+
+@keyframes ha-platform-dim {
+  0%, 62%, 100% { opacity: 1; }
+  72%, 86% { opacity: 0.42; }
+}
+
+@keyframes ha-dot-travel {
+  0% { opacity: 0; transform: translateY(120px); }
+  12% { opacity: 1; }
+  48% { opacity: 0.95; transform: translateY(-120px); }
+  60%, 100% { opacity: 0; transform: translateY(-120px); }
+}
+
+@keyframes ha-dot-travel-rev {
+  0%, 48% { opacity: 0; transform: translateY(-120px); }
+  58% { opacity: 1; }
+  92% { opacity: 0.9; transform: translateY(120px); }
+  100% { opacity: 0; transform: translateY(120px); }
+}
+
+/* 离屏暂停动画 */
+.sm-hero.is-offscreen .ha-viz__breath,
+.sm-hero.is-offscreen .ha-viz__breath-ring,
+.sm-hero.is-offscreen .ha-viz__core-ring,
+.sm-hero.is-offscreen .ha-viz__flow,
+.sm-hero.is-offscreen .ha-viz__wave,
+.sm-hero.is-offscreen .ha-viz__mini-loop circle,
+.sm-hero.is-offscreen .ha-viz__layer--platform,
+.sm-hero.is-offscreen .ha-viz__pulse-dot,
+.sm-hero.is-offscreen .ha-media__img {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-media__img,
+  .ha-visual,
+  .ha-copy .ha-kicker,
+  .ha-copy .ha-title,
+  .ha-copy .ha-desc,
+  .ha-copy .ha-actions,
+  .sm-hero__slide.is-active .ha-copy .ha-kicker,
+  .sm-hero__slide.is-active .ha-copy .ha-title,
+  .sm-hero__slide.is-active .ha-copy .ha-desc,
+  .sm-hero__slide.is-active .ha-copy .ha-actions {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .sm-hero__slide.is-active .ha-viz__breath,
+  .sm-hero__slide.is-active .ha-viz__breath-ring,
+  .sm-hero__slide.is-active .ha-viz__core-ring,
+  .sm-hero__slide.is-active .ha-viz__flow,
+  .sm-hero__slide.is-active .ha-viz__wave,
+  .sm-hero__slide.is-active .ha-viz__mini-loop circle,
+  .sm-hero__slide.is-active .ha-viz__layer--platform,
+  .sm-hero__slide.is-active .ha-viz__pulse-dot,
+  .sm-hero__slide.is-active .ha-viz__node,
+  .sm-hero__slide.is-active .ha-viz__hw-row {
+    animation: none !important;
+  }
+}
+
+/* 平板 */
+@media (max-width: 1199px) and (min-width: 768px) {
+  .ha-content {
+    grid-template-columns: minmax(0, 0.48fr) minmax(0, 0.52fr);
+    gap: 28px;
+  }
+
+  .ha-visual {
+    width: min(100%, 460px);
+  }
+
+  .ha-viz--open .ha-viz__outer,
+  .ha-viz--ai .ha-viz__scene g:nth-child(n + 3),
+  .ha-viz--wireless .ha-viz__distant {
+    opacity: 0.35;
+  }
+}
+
+/* 手机 */
+@media (max-width: 767px) {
+  .sm-hero.ha-hero,
+  .sm-hero {
+    height: auto;
+    min-height: 620px;
+  }
+
+  .ha-content {
+    grid-template-columns: 1fr;
+    align-content: start;
+    padding-top: 96px;
+    padding-bottom: 120px;
+    gap: 20px;
+  }
+
+  .ha-copy {
+    max-width: none;
+  }
+
+  .ha-title,
+  .sm-hero__copy .ha-title,
+  .sm-hero__copy h1.ha-title,
+  .sm-hero__copy h2.ha-title {
+    font-size: clamp(30px, 8vw, 36px);
+  }
+
+  .ha-desc,
+  .sm-hero__copy .ha-desc {
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-line-clamp: 4;
+    margin-bottom: 20px;
+  }
+
+  .ha-visual {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .ha-media__img {
+    object-position: 60% center;
+    opacity: 0.4;
+  }
+
+  .sm-hero__slide.is-active .ha-media__img {
+    opacity: 0.55;
+  }
+
+  .ha-viz--open .ha-viz__outer,
+  .ha-viz--ai .ha-viz__scene,
+  .ha-viz--wireless .ha-viz__distant,
+  .ha-viz--wireless .ha-viz__devices circle:nth-child(n + 9),
+  .ha-viz--hw .ha-viz__devices-row {
+    display: none;
+  }
+
+  .ha-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ha-actions .sm-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 767px) and (min-width: 420px) {
+  .ha-actions {
+    flex-direction: row;
+  }
+
+  .ha-actions .sm-btn {
+    width: auto;
+    flex: 1;
+  }
+}

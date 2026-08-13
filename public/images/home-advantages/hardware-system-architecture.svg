@@ -1,0 +1,9 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 460" role="img" aria-hidden="true">
+  <title>软硬件一体架构</title>
+  <rect width="560" height="460" fill="#000028"/>
+  <rect x="80" y="40" width="400" height="50" fill="#10285a" stroke="#e86e28"/><text x="100" y="70" fill="#fff" font-size="13" font-family="sans-serif">平台层</text>
+  <rect x="80" y="110" width="400" height="50" fill="#0e2a52" stroke="#6eb6ff"/><text x="100" y="140" fill="#fff" font-size="13" font-family="sans-serif">边缘层</text>
+  <rect x="80" y="180" width="400" height="50" fill="#0c2c4c" stroke="#6eb6ff"/><text x="100" y="210" fill="#fff" font-size="13" font-family="sans-serif">交互层</text>
+  <rect x="80" y="250" width="400" height="50" fill="#0a2e46" stroke="#6eb6ff"/><text x="100" y="280" fill="#fff" font-size="13" font-family="sans-serif">控制层</text>
+  <rect x="80" y="320" width="400" height="50" fill="#083042" stroke="#6eb6ff"/><text x="100" y="350" fill="#fff" font-size="13" font-family="sans-serif">感知层</text>
+</svg>

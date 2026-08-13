@@ -1,0 +1,6 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 460" role="img" aria-hidden="true">
+  <title>AI智能体架构</title>
+  <rect width="560" height="460" fill="#000028"/>
+  <circle cx="260" cy="210" r="40" fill="#3d8dff" stroke="#e86e28" stroke-width="2"/>
+  <text x="260" y="215" text-anchor="middle" fill="#fff" font-size="12" font-family="sans-serif">AI核心</text>
+</svg>

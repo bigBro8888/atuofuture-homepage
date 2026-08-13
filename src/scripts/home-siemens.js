@@ -1,5 +1,8 @@
 /** 首页西门子式模块交互：Hero 轮播、Tab、方案横滑 */
 
+import { mountHomeAdvantages } from '../components/home-advantages/index.js'
+import { HOME_ADVANTAGES_INTERVAL_MS } from '../data/home-advantages.js'
+
 export function initSiemensHome() {
   initHeroCarousel()
   initCapabilityTabs()
@@ -19,6 +22,10 @@ function initHeroCarousel() {
   const root = document.querySelector('[data-sm-hero]')
   if (!root) return
 
+  root.classList.add('ha-hero')
+  const track = root.querySelector('[data-sm-hero-track]')
+  if (track) mountHomeAdvantages(track)
+
   const controls = root.querySelector('.sm-hero__controls')
   const slides = [...root.querySelectorAll('[data-sm-hero-slide]')]
   const dotsWrap = root.querySelector('[data-sm-hero-dots]')
@@ -27,22 +34,34 @@ function initHeroCarousel() {
   const pauseBtn = root.querySelector('[data-sm-hero-pause]')
   if (!slides.length || !dotsWrap) return
 
-  const INTERVAL = 5000
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const INTERVAL = HOME_ADVANTAGES_INTERVAL_MS
   let index = 0
-  let paused = false
+  let paused = reduceMotion
+  let hoverPaused = false
+  let offscreenPaused = false
+  let userPaused = reduceMotion
   let raf = 0
   let startedAt = 0
+  let touchStartX = 0
+  let touchStartY = 0
+  let touchActive = false
 
+  dotsWrap.innerHTML = ''
   slides.forEach((_, i) => {
     const btn = document.createElement('button')
     btn.type = 'button'
     btn.className = 'sm-hero__dot'
-    btn.setAttribute('aria-label', `第 ${i + 1} 页`)
+    btn.setAttribute('aria-label', `切换到能力 ${String(i + 1).padStart(2, '0')}`)
     btn.addEventListener('click', () => go(i))
     dotsWrap.appendChild(btn)
   })
 
   const dots = [...dotsWrap.querySelectorAll('.sm-hero__dot')]
+
+  function isAutoplayBlocked() {
+    return userPaused || hoverPaused || offscreenPaused || reduceMotion
+  }
 
   function setProgress(value) {
     const v = Math.max(0, Math.min(1, value))
@@ -56,7 +75,7 @@ function initHeroCarousel() {
   }
 
   function tickProgress(now) {
-    if (paused) return
+    if (isAutoplayBlocked()) return
     const elapsed = now - startedAt
     setProgress(elapsed / INTERVAL)
     if (elapsed >= INTERVAL) {
@@ -68,8 +87,8 @@ function initHeroCarousel() {
 
   function startProgress() {
     stopProgress()
-    if (paused) {
-      setProgress(0)
+    if (isAutoplayBlocked()) {
+      setProgress(userPaused || reduceMotion ? 0 : 0)
       return
     }
     startedAt = performance.now()
@@ -77,33 +96,115 @@ function initHeroCarousel() {
     raf = requestAnimationFrame(tickProgress)
   }
 
+  function syncPauseUi() {
+    paused = isAutoplayBlocked()
+    pauseBtn?.classList.toggle('is-paused', userPaused)
+    pauseBtn?.setAttribute('aria-pressed', userPaused ? 'true' : 'false')
+    pauseBtn?.setAttribute('aria-label', userPaused ? '播放自动轮播' : '暂停自动轮播')
+  }
+
+  function preloadNeighbor(i) {
+    const nextSlide = slides[(i + 1) % slides.length]
+    const img = nextSlide?.querySelector('.ha-media__img')
+    if (img?.dataset.preloaded === '1' || !img?.src) return
+    const probe = new Image()
+    probe.src = img.currentSrc || img.src
+    img.dataset.preloaded = '1'
+  }
+
   function go(i) {
     index = (i + slides.length) % slides.length
-    slides.forEach((s, n) => s.classList.toggle('is-active', n === index))
-    dots.forEach((d, n) => {
-      d.classList.toggle('is-active', n === index)
-      d.toggleAttribute('aria-current', n === index)
+    slides.forEach((s, n) => {
+      const on = n === index
+      s.classList.toggle('is-active', on)
+      s.setAttribute('aria-hidden', on ? 'false' : 'true')
     })
+    dots.forEach((d, n) => {
+      const on = n === index
+      d.classList.toggle('is-active', on)
+      if (on) d.setAttribute('aria-current', 'true')
+      else d.removeAttribute('aria-current')
+    })
+    root.setAttribute('aria-live', 'polite')
+    preloadNeighbor(index)
+    syncPauseUi()
     startProgress()
   }
 
-  function setPaused(nextPaused) {
-    paused = nextPaused
-    pauseBtn?.classList.toggle('is-paused', paused)
-    pauseBtn?.setAttribute('aria-pressed', paused ? 'true' : 'false')
-    pauseBtn?.setAttribute('aria-label', paused ? '播放自动轮播' : '暂停自动轮播')
-    if (paused) stopProgress()
+  function setUserPaused(nextPaused) {
+    userPaused = nextPaused
+    syncPauseUi()
+    if (isAutoplayBlocked()) stopProgress()
     else startProgress()
   }
 
-  prev?.addEventListener('click', () => {
-    go(index - 1)
-  })
-  next?.addEventListener('click', () => {
-    go(index + 1)
-  })
-  pauseBtn?.addEventListener('click', () => setPaused(!paused))
+  prev?.addEventListener('click', () => go(index - 1))
+  next?.addEventListener('click', () => go(index + 1))
+  pauseBtn?.addEventListener('click', () => setUserPaused(!userPaused))
 
+  root.addEventListener('mouseenter', () => {
+    hoverPaused = true
+    stopProgress()
+  })
+  root.addEventListener('mouseleave', () => {
+    hoverPaused = false
+    if (!isAutoplayBlocked()) startProgress()
+  })
+
+  root.addEventListener(
+    'touchstart',
+    (e) => {
+      const t = e.changedTouches[0]
+      if (!t) return
+      touchActive = true
+      touchStartX = t.clientX
+      touchStartY = t.clientY
+    },
+    { passive: true }
+  )
+
+  root.addEventListener(
+    'touchend',
+    (e) => {
+      if (!touchActive) return
+      touchActive = false
+      const t = e.changedTouches[0]
+      if (!t) return
+      const dx = t.clientX - touchStartX
+      const dy = t.clientY - touchStartY
+      if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return
+      if (dx < 0) go(index + 1)
+      else go(index - 1)
+    },
+    { passive: true }
+  )
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+    const tag = (e.target instanceof Element ? e.target.tagName : '').toLowerCase()
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target?.isContentEditable) return
+    const rect = root.getBoundingClientRect()
+    const inView = rect.bottom > 80 && rect.top < window.innerHeight * 0.85
+    if (!inView) return
+    e.preventDefault()
+    if (e.key === 'ArrowLeft') go(index - 1)
+    else go(index + 1)
+  })
+
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        offscreenPaused = !entry.isIntersecting
+        root.classList.toggle('is-offscreen', offscreenPaused)
+        if (offscreenPaused) stopProgress()
+        else if (!isAutoplayBlocked()) startProgress()
+      },
+      { threshold: 0.2 }
+    )
+    io.observe(root)
+  }
+
+  if (reduceMotion) setUserPaused(true)
   go(0)
 }
 

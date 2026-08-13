@@ -1,0 +1,7 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 460" role="img" aria-hidden="true">
+  <title>分层自治架构</title>
+  <rect width="560" height="460" fill="#000028"/>
+  <rect x="80" y="60" width="400" height="80" fill="#0c1c40" stroke="#6eb6ff"/><text x="100" y="105" fill="#fff" font-size="14" font-family="sans-serif">平台层</text>
+  <rect x="80" y="170" width="400" height="80" fill="#0a2448" stroke="#6eb6ff"/><text x="100" y="215" fill="#fff" font-size="14" font-family="sans-serif">区域层</text>
+  <rect x="80" y="280" width="400" height="80" fill="#082846" stroke="#6eb6ff"/><text x="100" y="325" fill="#fff" font-size="14" font-family="sans-serif">终端层</text>
+</svg>
