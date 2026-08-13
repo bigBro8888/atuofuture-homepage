@@ -10349,9 +10349,11 @@ body.demo-modal-open {
 
 /* Hero carousel（五大技术优势，细节见 home-advantages.css） */
 .sm-hero {
+  /* 对齐西门子官网 --hero-carousel-height: 600px */
+  --sm-hero-height: 600px;
   position: relative;
-  height: clamp(620px, 78vh, 900px);
-  min-height: 620px;
+  height: var(--sm-hero-height);
+  min-height: var(--sm-hero-height);
   background: var(--sm-navy);
   overflow: hidden;
 }
@@ -11129,7 +11131,8 @@ body.demo-modal-open {
   .sm-sol-card { flex-basis: calc((100% - 32px) / 2); }
 }
 @media (max-width: 720px) {
-  .sm-hero { min-height: 620px; height: auto; }
+  /* 对齐西门子：小屏 height:auto，min-height 仍为 600px */
+  .sm-hero { height: auto; min-height: var(--sm-hero-height, 600px); }
   .sm-hero__content { padding: 96px 0 132px; align-items: flex-start; }
   .sm-mini-banner__inner {
     grid-template-columns: 1fr;

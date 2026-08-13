@@ -8,8 +8,10 @@
 
 .sm-hero.ha-hero,
 .sm-hero {
-  height: clamp(620px, 78vh, 900px);
-  min-height: 620px;
+  /* 对齐西门子官网首屏：固定 600px */
+  --sm-hero-height: 600px;
+  height: var(--sm-hero-height);
+  min-height: var(--sm-hero-height);
   background:
     radial-gradient(120% 90% at 80% 20%, rgba(20, 70, 150, 0.35), transparent 55%),
     linear-gradient(160deg, #000028 0%, #061038 48%, #020617 100%);
@@ -349,7 +351,7 @@
   .sm-hero.ha-hero,
   .sm-hero {
     height: auto;
-    min-height: 620px;
+    min-height: var(--sm-hero-height, 600px);
   }
 
   .ha-content {
