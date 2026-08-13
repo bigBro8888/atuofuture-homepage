@@ -18,17 +18,53 @@ const BUSINESS_GOALS = [
   { id: 'hospitality', label: '服务住客', icon: 'apartment' },
 ]
 
-/** 八大智能体展示名（贴近设计稿） */
-const AGENT_LABELS = {
-  space: '空间服务',
-  energy: '能源能耗',
-  meeting: '会议',
-  exhibition: '展厅',
-  visitor: '访客接待',
-  opc: '商业运营',
-  hospitality: '酒店公寓',
-  asset: '资产管理',
+/** 八大智能体展示文案（对齐设计稿） */
+const AGENT_COPY = {
+  space: {
+    title: '空间服务智能体',
+    desc: '空调照明、工单与信息发布统一调度',
+  },
+  energy: {
+    title: '能源能耗智能体',
+    desc: '分项计量与有无人节能分析',
+  },
+  meeting: {
+    title: '会议智能体',
+    desc: '预约签到、中控与音视频联动',
+  },
+  exhibition: {
+    title: '展厅智能体',
+    desc: '大屏、孪生、讲解与展项状态',
+  },
+  visitor: {
+    title: '访客接待智能体',
+    desc: '邀约登记、通行与接待编排',
+  },
+  opc: {
+    title: '商业空间运营智能体',
+    desc: '空间发布、带看、签约与运营协同',
+  },
+  hospitality: {
+    title: '酒店公寓智能体',
+    desc: '分房、门锁、客房与费用管理',
+  },
+  asset: {
+    title: '资产管理智能体',
+    desc: '盘点、领用借还与生命周期',
+  },
 }
+
+/** 展示顺序：左列业务 + 右列业务，贴近设计稿两列阅读 */
+const AGENT_DISPLAY_ORDER = [
+  'space',
+  'energy',
+  'meeting',
+  'exhibition',
+  'visitor',
+  'opc',
+  'hospitality',
+  'asset',
+]
 
 const HUB_STEPS = [
   { title: '读懂目标', icon: 'track_changes' },
@@ -111,13 +147,19 @@ function renderFlowDown() {
 }
 
 function renderAgentsPill(selectedId) {
+  const agents = AGENT_DISPLAY_ORDER.map(
+    (id) => AGENTS_OVERVIEW.find((a) => a.id === id)
+  ).filter(Boolean)
+
   return `
     <div class="ag-eco__pill ag-eco__pill--agents">
       <div class="ag-eco__pill-side">八大空间智能体</div>
       <div class="ag-eco__agents" data-ag-eco>
-        ${AGENTS_OVERVIEW.map((a) => {
-          const on = a.id === selectedId
-          return `
+        ${agents
+          .map((a) => {
+            const on = a.id === selectedId
+            const copy = AGENT_COPY[a.id] || { title: a.name, desc: a.blurb }
+            return `
             <button
               type="button"
               class="ag-eco__agent${on ? ' is-selected' : ''}"
@@ -127,11 +169,14 @@ function renderAgentsPill(selectedId) {
               <span class="ag-eco__agent-icon" aria-hidden="true">
                 <span class="material-symbols-outlined">${esc(a.icon)}</span>
               </span>
-              <span>${esc(AGENT_LABELS[a.id] || a.shortName)}</span>
+              <span class="ag-eco__agent-copy">
+                <strong>${esc(copy.title)}</strong>
+                <small>${esc(copy.desc)}</small>
+              </span>
             </button>`
-        }).join('')}
+          })
+          .join('')}
       </div>
-      <p class="ag-eco__pill-note">不同任务，由对应智能体全程负责</p>
     </div>`
 }
 

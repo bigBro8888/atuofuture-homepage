@@ -12815,11 +12815,11 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 }
 .ag-eco__pill {
   display: grid;
-  grid-template-columns: 132px 1fr minmax(140px, 168px);
+  grid-template-columns: 132px 1fr;
   align-items: center;
-  gap: 18px 20px;
-  min-height: 132px;
-  padding: 22px 28px;
+  gap: 18px 28px;
+  min-height: 148px;
+  padding: 24px 36px 24px 28px;
   border-radius: 999px;
   box-sizing: border-box;
 }
@@ -12838,33 +12838,22 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   color: #071A33;
   text-align: center;
 }
-.ag-eco__pill-side--light {
-  color: #fff;
-}
-.ag-eco__pill-note {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.55;
-  color: #6A7C94;
-  text-align: center;
-}
 .ag-eco__agents {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 36px;
 }
 .ag-eco__agent {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: start;
+  gap: 10px;
   min-width: 0;
-  padding: 6px 8px;
+  padding: 8px 10px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   background: transparent;
   color: #1B3558;
-  font-size: 14px;
-  font-weight: 500;
   text-align: left;
   cursor: pointer;
   transition: background .18s ease, color .18s ease;
@@ -12887,8 +12876,9 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
+  margin-top: 1px;
   border-radius: 50%;
   border: 1px solid #D5E2F2;
   background: #F3F7FC;
@@ -12896,7 +12886,23 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
 .ag-eco__agent-icon .material-symbols-outlined {
-  font-size: 17px;
+  font-size: 18px;
+}
+.ag-eco__agent-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.ag-eco__agent-copy strong {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #071A33;
+}
+.ag-eco__agent-copy small {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #62758F;
 }
 .ag-eco__flow-mid {
   display: grid;
@@ -12975,7 +12981,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   padding-right: 0;
 }
 .ag-eco__steps strong {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: .01em;
   color: #fff;
@@ -12983,12 +12989,12 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .ag-eco__step-icon {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   color: #EAF8FF;
 }
 .ag-eco__step-icon .material-symbols-outlined {
-  font-size: 22px;
+  font-size: 24px;
   font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
 }
 .ag-eco__step-arrow {
@@ -13003,7 +13009,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .ag-eco__hub-desc {
   margin: 0;
   max-width: 100%;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
   line-height: 1.5;
   color: rgba(255, 255, 255, .82);
