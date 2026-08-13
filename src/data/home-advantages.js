@@ -1,7 +1,7 @@
 /** 首页首屏：公司定位总览 + 五大技术优势（西门子式简洁文案） */
 
-export const HOME_ADVANTAGES_INTERVAL_MS = 8000
-export const HOME_OVERVIEW_INTERVAL_MS = 9000
+export const HOME_ADVANTAGES_INTERVAL_MS = 4000
+export const HOME_OVERVIEW_INTERVAL_MS = 4500
 
 /**
  * @typedef {{ label: string, href?: string, action?: 'demo' }} AdvantageAction
