@@ -37,12 +37,11 @@ function initHeroCarousel() {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const DEFAULT_INTERVAL = HOME_ADVANTAGES_INTERVAL_MS
   let index = 0
-  let hoverPaused = false
   let offscreenPaused = false
   let userPaused = reduceMotion
   let raf = 0
   let startedAt = 0
-  /** 本段计时开始时已有的进度 0~1（悬停/离屏后从此续播） */
+  /** 本段计时开始时已有的进度 0~1（离屏/手动暂停后从此续播） */
   let baseProgress = 0
   let touchStartX = 0
   let touchStartY = 0
@@ -66,7 +65,7 @@ function initHeroCarousel() {
   const dots = [...dotsWrap.querySelectorAll('.sm-hero__dot')]
 
   function isAutoplayBlocked() {
-    return userPaused || hoverPaused || offscreenPaused || reduceMotion
+    return userPaused || offscreenPaused || reduceMotion
   }
 
   function paintProgress(value) {
@@ -160,15 +159,6 @@ function initHeroCarousel() {
   prev?.addEventListener('click', () => go(index - 1))
   next?.addEventListener('click', () => go(index + 1))
   pauseBtn?.addEventListener('click', () => setUserPaused(!userPaused))
-
-  root.addEventListener('mouseenter', () => {
-    hoverPaused = true
-    freezeProgress()
-  })
-  root.addEventListener('mouseleave', () => {
-    hoverPaused = false
-    if (!isAutoplayBlocked()) startProgress({ reset: false })
-  })
 
   root.addEventListener(
     'touchstart',

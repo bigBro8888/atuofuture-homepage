@@ -1,20 +1,5 @@
 import { ADVANTAGE_SLIDES } from '../../data/home-advantages.js'
-import { renderCompanyOverviewVisual } from './visuals/overview.js'
-import { renderOpenInterfaceVisual } from './visuals/open-interface.js'
-import { renderAiAgentVisual } from './visuals/ai-agent.js'
-import { renderWirelessAccessVisual } from './visuals/wireless-access.js'
-import { renderLayeredLoopVisual } from './visuals/layered-loop.js'
-import { renderHardwareArchitectureVisual } from './visuals/hardware-system.js'
 import '../../styles/home-advantages.css'
-
-const VISUAL_RENDERERS = {
-  overview: renderCompanyOverviewVisual,
-  'open-interface': renderOpenInterfaceVisual,
-  'ai-agent': renderAiAgentVisual,
-  'wireless-access': renderWirelessAccessVisual,
-  'layered-loop': renderLayeredLoopVisual,
-  'hardware-system': renderHardwareArchitectureVisual,
-}
 
 function escapeHtml(value) {
   return String(value)
@@ -24,36 +9,29 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;')
 }
 
-function renderAction(action, variant) {
-  const className = variant === 'primary' ? 'sm-btn sm-btn--primary' : 'sm-btn sm-btn--outline'
+function renderAction(action) {
   const label = escapeHtml(action.label)
   if (action.action === 'demo') {
-    return `<button type="button" class="${className}" data-demo-modal-open>${label}</button>`
+    return `<button type="button" class="sm-btn sm-btn--primary" data-demo-modal-open>${label}</button>`
   }
-  return `<a href="${escapeHtml(action.href)}" class="${className}">${label}</a>`
+  return `<a href="${escapeHtml(action.href)}" class="sm-btn sm-btn--primary">${label}</a>`
 }
 
 function renderKicker(slide) {
-  if (slide.eyebrowEn || slide.eyebrowZh) {
-    return `
-      <strong class="sm-hero__kicker ha-kicker ha-kicker--overview">
-        <span class="ha-kicker__en">${escapeHtml(slide.eyebrowEn || '')}</span>
-        ${slide.eyebrowZh ? `<span class="ha-kicker__zh">${escapeHtml(slide.eyebrowZh)}</span>` : ''}
-      </strong>`
-  }
-  const match = /^能力\s*0?(\d+)$/.exec(String(slide.label || '').trim())
-  if (!match) return `<strong class="sm-hero__kicker ha-kicker">${escapeHtml(slide.label)}</strong>`
+  const label = String(slide.label || '').trim()
+  if (!label) return ''
+  const match = /^能力\s*0?(\d+)$/.exec(label)
+  if (!match) return `<strong class="sm-hero__kicker ha-kicker">${escapeHtml(label)}</strong>`
   return `<strong class="sm-hero__kicker ha-kicker">能力 <span class="ha-kicker__num">${match[1].padStart(2, '0')}</span></strong>`
 }
 
 function renderSlide(slide, index) {
   const isFirst = index === 0
   const titleTag = isFirst ? 'h1' : 'h2'
-  const visualFn = VISUAL_RENDERERS[slide.visual]
-  const visualHtml = visualFn ? visualFn() : ''
   const loading = isFirst ? 'eager' : 'lazy'
   const fetchPriority = isFirst ? 'high' : 'low'
   const dwell = slide.dwellMs || ''
+  const ariaLabel = slide.label ? `${slide.label}：${slide.title}` : slide.title
 
   return `
 <article
@@ -62,7 +40,7 @@ function renderSlide(slide, index) {
   data-ha-theme="${escapeHtml(slide.themeClass)}"
   ${dwell ? `data-ha-dwell="${dwell}"` : ''}
   aria-hidden="${isFirst ? 'false' : 'true'}"
-  aria-label="${escapeHtml(slide.label)}：${escapeHtml(slide.title)}"
+  aria-label="${escapeHtml(ariaLabel)}"
 >
   <div class="sm-hero__media ha-media">
     <img
@@ -82,20 +60,15 @@ function renderSlide(slide, index) {
       ${renderKicker(slide)}
       <${titleTag} class="ha-title">${escapeHtml(slide.title)}</${titleTag}>
       <p class="ha-desc">${escapeHtml(slide.description)}</p>
-      ${slide.valueProp ? `<p class="ha-value">${escapeHtml(slide.valueProp)}</p>` : ''}
       <div class="sm-hero__actions ha-actions">
-        ${renderAction(slide.primaryAction, 'primary')}
-        ${renderAction(slide.secondaryAction, 'secondary')}
+        ${renderAction(slide.primaryAction)}
       </div>
-    </div>
-    <div class="ha-visual" aria-hidden="true">
-      ${visualHtml}
     </div>
   </div>
 </article>`
 }
 
-/** 将公司总览 + 五大优势轮播渲染到 track 容器 */
+/** 西门子式简洁首屏：左文案 + 全幅背景，无右侧架构叠加 */
 export function mountHomeAdvantages(trackEl) {
   if (!trackEl) return
   trackEl.innerHTML = ADVANTAGE_SLIDES.map(renderSlide).join('')
