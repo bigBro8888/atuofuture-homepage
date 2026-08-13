@@ -8,16 +8,6 @@ function esc(str = '') {
     .replace(/"/g, '&quot;')
 }
 
-/** 顶层业务目标 */
-const BUSINESS_GOALS = [
-  { id: 'visitor', label: '接待访客', icon: 'badge' },
-  { id: 'meeting', label: '召开会议', icon: 'groups' },
-  { id: 'exhibition', label: '运营展厅', icon: 'view_in_ar' },
-  { id: 'energy', label: '降低能耗', icon: 'bolt' },
-  { id: 'asset', label: '管理资产', icon: 'inventory_2' },
-  { id: 'hospitality', label: '服务住客', icon: 'apartment' },
-]
-
 /** 八大智能体展示文案（对齐设计稿） */
 const AGENT_COPY = {
   space: {
@@ -112,38 +102,6 @@ function renderHeader() {
     <header class="ag-eco__head">
       <h2>空间智能体，让业务目标在真实空间自动落地</h2>
     </header>`
-}
-
-function renderGoals(selectedId) {
-  return `
-    <div class="ag-eco__goals" aria-label="业务目标">
-      ${BUSINESS_GOALS.map(
-        (g) => `
-        <button
-          type="button"
-          class="ag-eco__goal${g.id === selectedId ? ' is-selected' : ''}"
-          data-ag-select="${esc(g.id)}"
-          aria-pressed="${g.id === selectedId ? 'true' : 'false'}"
-        >
-          <span class="ag-eco__goal-icon" aria-hidden="true">
-            <span class="material-symbols-outlined">${esc(g.icon)}</span>
-          </span>
-          <span class="ag-eco__goal-label">${esc(g.label)}</span>
-        </button>`
-      ).join('')}
-    </div>`
-}
-
-function renderFlowDown() {
-  return `
-    <div class="ag-eco__flow-down" aria-hidden="true">
-      <svg viewBox="0 0 1200 72" preserveAspectRatio="none">
-        <path class="ag-eco__wave" d="M80 8 C200 58, 280 8, 400 40 C520 72, 600 20, 720 44 C840 68, 920 16, 1040 36 C1100 46, 1140 28, 1120 8" />
-        <path class="ag-eco__wave ag-eco__wave--soft" d="M120 4 C240 50, 320 12, 440 36 C560 60, 640 18, 760 40 C880 62, 960 14, 1080 32" />
-        <path class="ag-eco__dash" d="M600 40 v28" />
-        <path class="ag-eco__dash-head" d="M594 62 l6 8 6-8" />
-      </svg>
-    </div>`
 }
 
 function renderAgentsPill(selectedId) {
@@ -314,8 +272,6 @@ export function renderAgentEcosystemMap({ selectedId }) {
     <section class="ag-eco" id="agent-ecosystem">
       <div class="ag-eco__shell">
         ${renderHeader()}
-        ${renderGoals(selected.id)}
-        ${renderFlowDown()}
         ${renderAgentsPill(selected.id)}
         ${renderHubPill()}
         ${renderResources()}
