@@ -12844,10 +12844,10 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   overflow: visible;
 }
 .ag-eco__orbit-link {
-  stroke: rgba(90, 150, 210, .32);
-  stroke-width: 1.25;
+  stroke: #00D5BE;
+  stroke-width: 2;
   transition: stroke .2s ease, opacity .2s ease, stroke-width .2s ease;
-  opacity: .55;
+  opacity: 1;
 }
 .ag-eco__orbit-link.is-active {
   stroke: #00D5BE;
@@ -12909,25 +12909,20 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   padding: 8px 10px;
   border: 0;
   border-radius: 12px;
-  background: transparent;
-  color: #1B3558;
+  background: rgba(0, 213, 190, .12);
+  color: #071A33;
   text-align: left;
   cursor: pointer;
   transition: background .18s ease, color .18s ease;
 }
 .ag-eco__agent:hover,
 .ag-eco__agent:focus-visible {
-  background: rgba(0, 213, 190, .08);
+  background: rgba(0, 213, 190, .18);
   outline: none;
 }
 .ag-eco__agent.is-selected {
   background: rgba(0, 213, 190, .12);
   color: #071A33;
-}
-.ag-eco__agent.is-selected .ag-eco__agent-icon {
-  background: #00D5BE;
-  color: #071A33;
-  border-color: transparent;
 }
 .ag-eco__agent-icon {
   display: grid;
@@ -12936,10 +12931,15 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   height: 34px;
   margin-top: 1px;
   border-radius: 50%;
-  border: 1px solid #D5E2F2;
-  background: #F3F7FC;
-  color: #2A4B78;
+  border: 1px solid transparent;
+  background: #00D5BE;
+  color: #071A33;
   transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+.ag-eco__agent.is-selected .ag-eco__agent-icon {
+  background: #00D5BE;
+  color: #071A33;
+  border-color: transparent;
 }
 .ag-eco__agent-icon .material-symbols-outlined {
   font-size: 18px;
