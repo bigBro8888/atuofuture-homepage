@@ -21,10 +21,10 @@ export const SITE_NAV_ITEMS = [
     children: [
       { id: 'space', label: '空间服务智能体', desc: '空调照明、工单与信息发布统一调度', segment: 'agent-detail/?id=space' },
       { id: 'energy', label: '能源能耗智能体', desc: '分项计量与有无人节能分析', segment: 'agent-detail/?id=energy' },
-      { id: 'meeting', label: '会议运维智能体', desc: '预约签到、中控与音视频联动', segment: 'agent-detail/?id=meeting' },
+      { id: 'meeting', label: '会议智能体', desc: '预约签到、中控与音视频联动', segment: 'agent-detail/?id=meeting' },
       { id: 'exhibition', label: '展厅智能体', desc: '大屏、孪生、讲解与展项状态', segment: 'agent-detail/?id=exhibition' },
       { id: 'visitor', label: '访客接待智能体', desc: '邀约登记、通行与接待编排', segment: 'agent-detail/?id=visitor' },
-      { id: 'opc', label: 'OPC运营智能体', desc: '空间发布、带看、签约与运营协同', segment: 'agent-detail/?id=opc' },
+      { id: 'opc', label: '商业空间运营智能体', desc: '空间发布、带看、签约与运营协同（OPC）', segment: 'agent-detail/?id=opc' },
       { id: 'hospitality', label: '酒店公寓智能体', desc: '分房、门锁、客房与费用管理', segment: 'agent-detail/?id=hospitality' },
       { id: 'asset', label: '资产管理智能体', desc: '盘点、领用借还与生命周期', segment: 'agent-detail/?id=asset' },
     ],

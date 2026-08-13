@@ -55,13 +55,13 @@ export const AGENT_DETAILS = {
     scenarios: ['楼宇节能改造', '园区能耗管理', '会议室空耗治理', '酒店客房能耗'],
   },
   meeting: {
-    name: '会议运维智能体',
+    name: '会议智能体',
     icon: 'meeting_room',
     accent: '21, 101, 192',
-    eyebrow: 'Meeting Ops Agent',
-    tagline: '面向会议室运维：预约、签到、中控与云视频一站式编排，减少人工协调。',
+    eyebrow: 'Meeting Agent',
+    tagline: '从预约到会议结束，全流程自动运行：预约签到、中控联动与音视频运维。',
     overview:
-      '会议运维智能体服务行政与 IT：从预约冲突检测、签到核验，到中控开停与云视频接入，把会议室日常运维变成可自动化流程。',
+      '会议智能体服务行政与 IT：从预约冲突检测、签到核验，到中控开停与云视频接入，把会议室日常运维变成可自动化流程。',
     capabilities: [
       { icon: 'event_available', title: '预约与冲突检测', desc: '统一会议室资源，避免重复预订。' },
       { icon: 'how_to_reg', title: '签到核验', desc: '到会核验与未到释放，提高房间周转。' },
@@ -136,13 +136,13 @@ export const AGENT_DETAILS = {
     scenarios: ['总部大堂', '园区访客中心', '商务来访', '面试接待'],
   },
   opc: {
-    name: 'OPC运营智能体',
+    name: '商业空间运营智能体',
     icon: 'storefront',
     accent: '183, 110, 40',
-    eyebrow: 'OPC Ops Agent',
-    tagline: '支持空间资源发布、分享获客、预约带看、签约、订单与运营协同。',
+    eyebrow: 'OPC · Commercial Ops Agent',
+    tagline: '让商业空间从展示、带看到签约持续运营（OPC）。',
     overview:
-      'OPC运营智能体面向商业与空间运营团队，把空间发布、获客带看、签约订单与入驻运营串成可执行链路，降低线索流失与协作成本。',
+      '商业空间运营智能体（OPC）面向商业与空间运营团队，把空间发布、获客带看、签约订单与入驻运营串成可执行链路，降低线索流失与协作成本。',
     capabilities: [
       { icon: 'campaign', title: '空间资源发布', desc: '统一发布可招商/可租赁空间资源。' },
       { icon: 'share', title: '分享获客', desc: '支持分享触达与线索沉淀。' },

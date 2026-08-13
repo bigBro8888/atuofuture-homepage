@@ -24,7 +24,7 @@ export const PRODUCT_AGENTS = [
   },
   {
     id: 'meeting',
-    name: '会议运维智能体',
+    name: '会议智能体',
     icon: 'meeting_room',
     kicker: 'MEETING OPS',
     summary: '连接预约、签到、中控、桌牌、音视频会议与会议室设备运维。',
@@ -57,7 +57,7 @@ export const PRODUCT_AGENTS = [
   },
   {
     id: 'opc',
-    name: 'OPC运营智能体',
+    name: '商业空间运营智能体',
     icon: 'storefront',
     kicker: 'OPC OPS',
     summary: '支持空间资源发布、分享获客、预约带看、签约、订单与运营协同。',

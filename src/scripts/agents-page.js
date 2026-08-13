@@ -1,7 +1,8 @@
 import {
   AGENTS_OVERVIEW,
-  AGENTS_PROCESS,
-  AGENTS_COLLAB,
+  AGENTS_CAPABILITY_CHAIN,
+  AGENTS_HUB_LAYERS,
+  AGENTS_INDUSTRY,
   getAgentOverview,
   resolveAgentOverviewId,
 } from '../data/agents-overview.js'
@@ -15,22 +16,13 @@ function esc(str = '') {
     .replace(/"/g, '&quot;')
 }
 
-function readAgentParam() {
-  const params = new URLSearchParams(window.location.search)
-  const fromQuery = resolveAgentOverviewId(params.get('id') || params.get('agent'))
-  if (fromQuery) return fromQuery
-  const hash = window.location.hash.replace(/^#/, '')
-  if (hash.startsWith('agent-')) return resolveAgentOverviewId(hash.slice(6))
-  return resolveAgentOverviewId(hash)
-}
-
 function renderHero() {
   return `
     <section class="ag-hero">
       <div class="ag-shell ag-hero__grid">
         <div class="ag-hero__copy">
-          <h1>让智能体进入空间，真正完成任务</h1>
-          <p>它不只回答问题，更能感知空间状态、理解业务规则、调用系统与设备，并持续跟踪任务结果。</p>
+          <h1>让空间智能体感知现场、调用设备、完成任务</h1>
+          <p>不只是回答问题，而是连接软件系统、智能硬件与业务流程，让空间能够自主感知、判断、执行并持续反馈。</p>
           <div class="ag-hero__actions">
             <a class="ag-btn ag-btn--primary" href="#agent-matrix">探索八大智能体</a>
             <button type="button" class="ag-btn ag-btn--ghost" data-demo-modal-open>预约方案演示</button>
@@ -49,13 +41,15 @@ function renderHero() {
         </div>
       </div>
       <div class="ag-shell">
-        <ol class="ag-process">
-          ${AGENTS_PROCESS.map(
-            (step) => `
+        <ol class="ag-chain" aria-label="能力链">
+          ${AGENTS_CAPABILITY_CHAIN.map(
+            (step, i) => `
             <li>
-              <span class="material-symbols-outlined" aria-hidden="true">${esc(step.icon)}</span>
+              <span class="ag-chain__dot" aria-hidden="true">
+                <span class="material-symbols-outlined">${esc(step.icon)}</span>
+              </span>
               <strong>${esc(step.title)}</strong>
-              <small>${esc(step.desc)}</small>
+              ${i < AGENTS_CAPABILITY_CHAIN.length - 1 ? '<i class="ag-chain__line" aria-hidden="true"></i>' : ''}
             </li>`
           ).join('')}
         </ol>
@@ -63,132 +57,194 @@ function renderHero() {
     </section>`
 }
 
-function renderNav(activeId) {
+function renderMatrixCard(a, selectedId) {
+  const on = a.id === selectedId
   return `
-    <div class="ag-nav" role="tablist" aria-label="八大智能体" data-ag-nav>
-      ${AGENTS_OVERVIEW.map((a) => {
-        const on = a.id === activeId
-        return `
-        <button
-          type="button"
-          class="ag-nav__item${on ? ' is-active' : ''}"
-          role="tab"
-          aria-selected="${on ? 'true' : 'false'}"
-          data-ag-tab="${esc(a.id)}"
-          id="agent-tab-${esc(a.id)}"
-        >
-          <span class="material-symbols-outlined" aria-hidden="true">${esc(a.icon)}</span>
-          <span class="ag-nav__text">
-            <strong>${esc(a.shortName)}</strong>
-            <small>${esc(a.tagline)}</small>
+    <article
+      class="ag-card${on ? ' is-selected' : ''}"
+      style="--ag-accent:${esc(a.accent || '#00BFC1')}"
+    >
+      <button
+        type="button"
+        class="ag-card__hit"
+        data-ag-select="${esc(a.id)}"
+        aria-pressed="${on ? 'true' : 'false'}"
+      >
+        <span class="ag-card__bar" aria-hidden="true"></span>
+        <span class="ag-card__top">
+          <span class="ag-card__icon" aria-hidden="true">
+            <span class="material-symbols-outlined">${esc(a.icon)}</span>
           </span>
-          <span class="material-symbols-outlined ag-nav__arrow" aria-hidden="true">arrow_forward</span>
-        </button>`
-      }).join('')}
-    </div>`
+          <span class="ag-card__go" aria-hidden="true">
+            <span class="material-symbols-outlined">arrow_outward</span>
+          </span>
+        </span>
+        <span class="ag-card__title">
+          <strong>${esc(a.name)}</strong>
+          ${a.abbr ? `<small class="ag-card__abbr">${esc(a.abbr)}</small>` : ''}
+        </span>
+        <span class="ag-card__value">${esc(a.value)}</span>
+        <span class="ag-card__tasks">${esc(a.tasks.join(' · '))}</span>
+      </button>
+      <a class="ag-card__detail" href="${esc(a.detailUrl)}">查看详情</a>
+    </article>`
 }
 
-function renderPanel(a) {
+function renderMatrix(selectedId) {
   return `
-    <div class="ag-panel" data-ag-panel>
-      <div class="ag-panel__scene" data-ag-scene style="--ag-scene-image:url('${esc(a.image)}')">
-        <div class="ag-panel__overlays" data-ag-overlays>
-          ${a.overlays
-            .map(
-              (item) => `
-            <div class="ag-panel__chip">
-              <span>${esc(item.label)}</span>
-              <strong>${esc(item.value)}</strong>
-            </div>`
-            )
-            .join('')}
-        </div>
-      </div>
-      <div class="ag-panel__body" data-ag-body>
-        <h3 data-ag-name>${esc(a.name)}</h3>
-        <p class="ag-panel__desc" data-ag-desc>${esc(a.description)}</p>
-        <div class="ag-panel__cols">
-          <article>
-            <h4>解决什么</h4>
-            <p data-ag-problem>${esc(a.problem)}</p>
-          </article>
-          <article>
-            <h4>执行什么</h4>
-            <p data-ag-actions>${esc(a.actions)}</p>
-          </article>
-          <article>
-            <h4>联动什么</h4>
-            <p data-ag-integrations>${esc(a.integrations)}</p>
-          </article>
-        </div>
-        <a class="ag-btn ag-btn--solid" data-ag-detail href="${esc(a.href)}">查看智能体详情 <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
-      </div>
-    </div>`
-}
-
-function renderWorkflow(a) {
-  return `
-    <section class="ag-workflow" aria-label="执行链">
-      <div class="ag-shell">
+    <section class="ag-matrix" id="agent-matrix">
+      <div class="ag-shell ag-shell--1280">
         <header class="ag-section-head">
-          <h2>当前智能体执行链</h2>
-          <p data-ag-workflow-title>${esc(a.name)}如何把业务变化变成可执行任务</p>
+          <h2>八大空间智能体，覆盖空间运营的核心业务</h2>
+          <p>每个智能体都可以独立落地，也可以根据行业、空间和业务需求协同组合。</p>
         </header>
-        <ol class="ag-workflow__list" data-ag-workflow>
-          ${a.workflow
-            .map(
-              (step, i) => `
-            <li>
-              <em>${String(i + 1).padStart(2, '0')}</em>
-              <strong>${esc(step.title)}</strong>
-              <span>${esc(step.description)}</span>
-            </li>`
-            )
-            .join('')}
-        </ol>
+        <div class="ag-matrix__grid" role="list">
+          ${AGENTS_OVERVIEW.map((a) => renderMatrixCard(a, selectedId)).join('')}
+        </div>
       </div>
     </section>`
 }
 
-function renderCollab() {
+function renderStage(a) {
   return `
-    <section class="ag-collab">
-      <div class="ag-shell">
-        <header class="ag-section-head ag-section-head--light">
-          <h2>一个智能体独立完成任务，多个智能体协同运营空间</h2>
-          <p>八类智能体既可以独立落地，也可以围绕园区、楼宇、酒店、公寓等行业场景协同组合。</p>
+    <section class="ag-stage" id="agent-stage" aria-live="polite">
+      <div class="ag-shell ag-shell--1280">
+        <header class="ag-section-head">
+          <h2>看一次智能体如何完成真实任务</h2>
+          <p>从业务或环境变化开始，到系统与设备执行，再到结果回读，形成完整闭环。</p>
         </header>
-        <div class="ag-collab__flow" aria-hidden="true">
-          <span>业务需求</span>
-          <i></i>
-          <span>空间智能中枢</span>
-          <i></i>
-          <span>多个场景智能体协同</span>
-          <i></i>
-          <span>软件系统＋智能硬件＋第三方设备</span>
-          <i></i>
-          <span>任务结果与状态反馈</span>
+        <div class="ag-stage__layout" data-ag-stage>
+          <div class="ag-stage__media" data-ag-scene>
+            <img
+              src="${esc(a.image)}"
+              alt="${esc(a.name)}业务场景"
+              width="960"
+              height="600"
+              loading="lazy"
+              data-ag-scene-img
+            />
+            <div class="ag-stage__flow" data-ag-mini-flow aria-hidden="true">
+              ${a.workflow
+                .map((step, i) => `<span>${esc(step)}${i < a.workflow.length - 1 ? ' → ' : ''}</span>`)
+                .join('')}
+            </div>
+          </div>
+          <div class="ag-stage__body" data-ag-body>
+            <p class="ag-stage__kicker" data-ag-short>${esc(a.shortName)}</p>
+            <h3 data-ag-name>${esc(a.name)}</h3>
+            <p class="ag-stage__value" data-ag-value>${esc(a.value)}</p>
+            <ol class="ag-loop">
+              <li>
+                <span class="ag-loop__index">01</span>
+                <div>
+                  <strong>何时触发</strong>
+                  <p data-ag-trigger>${esc(a.trigger)}</p>
+                </div>
+              </li>
+              <li>
+                <span class="ag-loop__index">02</span>
+                <div>
+                  <strong>自动执行</strong>
+                  <p data-ag-actions>${esc(a.actions)}</p>
+                </div>
+              </li>
+              <li>
+                <span class="ag-loop__index">03</span>
+                <div>
+                  <strong>结果回读</strong>
+                  <p data-ag-result>${esc(a.result)}</p>
+                </div>
+              </li>
+            </ol>
+            <a class="ag-btn ag-btn--solid" data-ag-detail href="${esc(a.detailUrl)}">查看智能体详情</a>
+          </div>
         </div>
-        <div class="ag-collab__examples" data-ag-collab>
-          ${AGENTS_COLLAB.map(
-            (item, i) => `
-            <button type="button" class="ag-collab__item${i === 0 ? ' is-active' : ''}" data-ag-collab-tab="${esc(item.id)}">
-              <strong>${esc(item.title)}</strong>
-              <span>${esc(item.agents)}</span>
-            </button>`
+      </div>
+    </section>`
+}
+
+function renderHub() {
+  const agents = AGENTS_OVERVIEW.map(
+    (a, i) => `
+    <button
+      type="button"
+      class="ag-hub__agent"
+      style="--i:${i}"
+      data-ag-hub-node="${esc(a.id)}"
+      aria-label="${esc(a.name)}"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">${esc(a.icon)}</span>
+      <strong>${esc(a.shortName)}</strong>
+    </button>`
+  ).join('')
+
+  const group = (key, layer) => `
+    <div class="ag-hub__group ag-hub__group--${esc(key)}" data-ag-hub-group="${esc(key)}">
+      <h4>${esc(layer.title)}</h4>
+      <ul>
+        ${layer.items.map((item) => `<li>${esc(item)}</li>`).join('')}
+      </ul>
+    </div>`
+
+  return `
+    <section class="ag-hub">
+      <div class="ag-shell ag-shell--1280">
+        <header class="ag-section-head ag-section-head--light">
+          <h2>一个智能体完成任务，多个智能体协同运营空间</h2>
+          <p>八大智能体共享空间智能中枢，并与软件系统、智能硬件及第三方平台持续交换状态和任务。</p>
+        </header>
+        <div class="ag-hub__diagram" data-ag-hub>
+          <div class="ag-hub__orbit" aria-hidden="true"></div>
+          <div class="ag-hub__core">
+            <span class="material-symbols-outlined">hub</span>
+            <strong>空间智能中枢</strong>
+            <small>状态进入 → 调度智能体 → 调用系统与设备 → 结果回读</small>
+          </div>
+          <div class="ag-hub__agents">${agents}</div>
+          <div class="ag-hub__outer">
+            ${group('software', AGENTS_HUB_LAYERS.software)}
+            ${group('hardware', AGENTS_HUB_LAYERS.hardware)}
+            ${group('ecosystem', AGENTS_HUB_LAYERS.ecosystem)}
+          </div>
+        </div>
+        <div class="ag-hub__open">
+          <span>开放接口：API · MCP · AI Token · 第三方协议</span>
+          ${
+            SHOW_TOKEN_ENTRY
+              ? `<a href="${esc(TOKEN_SITE_URL)}" target="_blank" rel="noopener noreferrer" data-token-link>了解 AI Token</a>`
+              : ''
+          }
+        </div>
+      </div>
+    </section>`
+}
+
+function renderIndustry() {
+  return `
+    <section class="ag-industry">
+      <div class="ag-shell ag-shell--1280">
+        <header class="ag-section-head">
+          <h2>按业务场景自由组合智能体</h2>
+          <p>从楼宇、园区到酒店公寓，按行业需求组合智能体能力，快速形成可落地的协同方案。</p>
+        </header>
+        <div class="ag-industry__grid">
+          ${AGENTS_INDUSTRY.map(
+            (item) => `
+            <article class="ag-industry__card">
+              <div class="ag-industry__icon" aria-hidden="true">
+                <span class="material-symbols-outlined">${esc(item.icon)}</span>
+              </div>
+              <div class="ag-industry__body">
+                <h3>${esc(item.title)}</h3>
+                <p>${esc(item.desc)}</p>
+                <div class="ag-industry__tags">
+                  ${item.combo.map((tag) => `<span>${esc(tag)}</span>`).join('')}
+                </div>
+                <a class="ag-text-link" href="${esc(item.href)}">查看行业方案 →</a>
+              </div>
+            </article>`
           ).join('')}
         </div>
-      </div>
-    </section>`
-}
-
-function renderTokenNote() {
-  if (!SHOW_TOKEN_ENTRY) return ''
-  return `
-    <section class="ag-token">
-      <div class="ag-shell ag-token__inner">
-        <p>需要模型与工具调用能力时，可通过 AI Token 服务接入。</p>
-        <a href="${esc(TOKEN_SITE_URL)}" target="_blank" rel="noopener noreferrer" data-token-link>了解 AI Token</a>
       </div>
     </section>`
 }
@@ -199,7 +255,7 @@ function renderCta() {
       <div class="ag-shell ag-cta__inner">
         <div>
           <h2>让空间智能体进入您的业务现场</h2>
-          <p>告诉我们您的空间类型和核心问题，安托未来将为您组合适合的智能体、硬件与系统能力。</p>
+          <p>从一个场景开始，连接现有系统和设备，逐步构建可感知、可执行、可持续运营的空间智能体系。</p>
         </div>
         <div class="ag-cta__actions">
           <button type="button" class="ag-btn ag-btn--primary" data-demo-modal-open>预约方案演示</button>
@@ -224,21 +280,10 @@ function renderPage(activeId) {
   const active = getAgentOverview(activeId) || AGENTS_OVERVIEW[0]
   return `
     ${renderHero()}
-    <section class="ag-selector" id="agent-matrix">
-      <div class="ag-shell">
-        <header class="ag-section-head">
-          <h2>选择一个智能体，查看它如何工作</h2>
-          <p>每个智能体都可以独立落地，也可以根据行业和业务需求协同组合。</p>
-        </header>
-        <div class="ag-selector__layout">
-          ${renderNav(active.id)}
-          ${renderPanel(active)}
-        </div>
-      </div>
-    </section>
-    ${renderWorkflow(active)}
-    ${renderCollab()}
-    ${renderTokenNote()}
+    ${renderMatrix(active.id)}
+    ${renderStage(active)}
+    ${renderHub()}
+    ${renderIndustry()}
     ${renderCta()}
   `
 }
@@ -247,37 +292,32 @@ function applyAgent(root, id) {
   const a = getAgentOverview(id)
   if (!a) return false
 
-  root.querySelectorAll('[data-ag-tab]').forEach((btn) => {
-    const on = btn.dataset.agTab === a.id
-    btn.classList.toggle('is-active', on)
-    btn.setAttribute('aria-selected', on ? 'true' : 'false')
+  root.querySelectorAll('[data-ag-select]').forEach((btn) => {
+    const on = btn.dataset.agSelect === a.id
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false')
+    btn.closest('.ag-card')?.classList.toggle('is-selected', on)
   })
 
-  const scene = root.querySelector('[data-ag-scene]')
+  const stage = root.querySelector('[data-ag-stage]')
   const body = root.querySelector('[data-ag-body]')
-  const workflow = root.querySelector('[data-ag-workflow]')
-  if (scene) {
-    scene.classList.remove('is-animating')
-    void scene.offsetWidth
-    scene.style.setProperty('--ag-scene-image', `url('${a.image}')`)
-    scene.classList.add('is-animating')
-  }
-  if (body) {
-    body.classList.remove('is-animating')
-    void body.offsetWidth
-    body.classList.add('is-animating')
-  }
+  const scene = root.querySelector('[data-ag-scene]')
+  const img = root.querySelector('[data-ag-scene-img]')
+  const mini = root.querySelector('[data-ag-mini-flow]')
 
-  const overlays = root.querySelector('[data-ag-overlays]')
-  if (overlays) {
-    overlays.innerHTML = a.overlays
-      .map(
-        (item) => `
-      <div class="ag-panel__chip">
-        <span>${esc(item.label)}</span>
-        <strong>${esc(item.value)}</strong>
-      </div>`
-      )
+  ;[stage, body, scene].forEach((el) => {
+    if (!el) return
+    el.classList.remove('is-animating')
+    void el.offsetWidth
+    el.classList.add('is-animating')
+  })
+
+  if (img) {
+    img.src = a.image
+    img.alt = `${a.name}业务场景`
+  }
+  if (mini) {
+    mini.innerHTML = a.workflow
+      .map((step, i) => `<span>${esc(step)}${i < a.workflow.length - 1 ? ' → ' : ''}</span>`)
       .join('')
   }
 
@@ -285,28 +325,15 @@ function applyAgent(root, id) {
     const el = root.querySelector(sel)
     if (el) el.textContent = value
   }
+  setText('[data-ag-short]', a.shortName)
   setText('[data-ag-name]', a.name)
-  setText('[data-ag-desc]', a.description)
-  setText('[data-ag-problem]', a.problem)
+  setText('[data-ag-value]', a.value)
+  setText('[data-ag-trigger]', a.trigger)
   setText('[data-ag-actions]', a.actions)
-  setText('[data-ag-integrations]', a.integrations)
-  setText('[data-ag-workflow-title]', `${a.name}如何把业务变化变成可执行任务`)
+  setText('[data-ag-result]', a.result)
 
   const detail = root.querySelector('[data-ag-detail]')
-  if (detail) detail.setAttribute('href', a.href)
-
-  if (workflow) {
-    workflow.innerHTML = a.workflow
-      .map(
-        (step, i) => `
-      <li>
-        <em>${String(i + 1).padStart(2, '0')}</em>
-        <strong>${esc(step.title)}</strong>
-        <span>${esc(step.description)}</span>
-      </li>`
-      )
-      .join('')
-  }
+  if (detail) detail.setAttribute('href', a.detailUrl)
 
   const url = new URL(window.location.href)
   url.searchParams.set('agent', a.id)
@@ -317,37 +344,60 @@ function applyAgent(root, id) {
 
 function initInteractions(root, initialId) {
   let activeId = initialId
-  const tabs = [...root.querySelectorAll('[data-ag-tab]')]
+  const cards = [...root.querySelectorAll('[data-ag-select]')]
 
   const selectByIndex = (index) => {
     const next = AGENTS_OVERVIEW[(index + AGENTS_OVERVIEW.length) % AGENTS_OVERVIEW.length]
     activeId = next.id
     applyAgent(root, activeId)
-    tabs[index]?.focus()
+    cards[index]?.focus()
+    document.getElementById('agent-stage')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
 
-  tabs.forEach((btn, index) => {
+  cards.forEach((btn, index) => {
     btn.addEventListener('click', () => {
-      const id = btn.dataset.agTab
-      if (!id || id === activeId) return
+      const id = btn.dataset.agSelect
+      if (!id || id === activeId) {
+        document.getElementById('agent-stage')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
       activeId = id
       applyAgent(root, id)
     })
     btn.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault()
         selectByIndex(index + 1)
-      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault()
         selectByIndex(index - 1)
       }
     })
   })
 
-  root.querySelectorAll('[data-ag-collab-tab]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      root.querySelectorAll('[data-ag-collab-tab]').forEach((el) => el.classList.remove('is-active'))
-      btn.classList.add('is-active')
+  root.querySelectorAll('[data-ag-hub-node]').forEach((node) => {
+    node.addEventListener('mouseenter', () => {
+      root.querySelector('[data-ag-hub]')?.classList.add('is-hot')
+      node.classList.add('is-hot')
+    })
+    node.addEventListener('mouseleave', () => {
+      root.querySelector('[data-ag-hub]')?.classList.remove('is-hot')
+      node.classList.remove('is-hot')
+    })
+    node.addEventListener('focus', () => {
+      root.querySelector('[data-ag-hub]')?.classList.add('is-hot')
+      node.classList.add('is-hot')
+    })
+    node.addEventListener('blur', () => {
+      root.querySelector('[data-ag-hub]')?.classList.remove('is-hot')
+      node.classList.remove('is-hot')
+    })
+    node.addEventListener('click', () => {
+      const id = node.dataset.agHubNode
+      if (!id) return
+      activeId = id
+      applyAgent(root, id)
+      document.getElementById('agent-matrix')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
   })
 }
@@ -356,7 +406,10 @@ export function initAgentsPage() {
   const root = document.getElementById('agents-root')
   if (!root) return
 
-  const raw = new URLSearchParams(window.location.search).get('id') || new URLSearchParams(window.location.search).get('agent') || window.location.hash.replace(/^#/, '')
+  const raw =
+    new URLSearchParams(window.location.search).get('id') ||
+    new URLSearchParams(window.location.search).get('agent') ||
+    window.location.hash.replace(/^#/, '')
   const requested = raw ? (raw.startsWith('agent-') ? raw.slice(6) : raw) : null
   const resolved = requested ? resolveAgentOverviewId(requested) : AGENTS_OVERVIEW[0].id
 
@@ -368,4 +421,10 @@ export function initAgentsPage() {
   const activeId = resolved || AGENTS_OVERVIEW[0].id
   root.innerHTML = renderPage(activeId)
   initInteractions(root, activeId)
+
+  if (window.location.hash === '#agent-matrix' || window.location.hash === '#agent-stage') {
+    window.setTimeout(() => {
+      document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 60)
+  }
 }
