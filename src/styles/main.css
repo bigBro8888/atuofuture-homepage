@@ -12813,43 +12813,85 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   stroke: rgba(70, 140, 230, .55);
   stroke-width: 1.4;
 }
-.ag-eco__pill {
+.ag-eco__orbit {
+  position: relative;
   display: grid;
-  grid-template-columns: 132px 1fr;
+  grid-template-columns: minmax(260px, 1fr) 168px minmax(260px, 1fr);
   align-items: center;
-  gap: 18px 28px;
-  min-height: 148px;
-  padding: 24px 36px 24px 28px;
-  border-radius: 999px;
+  gap: 12px 8px;
+  min-height: 360px;
+  margin: 0 auto 8px;
+}
+.ag-eco__orbit-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.ag-eco__orbit-link {
+  stroke: rgba(90, 150, 210, .28);
+  stroke-width: 1.2;
+  transition: stroke .2s ease, opacity .2s ease, stroke-width .2s ease;
+  opacity: .55;
+}
+.ag-eco__orbit-link.is-active {
+  stroke: #00D5BE;
+  stroke-width: 2;
+  opacity: 1;
+}
+.ag-eco__orbit-col {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 14px;
+  align-content: space-between;
+  min-height: 320px;
+}
+.ag-eco__orbit-col--left {
+  justify-items: start;
+  padding-right: 8px;
+}
+.ag-eco__orbit-col--right {
+  justify-items: start;
+  padding-left: 8px;
+}
+.ag-eco__orbit-core {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 148px;
+  height: 148px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 1px solid rgba(90, 160, 230, .35);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.95), rgba(230, 243, 255, .92) 55%, rgba(205, 230, 255, .88));
+  box-shadow:
+    0 10px 28px rgba(40, 100, 170, .12),
+    inset 0 1px 0 rgba(255,255,255,.9);
+  text-align: center;
   box-sizing: border-box;
 }
-.ag-eco__pill--agents {
-  border: 1px solid rgba(120, 170, 230, .28);
-  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(245,250,255,.92));
-  box-shadow:
-    0 12px 40px rgba(20, 60, 120, .07),
-    inset 0 1px 0 rgba(255,255,255,.9);
-  backdrop-filter: blur(8px);
-}
-.ag-eco__pill-side {
+.ag-eco__orbit-core span {
+  max-width: 5.2em;
   font-size: 16px;
-  font-weight: 600;
-  line-height: 1.35;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: .02em;
   color: #071A33;
-  text-align: center;
-}
-.ag-eco__agents {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 36px;
 }
 .ag-eco__agent {
   display: grid;
-  grid-template-columns: 32px 1fr;
+  grid-template-columns: 34px 1fr;
   align-items: start;
   gap: 10px;
+  width: 100%;
+  max-width: 300px;
   min-width: 0;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border: 0;
   border-radius: 12px;
   background: transparent;
@@ -12875,9 +12917,8 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .ag-eco__agent-icon {
   display: grid;
   place-items: center;
-  flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   margin-top: 1px;
   border-radius: 50%;
   border: 1px solid #D5E2F2;
@@ -13775,12 +13816,36 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
     grid-template-columns: repeat(3, minmax(0, 1fr));
     max-width: 560px;
   }
-  .ag-eco__pill {
+  .ag-eco__orbit {
     grid-template-columns: 1fr;
-    border-radius: 28px;
-    padding: 22px 22px 20px;
-    gap: 16px;
-    text-align: center;
+    gap: 18px;
+    min-height: 0;
+    padding: 8px 0 4px;
+  }
+  .ag-eco__orbit-svg {
+    display: none;
+  }
+  .ag-eco__orbit-core {
+    order: -1;
+    width: 148px;
+    height: 148px;
+    margin: 0 auto;
+  }
+  .ag-eco__orbit-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    max-width: 640px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .ag-eco__orbit-col--left,
+  .ag-eco__orbit-col--right {
+    align-items: stretch;
+  }
+  .ag-eco__agent {
+    justify-content: flex-start;
+    text-align: left;
   }
   .ag-eco__hub-capsule {
     flex-direction: column;
@@ -13804,10 +13869,6 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   .ag-eco__hub-main {
     padding-left: 0;
     width: 100%;
-  }
-  .ag-eco__agents {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-items: start;
   }
   .ag-eco__steps {
     flex-wrap: wrap;
@@ -13899,8 +13960,15 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   .ag-eco__res-flow {
     height: 36px;
   }
-  .ag-eco__agents {
-    grid-template-columns: 1fr 1fr;
+  .ag-eco__orbit-col {
+    grid-template-columns: 1fr;
+  }
+  .ag-eco__orbit-core {
+    width: 132px;
+    height: 132px;
+  }
+  .ag-eco__orbit-core span {
+    font-size: 15px;
   }
   .ag-eco__agent {
     font-size: 13px;

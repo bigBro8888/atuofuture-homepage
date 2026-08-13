@@ -44,17 +44,9 @@ const AGENT_COPY = {
   },
 }
 
-/** 展示顺序：左列业务 + 右列业务，贴近设计稿两列阅读 */
-const AGENT_DISPLAY_ORDER = [
-  'space',
-  'energy',
-  'meeting',
-  'exhibition',
-  'visitor',
-  'opc',
-  'hospitality',
-  'asset',
-]
+/** 左右环绕中心的智能体顺序 */
+const AGENT_LEFT_IDS = ['space', 'meeting', 'visitor', 'hospitality']
+const AGENT_RIGHT_IDS = ['energy', 'exhibition', 'opc', 'asset']
 
 const HUB_STEPS = [
   { title: '读懂目标', icon: 'track_changes' },
@@ -104,36 +96,60 @@ function renderHeader() {
     </header>`
 }
 
-function renderAgentsPill(selectedId) {
-  const agents = AGENT_DISPLAY_ORDER.map(
-    (id) => AGENTS_OVERVIEW.find((a) => a.id === id)
-  ).filter(Boolean)
+function renderAgentButton(a, selectedId) {
+  const on = a.id === selectedId
+  const copy = AGENT_COPY[a.id] || { title: a.name, desc: a.blurb }
+  return `
+    <button
+      type="button"
+      class="ag-eco__agent${on ? ' is-selected' : ''}"
+      data-ag-select="${esc(a.id)}"
+      aria-pressed="${on ? 'true' : 'false'}"
+    >
+      <span class="ag-eco__agent-icon" aria-hidden="true">
+        <span class="material-symbols-outlined">${esc(a.icon)}</span>
+      </span>
+      <span class="ag-eco__agent-copy">
+        <strong>${esc(copy.title)}</strong>
+        <small>${esc(copy.desc)}</small>
+      </span>
+    </button>`
+}
+
+function renderAgentsOrbit(selectedId) {
+  const left = AGENT_LEFT_IDS.map((id) => AGENTS_OVERVIEW.find((a) => a.id === id)).filter(Boolean)
+  const right = AGENT_RIGHT_IDS.map((id) => AGENTS_OVERVIEW.find((a) => a.id === id)).filter(Boolean)
+  const ys = [48, 128, 208, 288]
+  const leftPaths = ys.map((y) => `M 292 ${y} C 360 ${y}, 420 180, 500 180`)
+  const rightPaths = ys.map((y) => `M 708 ${y} C 640 ${y}, 580 180, 500 180`)
+  const links = [
+    ...left.map((a, i) => ({ id: a.id, d: leftPaths[i] })),
+    ...right.map((a, i) => ({ id: a.id, d: rightPaths[i] })),
+  ]
 
   return `
-    <div class="ag-eco__pill ag-eco__pill--agents">
-      <div class="ag-eco__pill-side">八大空间智能体</div>
-      <div class="ag-eco__agents" data-ag-eco>
-        ${agents
-          .map((a) => {
-            const on = a.id === selectedId
-            const copy = AGENT_COPY[a.id] || { title: a.name, desc: a.blurb }
-            return `
-            <button
-              type="button"
-              class="ag-eco__agent${on ? ' is-selected' : ''}"
-              data-ag-select="${esc(a.id)}"
-              aria-pressed="${on ? 'true' : 'false'}"
-            >
-              <span class="ag-eco__agent-icon" aria-hidden="true">
-                <span class="material-symbols-outlined">${esc(a.icon)}</span>
-              </span>
-              <span class="ag-eco__agent-copy">
-                <strong>${esc(copy.title)}</strong>
-                <small>${esc(copy.desc)}</small>
-              </span>
-            </button>`
-          })
+    <div class="ag-eco__orbit" data-ag-eco>
+      <svg class="ag-eco__orbit-svg" viewBox="0 0 1000 360" preserveAspectRatio="none" aria-hidden="true">
+        ${links
+          .map(
+            (p) => `
+          <path
+            class="ag-eco__orbit-link${p.id === selectedId ? ' is-active' : ''}"
+            data-ag-link="${esc(p.id)}"
+            d="${p.d}"
+            fill="none"
+          />`
+          )
           .join('')}
+      </svg>
+      <div class="ag-eco__orbit-col ag-eco__orbit-col--left">
+        ${left.map((a) => renderAgentButton(a, selectedId)).join('')}
+      </div>
+      <div class="ag-eco__orbit-core" aria-hidden="true">
+        <span>八大空间智能体</span>
+      </div>
+      <div class="ag-eco__orbit-col ag-eco__orbit-col--right">
+        ${right.map((a) => renderAgentButton(a, selectedId)).join('')}
       </div>
     </div>`
 }
@@ -272,7 +288,7 @@ export function renderAgentEcosystemMap({ selectedId }) {
     <section class="ag-eco" id="agent-ecosystem">
       <div class="ag-eco__shell">
         ${renderHeader()}
-        ${renderAgentsPill(selected.id)}
+        ${renderAgentsOrbit(selected.id)}
         ${renderHubPill()}
         ${renderResources()}
         ${renderValueBar()}
@@ -287,5 +303,9 @@ export function syncAgentEcosystemMap(root, selectedId) {
     const on = btn.dataset.agSelect === selected.id
     btn.classList.toggle('is-selected', on)
     btn.setAttribute('aria-pressed', on ? 'true' : 'false')
+  })
+
+  root.querySelectorAll('[data-ag-link]').forEach((link) => {
+    link.classList.toggle('is-active', link.dataset.agLink === selected.id)
   })
 }
