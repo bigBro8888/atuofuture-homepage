@@ -13763,10 +13763,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
     margin-bottom: 36px;
   }
   .ag-eco__head h2 {
-    font-size: 28px;
-  }
-  .ag-eco__head p {
-    font-size: 15px;
+    font-size: 22px;
   }
   .ag-eco__goals {
     grid-template-columns: repeat(2, minmax(0, 1fr));
