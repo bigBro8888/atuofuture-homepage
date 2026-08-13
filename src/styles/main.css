@@ -12717,24 +12717,17 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   margin: 0 auto;
 }
 .ag-eco__head {
-  max-width: 860px;
   margin: 0 auto 48px;
   text-align: center;
 }
 .ag-eco__head h2 {
   margin: 0;
-  font-size: clamp(30px, 3.5vw, 44px);
+  font-size: clamp(26px, 2.8vw, 40px);
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -.02em;
   color: #071A33;
-}
-.ag-eco__head p {
-  margin: 16px auto 0;
-  max-width: 640px;
-  font-size: 16px;
-  line-height: 1.8;
-  color: #5B6B82;
+  white-space: nowrap;
 }
 .ag-eco__goals {
   display: grid;

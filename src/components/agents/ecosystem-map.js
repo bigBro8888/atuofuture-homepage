@@ -76,7 +76,6 @@ function renderHeader() {
   return `
     <header class="ag-eco__head">
       <h2>空间智能体，让业务目标在真实空间自动落地</h2>
-      <p>提出目标后，智能体接管任务，协调人员、系统与设备，持续推进直至完成。</p>
     </header>`
 }
 
