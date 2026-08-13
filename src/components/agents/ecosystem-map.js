@@ -32,7 +32,7 @@ const AGENT_LABELS = {
 }
 
 const HUB_STEPS = [
-  { title: '读懂目标', icon: 'crisis_alert' },
+  { title: '读懂目标', icon: 'track_changes' },
   { title: '感知现场', icon: 'visibility' },
   { title: '自主判断', icon: 'psychology' },
   { title: '协调执行', icon: 'hub' },
@@ -144,9 +144,10 @@ function renderHubPill() {
         <path class="ag-eco__dash-head" d="M14 24 l6 8 6-8" />
       </svg>
     </div>
-    <div class="ag-eco__pill ag-eco__pill--hub">
-      <div class="ag-eco__pill-side ag-eco__pill-side--light">智能体自主完成任务</div>
-      <div class="ag-eco__hub-body">
+    <div class="ag-eco__hub-capsule">
+      <div class="ag-eco__hub-title">智能体自主完成任务</div>
+      <div class="ag-eco__hub-divider" aria-hidden="true"></div>
+      <div class="ag-eco__hub-main">
         <ol class="ag-eco__steps">
           ${HUB_STEPS.map(
             (s, i) => `
@@ -155,11 +156,19 @@ function renderHubPill() {
                 <span class="material-symbols-outlined">${esc(s.icon)}</span>
               </span>
               <strong>${esc(s.title)}</strong>
-              ${i < HUB_STEPS.length - 1 ? '<i class="ag-eco__step-arrow" aria-hidden="true"></i>' : ''}
+              ${
+                i < HUB_STEPS.length - 1
+                  ? `<span class="ag-eco__step-arrow" aria-hidden="true">
+                      <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+                        <path d="M1 5h10.5M8.5 1.5 12.5 5 8.5 8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>`
+                  : ''
+              }
             </li>`
           ).join('')}
         </ol>
-        <p>根据现场变化，自动决定下一步做什么，并持续跟进直至任务完成</p>
+        <p class="ag-eco__hub-desc">根据现场变化，自动决定下一步做什么，并持续跟进直至任务完成</p>
       </div>
     </div>`
 }
