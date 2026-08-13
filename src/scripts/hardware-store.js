@@ -77,40 +77,41 @@ function renderHero() {
 }
 
 function renderLineOverview() {
-  const lineMeta = {
-    space: { icon: 'apartment', arrow: 'cyan' },
-    retail: { icon: 'shopping_bag', arrow: 'cyan' },
-    consumer: { icon: 'smartphone', arrow: 'orange' },
+  const summaries = {
+    space: {
+      icon: 'apartment',
+      summary: '交互终端、环境控制、感知计量与边缘接入。',
+      highlights: '中控屏 · 电子桌牌 · 工位屏 · 照明与空调 · 传感器 · 网关',
+    },
+    retail: {
+      icon: 'shopping_bag',
+      summary: '电子价签、冷链标签与资产盘点硬件。',
+      highlights: '墨水屏价签 · LCD价签 · 低温标签 · AAP',
+    },
+    consumer: {
+      icon: 'smartphone',
+      summary: 'AI 墨水屏终端与电子纸展示设备。',
+      highlights: 'AI墨水屏手机壳 · AI电子纸艺术相框',
+    },
   }
   return `
     <section class="hwc-lines" id="hwc-lines">
       <div class="hwc-shell hwc-lines__shell">
+        <div class="hwc-lines__rail" aria-hidden="true"></div>
         <div class="hwc-lines__grid">
           ${HARDWARE_LINES.map((line) => {
-            const items = linePreviewItems(line.id)
-            const meta = lineMeta[line.id] || { icon: line.icon, arrow: 'cyan' }
+            const meta = summaries[line.id] || { icon: line.icon, summary: line.description, highlights: '' }
             return `
-            <article class="hwc-lines__card hwc-lines__card--${esc(line.id)}">
-              <button type="button" class="hwc-lines__head" data-hwc-goto-line="${esc(line.id)}">
+            <button type="button" class="hwc-lines__card hwc-lines__card--${esc(line.id)}" data-hwc-goto-line="${esc(line.id)}">
+              <span class="hwc-lines__kicker">
                 <span class="hwc-lines__node" aria-hidden="true"></span>
                 <span class="material-symbols-outlined hwc-lines__icon" aria-hidden="true">${esc(meta.icon)}</span>
                 <strong>${esc(line.name)}</strong>
-                <span class="material-symbols-outlined hwc-lines__arrow hwc-lines__arrow--${esc(meta.arrow)}" aria-hidden="true">arrow_forward</span>
-              </button>
-              <div class="hwc-lines__items">
-                ${items
-                  .map(
-                    (item) => `
-                  <button type="button" class="hwc-lines__item" data-hwc-pick="${esc(item.product.slug)}">
-                    <span class="hwc-lines__thumb">
-                      <img src="${esc(item.thumb)}" alt="" width="72" height="72" loading="lazy" />
-                    </span>
-                    <span class="hwc-lines__label">${esc(item.label)}</span>
-                  </button>`
-                  )
-                  .join('')}
-              </div>
-            </article>`
+                <span class="material-symbols-outlined hwc-lines__arrow" aria-hidden="true">arrow_forward</span>
+              </span>
+              <span class="hwc-lines__summary">${esc(meta.summary)}</span>
+              <span class="hwc-lines__highlights">${esc(meta.highlights)}</span>
+            </button>`
           }).join('')}
         </div>
       </div>
