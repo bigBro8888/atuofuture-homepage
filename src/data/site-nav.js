@@ -40,6 +40,7 @@ export const SITE_NAV_ITEMS = [
       { id: 'hw-av', label: '音视频会议', desc: '会议中控与音视频终端联动', segment: 'hardware/#av' },
     ],
   },
+  { id: 'news', label: '新闻中心', segment: 'news/' },
   {
     id: 'about',
     label: '关于我们',
@@ -48,7 +49,6 @@ export const SITE_NAV_ITEMS = [
       { id: 'about-intro', label: '公司介绍', desc: '物理AI与空间智能定位', segment: 'about/#intro' },
       { id: 'about-team', label: '团队与能力', desc: '软件、IoT与交付能力', segment: 'about/#team' },
       { id: 'about-delivery', label: '项目实践', desc: '实施流程与交付方式', segment: 'about/#delivery' },
-      { id: 'about-news', label: '新闻动态', desc: '公司与产品进展', segment: 'news/' },
       { id: 'about-contact', label: '联系我们', desc: '预约演示与商务对接', segment: 'about/#contact' },
     ],
   },
