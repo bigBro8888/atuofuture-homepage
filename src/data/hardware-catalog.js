@@ -76,6 +76,8 @@ export const HARDWARE_PRODUCTS = [
     category: 'space-terminal',
     name: '中控屏',
     shortDescription: '空间控制、设备联动与场景执行的统一交互入口。',
+    fullDescription:
+      '面向会议室、办公空间与智慧楼宇，将照明、空调、窗帘、音视频及空间服务集中到一个界面。',
     coverImage: '/images/hardware/control-screen.svg',
     gallery: ['/images/hardware/control-screen.svg'],
     capabilities: ['场景一键执行', '设备状态回读', '本地与云端协同控制'],
