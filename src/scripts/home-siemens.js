@@ -8,9 +8,6 @@ export function initSiemensHome() {
   initCapabilityTabs()
   initSolutionsCarousel()
   bindDemoAnchors()
-  import('./home-main.js').then(({ mountHomeMain }) => {
-    mountHomeMain(document.getElementById('home-main'))
-  })
 }
 
 function bindDemoAnchors() {

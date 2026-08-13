@@ -33,7 +33,7 @@ export const ADVANTAGE_SLIDES = [
     description:
       '安托未来以空间智能中枢为核心，连接场景智能体、自研智能硬件和第三方系统，为楼宇、园区、学校、酒店、公寓与商业空间提供可开放、可自治、可规模交付的空间智能解决方案。',
     valueProp: '不是单纯卖硬件，也不是普通软件公司，而是把AI智能体、业务系统和真实设备连接起来的物理AI空间智能服务商。',
-    primaryAction: { label: '查看整体架构', href: '#system-architecture' },
+    primaryAction: { label: '查看整体架构', href: '#upgrade' },
     secondaryAction: { label: '预约方案演示', action: 'demo' },
     background: '/images/home-advantages/advantage-ai-agent.webp',
     themeClass: 'overview',
@@ -47,7 +47,7 @@ export const ADVANTAGE_SLIDES = [
     description:
       '提供标准化API、MCP与灵活的系统接入能力，既能连接客户现有系统、第三方平台与主流软硬件协议，也为未来新增应用保留扩展空间。',
     valueProp: '系统不被单一厂商绑定，客户、合作伙伴与集成商可以持续扩展自己的应用能力。',
-    primaryAction: { label: '查看开放能力', href: '#system-architecture' },
+    primaryAction: { label: '查看开放能力', href: '#upgrade' },
     secondaryAction: { label: '预约方案演示', action: 'demo' },
     background: '/images/home-advantages/advantage-open-interface.webp',
     themeClass: 'open-interface',
