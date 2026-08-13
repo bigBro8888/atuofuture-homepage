@@ -4,7 +4,7 @@ export const TOKEN_SITE_URL = 'https://token.atuofuture.com'
 /** Token 入口是否展示（无有效外链时设为 false，避免空链接） */
 export const SHOW_TOKEN_ENTRY = Boolean(TOKEN_SITE_URL)
 
-/** App 下载入口：有正式分发能力时再打开；顶栏已移除，仅页脚/相关页可控 */
+/** App 下载入口：顶栏、页脚与弹窗共用；无正式分发时可设为 false */
 export const SHOW_APP_DOWNLOAD = true
 
 export const SITE_CTA = {
