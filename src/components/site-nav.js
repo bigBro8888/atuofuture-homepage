@@ -102,9 +102,6 @@ export function renderSiteNav(activeId) {
           ${renderDesktopNav(activeId, root)}
         </nav>
         <div class="site-header__actions hidden md:flex items-center gap-4">
-          <button type="button" class="site-header__btn site-header__btn--ghost" data-app-download-open>
-            <span class="material-symbols-outlined" aria-hidden="true">download</span> 下载 App
-          </button>
           <button type="button" class="site-header__btn site-header__btn--primary" data-demo-modal-open>预约方案演示</button>
         </div>
         <button type="button" class="site-header__menu lg:hidden" id="menu-toggle" aria-label="打开菜单">
@@ -125,7 +122,6 @@ export function renderSiteNav(activeId) {
             ${renderMobileNav(activeId, root)}
           </nav>
           <div class="site-mobile-drawer__actions">
-            <button type="button" class="site-header__btn site-header__btn--ghost w-full" data-app-download-open>下载 App</button>
             <button type="button" class="site-header__btn site-header__btn--primary w-full" data-demo-modal-open>预约方案演示</button>
           </div>
         </div>

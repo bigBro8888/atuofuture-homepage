@@ -65,7 +65,7 @@ export function renderOpenInterfaceVisual() {
     <circle class="ha-viz__core-ring" r="52" fill="none" stroke="rgba(232,110,40,0.55)" stroke-width="2.5"/>
     <circle class="ha-viz__core-glow" r="40" fill="url(#ha-open-core)" opacity="0.95"/>
     <polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="1.4"/>
-    <text y="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">安拓平台</text>
+    <text y="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">安托平台</text>
   </g>
 </svg>`
 }

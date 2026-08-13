@@ -1,13 +1,13 @@
 /** 七类产品智能体详情 —— 供 agent-detail 页按 id 渲染 */
 export const AGENT_DETAILS = {
   space: {
-    name: '空间智能体',
+    name: '空间服务智能体',
     icon: 'tune',
     accent: '0, 82, 209',
     eyebrow: 'Space Agent',
     tagline: '统一调度空调、照明、设备控制、智能工单与信息发布，让空间按场景自动响应。',
     overview:
-      '空间智能体面向办公与楼宇空间运营，把环境控制、设备状态、工单流转与信息发布编排成可执行策略。无论是会议准备、下班节能还是异常报修，都能按规则自动触发并闭环跟踪。',
+      '空间服务智能体面向办公与楼宇空间运营，把环境控制、设备状态、工单流转与信息发布编排成可执行策略。无论是会议准备、下班节能还是异常报修，都能按规则自动触发并闭环跟踪。',
     capabilities: [
       { icon: 'ac_unit', title: '空调与照明策略', desc: '按时段、占用与场景策略联动启停与调光调温。' },
       { icon: 'settings_remote', title: '设备控制回读', desc: '远程控制终端设备并回读状态，形成可信执行闭环。' },
@@ -109,24 +109,24 @@ export const AGENT_DETAILS = {
     scenarios: ['企业展厅', '园区招商中心', '产品体验馆', '数字展项空间'],
   },
   visitor: {
-    name: '访客智能体',
+    name: '访客接待智能体',
     icon: 'badge',
     accent: '2, 119, 189',
     eyebrow: 'Visitor Agent',
-    tagline: '覆盖来访登记到接待引导，串联通行、通知与会面空间准备。',
+    tagline: '覆盖访客邀约、登记、通行、接待提醒、空间准备与离场流程。',
     overview:
-      '访客智能体把来访预约、登记、通行权限与接待通知连成一条链，并可联动会面空间准备，减少前台与行政的临时协调。',
+      '访客接待智能体把邀约、登记、通行权限、接待通知与空间准备连成一条链，减少前台与行政的临时协调，并在离场后回收权限。',
     capabilities: [
-      { icon: 'edit_calendar', title: '来访预约登记', desc: '线上预约与现场登记统一入口。' },
+      { icon: 'edit_calendar', title: '邀约与登记', desc: '线上邀约与现场登记统一入口。' },
       { icon: 'lock_open', title: '通行权限下发', desc: '按来访范围下发临时门禁权限。' },
       { icon: 'notifications_active', title: '接待提醒', desc: '自动通知被访人与前台。' },
-      { icon: 'meeting_room', title: '会面空间联动', desc: '预约会议室并预启环境设备。' },
+      { icon: 'meeting_room', title: '空间准备与离场', desc: '联动会面空间准备，离场回收权限。' },
     ],
     workflow: [
-      { title: '预约', desc: '填写来访信息并生成通行凭证。' },
-      { title: '到访', desc: '核验身份并开放通行权限。' },
-      { title: '接待', desc: '通知被访人并引导会面。' },
-      { title: '离场', desc: '签退并回收临时权限。' },
+      { title: '发起邀约', desc: '填写来访信息并生成通行凭证。' },
+      { title: '到访识别', desc: '核验身份并开放通行权限。' },
+      { title: '接待与空间准备', desc: '通知接待人并准备会面空间。' },
+      { title: '离场回收', desc: '签退并回收临时权限。' },
     ],
     metrics: [
       { value: '端到端', label: '来访闭环' },
@@ -134,6 +134,33 @@ export const AGENT_DETAILS = {
       { value: '可留痕', label: '接待记录' },
     ],
     scenarios: ['总部大堂', '园区访客中心', '商务来访', '面试接待'],
+  },
+  opc: {
+    name: 'OPC运营智能体',
+    icon: 'storefront',
+    accent: '183, 110, 40',
+    eyebrow: 'OPC Ops Agent',
+    tagline: '支持空间资源发布、分享获客、预约带看、签约、订单与运营协同。',
+    overview:
+      'OPC运营智能体面向商业与空间运营团队，把空间发布、获客带看、签约订单与入驻运营串成可执行链路，降低线索流失与协作成本。',
+    capabilities: [
+      { icon: 'campaign', title: '空间资源发布', desc: '统一发布可招商/可租赁空间资源。' },
+      { icon: 'share', title: '分享获客', desc: '支持分享触达与线索沉淀。' },
+      { icon: 'event', title: '预约带看', desc: '自动编排带看时间与空间准备。' },
+      { icon: 'handshake', title: '签约与运营', desc: '签约订单与运营协同回流。' },
+    ],
+    workflow: [
+      { title: '发布', desc: '上架空间资源并配置展示信息。' },
+      { title: '获客', desc: '线索进入并预约带看。' },
+      { title: '成交', desc: '签约与订单确认。' },
+      { title: '运营', desc: '入驻后持续运营协同。' },
+    ],
+    metrics: [
+      { value: '发布→成交', label: '运营闭环' },
+      { value: '带看', label: '可编排' },
+      { value: '订单', label: '可协同' },
+    ],
+    scenarios: ['商业资产招商', '园区企业服务', '联合办公运营', '空间可视化获客'],
   },
   hospitality: {
     name: '酒店公寓智能体',
@@ -191,4 +218,23 @@ export const AGENT_DETAILS = {
   },
 }
 
-export const AGENT_ORDER = ['space', 'energy', 'meeting', 'exhibition', 'visitor', 'hospitality', 'asset']
+export const AGENT_ORDER = ['space', 'energy', 'meeting', 'exhibition', 'visitor', 'opc', 'hospitality', 'asset']
+
+/** 兼容旧链接与别名 */
+export const AGENT_ID_ALIASES = {
+  reception: 'visitor',
+  visitor: 'visitor',
+  space: 'space',
+  energy: 'energy',
+  meeting: 'meeting',
+  exhibition: 'exhibition',
+  opc: 'opc',
+  hospitality: 'hospitality',
+  asset: 'asset',
+}
+
+export function resolveAgentId(rawId) {
+  if (!rawId) return null
+  const mapped = AGENT_ID_ALIASES[rawId] || rawId
+  return AGENT_DETAILS[mapped] ? mapped : null
+}

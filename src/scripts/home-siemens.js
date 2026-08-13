@@ -8,6 +8,9 @@ export function initSiemensHome() {
   initCapabilityTabs()
   initSolutionsCarousel()
   bindDemoAnchors()
+  import('./home-main.js').then(({ mountHomeMain }) => {
+    mountHomeMain(document.getElementById('home-main'))
+  })
 }
 
 function bindDemoAnchors() {
@@ -35,24 +38,30 @@ function initHeroCarousel() {
   if (!slides.length || !dotsWrap) return
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const INTERVAL = HOME_ADVANTAGES_INTERVAL_MS
+  const DEFAULT_INTERVAL = HOME_ADVANTAGES_INTERVAL_MS
   let index = 0
+  let hoverPaused = false
   let offscreenPaused = false
   let userPaused = reduceMotion
   let raf = 0
   let startedAt = 0
-  /** 本段计时开始时已有的进度 0~1（离屏/手动暂停后从此续播） */
+  /** 本段计时开始时已有的进度 0~1（悬停/离屏后从此续播） */
   let baseProgress = 0
   let touchStartX = 0
   let touchStartY = 0
   let touchActive = false
+
+  function slideInterval(i) {
+    const raw = Number(slides[i]?.dataset.haDwell)
+    return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_INTERVAL
+  }
 
   dotsWrap.innerHTML = ''
   slides.forEach((_, i) => {
     const btn = document.createElement('button')
     btn.type = 'button'
     btn.className = 'sm-hero__dot'
-    btn.setAttribute('aria-label', `切换到能力 ${String(i + 1).padStart(2, '0')}`)
+    btn.setAttribute('aria-label', `切换到第 ${i + 1} 页`)
     btn.addEventListener('click', () => go(i))
     dotsWrap.appendChild(btn)
   })
@@ -60,7 +69,7 @@ function initHeroCarousel() {
   const dots = [...dotsWrap.querySelectorAll('.sm-hero__dot')]
 
   function isAutoplayBlocked() {
-    return userPaused || offscreenPaused || reduceMotion
+    return userPaused || hoverPaused || offscreenPaused || reduceMotion
   }
 
   function paintProgress(value) {
@@ -72,7 +81,7 @@ function initHeroCarousel() {
 
   function currentProgress() {
     if (!raf) return baseProgress
-    return Math.min(1, baseProgress + (performance.now() - startedAt) / INTERVAL)
+    return Math.min(1, baseProgress + (performance.now() - startedAt) / slideInterval(index))
   }
 
   function stopProgress() {
@@ -87,7 +96,7 @@ function initHeroCarousel() {
 
   function tickProgress(now) {
     if (isAutoplayBlocked()) return
-    const next = baseProgress + (now - startedAt) / INTERVAL
+    const next = baseProgress + (now - startedAt) / slideInterval(index)
     paintProgress(next)
     if (next >= 1) {
       go(index + 1)
@@ -154,6 +163,15 @@ function initHeroCarousel() {
   prev?.addEventListener('click', () => go(index - 1))
   next?.addEventListener('click', () => go(index + 1))
   pauseBtn?.addEventListener('click', () => setUserPaused(!userPaused))
+
+  root.addEventListener('mouseenter', () => {
+    hoverPaused = true
+    freezeProgress()
+  })
+  root.addEventListener('mouseleave', () => {
+    hoverPaused = false
+    if (!isAutoplayBlocked()) startProgress({ reset: false })
+  })
 
   root.addEventListener(
     'touchstart',

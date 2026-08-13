@@ -41,7 +41,8 @@ export function initAgentChat() {
 
   let currentAgentId = state.agentId
   let messages = state.messages
-  let isOpen = state.isOpen
+  /** 默认收起，避免遮挡首屏控件；用户手动打开后再记忆 */
+  let isOpen = false
   let isLoading = false
 
   function persist() {
@@ -110,9 +111,26 @@ export function initAgentChat() {
     els.messages.scrollTop = els.messages.scrollHeight
   }
 
+  function pageQuickPrompts() {
+    const page = document.body.dataset.page
+    if (page === 'hardware') {
+      return ['无线网关和多功能网关有什么区别？', '中控屏如何接入自有设备？', '如何实现端边云本地闭环？']
+    }
+    if (page === 'solutions') {
+      return ['智慧楼宇适合解决哪些问题？', '园区如何实现多楼栋统一运营？', '如何预约行业方案演示？']
+    }
+    if (page === 'agents' || page === 'agent-detail') {
+      return ['空间智能体和普通AI助手有什么区别？', '会议运维智能体能完成哪些任务？', '访客接待流程如何闭环？']
+    }
+    if (page === 'about') {
+      return ['安托未来的核心定位是什么？', '你们的交付流程包含哪些环节？', '如何联系方案顾问？']
+    }
+    return ['安托未来主要服务哪些行业？', '空间智能系统是如何构成的？', '如何预约方案演示？']
+  }
+
   function renderQuickPrompts() {
-    const agent = getAgentById(currentAgentId)
-    els.quick.innerHTML = agent.quickPrompts
+    const prompts = pageQuickPrompts()
+    els.quick.innerHTML = prompts
       .map(
         (p) =>
           `<button type="button" class="agent-chat-quick-btn" data-quick="${escapeAttr(p)}">
@@ -189,7 +207,7 @@ export function initAgentChat() {
     } catch {
       messages.push({
         role: 'assistant',
-        content: '暂时无法连接服务，请稍后重试或直接联系我们：400-888-9999。',
+        content: '暂时无法连接服务，请稍后重试，或通过页面「预约方案演示」联系我们。',
         agentId: currentAgentId,
         ts: Date.now(),
       })

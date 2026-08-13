@@ -1,3 +1,6 @@
+import { CONTACT, contactMailto, contactTelHref } from '../data/contact.js'
+import { SHOW_TOKEN_ENTRY, TOKEN_SITE_URL, SHOW_APP_DOWNLOAD } from '../data/site-links.js'
+
 function getRootPrefix() {
   const depth = Number(document.body.dataset.navDepth || 0)
   if (depth <= 0) return './'
@@ -14,6 +17,8 @@ function iconPhone() {
 
 export function renderSiteFooter() {
   const root = getRootPrefix()
+  const mail = contactMailto()
+  const tel = contactTelHref()
   return `
     <footer class="site-footer" id="site-footer">
       <div class="max-w-max-width mx-auto px-margin-desktop">
@@ -23,42 +28,46 @@ export function renderSiteFooter() {
               <img src="${root}assets/artink-logo-light.png" alt="安托未来" />
             </a>
             <div class="site-footer__social">
-              <a href="mailto:contact@atuofuture.com" aria-label="邮箱">${iconMail()}</a>
-              <a href="tel:4008889999" aria-label="电话">${iconPhone()}</a>
+              ${mail ? `<a href="${mail}" aria-label="邮箱">${iconMail()}</a>` : ''}
+              ${tel ? `<a href="${tel}" aria-label="电话">${iconPhone()}</a>` : ''}
             </div>
           </div>
           <div class="site-footer__col">
             <h6>关于安托未来</h6>
             <ul>
-              <li><a href="${root}about/">关于我们</a></li>
-              <li><a href="${root}news/">新闻中心</a></li>
-              <li><a href="${root}about/">联系我们</a></li>
+              <li><a href="${root}about/#intro">公司介绍</a></li>
+              <li><a href="${root}about/#team">团队与能力</a></li>
+              <li><a href="${root}news/">新闻动态</a></li>
+              <li><a href="${root}about/#contact">联系我们</a></li>
             </ul>
           </div>
           <div class="site-footer__col">
-            <h6>产品与方案</h6>
+            <h6>产品与能力</h6>
             <ul>
               <li><a href="${root}solutions/">行业解决方案</a></li>
-              <li><a href="${root}agents/">智能体</a></li>
+              <li><a href="${root}agents/">空间智能体</a></li>
               <li><a href="${root}hardware/">智能硬件</a></li>
-              <li><a href="https://token.atuofuture.com" target="_blank" rel="noopener noreferrer" data-token-link>AI Token</a></li>
+              ${SHOW_TOKEN_ENTRY ? `<li><a href="${TOKEN_SITE_URL}" target="_blank" rel="noopener noreferrer" data-token-link>AI Token</a></li>` : ''}
+              ${SHOW_APP_DOWNLOAD ? `<li><button type="button" class="site-footer__text-btn" data-app-download-open>下载 App</button></li>` : ''}
             </ul>
           </div>
           <div class="site-footer__col">
             <h6>行业</h6>
             <ul>
+              <li><a href="${root}solutions/?id=campus">智慧园区</a></li>
               <li><a href="${root}solutions/?id=building">智慧楼宇</a></li>
-              <li><a href="${root}solutions/?id=campus">园区运营</a></li>
+              <li><a href="${root}solutions/?id=school">智慧学校</a></li>
+              <li><a href="${root}solutions/?id=hotel">智慧酒店</a></li>
+              <li><a href="${root}solutions/?id=apartment">智慧公寓</a></li>
               <li><a href="${root}solutions/?id=commercial">商业资产</a></li>
-              <li><a href="${root}solutions/?id=energy">能源能耗</a></li>
             </ul>
           </div>
           <div class="site-footer__col">
             <h6>与我们联系</h6>
             <ul>
-              <li><a href="#" data-demo-modal-open>预约方案演示</a></li>
-              <li><a href="mailto:contact@atuofuture.com">contact@atuofuture.com</a></li>
-              <li><a href="tel:4008889999">400-888-9999</a></li>
+              <li><button type="button" class="site-footer__text-btn" data-demo-modal-open>预约方案演示</button></li>
+              ${CONTACT.email ? `<li><a href="${mail}">${CONTACT.email}</a></li>` : ''}
+              ${CONTACT.phoneDisplay ? `<li><a href="${tel}">${CONTACT.phoneDisplay}</a></li>` : ''}
             </ul>
           </div>
         </div>
@@ -66,9 +75,7 @@ export function renderSiteFooter() {
           <p>© 2026 atuofuture</p>
           <nav class="site-footer__legal" aria-label="法律信息">
             <a href="${root}about/">企业信息</a>
-            <a href="${root}about/">隐私声明</a>
-            <a href="${root}about/">使用条款</a>
-            <a href="${root}about/">联系我们</a>
+            <a href="${root}about/#contact">联系我们</a>
           </nav>
         </div>
       </div>
