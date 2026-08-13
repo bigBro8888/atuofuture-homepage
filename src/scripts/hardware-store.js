@@ -46,7 +46,13 @@ function linePreviewItems(lineId) {
   return (map[lineId] || [])
     .map((item) => {
       const p = getProductBySlug(item.id)
-      return p ? { ...item, product: p } : null
+      return p
+        ? {
+            ...item,
+            product: p,
+            thumb: `/images/hardware/thumb-${item.id}.png`,
+          }
+        : null
     })
     .filter(Boolean)
 }
@@ -59,39 +65,47 @@ function renderHero() {
           <h1>连接空间、商品与真实业务</h1>
           <p>安托未来以空间智能、电子纸与边缘连接能力，构建覆盖企业空间、新零售与智能终端的硬件产品体系。</p>
           <div class="hwc-hero__actions">
-            <a class="hwc-btn hwc-btn--cyan" href="#hwc-browser">浏览全部产品</a>
+            <a class="hwc-btn hwc-btn--cyan hwc-btn--hero" href="#hwc-browser">浏览全部产品</a>
             <button type="button" class="hwc-btn hwc-btn--outline-dark" data-demo-modal-open>获取选型建议</button>
           </div>
         </div>
         <div class="hwc-hero__visual" aria-hidden="true">
-          <img src="/images/hardware/hero-family.svg" alt="" width="640" height="480" />
+          <img src="/images/hardware/hero-family.png" alt="" width="1270" height="662" />
         </div>
       </div>
     </section>`
 }
 
 function renderLineOverview() {
+  const lineMeta = {
+    space: { icon: 'apartment', arrow: 'cyan' },
+    retail: { icon: 'shopping_bag', arrow: 'cyan' },
+    consumer: { icon: 'smartphone', arrow: 'orange' },
+  }
   return `
     <section class="hwc-lines" id="hwc-lines">
-      <div class="hwc-shell">
-        <div class="hwc-lines__rail" aria-hidden="true"></div>
+      <div class="hwc-shell hwc-lines__shell">
         <div class="hwc-lines__grid">
           ${HARDWARE_LINES.map((line) => {
             const items = linePreviewItems(line.id)
+            const meta = lineMeta[line.id] || { icon: line.icon, arrow: 'cyan' }
             return `
             <article class="hwc-lines__card hwc-lines__card--${esc(line.id)}">
               <button type="button" class="hwc-lines__head" data-hwc-goto-line="${esc(line.id)}">
-                <span class="material-symbols-outlined" aria-hidden="true">${esc(line.icon)}</span>
+                <span class="hwc-lines__node" aria-hidden="true"></span>
+                <span class="material-symbols-outlined hwc-lines__icon" aria-hidden="true">${esc(meta.icon)}</span>
                 <strong>${esc(line.name)}</strong>
-                <span class="material-symbols-outlined hwc-lines__arrow" aria-hidden="true">arrow_forward</span>
+                <span class="material-symbols-outlined hwc-lines__arrow hwc-lines__arrow--${esc(meta.arrow)}" aria-hidden="true">arrow_forward</span>
               </button>
               <div class="hwc-lines__items">
                 ${items
                   .map(
                     (item) => `
                   <button type="button" class="hwc-lines__item" data-hwc-pick="${esc(item.product.slug)}">
-                    <span class="material-symbols-outlined" aria-hidden="true">${esc(item.product.icon || 'devices')}</span>
-                    <span>${esc(item.label)}</span>
+                    <span class="hwc-lines__thumb">
+                      <img src="${esc(item.thumb)}" alt="" width="72" height="72" loading="lazy" />
+                    </span>
+                    <span class="hwc-lines__label">${esc(item.label)}</span>
                   </button>`
                   )
                   .join('')}
@@ -316,8 +330,10 @@ export function initHardwareStore() {
 
   const render = () => {
     root.innerHTML = `
-      ${renderHero()}
-      ${renderLineOverview()}
+      <div class="hwc-first">
+        ${renderHero()}
+        ${renderLineOverview()}
+      </div>
       ${renderBrowser(state)}
       ${renderRelatedPreviews(state.lineId)}
       ${renderCta()}
