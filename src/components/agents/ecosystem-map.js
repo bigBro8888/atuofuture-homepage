@@ -33,23 +33,23 @@ function curvesMarkup(selectedId) {
   const left = AGENTS_OVERVIEW.filter((a) => a.side === 'left')
   const right = AGENTS_OVERVIEW.filter((a) => a.side === 'right')
   const leftPaths = [
-    'M 280 300 C 360 300, 420 120, 500 300',
-    'M 280 300 C 360 300, 420 220, 500 300',
-    'M 280 300 C 360 300, 420 380, 500 300',
-    'M 280 300 C 360 300, 420 480, 500 300',
+    'M 70 70 C 220 70, 340 180, 500 270',
+    'M 70 190 C 230 190, 350 230, 500 270',
+    'M 70 330 C 230 330, 350 300, 500 270',
+    'M 70 450 C 220 450, 340 360, 500 270',
   ]
   const rightPaths = [
-    'M 720 300 C 640 300, 580 120, 500 300',
-    'M 720 300 C 640 300, 580 220, 500 300',
-    'M 720 300 C 640 300, 580 380, 500 300',
-    'M 720 300 C 640 300, 580 480, 500 300',
+    'M 930 70 C 780 70, 660 180, 500 270',
+    'M 930 190 C 770 190, 650 230, 500 270',
+    'M 930 330 C 770 330, 650 300, 500 270',
+    'M 930 450 C 780 450, 660 360, 500 270',
   ]
   const paths = [
     ...left.map((a, i) => ({ id: a.id, d: leftPaths[i] })),
     ...right.map((a, i) => ({ id: a.id, d: rightPaths[i] })),
   ]
   return `
-    <svg class="ag-eco__svg" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
+    <svg class="ag-eco__svg" viewBox="0 0 1000 540" preserveAspectRatio="none" aria-hidden="true">
       ${paths
         .map(
           (p) => `

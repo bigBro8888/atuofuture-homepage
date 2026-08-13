@@ -13,6 +13,19 @@ function stepIcon(i) {
   return names[i] || 'circle'
 }
 
+function sceneNodesMarkup(nodes, activeStep = 0) {
+  return (nodes || [])
+    .map(
+      (n) => `
+    <span
+      class="ag-story__pin${n.step === activeStep ? ' is-active' : ''}"
+      style="left:${n.x}%;top:${n.y}%"
+      data-ag-pin-step="${n.step}"
+    >${esc(n.label)}</span>`
+    )
+    .join('')
+}
+
 /**
  * AgentTaskStory
  * @param {{ selectedId: string }} props
@@ -54,13 +67,8 @@ export function renderAgentTaskStory({ selectedId }) {
               loading="lazy"
               data-ag-scene-img
             />
-            <div class="ag-story__states" data-ag-states>
-              ${selected.sceneStates
-                .map(
-                  (s) => `
-                <span class="ag-story__chip"><i></i>${esc(s)}</span>`
-                )
-                .join('')}
+            <div class="ag-story__pins" data-ag-pins>
+              ${sceneNodesMarkup(selected.sceneNodes, 0)}
             </div>
           </div>
           <div class="ag-story__aside" data-ag-aside>
@@ -136,12 +144,8 @@ export function syncAgentTaskStory(root, selectedId) {
     img.alt = `${selected.name}业务场景`
   }
 
-  const states = root.querySelector('[data-ag-states]')
-  if (states) {
-    states.innerHTML = selected.sceneStates
-      .map((s) => `<span class="ag-story__chip"><i></i>${esc(s)}</span>`)
-      .join('')
-  }
+  const pins = root.querySelector('[data-ag-pins]')
+  if (pins) pins.innerHTML = sceneNodesMarkup(selected.sceneNodes, 0)
 
   const setText = (sel, value) => {
     const el = root.querySelector(sel)
@@ -174,4 +178,13 @@ export function syncAgentTaskStory(root, selectedId) {
       )
       .join('')
   }
+}
+
+export function syncStoryFlowStep(root, stepIndex) {
+  root.querySelectorAll('[data-ag-flow-step]').forEach((el) => {
+    el.classList.toggle('is-active', Number(el.dataset.agFlowStep) === stepIndex)
+  })
+  root.querySelectorAll('[data-ag-pin-step]').forEach((el) => {
+    el.classList.toggle('is-active', Number(el.dataset.agPinStep) === stepIndex)
+  })
 }

@@ -8,6 +8,24 @@ function esc(str = '') {
     .replace(/"/g, '&quot;')
 }
 
+function pinsMarkup(pins, hotId = '') {
+  return (pins || [])
+    .map(
+      (p) => `
+    <button
+      type="button"
+      class="ag-ind__pin${hotId === p.id ? ' is-hot' : ''}"
+      style="left:${p.x}%;top:${p.y}%"
+      data-ag-ind-pin="${esc(p.id)}"
+      data-ag-ind-chain="${p.chain}"
+    >
+      <i></i>
+      <span>${esc(p.label)}</span>
+    </button>`
+    )
+    .join('')
+}
+
 function panelMarkup(item) {
   return `
     <div class="ag-ind__panel" data-ag-ind-panel>
@@ -20,6 +38,9 @@ function panelMarkup(item) {
           loading="lazy"
           data-ag-ind-img
         />
+        <div class="ag-ind__pins" data-ag-ind-pins>
+          ${pinsMarkup(item.scenePins)}
+        </div>
       </div>
       <div class="ag-ind__info">
         <h3 data-ag-ind-title>${esc(item.title)}</h3>
@@ -28,7 +49,7 @@ function panelMarkup(item) {
           ${item.combo
             .map(
               (c) => `
-            <span class="ag-ind__dot"><i></i>${esc(c.label)}</span>`
+            <span class="ag-ind__dot" data-ag-ind-combo-id="${esc(c.id)}"><i></i>${esc(c.label)}</span>`
             )
             .join('')}
         </div>
@@ -36,7 +57,7 @@ function panelMarkup(item) {
           ${item.chain
             .map(
               (step, i) => `
-            <li>
+            <li data-ag-ind-chain-step="${i}">
               <em>${String(i + 1).padStart(2, '0')}</em>
               <strong>${esc(step)}</strong>
             </li>`
@@ -117,10 +138,13 @@ export function syncIndustryAgentComposition(root, selectedIndustryId) {
   setText('[data-ag-ind-title]', selected.title)
   setText('[data-ag-ind-desc]', selected.desc)
 
+  const pins = root.querySelector('[data-ag-ind-pins]')
+  if (pins) pins.innerHTML = pinsMarkup(selected.scenePins)
+
   const combo = root.querySelector('[data-ag-ind-combo]')
   if (combo) {
     combo.innerHTML = selected.combo
-      .map((c) => `<span class="ag-ind__dot"><i></i>${esc(c.label)}</span>`)
+      .map((c) => `<span class="ag-ind__dot" data-ag-ind-combo-id="${esc(c.id)}"><i></i>${esc(c.label)}</span>`)
       .join('')
   }
 
@@ -129,7 +153,7 @@ export function syncIndustryAgentComposition(root, selectedIndustryId) {
     chain.innerHTML = selected.chain
       .map(
         (step, i) => `
-      <li>
+      <li data-ag-ind-chain-step="${i}">
         <em>${String(i + 1).padStart(2, '0')}</em>
         <strong>${esc(step)}</strong>
       </li>`
@@ -139,4 +163,53 @@ export function syncIndustryAgentComposition(root, selectedIndustryId) {
 
   const link = root.querySelector('[data-ag-ind-link]')
   if (link) link.setAttribute('href', selected.href)
+
+  bindIndustryPinHover(root)
+}
+
+export function bindIndustryPinHover(root) {
+  const clear = () => {
+    root.querySelectorAll('.ag-ind__pin, .ag-ind__dot, [data-ag-ind-chain-step]').forEach((el) => {
+      el.classList.remove('is-hot')
+    })
+  }
+
+  const highlight = (pinId, chainIndex) => {
+    clear()
+    root.querySelectorAll(`[data-ag-ind-pin="${pinId}"]`).forEach((el) => el.classList.add('is-hot'))
+    root.querySelectorAll(`[data-ag-ind-combo-id="${pinId}"]`).forEach((el) => el.classList.add('is-hot'))
+    if (chainIndex != null) {
+      root.querySelectorAll(`[data-ag-ind-chain-step="${chainIndex}"]`).forEach((el) => el.classList.add('is-hot'))
+    }
+  }
+
+  root.querySelectorAll('[data-ag-ind-pin]').forEach((pin) => {
+    pin.onmouseenter = () => highlight(pin.dataset.agIndPin, Number(pin.dataset.agIndChain))
+    pin.onmouseleave = clear
+    pin.onfocus = () => highlight(pin.dataset.agIndPin, Number(pin.dataset.agIndChain))
+    pin.onblur = clear
+  })
+
+  root.querySelectorAll('[data-ag-ind-combo-id]').forEach((dot) => {
+    const id = dot.dataset.agIndComboId
+    const pin = root.querySelector(`[data-ag-ind-pin="${id}"]`)
+    const chain = pin ? Number(pin.dataset.agIndChain) : null
+    dot.onmouseenter = () => highlight(id, chain)
+    dot.onmouseleave = clear
+  })
+
+  root.querySelectorAll('[data-ag-ind-chain-step]').forEach((row) => {
+    row.onmouseenter = () => {
+      const step = Number(row.dataset.agIndChainStep)
+      const pin = [...root.querySelectorAll('[data-ag-ind-pin]')].find(
+        (el) => Number(el.dataset.agIndChain) === step
+      )
+      if (pin) highlight(pin.dataset.agIndPin, step)
+      else {
+        clear()
+        row.classList.add('is-hot')
+      }
+    }
+    row.onmouseleave = clear
+  })
 }

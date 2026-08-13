@@ -10,10 +10,12 @@ import {
 import {
   renderAgentTaskStory,
   syncAgentTaskStory,
+  syncStoryFlowStep,
 } from '../components/agents/task-story.js'
 import {
   renderIndustryAgentComposition,
   syncIndustryAgentComposition,
+  bindIndustryPinHover,
 } from '../components/agents/industry-composition.js'
 
 function esc(str = '') {
@@ -138,13 +140,14 @@ function bindInteractions(root, state) {
     })
   })
 
-  // subtle workflow pulse
+  bindIndustryPinHover(root)
+
+  // workflow + scene pin sync
   let step = 0
   const tick = () => {
     const items = root.querySelectorAll('[data-ag-flow-step]')
     if (!items.length) return
-    items.forEach((el) => el.classList.remove('is-active'))
-    items[step % items.length]?.classList.add('is-active')
+    syncStoryFlowStep(root, step % items.length)
     step += 1
   }
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
