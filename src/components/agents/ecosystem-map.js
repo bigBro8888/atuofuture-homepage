@@ -199,19 +199,24 @@ function renderResources() {
 function renderValueBar() {
   return `
     <div class="ag-eco__value">
-      <div class="ag-eco__value-side">客户最终获得</div>
-      <ul class="ag-eco__value-list">
-        ${VALUE_ITEMS.map(
-          (item) => `
-          <li>
-            <span class="ag-eco__check" aria-hidden="true">
-              <span class="material-symbols-outlined">check_circle</span>
-            </span>
-            ${esc(item)}
-          </li>`
-        ).join('')}
-      </ul>
-      <strong class="ag-eco__value-tag">少操作，更高效，更可靠</strong>
+      <div class="ag-eco__value-cell ag-eco__value-cell--title">客户最终获得</div>
+      <div class="ag-eco__value-cell ag-eco__value-cell--list">
+        <ul class="ag-eco__value-list">
+          ${VALUE_ITEMS.map(
+            (item) => `
+            <li>
+              <span class="ag-eco__check" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M5.2 8.1 7.1 10l3.7-4.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span>${esc(item)}</span>
+            </li>`
+          ).join('')}
+        </ul>
+      </div>
+      <div class="ag-eco__value-cell ag-eco__value-cell--tag">少操作，更高效，更可靠</div>
     </div>`
 }
 
