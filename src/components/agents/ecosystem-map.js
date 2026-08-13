@@ -198,26 +198,56 @@ function renderResources() {
 
 function renderValueBar() {
   return `
-    <div class="ag-eco__value">
-      <div class="ag-eco__value-glass">
-        <div class="ag-eco__value-cell ag-eco__value-cell--title">客户最终获得</div>
-        <div class="ag-eco__value-cell ag-eco__value-cell--list">
-          <ul class="ag-eco__value-list">
-            ${VALUE_ITEMS.map(
-              (item) => `
-              <li>
-                <span class="ag-eco__check" aria-hidden="true">
-                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                    <circle cx="8" cy="8" r="6.4" stroke="currentColor" stroke-width="1.15"/>
-                    <path d="M5 8.15 7.05 10.1 11 5.8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </span>
-                <span>${esc(item)}</span>
-              </li>`
-            ).join('')}
-          </ul>
+    <div class="ag-eco__value-stage">
+      <div class="ag-eco__value-trap" aria-hidden="true">
+        <svg viewBox="0 0 1200 140" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="agEcoTrapFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#EAF6FF" stop-opacity="0.95"/>
+              <stop offset="42%" stop-color="#C8E6FF" stop-opacity="0.82"/>
+              <stop offset="100%" stop-color="#9CCAF5" stop-opacity="0.78"/>
+            </linearGradient>
+            <linearGradient id="agEcoTrapEdge" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#7EB4E8" stop-opacity="0.55"/>
+            </linearGradient>
+          </defs>
+          <path
+            d="M70 10 H1130 L1200 130 H0 Z"
+            fill="url(#agEcoTrapFill)"
+            stroke="url(#agEcoTrapEdge)"
+            stroke-width="2"
+          />
+          <path
+            d="M95 18 H1105"
+            stroke="rgba(255,255,255,.75)"
+            stroke-width="3"
+            stroke-linecap="round"
+            opacity=".8"
+          />
+        </svg>
+      </div>
+      <div class="ag-eco__value">
+        <div class="ag-eco__value-glass">
+          <div class="ag-eco__value-cell ag-eco__value-cell--title">客户最终获得</div>
+          <div class="ag-eco__value-cell ag-eco__value-cell--list">
+            <ul class="ag-eco__value-list">
+              ${VALUE_ITEMS.map(
+                (item) => `
+                <li>
+                  <span class="ag-eco__check" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="6.4" stroke="currentColor" stroke-width="1.15"/>
+                      <path d="M5 8.15 7.05 10.1 11 5.8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
+                  <span>${esc(item)}</span>
+                </li>`
+              ).join('')}
+            </ul>
+          </div>
+          <div class="ag-eco__value-cell ag-eco__value-cell--tag">少操作，更高效，更可靠</div>
         </div>
-        <div class="ag-eco__value-cell ag-eco__value-cell--tag">少操作，更高效，更可靠</div>
       </div>
     </div>`
 }
