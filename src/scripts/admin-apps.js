@@ -1,11 +1,19 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 
 const API = '/api/admin'
-const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '' }
+const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', homeSection: 'hero' }
+const HOME_OUTLINE = [
+  { id: 'hero', no: '01', title: '首屏轮播', desc: '顶部能力轮播图与文案' },
+  { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
+  { id: 'agents', no: '03', title: '空间智能体', desc: '八个智能体一览区标题' },
+  { id: 'solutions', no: '04', title: '产品与方案', desc: '方案横滑卡片' },
+  { id: 'news', no: '05', title: '新闻动态', desc: '三列新闻卡片' },
+  { id: 'pitch', no: '06', title: '探索安托未来', desc: '底部宫格导语' },
+]
 const titles = {
   overview: ['页面目录', '每个前台路径对应一块后台配置，结构与官网导航一致'],
   site: ['全站设置', 'Logo、品牌名、顶栏按钮与联系方式'],
-  home: ['官网首页', '路径 / · 编辑草稿并发布'],
+  home: ['官网首页', '路径 / · 按前台区块逐项编辑，点左侧大纲跳转'],
   about: ['关于我们', '路径 /about/ · 编辑草稿并发布'],
   'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏标题与 Banner'],
   'page-agents': ['空间智能体', '路径 /agents/ · 首屏标题与 Banner'],
@@ -214,118 +222,149 @@ async function loadConfig() {
 function homeField(path, label, value, options = {}) {
   const type = options.type || 'text'
   const field = type === 'textarea'
-    ? `<textarea data-home-field="${path}" rows="${options.rows || 3}">${escapeHtml(value)}</textarea>`
-    : `<input data-home-field="${path}" data-home-type="${type}" type="${type === 'number' ? 'number' : 'text'}" value="${escapeHtml(value)}" ${type === 'number' ? 'min="0"' : ''} />`
+    ? `<textarea data-home-field="${path}" rows="${options.rows || 3}">${escapeHtml(value ?? '')}</textarea>`
+    : `<input data-home-field="${path}" data-home-type="${type}" type="${type === 'number' ? 'number' : 'text'}" value="${escapeHtml(value ?? '')}" ${type === 'number' ? 'min="0"' : ''} />`
   const media = options.image
     ? `<div class="admin-home-media">
-        <img data-home-preview-for="${path}" src="${escapeHtml(value)}" alt="" ${value ? '' : 'hidden'} />
+        <img data-home-preview-for="${path}" src="${escapeHtml(value ?? '')}" alt="" ${value ? '' : 'hidden'} />
         <label class="admin-home-upload">上传本地图片<input type="file" accept="image/jpeg,image/png,image/webp" data-home-upload-for="${path}" /></label>
       </div>`
     : ''
   return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${field}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
 }
 
+function showHomeSection(id) {
+  if (!HOME_OUTLINE.some((item) => item.id === id)) id = 'hero'
+  state.homeSection = id
+  document.querySelectorAll('[data-home-goto]').forEach((button) => button.classList.toggle('is-active', button.dataset.homeGoto === id))
+  document.querySelectorAll('[data-home-section]').forEach((section) => {
+    section.hidden = section.dataset.homeSection !== id
+  })
+}
+
 function renderHomeEditor(content) {
+  const slides = content.heroSlides?.length ? content.heroSlides : [{ label: '', title: '', description: '', actionLabel: '', actionHref: '', background: '' }]
+  const banner = content.banner || {}
+  const agents = content.agents || {}
+  const news = content.news || { items: [] }
+  const pitch = content.pitch || {}
   const editor = document.querySelector('[data-home-editor]')
   editor.innerHTML = `
-    <fieldset>
-      <legend>首屏 Hero</legend>
-      <div class="admin-form-grid">
-        ${homeField('hero.eyebrow', '英文眉题', content.hero.eyebrow)}
-        ${homeField('hero.title', '主标题', content.hero.title)}
-        ${homeField('hero.subtitle', '副标题', content.hero.subtitle, { wide: true })}
-        ${homeField('hero.posterUrl', '背景 Banner 图', content.hero.posterUrl, { image: true, help: '填写图片且视频链接留空时，首页显示静态 Banner；全部留空则保留默认视频' })}
-        ${homeField('hero.videoUrl', '背景视频 HTTPS 链接', content.hero.videoUrl, { help: '填写后播放该视频，并使用 Banner 图作为视频封面' })}
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>核心能力</legend>
-      <div class="admin-form-grid">
-        ${homeField('core.kicker', '英文眉题', content.core.kicker)}
-        ${homeField('core.title', '区块标题', content.core.title)}
-        ${homeField('core.subtitle', '区块说明', content.core.subtitle, { type: 'textarea', wide: true })}
-      </div>
-      <div class="admin-home-list">${content.core.items.map((item, index) => `
-        <details ${index === 0 ? 'open' : ''}><summary>能力 ${index + 1}：${escapeHtml(item.title)}</summary>
-          <div class="admin-form-grid">
-            ${homeField(`core.items.${index}.icon`, '图标名称', item.icon)}
-            ${homeField(`core.items.${index}.title`, '标题', item.title)}
-            ${homeField(`core.items.${index}.label`, '英文标签', item.label)}
-            ${homeField(`core.items.${index}.description`, '说明', item.description, { type: 'textarea', wide: true })}
-          </div>
-        </details>`).join('')}</div>
-    </fieldset>
-    <fieldset>
-      <legend>合作数据</legend>
-      <div class="admin-form-grid">
-        ${homeField('partners.kicker', '英文眉题', content.partners.kicker)}
-        ${homeField('partners.title', '区块标题', content.partners.title)}
-        ${homeField('partners.subtitle', '区块说明', content.partners.subtitle, { type: 'textarea', wide: true })}
-      </div>
-      <div class="admin-home-metrics">${content.partners.metrics.map((metric, index) => `
-        <div>
-          <b>指标 ${index + 1}</b>
-          ${homeField(`partners.metrics.${index}.value`, '数值', metric.value, { type: 'number' })}
-          ${homeField(`partners.metrics.${index}.suffix`, '单位/后缀', metric.suffix)}
-          ${homeField(`partners.metrics.${index}.label`, '名称', metric.label)}
-        </div>`).join('')}</div>
-    </fieldset>
-    <fieldset>
-      <legend>解决方案</legend>
-      <div class="admin-form-grid">
-        ${homeField('solutions.eyebrow', '英文眉题', content.solutions.eyebrow)}
-        ${homeField('solutions.title', '区块标题', content.solutions.title)}
-        ${homeField('solutions.subtitle', '区块说明', content.solutions.subtitle, { type: 'textarea', wide: true })}
-        ${homeField('solutions.moreLabel', '更多按钮文字', content.solutions.moreLabel)}
-        ${homeField('solutions.moreUrl', '更多按钮链接', content.solutions.moreUrl)}
-      </div>
-      <div class="admin-home-list">${content.solutions.items.map((item, index) => `
-        <details ${index === 0 ? 'open' : ''}><summary>方案 ${index + 1}：${escapeHtml(item.title)}</summary>
-          <div class="admin-form-grid">
-            ${homeField(`solutions.items.${index}.chip`, '分类标签', item.chip)}
-            ${homeField(`solutions.items.${index}.title`, '标题', item.title)}
-            ${homeField(`solutions.items.${index}.description`, '说明', item.description, { type: 'textarea', wide: true })}
-            ${homeField(`solutions.items.${index}.tags`, '标签（逗号分隔）', item.tags.join('，'), { wide: true })}
-            ${homeField(`solutions.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, help: '留空保留当前默认图片' })}
-            ${homeField(`solutions.items.${index}.linkUrl`, '详情链接', item.linkUrl)}
-          </div>
-        </details>`).join('')}</div>
-    </fieldset>
-    <fieldset>
-      <legend>标杆案例</legend>
-      ${homeField('cases.title', '区块标题', content.cases.title)}
-      <div class="admin-home-list">${content.cases.items.map((item, index) => `
-        <details open><summary>案例 ${index + 1}：${escapeHtml(item.client)}</summary>
-          <div class="admin-form-grid">
-            ${homeField(`cases.items.${index}.client`, '客户名称', item.client)}
-            ${homeField(`cases.items.${index}.title`, '案例标题', item.title)}
-            ${homeField(`cases.items.${index}.description`, '案例说明', item.description, { type: 'textarea', wide: true })}
-            ${homeField(`cases.items.${index}.imageUrl`, '案例图片', item.imageUrl, { image: true, help: '留空保留当前默认图片' })}
-            ${homeField(`cases.items.${index}.linkUrl`, '详情链接', item.linkUrl)}
-          </div>
-        </details>`).join('')}</div>
-    </fieldset>
-    <fieldset>
-      <legend>底部行动区</legend>
-      <div class="admin-form-grid">
-        ${homeField('cta.title', '主标题', content.cta.title, { wide: true })}
-        ${homeField('cta.primaryLabel', '主按钮文字', content.cta.primaryLabel)}
-        ${homeField('cta.secondaryLabel', '次按钮文字', content.cta.secondaryLabel)}
-        ${homeField('cta.note', '底部说明', content.cta.note, { wide: true })}
-      </div>
-    </fieldset>`
+    <aside class="admin-home-outline" data-home-outline>
+      <p>按官网首页从上到下排列，点一项只打开这一块</p>
+      ${HOME_OUTLINE.map((item) => `
+        <button type="button" class="admin-home-outline__item${item.id === state.homeSection ? ' is-active' : ''}" data-home-goto="${item.id}">
+          <em>${item.no}</em>
+          <span><b>${item.title}</b><small>${item.desc}</small></span>
+        </button>`).join('')}
+    </aside>
+    <div class="admin-home-stage">
+      <fieldset data-home-section="hero">
+        <legend>首屏轮播</legend>
+        <p class="admin-form-section__hint">对应首页顶部大图轮播。点开单张修改，不必一次看完。</p>
+        <div class="admin-home-list">${slides.map((slide, index) => `
+          <details ${index === 0 ? 'open' : ''}><summary>第 ${index + 1} 屏：${escapeHtml(slide.title || '未填写标题')}</summary>
+            <div class="admin-form-grid">
+              ${homeField(`heroSlides.${index}.label`, '角标', slide.label)}
+              ${homeField(`heroSlides.${index}.title`, '主标题', slide.title, { wide: true })}
+              ${homeField(`heroSlides.${index}.description`, '说明', slide.description, { type: 'textarea', wide: true })}
+              ${homeField(`heroSlides.${index}.actionLabel`, '按钮文字', slide.actionLabel)}
+              ${homeField(`heroSlides.${index}.actionHref`, '按钮链接', slide.actionHref)}
+              ${homeField(`heroSlides.${index}.background`, '背景图', slide.background, { image: true, wide: true })}
+            </div>
+          </details>`).join('')}</div>
+      </fieldset>
+      <fieldset data-home-section="banner">
+        <legend>中部推广条</legend>
+        <p class="admin-form-section__hint">首屏下方的咨询横条。</p>
+        <div class="admin-form-grid">
+          ${homeField('banner.title', '标题', banner.title, { wide: true })}
+          ${homeField('banner.subtitle', '说明', banner.subtitle, { type: 'textarea', wide: true })}
+          ${homeField('banner.ctaLabel', '按钮文字', banner.ctaLabel)}
+          ${homeField('banner.ctaUrl', '按钮链接', banner.ctaUrl)}
+          ${homeField('banner.imageUrl', '左侧配图', banner.imageUrl, { image: true, wide: true })}
+        </div>
+      </fieldset>
+      <fieldset data-home-section="agents">
+        <legend>空间智能体</legend>
+        <p class="admin-form-section__hint">只改这一区的标题与说明。底部八个智能体名称来自「空间智能体」独立页。</p>
+        <div class="admin-form-grid">
+          ${homeField('agents.kicker', '眉题', agents.kicker)}
+          ${homeField('agents.title', '主标题', agents.title, { wide: true })}
+          ${homeField('agents.subtitle', '说明', agents.subtitle, { type: 'textarea', wide: true, rows: 4 })}
+        </div>
+      </fieldset>
+      <fieldset data-home-section="solutions">
+        <legend>产品与方案</legend>
+        <p class="admin-form-section__hint">首页横滑方案卡。点开单张编辑。</p>
+        <div class="admin-form-grid">
+          ${homeField('solutions.eyebrow', '眉题', content.solutions.eyebrow)}
+          ${homeField('solutions.title', '区块标题', content.solutions.title)}
+          ${homeField('solutions.subtitle', '区块说明', content.solutions.subtitle, { type: 'textarea', wide: true })}
+          ${homeField('solutions.moreLabel', '更多按钮文字', content.solutions.moreLabel)}
+          ${homeField('solutions.moreUrl', '更多按钮链接', content.solutions.moreUrl)}
+        </div>
+        <div class="admin-home-list">${content.solutions.items.map((item, index) => `
+          <details ${index === 0 ? 'open' : ''}><summary>方案 ${index + 1}：${escapeHtml(item.title)}</summary>
+            <div class="admin-form-grid">
+              ${homeField(`solutions.items.${index}.chip`, '角标', item.chip)}
+              ${homeField(`solutions.items.${index}.title`, '标题', item.title)}
+              ${homeField(`solutions.items.${index}.description`, '说明', item.description, { type: 'textarea', wide: true })}
+              ${homeField(`solutions.items.${index}.tags`, '标签（逗号分隔）', (item.tags || []).join('，'), { wide: true })}
+              ${homeField(`solutions.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, help: '留空保留当前默认图片' })}
+              ${homeField(`solutions.items.${index}.linkUrl`, '详情链接', item.linkUrl)}
+            </div>
+          </details>`).join('')}</div>
+      </fieldset>
+      <fieldset data-home-section="news">
+        <legend>新闻动态</legend>
+        <p class="admin-form-section__hint">首页三列新闻。完整列表在「新闻中心」页。</p>
+        <div class="admin-form-grid">
+          ${homeField('news.kicker', '眉题', news.kicker)}
+          ${homeField('news.title', '区块标题', news.title)}
+          ${homeField('news.subtitle', '区块说明', news.subtitle, { type: 'textarea', wide: true })}
+          ${homeField('news.moreLabel', '更多按钮', news.moreLabel)}
+          ${homeField('news.moreUrl', '更多链接', news.moreUrl)}
+        </div>
+        <div class="admin-home-list">${(news.items || []).map((item, index) => `
+          <details ${index === 0 ? 'open' : ''}><summary>新闻 ${index + 1}：${escapeHtml(item.title)}</summary>
+            <div class="admin-form-grid">
+              ${homeField(`news.items.${index}.category`, '分类', item.category)}
+              ${homeField(`news.items.${index}.title`, '标题', item.title, { wide: true })}
+              ${homeField(`news.items.${index}.description`, '摘要', item.description, { type: 'textarea', wide: true })}
+              ${homeField(`news.items.${index}.linkUrl`, '详情链接', item.linkUrl)}
+              ${homeField(`news.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, wide: true })}
+            </div>
+          </details>`).join('')}</div>
+      </fieldset>
+      <fieldset data-home-section="pitch">
+        <legend>探索安托未来</legend>
+        <p class="admin-form-section__hint">首页底部深蓝宫格区的标题。</p>
+        <div class="admin-form-grid">
+          ${homeField('pitch.label', '小标题', pitch.label)}
+          ${homeField('pitch.title', '主标题', pitch.title, { type: 'textarea', wide: true })}
+        </div>
+      </fieldset>
+    </div>`
+  showHomeSection(state.homeSection)
 }
 
 function setHomeValue(target, path, value) {
   const parts = path.split('.')
   let cursor = target
-  parts.slice(0, -1).forEach((part) => { cursor = cursor[Number.isNaN(Number(part)) ? part : Number(part)] })
+  parts.slice(0, -1).forEach((part, index) => {
+    const key = Number.isNaN(Number(part)) ? part : Number(part)
+    const next = parts[index + 1]
+    const nextIsIndex = next !== undefined && !Number.isNaN(Number(next))
+    if (cursor[key] == null) cursor[key] = nextIsIndex ? [] : {}
+    cursor = cursor[key]
+  })
   cursor[parts.at(-1)] = value
 }
 
 function collectHomeContent() {
   const content = structuredClone(state.homePage.draftContent)
-  document.querySelectorAll('[data-home-field]').forEach((field) => {
+  document.querySelectorAll('[data-home-editor] [data-home-field]').forEach((field) => {
     let value = field.value.trim()
     if (field.dataset.homeType === 'number') value = Number(value)
     if (field.dataset.homeField.endsWith('.tags')) value = value.split(/[，,]/).map((tag) => tag.trim()).filter(Boolean)
@@ -825,6 +864,10 @@ document.querySelector('[data-home-editor]').addEventListener('input', (event) =
 })
 
 document.querySelector('[data-home-form]').addEventListener('submit', (event) => event.preventDefault())
+document.querySelector('[data-home-form]').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-home-goto]')
+  if (button) showHomeSection(button.dataset.homeGoto)
+})
 
 document.querySelector('[data-home-editor]').addEventListener('change', async (event) => {
   const upload = event.target.closest('[data-home-upload-for]')

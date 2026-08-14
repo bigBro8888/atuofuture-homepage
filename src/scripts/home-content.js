@@ -5,6 +5,13 @@ function text(selector, value, root = document) {
   if (element && value !== undefined) element.textContent = value
 }
 
+function escapeHome(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
 function linkAction(element, url) {
   if (!element || !url) return
   element.dataset.homeUrl = url
@@ -76,7 +83,19 @@ export function applyHomeContent(content) {
   text('[data-home-solutions-title]', content.solutions?.title)
   text('[data-home-solutions-subtitle]', content.solutions?.subtitle)
   text('[data-home-solutions-more-label]', content.solutions?.moreLabel)
-  linkAction(document.querySelector('[data-home-solutions-more]'), content.solutions?.moreUrl)
+  const solutionsMore = document.querySelector('[data-home-solutions-more]')
+  if (solutionsMore && content.solutions?.moreUrl) solutionsMore.setAttribute('href', content.solutions.moreUrl)
+  document.querySelectorAll('[data-home-sol-card]').forEach((card, index) => {
+    const item = content.solutions?.items?.[index]
+    if (!item) return
+    text('.sm-sol-card__badge', item.chip, card)
+    text('h3', item.title, card)
+    text('p', item.description, card)
+    const media = card.querySelector('.sm-sol-card__media')
+    if (media && item.imageUrl) media.style.backgroundImage = `url("${item.imageUrl}")`
+    const link = card.querySelector('a')
+    if (link && item.linkUrl) link.setAttribute('href', item.linkUrl)
+  })
   document.querySelectorAll('[data-sol-card]').forEach((card, index) => {
     const item = content.solutions?.items?.[index]
     if (!item) return
@@ -107,14 +126,56 @@ export function applyHomeContent(content) {
     if (link && item.linkUrl) link.href = item.linkUrl
   })
 
-  const ctaTitle = document.querySelector('[data-home-cta-title]')
-  if (ctaTitle && content.cta?.title) {
-    ctaTitle.textContent = content.cta.title
-    ctaTitle.dataset.text = content.cta.title
+  text('[data-home-banner-title]', content.banner?.title)
+  text('[data-home-banner-subtitle]', content.banner?.subtitle)
+  const bannerCta = document.querySelector('[data-home-banner-cta]')
+  if (bannerCta && content.banner?.ctaLabel) bannerCta.textContent = content.banner.ctaLabel
+  if (bannerCta && content.banner?.ctaUrl) bannerCta.setAttribute('href', content.banner.ctaUrl)
+  const bannerMedia = document.querySelector('[data-home-banner-media]')
+  if (bannerMedia && content.banner?.imageUrl) bannerMedia.style.backgroundImage = `url("${content.banner.imageUrl}")`
+
+  text('[data-home-agents-kicker]', content.agents?.kicker)
+  text('[data-home-agents-title]', content.agents?.title)
+  text('[data-home-agents-subtitle]', content.agents?.subtitle)
+
+  text('[data-home-news-kicker]', content.news?.kicker)
+  text('[data-home-news-title]', content.news?.title)
+  text('[data-home-news-subtitle]', content.news?.subtitle)
+  text('[data-home-news-more-label]', content.news?.moreLabel)
+  const newsMore = document.querySelector('[data-home-news-more]')
+  if (newsMore && content.news?.moreUrl) newsMore.setAttribute('href', content.news.moreUrl)
+  document.querySelectorAll('[data-home-news-item]').forEach((card, index) => {
+    const item = content.news?.items?.[index]
+    if (!item) return
+    text('.sm-kicker', item.category, card)
+    text('h3', item.title, card)
+    text('p', item.description, card)
+    if (item.linkUrl) card.setAttribute('href', item.linkUrl)
+    const media = card.querySelector('.sm-news-card__media')
+    if (media && item.imageUrl) media.style.backgroundImage = `url("${item.imageUrl}")`
+  })
+
+  text('[data-home-pitch-label]', content.pitch?.label)
+  if (content.pitch?.title) {
+    const pitchTitle = document.querySelector('[data-home-pitch-title]')
+    if (pitchTitle) pitchTitle.innerHTML = escapeHome(content.pitch.title).replace(/\n/g, '<br>')
   }
-  text('[data-home-cta-primary]', content.cta?.primaryLabel)
-  text('[data-home-cta-secondary]', content.cta?.secondaryLabel)
-  text('[data-home-cta-note]', content.cta?.note)
+
+  document.querySelectorAll('[data-sm-hero-slide]').forEach((slide, index) => {
+    const item = content.heroSlides?.[index]
+    if (!item) return
+    const kicker = slide.querySelector('.ha-kicker, .sm-hero__kicker')
+    if (kicker && item.label !== undefined) kicker.textContent = item.label
+    const title = slide.querySelector('.ha-title')
+    if (title && item.title) title.textContent = item.title
+    const desc = slide.querySelector('.ha-desc')
+    if (desc && item.description) desc.textContent = item.description
+    const action = slide.querySelector('.sm-hero__actions .sm-btn, .ha-actions .sm-btn')
+    if (action && item.actionLabel) action.textContent = item.actionLabel
+    if (action && item.actionHref && action.tagName === 'A') action.setAttribute('href', item.actionHref)
+    const image = slide.querySelector('.ha-media__img')
+    if (image && item.background) image.src = item.background
+  })
 }
 
 export async function loadAndApplyHomeContent() {

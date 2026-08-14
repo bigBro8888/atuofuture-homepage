@@ -59,6 +59,42 @@ export const defaultHomeContent = {
     secondaryLabel: '咨询专家建议',
     note: '已有 500+ 企业在安托未来的帮助下实现空间智能升级',
   },
+  heroSlides: [
+    { label: '', title: '让空间具备感知、思考与执行能力', description: '安托未来以空间智能中枢连接场景智能体与智能硬件，为楼宇、园区及各类空间提供可开放、可自治、可规模交付的解决方案。', actionLabel: '了解安托未来', actionHref: '#upgrade', background: '/images/home-advantages/advantage-ai-agent.webp' },
+    { label: '能力 01', title: '开放架构，连接现有系统与未来应用', description: '以标准化 API 与灵活接入能力，连接客户现有系统、第三方平台，并为新增应用保留扩展空间。', actionLabel: '查看开放能力', actionHref: '#upgrade', background: '/images/home-advantages/advantage-open-interface.webp' },
+    { label: '能力 02', title: 'AI 原生架构，让空间主动理解与执行', description: '以智能体感知环境、理解需求、协同决策并调用设备，将空间运营从人工操作升级为自动执行。', actionLabel: '探索智能体', actionHref: '/agents/', background: '/images/home-advantages/advantage-ai-agent.webp' },
+    { label: '能力 03', title: '大规模无线接入，让复杂项目快速落地', description: '具备千万平方米级无线商用接入经验，支持多楼栋、多楼层、多类型终端的稳定连接与统一管理。', actionLabel: '查看接入能力', actionHref: '/hardware/#gateway', background: '/images/home-advantages/advantage-wireless-access.webp' },
+    { label: '能力 04', title: '分层自治，全域协同', description: '平台、区域、边缘与终端均可独立闭环运行，也能在统一架构下协同联动，断网时本地仍可持续工作。', actionLabel: '了解技术架构', actionHref: '#upgrade', background: '/images/home-advantages/advantage-layered-loop.webp' },
+    { label: '能力 05', title: '软硬协同，构建完整空间智能底座', description: '从感知终端、边缘网关到 AI 平台与场景应用，形成软硬件协同设计与项目交付能力。', actionLabel: '查看智能硬件', actionHref: '/hardware/', background: '/images/home-advantages/advantage-hardware-system.webp' },
+  ],
+  banner: {
+    title: '八大空间智能体现已开放方案咨询',
+    subtitle: '会议、访客、能耗、展厅、酒店公寓……每个智能体负责一类真实任务。',
+    ctaLabel: '查看智能体',
+    ctaUrl: '/agents/',
+    imageUrl: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=400&q=70',
+  },
+  agents: {
+    kicker: 'Atuo Future · 安托未来',
+    title: '空间智能体，让空间自己完成工作',
+    subtitle: '它是空间里的执行者：看懂现场，调用设备与系统，把一类任务做完。会议、访客、能耗、展厅……每一类工作对应一个智能体。现在是八个，以后会更多，目标是让楼宇、园区和酒店真正能自己运行。',
+  },
+  news: {
+    kicker: '新闻',
+    title: '新闻动态',
+    subtitle: '公司动态、产品更新与方案实践，带您了解正积极塑造更智能空间运营的技术进展。',
+    moreLabel: '进入新闻中心',
+    moreUrl: '/news/',
+    items: [
+      { category: '公司动态', title: '安托未来发布 AI 原生空间智能架构', description: '以智能体编排为核心，打通传感、网关、中控与开放接口。', imageUrl: '/images/home-advantages/advantage-ai-agent.webp', linkUrl: '/news-detail/?id=n1' },
+      { category: '产品更新', title: '会议运维智能体支持云视频与中控联动', description: '预约、签到、中控与云视频形成运维闭环。', imageUrl: '/assets/hero/capability-agents.jpg', linkUrl: '/news-detail/?id=n2' },
+      { category: '方案实践', title: '毫米波有无人感知助力楼宇节能落地', description: '按真实占用调节照明与空调策略。', imageUrl: '/images/home-advantages/advantage-layered-loop.webp', linkUrl: '/news-detail/?id=n3' },
+    ],
+  },
+  pitch: {
+    label: '探索安托未来',
+    title: '我们把物理空间，做成可感知、可调度、可运营的智能系统',
+  },
 }
 
 function cleanText(value, fallback, maxLength = 500) {
@@ -68,10 +104,10 @@ function cleanText(value, fallback, maxLength = 500) {
 
 function cleanUrl(value, fallback = '') {
   const url = String(value ?? fallback ?? '').trim()
-  if (!url) return ''
-  if (url.startsWith('#') || (url.startsWith('/') && !url.startsWith('//'))) return url.slice(0, 1000)
+  if (!url) return fallback || ''
+  if (url.startsWith('#') || (url.startsWith('/') && !url.startsWith('//')) || !/^[a-z]+:/i.test(url)) return url.slice(0, 1000)
   const parsed = new URL(url)
-  if (parsed.protocol !== 'https:') throw new Error('图片、视频和跳转链接必须使用 HTTPS 或站内相对地址')
+  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('图片、视频和跳转链接必须使用 http(s) 或站内相对地址')
   return parsed.toString().slice(0, 1000)
 }
 
@@ -87,6 +123,10 @@ export function validateHomeContent(value = {}) {
   const solutions = value.solutions || {}
   const cases = value.cases || {}
   const cta = value.cta || {}
+  const banner = value.banner || {}
+  const agents = value.agents || {}
+  const news = value.news || {}
+  const pitch = value.pitch || {}
 
   return {
     hero: {
@@ -147,6 +187,44 @@ export function validateHomeContent(value = {}) {
       primaryLabel: cleanText(cta.primaryLabel, defaultHomeContent.cta.primaryLabel, 40),
       secondaryLabel: cleanText(cta.secondaryLabel, defaultHomeContent.cta.secondaryLabel, 40),
       note: cleanText(cta.note, defaultHomeContent.cta.note, 240),
+    },
+    heroSlides: fixedItems(value.heroSlides, defaultHomeContent.heroSlides, (item, fallback) => ({
+      label: cleanText(item.label, fallback.label, 40),
+      title: cleanText(item.title, fallback.title, 120),
+      description: cleanText(item.description, fallback.description, 400),
+      actionLabel: cleanText(item.actionLabel, fallback.actionLabel, 40),
+      actionHref: cleanUrl(item.actionHref, fallback.actionHref),
+      background: cleanUrl(item.background, fallback.background),
+    })),
+    banner: {
+      title: cleanText(banner.title, defaultHomeContent.banner.title, 80),
+      subtitle: cleanText(banner.subtitle, defaultHomeContent.banner.subtitle, 200),
+      ctaLabel: cleanText(banner.ctaLabel, defaultHomeContent.banner.ctaLabel, 20),
+      ctaUrl: cleanUrl(banner.ctaUrl, defaultHomeContent.banner.ctaUrl),
+      imageUrl: cleanUrl(banner.imageUrl, defaultHomeContent.banner.imageUrl),
+    },
+    agents: {
+      kicker: cleanText(agents.kicker, defaultHomeContent.agents.kicker, 80),
+      title: cleanText(agents.title, defaultHomeContent.agents.title, 80),
+      subtitle: cleanText(agents.subtitle, defaultHomeContent.agents.subtitle, 500),
+    },
+    news: {
+      kicker: cleanText(news.kicker, defaultHomeContent.news.kicker, 40),
+      title: cleanText(news.title, defaultHomeContent.news.title, 80),
+      subtitle: cleanText(news.subtitle, defaultHomeContent.news.subtitle, 300),
+      moreLabel: cleanText(news.moreLabel, defaultHomeContent.news.moreLabel, 30),
+      moreUrl: cleanUrl(news.moreUrl, defaultHomeContent.news.moreUrl),
+      items: fixedItems(news.items, defaultHomeContent.news.items, (item, fallback) => ({
+        category: cleanText(item.category, fallback.category, 20),
+        title: cleanText(item.title, fallback.title, 80),
+        description: cleanText(item.description, fallback.description, 200),
+        imageUrl: cleanUrl(item.imageUrl, fallback.imageUrl),
+        linkUrl: cleanUrl(item.linkUrl, fallback.linkUrl),
+      })),
+    },
+    pitch: {
+      label: cleanText(pitch.label, defaultHomeContent.pitch.label, 40),
+      title: cleanText(pitch.title, defaultHomeContent.pitch.title, 120),
     },
   }
 }
