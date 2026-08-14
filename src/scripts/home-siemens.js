@@ -20,47 +20,16 @@ export function initSiemensHome() {
   bindDemoAnchors()
 }
 
-const HOME_AGENT_MOMENTS = {
-  space: [
-    { title: '人员进入', caption: '灯光、空调和信息屏自动准备', image: '/images/agents/space.jpg' },
-    { title: '空间无人', caption: '灯光、空调自动降载', image: '/images/agents/meeting.jpg' },
-    { title: '设备异常', caption: '自动定位问题并发起工单', image: '/images/agents/energy.jpg' },
-  ],
-  energy: [
-    { title: '空间空闲', caption: '照明和空调按占用降载', image: '/images/agents/energy.jpg' },
-    { title: '用电异常', caption: '分区计量立刻标出空耗', image: '/images/solutions/building.jpg' },
-    { title: '策略生效', caption: '回读曲线，确认已经省下来', image: '/images/agents/space.jpg' },
-  ],
-  meeting: [
-    { title: '会前十分钟', caption: '门禁、投影和空调已准备', image: '/images/agents/meeting.jpg' },
-    { title: '会议进行', caption: '签到、中控和云视频按序接通', image: '/images/agents/visitor.jpg' },
-    { title: '会议结束', caption: '设备关闭，房间自动复位', image: '/images/agents/space.jpg' },
-  ],
-  exhibition: [
-    { title: '参观开始', caption: '讲解脚本和大屏同步启动', image: '/images/agents/exhibition.jpg' },
-    { title: '走到节点', caption: '灯光、孪生和展项跟着切换', image: '/images/agents/hero.jpg' },
-    { title: '参观结束', caption: '路径和互动数据自动沉淀', image: '/images/solutions/campus.jpg' },
-  ],
-  visitor: [
-    { title: '客户到访', caption: '门禁、派梯和接待人已安排', image: '/images/agents/visitor.jpg' },
-    { title: '会面进行', caption: '通行权限和会议室已准备', image: '/images/solutions/building.jpg' },
-    { title: '访客离场', caption: '权限自动收回，记录留档', image: '/images/agents/meeting.jpg' },
-  ],
-  opc: [
-    { title: '房源上架', caption: '可招商空间统一对外展示', image: '/images/solutions/commercial.jpg' },
-    { title: '预约带看', caption: '客户线上看，现场带看不断档', image: '/images/solutions/campus.jpg' },
-    { title: '签约入驻', caption: '订单回传，招商进度可跟踪', image: '/images/agents/opc.jpg' },
-  ],
-  hospitality: [
-    { title: '办理入住', caption: '分房完成，门锁权限已下发', image: '/images/solutions/hotel.jpg' },
-    { title: '客房准备', caption: '灯光、空调和场景自动就位', image: '/images/solutions/apartment.jpg' },
-    { title: '办理退房', caption: '水电计费、权限回收、房态复位', image: '/images/agents/hospitality.jpg' },
-  ],
-  asset: [
-    { title: '现场盘点', caption: '设备在哪，当场能查到', image: '/images/agents/asset.jpg' },
-    { title: '借还调拨', caption: '谁领走、调到哪，全程留痕', image: '/images/solutions/campus.jpg' },
-    { title: '状态异常', caption: '位置或状态变化立刻告警', image: '/images/solutions/building.jpg' },
-  ],
+/** 首页长图：后续直接替换 public/images/home-agents/{id}.jpg */
+const HOME_AGENT_BANNERS = {
+  space: { title: '人员进入', caption: '灯光、空调和信息屏自动准备', image: '/images/home-agents/space.jpg' },
+  energy: { title: '空间空闲', caption: '照明和空调按占用自动降载', image: '/images/home-agents/energy.jpg' },
+  meeting: { title: '会前十分钟', caption: '门禁、投影和空调已经准备好', image: '/images/home-agents/meeting.jpg' },
+  exhibition: { title: '参观走到哪', caption: '讲解、灯光和大屏跟着切换', image: '/images/home-agents/exhibition.jpg' },
+  visitor: { title: '客户到访', caption: '门禁、派梯和接待人已安排', image: '/images/home-agents/visitor.jpg' },
+  opc: { title: '房源上架', caption: '从带看到签约，招商不断档', image: '/images/home-agents/opc.jpg' },
+  hospitality: { title: '办理入住', caption: '分房完成，门锁和客房已经准备好', image: '/images/home-agents/hospitality.jpg' },
+  asset: { title: '现场盘点', caption: '设备在哪、谁借走了，当场能查到', image: '/images/home-agents/asset.jpg' },
 }
 
 function mountHomeAgentStories() {
@@ -73,25 +42,20 @@ function mountHomeAgentStories() {
     <div class="sm-agent-stage__frame">
       <div class="sm-agent-film" data-agent-film>
         ${AGENTS_OVERVIEW.map((a, i) => {
-          const moments = HOME_AGENT_MOMENTS[a.id] || [
-            { title: a.shortName, caption: a.blurb, image: a.sceneImage },
-          ]
+          const banner = HOME_AGENT_BANNERS[a.id] || {
+            title: a.shortName,
+            caption: a.blurb,
+            image: a.sceneImage,
+          }
           return `
           <article class="sm-agent-slide${i === 0 ? ' is-active' : ''}" data-agent-slide="${esc(a.id)}" aria-hidden="${i === 0 ? 'false' : 'true'}">
-            <div class="sm-agent-tri">
-              ${moments
-                .map(
-                  (m) => `
-                <figure class="sm-agent-panel">
-                  <img src="${esc(m.image)}" alt="" />
-                  <figcaption>
-                    <strong>${esc(m.title)}</strong>
-                    <span>${esc(m.caption)}</span>
-                  </figcaption>
-                </figure>`
-                )
-                .join('')}
-            </div>
+            <figure class="sm-agent-banner">
+              <img src="${esc(banner.image)}" alt="${esc(a.name)}" />
+              <figcaption>
+                <strong>${esc(banner.title)}</strong>
+                <span>${esc(banner.caption)}</span>
+              </figcaption>
+            </figure>
           </article>`
         }).join('')}
       </div>
