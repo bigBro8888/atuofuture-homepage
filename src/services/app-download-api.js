@@ -27,9 +27,10 @@ export async function getAppConfig(signal) {
 }
 
 export function getDownloadLinks(config) {
+  const iosReady = Boolean(config?.platforms?.ios?.available && (config.platforms.ios.downloadUrl || config.platforms.ios.storeUrl))
   return {
-    android: config?.platforms?.android?.downloadUrl || `${APP_API}/android/download`,
-    ios: config?.platforms?.ios?.downloadUrl || '#',
+    android: `${APP_API}/android/download`,
+    ios: iosReady ? `${APP_API}/ios/download` : '#',
     androidQr: `${APP_API}/qr?platform=android`,
     iosQr: `${APP_API}/qr?platform=ios`,
   }

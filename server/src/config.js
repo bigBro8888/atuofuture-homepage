@@ -13,7 +13,7 @@ export const config = {
   adminPassword: process.env.ADMIN_PASSWORD || 'ChangeMe123!',
   dataFile: process.env.DATA_FILE || path.resolve(here, '../data/store.json'),
   uploadDir: process.env.UPLOAD_DIR || path.resolve(here, '../uploads'),
-  publicBaseUrl: process.env.PUBLIC_BASE_URL || 'http://localhost:5173',
+  publicBaseUrl: process.env.PUBLIC_BASE_URL || 'https://www.atuofuture.com',
   versionSourceUrl: process.env.VERSION_SOURCE_URL || 'https://file.atuofuture.com/release/version',
   releaseBaseUrl: process.env.RELEASE_BASE_URL || 'https://file.atuofuture.com/release',
   versionCacheMs: Number(process.env.VERSION_CACHE_MS || 120000),

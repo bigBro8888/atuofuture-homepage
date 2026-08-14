@@ -14,7 +14,11 @@ const wechatMaskTitle = document.querySelector('[data-wechat-mask-title]')
 const wechatMaskText = document.querySelector('[data-wechat-mask-text]')
 const wechatCopyButton = document.querySelector('[data-wechat-copy]')
 let activePlatform = detected.isIOS ? 'ios' : detected.isAndroid ? 'android' : 'desktop'
-let links = { android: '#', ios: '#' }
+let links = {
+  android: '/api/public/apps/artink/android/download',
+  ios: '/api/public/apps/artink/ios/download',
+  androidQr: '/api/public/apps/artink/qr?platform=android',
+}
 let androidTrackingUrl = ''
 let iosTrackingUrl = ''
 let buttons = {
@@ -61,9 +65,18 @@ function openExternalBrowser() {
   window.location.href = androidBrowserIntent()
 }
 
+function isApiDownload(url = '') {
+  return /\/api\/public\/apps\/artink\/(android|ios)\/download/.test(url)
+}
+
+function trackIfNeeded(url, trackingUrl) {
+  if (!trackingUrl || isApiDownload(url) || !navigator.sendBeacon) return
+  navigator.sendBeacon(trackingUrl)
+}
+
 function openIOSStore() {
   if (links.ios === '#') return
-  if (iosTrackingUrl && navigator.sendBeacon) navigator.sendBeacon(iosTrackingUrl)
+  trackIfNeeded(links.ios, iosTrackingUrl)
   window.location.assign(links.ios)
 }
 
@@ -155,7 +168,7 @@ function startAndroidDownload(event) {
   if (!href || href.endsWith('#') || target.getAttribute('aria-disabled') === 'true') return
 
   event.preventDefault()
-  if (androidTrackingUrl && navigator.sendBeacon) navigator.sendBeacon(androidTrackingUrl)
+  trackIfNeeded(href, androidTrackingUrl)
   deviceMessage.textContent = '正在启动下载，真实进度请在系统通知栏中查看'
   primary.classList.add('is-starting')
   primary.querySelector('[data-primary-icon]').textContent = '↓'
@@ -283,7 +296,6 @@ async function init() {
     }
   } catch (error) {
     deviceMessage.textContent = error.message || '下载服务暂不可用，请稍后重试'
-    links = { android: '#', ios: '#' }
     hideHeroVisual()
   }
 
