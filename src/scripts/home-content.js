@@ -1,4 +1,5 @@
 import { getHomeContent } from '../services/home-content-api.js'
+import { applyCmsHeroSlides } from './home-siemens.js'
 
 function text(selector, value, root = document) {
   const element = root.querySelector(selector)
@@ -161,21 +162,7 @@ export function applyHomeContent(content) {
     if (pitchTitle) pitchTitle.innerHTML = escapeHome(content.pitch.title).replace(/\n/g, '<br>')
   }
 
-  document.querySelectorAll('[data-sm-hero-slide]').forEach((slide, index) => {
-    const item = content.heroSlides?.[index]
-    if (!item) return
-    const kicker = slide.querySelector('.ha-kicker, .sm-hero__kicker')
-    if (kicker && item.label !== undefined) kicker.textContent = item.label
-    const title = slide.querySelector('.ha-title')
-    if (title && item.title) title.textContent = item.title
-    const desc = slide.querySelector('.ha-desc')
-    if (desc && item.description) desc.textContent = item.description
-    const action = slide.querySelector('.sm-hero__actions .sm-btn, .ha-actions .sm-btn')
-    if (action && item.actionLabel) action.textContent = item.actionLabel
-    if (action && item.actionHref && action.tagName === 'A') action.setAttribute('href', item.actionHref)
-    const image = slide.querySelector('.ha-media__img')
-    if (image && item.background) image.src = item.background
-  })
+  if (content.heroSlides?.length) applyCmsHeroSlides(content.heroSlides)
 }
 
 export async function loadAndApplyHomeContent() {

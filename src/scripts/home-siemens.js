@@ -190,13 +190,18 @@ function bindDemoAnchors() {
   })
 }
 
-function initHeroCarousel() {
+function initHeroCarousel(customSlides) {
   const root = document.querySelector('[data-sm-hero]')
   if (!root) return
 
+  if (root._heroAbort) root._heroAbort.abort()
+  const abort = new AbortController()
+  root._heroAbort = abort
+  const { signal } = abort
+
   root.classList.add('ha-hero')
   const track = root.querySelector('[data-sm-hero-track]')
-  if (track) mountHomeAdvantages(track)
+  if (track) mountHomeAdvantages(track, customSlides)
 
   const controls = root.querySelector('.sm-hero__controls')
   const slides = [...root.querySelectorAll('[data-sm-hero-slide]')]
@@ -328,9 +333,9 @@ function initHeroCarousel() {
     else startProgress({ reset: false })
   }
 
-  prev?.addEventListener('click', () => go(index - 1))
-  next?.addEventListener('click', () => go(index + 1))
-  pauseBtn?.addEventListener('click', () => setUserPaused(!userPaused))
+  prev?.addEventListener('click', () => go(index - 1), { signal })
+  next?.addEventListener('click', () => go(index + 1), { signal })
+  pauseBtn?.addEventListener('click', () => setUserPaused(!userPaused), { signal })
 
   root.addEventListener(
     'touchstart',
@@ -341,7 +346,7 @@ function initHeroCarousel() {
       touchStartX = t.clientX
       touchStartY = t.clientY
     },
-    { passive: true }
+    { passive: true, signal }
   )
 
   root.addEventListener(
@@ -357,7 +362,7 @@ function initHeroCarousel() {
       if (dx < 0) go(index + 1)
       else go(index - 1)
     },
-    { passive: true }
+    { passive: true, signal }
   )
 
   document.addEventListener('keydown', (e) => {
@@ -370,7 +375,7 @@ function initHeroCarousel() {
     e.preventDefault()
     if (e.key === 'ArrowLeft') go(index - 1)
     else go(index + 1)
-  })
+  }, { signal })
 
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver(
@@ -384,10 +389,28 @@ function initHeroCarousel() {
       { threshold: 0.15 }
     )
     io.observe(root)
+    signal.addEventListener('abort', () => {
+      io.disconnect()
+      stopProgress()
+    })
   }
 
   if (reduceMotion) setUserPaused(true)
   go(0)
+}
+
+const HERO_THEMES = ['overview', 'open-interface', 'ai-agent', 'wireless-access', 'layered-loop', 'hardware-system']
+
+export function applyCmsHeroSlides(slides) {
+  if (!Array.isArray(slides) || !slides.length) return
+  initHeroCarousel(slides.map((item, index) => ({
+    label: item.label || '',
+    title: item.title || '',
+    description: item.description || '',
+    primaryAction: { label: item.actionLabel || '了解更多', href: item.actionHref || '#upgrade' },
+    background: item.background || '/images/home-advantages/advantage-ai-agent.webp',
+    themeClass: HERO_THEMES[index % HERO_THEMES.length],
+  })))
 }
 
 function initCapabilityTabs() {

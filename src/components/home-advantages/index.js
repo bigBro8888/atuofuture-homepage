@@ -69,9 +69,10 @@ function renderSlide(slide, index) {
 }
 
 /** 西门子式简洁首屏：左文案 + 全幅背景，无右侧架构叠加 */
-export function mountHomeAdvantages(trackEl) {
+export function mountHomeAdvantages(trackEl, slides = ADVANTAGE_SLIDES) {
   if (!trackEl) return
-  trackEl.innerHTML = ADVANTAGE_SLIDES.map(renderSlide).join('')
+  const list = slides?.length ? slides : ADVANTAGE_SLIDES
+  trackEl.innerHTML = list.map(renderSlide).join('')
 }
 
 export { ADVANTAGE_SLIDES }

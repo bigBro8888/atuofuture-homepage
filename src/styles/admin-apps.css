@@ -166,7 +166,11 @@ textarea { resize: vertical; }
 .admin-home-editor label small { display: block; margin-top: 6px; color: #98a2b3; font-size: 9px; }
 .admin-home-list { display: grid; gap: 10px; margin-top: 16px; }
 .admin-home-list details { border: 1px solid #e7ecf3; border-radius: 11px; background: #fbfcfe; }
-.admin-home-list summary { padding: 12px 14px; cursor: pointer; color: #344054; font-size: 11px; font-weight: 700; }
+.admin-home-list details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; cursor: pointer; color: #344054; font-size: 11px; font-weight: 700; }
+.admin-slide-tools { display: inline-flex; gap: 6px; }
+.admin-slide-tools button { padding: 4px 8px; border: 1px solid #dce4ef; border-radius: 7px; color: #1769ff; background: #fff; font-size: 10px; }
+.admin-slide-tools button:disabled { opacity: .35; cursor: not-allowed; }
+.admin-add-slide { margin-top: 12px; padding: 10px 14px; border: 1px dashed #1769ff; border-radius: 10px; color: #1769ff; background: #f5f9ff; font-size: 12px; font-weight: 700; cursor: pointer; }
 .admin-home-list details .admin-form-grid { padding: 4px 14px 15px; }
 .admin-home-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 16px; }
 .admin-home-metrics > div { padding: 13px; border: 1px solid #e7ecf3; border-radius: 11px; background: #fbfcfe; }

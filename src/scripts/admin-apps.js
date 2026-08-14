@@ -3,7 +3,7 @@ import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 const API = '/api/admin'
 const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', homeSection: 'hero' }
 const HOME_OUTLINE = [
-  { id: 'hero', no: '01', title: '首屏轮播', desc: '顶部能力轮播图与文案' },
+  { id: 'hero', no: '01', title: '首屏轮播', desc: '多屏大图，可新增和逐屏编辑' },
   { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
   { id: 'agents', no: '03', title: '空间智能体', desc: '八个智能体一览区标题' },
   { id: 'solutions', no: '04', title: '产品与方案', desc: '方案横滑卡片' },
@@ -243,7 +243,7 @@ function showHomeSection(id) {
 }
 
 function renderHomeEditor(content) {
-  const slides = content.heroSlides?.length ? content.heroSlides : [{ label: '', title: '', description: '', actionLabel: '', actionHref: '', background: '' }]
+  const slides = content.heroSlides?.length ? content.heroSlides : []
   const banner = content.banner || {}
   const agents = content.agents || {}
   const news = content.news || { items: [] }
@@ -261,11 +261,19 @@ function renderHomeEditor(content) {
     <div class="admin-home-stage">
       <fieldset data-home-section="hero">
         <legend>首屏轮播</legend>
-        <p class="admin-form-section__hint">对应首页顶部大图轮播。点开单张修改，不必一次看完。</p>
-        <div class="admin-home-list">${slides.map((slide, index) => `
-          <details ${index === 0 ? 'open' : ''}><summary>第 ${index + 1} 屏：${escapeHtml(slide.title || '未填写标题')}</summary>
+        <p class="admin-form-section__hint">首页顶部一共 ${slides.length} 屏，点开某一屏改文案和背景图。可新增、删除、调整顺序，发布后前台轮播同步。</p>
+        <div class="admin-home-list" data-hero-slides>${slides.map((slide, index) => `
+          <details ${index === 0 ? 'open' : ''} data-hero-slide>
+            <summary>
+              <span>第 ${index + 1} 屏：${escapeHtml(slide.title || '未填写标题')}</span>
+              <span class="admin-slide-tools">
+                <button type="button" data-hero-move="-1" ${index === 0 ? 'disabled' : ''}>上移</button>
+                <button type="button" data-hero-move="1" ${index === slides.length - 1 ? 'disabled' : ''}>下移</button>
+                <button type="button" data-hero-remove ${slides.length <= 1 ? 'disabled' : ''}>删除</button>
+              </span>
+            </summary>
             <div class="admin-form-grid">
-              ${homeField(`heroSlides.${index}.label`, '角标', slide.label)}
+              ${homeField(`heroSlides.${index}.label`, '角标', slide.label, { help: '例如「能力 01」，可留空' })}
               ${homeField(`heroSlides.${index}.title`, '主标题', slide.title, { wide: true })}
               ${homeField(`heroSlides.${index}.description`, '说明', slide.description, { type: 'textarea', wide: true })}
               ${homeField(`heroSlides.${index}.actionLabel`, '按钮文字', slide.actionLabel)}
@@ -273,6 +281,7 @@ function renderHomeEditor(content) {
               ${homeField(`heroSlides.${index}.background`, '背景图', slide.background, { image: true, wide: true })}
             </div>
           </details>`).join('')}</div>
+        <button type="button" class="admin-add-slide" data-hero-add>+ 新增一屏</button>
       </fieldset>
       <fieldset data-home-section="banner">
         <legend>中部推广条</legend>
@@ -370,7 +379,44 @@ function collectHomeContent() {
     if (field.dataset.homeField.endsWith('.tags')) value = value.split(/[，,]/).map((tag) => tag.trim()).filter(Boolean)
     setHomeValue(content, field.dataset.homeField, value)
   })
+  const count = document.querySelectorAll('[data-hero-slide]').length
+  if (count) content.heroSlides = (content.heroSlides || []).slice(0, count)
   return content
+}
+
+const EMPTY_HERO_SLIDE = { label: '', title: '', description: '', actionLabel: '了解更多', actionHref: '/', background: '' }
+
+function addHeroSlide() {
+  const content = collectHomeContent()
+  content.heroSlides = content.heroSlides || []
+  if (content.heroSlides.length >= 12) {
+    toast('最多 12 屏', true)
+    return
+  }
+  content.heroSlides.push({ ...EMPTY_HERO_SLIDE })
+  state.homePage.draftContent = content
+  renderHomeEditor(content)
+}
+
+function removeHeroSlide(index) {
+  const content = collectHomeContent()
+  if (!content.heroSlides || content.heroSlides.length <= 1) {
+    toast('至少保留一屏', true)
+    return
+  }
+  content.heroSlides.splice(index, 1)
+  state.homePage.draftContent = content
+  renderHomeEditor(content)
+}
+
+function moveHeroSlide(index, offset) {
+  const content = collectHomeContent()
+  const next = index + offset
+  if (!content.heroSlides?.[index] || next < 0 || next >= content.heroSlides.length) return
+  const [slide] = content.heroSlides.splice(index, 1)
+  content.heroSlides.splice(next, 0, slide)
+  state.homePage.draftContent = content
+  renderHomeEditor(content)
 }
 
 function updateHomeStatus(page) {
@@ -865,8 +911,31 @@ document.querySelector('[data-home-editor]').addEventListener('input', (event) =
 
 document.querySelector('[data-home-form]').addEventListener('submit', (event) => event.preventDefault())
 document.querySelector('[data-home-form]').addEventListener('click', (event) => {
-  const button = event.target.closest('[data-home-goto]')
-  if (button) showHomeSection(button.dataset.homeGoto)
+  const jump = event.target.closest('[data-home-goto]')
+  if (jump) {
+    showHomeSection(jump.dataset.homeGoto)
+    return
+  }
+  if (event.target.closest('[data-hero-add]')) {
+    event.preventDefault()
+    addHeroSlide()
+    return
+  }
+  const remove = event.target.closest('[data-hero-remove]')
+  if (remove) {
+    event.preventDefault()
+    event.stopPropagation()
+    const index = [...document.querySelectorAll('[data-hero-slide]')].indexOf(remove.closest('[data-hero-slide]'))
+    if (index >= 0) removeHeroSlide(index)
+    return
+  }
+  const move = event.target.closest('[data-hero-move]')
+  if (move) {
+    event.preventDefault()
+    event.stopPropagation()
+    const index = [...document.querySelectorAll('[data-hero-slide]')].indexOf(move.closest('[data-hero-slide]'))
+    if (index >= 0) moveHeroSlide(index, Number(move.dataset.heroMove))
+  }
 })
 
 document.querySelector('[data-home-editor]').addEventListener('change', async (event) => {

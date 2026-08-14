@@ -116,6 +116,12 @@ function fixedItems(value, defaults, mapper) {
   return defaults.map((fallback, index) => mapper(source[index] || {}, fallback))
 }
 
+function listItems(value, defaults, mapper, max = 12) {
+  const fallback = defaults[0] || {}
+  const source = Array.isArray(value) && value.length ? value : defaults
+  return source.slice(0, max).map((item, index) => mapper(item || {}, defaults[index] || fallback))
+}
+
 export function validateHomeContent(value = {}) {
   const hero = value.hero || {}
   const core = value.core || {}
@@ -188,7 +194,7 @@ export function validateHomeContent(value = {}) {
       secondaryLabel: cleanText(cta.secondaryLabel, defaultHomeContent.cta.secondaryLabel, 40),
       note: cleanText(cta.note, defaultHomeContent.cta.note, 240),
     },
-    heroSlides: fixedItems(value.heroSlides, defaultHomeContent.heroSlides, (item, fallback) => ({
+    heroSlides: listItems(value.heroSlides, defaultHomeContent.heroSlides, (item, fallback) => ({
       label: cleanText(item.label, fallback.label, 40),
       title: cleanText(item.title, fallback.title, 120),
       description: cleanText(item.description, fallback.description, 400),
@@ -244,6 +250,16 @@ export function getHomePageConfig() {
       publishedAt: now,
     }
     db().pageConfigs.push(page)
+  }
+  if (!Array.isArray(page.draftContent?.heroSlides) || !page.draftContent.heroSlides.length) {
+    page.draftContent = {
+      ...page.draftContent,
+      heroSlides: structuredClone(defaultHomeContent.heroSlides),
+      banner: page.draftContent?.banner || structuredClone(defaultHomeContent.banner),
+      agents: page.draftContent?.agents || structuredClone(defaultHomeContent.agents),
+      news: page.draftContent?.news || structuredClone(defaultHomeContent.news),
+      pitch: page.draftContent?.pitch || structuredClone(defaultHomeContent.pitch),
+    }
   }
   return page
 }
