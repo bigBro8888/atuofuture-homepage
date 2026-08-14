@@ -327,6 +327,62 @@ export const HARDWARE_SPACE_FLOW = [
   { id: 'terminal', title: '中控屏与信息终端', desc: '人机交互、状态呈现与会务信息', icon: 'smart_display' },
 ]
 
+/** 顶部「智能硬件」下拉：按产品线展示具体产品（对齐导航设计稿） */
+export const HARDWARE_MEGA_GROUPS = [
+  {
+    id: 'space',
+    title: '空间智能',
+    icon: 'domain',
+    products: [
+      { id: 'control-screen' },
+      { id: 'e-table-sign' },
+      { id: 'desk-screen' },
+      { id: 'switch-control', label: '照明与空调' },
+      { id: 'sensor' },
+      { id: 'gateway' },
+    ],
+  },
+  {
+    id: 'retail',
+    title: '新零售与行业电子纸',
+    icon: 'shopping_bag',
+    products: [
+      { id: 'eink-price-tag' },
+      { id: 'lcd-price-tag' },
+      { id: 'cold-tag' },
+      { id: 'aap' },
+    ],
+  },
+  {
+    id: 'consumer',
+    title: '3C 数码',
+    icon: 'smartphone',
+    products: [
+      { id: 'eink-phone-case' },
+      { id: 'eink-frame' },
+    ],
+  },
+]
+
+export function resolveHardwareMegaGroups() {
+  return HARDWARE_MEGA_GROUPS.map((group) => ({
+    ...group,
+    products: group.products
+      .map((entry) => {
+        const product = getProductBySlug(entry.id)
+        if (!product) return null
+        return {
+          id: product.id,
+          slug: product.slug,
+          name: entry.label || product.name,
+          coverImage: product.coverImage,
+          href: getProductDetailHref(product),
+        }
+      })
+      .filter(Boolean),
+  }))
+}
+
 export const ASPACE_SOLUTION_HREF = '/solutions/'
 
 export function getPublishedProducts() {

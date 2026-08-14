@@ -1,5 +1,6 @@
 import { SITE_NAV_ITEMS } from '../data/site-nav.js'
 import { SHOW_APP_DOWNLOAD, SITE_CTA } from '../data/site-links.js'
+import { resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
 
 function getRootPrefix() {
   const depth = Number(document.body.dataset.navDepth || 0)
@@ -23,7 +24,40 @@ function isActiveNav(item, activeId) {
   return false
 }
 
-function renderMegaChildren(children, root) {
+function renderHardwareMega(root) {
+  const groups = resolveHardwareMegaGroups()
+  return `
+    <div class="site-mega site-mega--hardware" role="region">
+      <div class="site-mega__hardware">
+        ${groups
+          .map(
+            (group) => `
+          <section class="site-mega-col">
+            <a class="site-mega-col__head" href="${root}hardware/?line=${group.id}#hwc-browser">
+              <span class="material-symbols-outlined" aria-hidden="true">${group.icon}</span>
+              <strong>${group.title}</strong>
+            </a>
+            <div class="site-mega-col__grid">
+              ${group.products
+                .map(
+                  (p) => `
+                <a class="site-mega-prod" href="${root}hardware/product/?id=${encodeURIComponent(p.slug)}">
+                  <span class="site-mega-prod__thumb" style="background-image:url('${p.coverImage}')" aria-hidden="true"></span>
+                  <span class="site-mega-prod__name">${p.name}</span>
+                </a>`
+                )
+                .join('')}
+            </div>
+          </section>`
+          )
+          .join('')}
+      </div>
+    </div>
+  `
+}
+
+function renderMegaChildren(children, root, mega) {
+  if (mega === 'hardware') return renderHardwareMega(root)
   if (!children?.length) return ''
   return `
     <div class="site-mega" role="region">
@@ -51,12 +85,12 @@ function renderDesktopNav(activeId, root) {
       return `<a class="site-nav-link${active ? ' is-active' : ''}" href="${href}"${item.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${item.label}</a>`
     }
     return `
-      <div class="site-nav-item${active ? ' is-active' : ''}" data-nav-item>
+      <div class="site-nav-item${active ? ' is-active' : ''}${item.mega === 'hardware' ? ' site-nav-item--hardware' : ''}" data-nav-item>
         <a class="site-nav-link site-nav-link--parent${active ? ' is-active' : ''}" href="${href}" aria-haspopup="true" aria-expanded="false" data-nav-trigger>
           ${item.label}
           <span class="material-symbols-outlined site-nav-chevron" aria-hidden="true">expand_more</span>
         </a>
-        ${renderMegaChildren(item.children, root)}
+        ${renderMegaChildren(item.children, root, item.mega)}
       </div>
     `
   }).join('')
@@ -78,15 +112,32 @@ function renderMobileNav(activeId, root) {
         </button>
         <div class="site-mobile-acc__panel">
           <a class="site-mobile-nav-link site-mobile-nav-link--all" href="${href}">查看全部</a>
-          ${item.children
-            .map(
-              (child) => `
+          ${
+            item.mega === 'hardware'
+              ? resolveHardwareMegaGroups()
+                  .map(
+                    (group) => `
+            <p class="site-mobile-nav-group">${group.title}</p>
+            ${group.products
+              .map(
+                (p) => `
+            <a class="site-mobile-nav-link site-mobile-nav-link--child" href="${root}hardware/product/?id=${encodeURIComponent(p.slug)}">
+              <strong>${p.name}</strong>
+            </a>`
+              )
+              .join('')}`
+                  )
+                  .join('')
+              : item.children
+                  .map(
+                    (child) => `
             <a class="site-mobile-nav-link site-mobile-nav-link--child" href="${buildHref(child, root)}">
               <strong>${child.label}</strong>
               ${child.desc ? `<small>${child.desc}</small>` : ''}
             </a>`
-            )
-            .join('')}
+                  )
+                  .join('')
+          }
         </div>
       </div>
     `
