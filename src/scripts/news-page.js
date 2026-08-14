@@ -26,47 +26,22 @@ function filterItems(active) {
   return active === '全部' ? NEWS_ITEMS : NEWS_ITEMS.filter((n) => n.category === active)
 }
 
-function renderLeadMain(n) {
-  return `
-    <a class="nx-lead__main" href="../news-detail/?id=${encodeURIComponent(n.id)}">
-      <div class="nx-lead__photo" style="background-image:url('${esc(n.cover)}')" role="img" aria-hidden="true"></div>
-      <div class="nx-lead__body">
-        <div class="nx-item__meta">
-          <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(n.category)}</span>
-          <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
-        </div>
-        <h1>${esc(n.title)}</h1>
-        <p>${esc(n.summary)}</p>
-      </div>
-    </a>`
-}
-
-function renderLeadSide(n) {
-  return `
-    <a class="nx-lead__story" href="../news-detail/?id=${encodeURIComponent(n.id)}">
-      <div class="nx-lead__story-photo" style="background-image:url('${esc(n.cover)}')" role="img" aria-hidden="true"></div>
-      <div class="nx-lead__story-body">
-        <div class="nx-item__meta">
-          <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(n.category)}</span>
-          <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
-        </div>
-        <h2>${esc(n.title)}</h2>
-      </div>
-    </a>`
-}
-
-function renderLead(items) {
-  if (!items.length) return ''
-  const [main, ...side] = items
+function renderLead(n) {
+  if (!n) return ''
   return `
     <section class="nx-lead">
-      <div class="nx-shell nx-lead__grid">
-        ${renderLeadMain(main)}
-        ${
-          side.length
-            ? `<div class="nx-lead__side">${side.map((n) => renderLeadSide(n)).join('')}</div>`
-            : ''
-        }
+      <div class="nx-shell">
+        <a class="nx-lead__main" href="../news-detail/?id=${encodeURIComponent(n.id)}">
+          <div class="nx-lead__photo" style="background-image:url('${esc(n.cover)}')" role="img" aria-hidden="true"></div>
+          <div class="nx-lead__overlay">
+            <div class="nx-lead__meta">
+              <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(n.category)}</span>
+              <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
+            </div>
+            <h1>${esc(n.title)}</h1>
+            <p>${esc(n.summary)}</p>
+          </div>
+        </a>
       </div>
     </section>`
 }
@@ -89,12 +64,12 @@ function renderItem(n, index) {
 
 function renderPage(active) {
   const pool = filterItems(active)
-  const lead = pool.slice(0, 4)
-  const rest = pool.slice(4)
+  const featured = pool[0]
+  const rest = pool.slice(1)
   const count = pool.length
 
   return `
-    ${renderLead(lead)}
+    ${renderLead(featured)}
 
     <section class="nx-main">
       <div class="nx-shell">
