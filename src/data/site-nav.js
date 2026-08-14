@@ -5,6 +5,7 @@ export const SITE_NAV_ITEMS = [
     id: 'solutions',
     label: '行业解决方案',
     segment: 'solutions/',
+    mega: 'visual',
     children: [
       { id: 'sol-campus', label: '智慧园区', desc: '多楼栋统一运营与园区服务协同', segment: 'solutions/?id=campus' },
       { id: 'sol-building', label: '智慧楼宇', desc: '访客、会议、能耗与运维一体联动', segment: 'solutions/?id=building' },
@@ -18,6 +19,7 @@ export const SITE_NAV_ITEMS = [
     id: 'agents',
     label: '空间智能体',
     segment: 'agents/',
+    mega: 'visual',
     children: [
       { id: 'space', label: '空间服务智能体', desc: '空调照明、工单与信息发布统一调度', segment: 'agent-detail/?id=space' },
       { id: 'energy', label: '能源能耗智能体', desc: '分项计量与有无人节能分析', segment: 'agent-detail/?id=energy' },

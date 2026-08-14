@@ -281,18 +281,72 @@
     color: rgba(255, 255, 255, 0.62);
   }
 
-  .site-nav-item--hardware {
+  .site-nav-item--wide {
     position: static;
   }
 
-  .site-mega--hardware {
+  .site-mega--hardware,
+  .site-mega--visual {
     left: 50%;
     width: min(1240px, calc(100vw - 32px));
     transform: translate(-50%, 4px);
   }
 
-  .site-nav-item.is-open .site-mega--hardware {
+  .site-nav-item.is-open .site-mega--hardware,
+  .site-nav-item.is-open .site-mega--visual {
     transform: translate(-50%, 0);
+  }
+
+  .site-mega__visual {
+    display: grid;
+    grid-template-columns: repeat(var(--mega-cols, 6), minmax(0, 1fr));
+    gap: 12px 8px;
+    padding: 22px 20px 18px;
+    border: 1px solid rgba(15, 40, 80, 0.08);
+    border-radius: 8px;
+    background: #f4f6f8;
+    box-shadow: 0 22px 56px rgba(8, 18, 40, 0.22);
+  }
+
+  .site-mega-prod--scene {
+    max-width: none;
+  }
+
+  .site-mega-prod--scene .site-mega-prod__thumb {
+    width: 100%;
+    max-width: 128px;
+    height: 80px;
+    border-radius: 10px;
+    background-color: #e8eef5;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .site-mega-prod__thumb--icon {
+    display: grid;
+    place-items: center;
+    background: #fff;
+    color: #00c8b0;
+  }
+
+  .site-mega-prod--scene .site-mega-prod__name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0b1c3a;
+  }
+
+  .site-mobile-nav-link--visual {
+    grid-template-columns: 48px 1fr;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .site-mobile-nav-thumb {
+    display: block;
+    width: 48px;
+    height: 36px;
+    border-radius: 6px;
+    background: #1a1a4a center / cover no-repeat;
   }
 
   .site-mega__hardware {

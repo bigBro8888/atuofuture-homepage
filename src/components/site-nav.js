@@ -1,6 +1,8 @@
 import { SITE_NAV_ITEMS } from '../data/site-nav.js'
 import { SHOW_APP_DOWNLOAD, SITE_CTA } from '../data/site-links.js'
 import { resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
+import { SOLUTIONS } from '../data/solutions.js'
+import { AGENTS_OVERVIEW } from '../data/agents-overview.js'
 
 function getRootPrefix() {
   const depth = Number(document.body.dataset.navDepth || 0)
@@ -22,6 +24,44 @@ function isActiveNav(item, activeId) {
   if (activeId === 'news-detail' && item.id === 'news') return true
   if (activeId?.startsWith('sol-') && item.id === 'solutions') return true
   return false
+}
+
+function resolveVisualItems(item) {
+  return (item.children || []).map((child) => {
+    if (item.id === 'solutions') {
+      const sol = SOLUTIONS.find((s) => s.id === child.id.replace(/^sol-/, ''))
+      return { ...child, image: sol?.image || '', icon: sol?.icon || 'domain' }
+    }
+    if (item.id === 'agents') {
+      const agent = AGENTS_OVERVIEW.find((a) => a.id === child.id)
+      return { ...child, image: agent?.sceneImage || '', icon: agent?.icon || 'smart_toy' }
+    }
+    return child
+  })
+}
+
+function renderVisualMega(item, root) {
+  const entries = resolveVisualItems(item)
+  const count = entries.length
+  return `
+    <div class="site-mega site-mega--visual" role="region">
+      <div class="site-mega__visual" style="--mega-cols:${count > 6 ? 4 : count}">
+        ${entries
+          .map(
+            (child) => `
+          <a class="site-mega-prod site-mega-prod--scene" href="${buildHref(child, root)}">
+            <span class="site-mega-prod__thumb${child.image ? '' : ' site-mega-prod__thumb--icon'}" ${
+              child.image ? `style="background-image:url('${child.image}')"` : ''
+            } aria-hidden="true">
+              ${child.image ? '' : `<span class="material-symbols-outlined">${child.icon || 'image'}</span>`}
+            </span>
+            <span class="site-mega-prod__name">${child.label}</span>
+          </a>`
+          )
+          .join('')}
+      </div>
+    </div>
+  `
 }
 
 function renderHardwareMega(root) {
@@ -56,8 +96,10 @@ function renderHardwareMega(root) {
   `
 }
 
-function renderMegaChildren(children, root, mega) {
-  if (mega === 'hardware') return renderHardwareMega(root)
+function renderMegaChildren(item, root) {
+  if (item.mega === 'hardware') return renderHardwareMega(root)
+  if (item.mega === 'visual') return renderVisualMega(item, root)
+  const children = item.children
   if (!children?.length) return ''
   return `
     <div class="site-mega" role="region">
@@ -84,13 +126,14 @@ function renderDesktopNav(activeId, root) {
     if (!hasChildren) {
       return `<a class="site-nav-link${active ? ' is-active' : ''}" href="${href}"${item.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${item.label}</a>`
     }
+    const wide = item.mega === 'hardware' || item.mega === 'visual'
     return `
-      <div class="site-nav-item${active ? ' is-active' : ''}${item.mega === 'hardware' ? ' site-nav-item--hardware' : ''}" data-nav-item>
+      <div class="site-nav-item${active ? ' is-active' : ''}${wide ? ' site-nav-item--wide' : ''}" data-nav-item>
         <a class="site-nav-link site-nav-link--parent${active ? ' is-active' : ''}" href="${href}" aria-haspopup="true" aria-expanded="false" data-nav-trigger>
           ${item.label}
           <span class="material-symbols-outlined site-nav-chevron" aria-hidden="true">expand_more</span>
         </a>
-        ${renderMegaChildren(item.children, root, item.mega)}
+        ${renderMegaChildren(item, root)}
       </div>
     `
   }).join('')
@@ -128,12 +171,19 @@ function renderMobileNav(activeId, root) {
               .join('')}`
                   )
                   .join('')
-              : item.children
+              : resolveVisualItems(item)
                   .map(
                     (child) => `
-            <a class="site-mobile-nav-link site-mobile-nav-link--child" href="${buildHref(child, root)}">
-              <strong>${child.label}</strong>
-              ${child.desc ? `<small>${child.desc}</small>` : ''}
+            <a class="site-mobile-nav-link site-mobile-nav-link--child${child.image ? ' site-mobile-nav-link--visual' : ''}" href="${buildHref(child, root)}">
+              ${
+                child.image
+                  ? `<span class="site-mobile-nav-thumb" style="background-image:url('${child.image}')" aria-hidden="true"></span>`
+                  : ''
+              }
+              <span>
+                <strong>${child.label}</strong>
+                ${child.desc ? `<small>${child.desc}</small>` : ''}
+              </span>
             </a>`
                   )
                   .join('')
