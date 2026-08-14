@@ -46,20 +46,22 @@ function resolveVisualItems(item) {
 
 function renderVisualMega(item, root) {
   const entries = resolveVisualItems(item)
-  const count = entries.length
   return `
     <div class="site-mega site-mega--visual" role="region">
-      <div class="site-mega__visual" style="--mega-cols:${count > 6 ? 4 : count}">
+      <div class="site-mega__glance">
         ${entries
           .map(
             (child) => `
-          <a class="site-mega-prod site-mega-prod--scene" href="${buildHref(child, root)}">
-            <span class="site-mega-prod__thumb${child.image ? '' : ' site-mega-prod__thumb--icon'}" ${
+          <a class="site-mega-row" href="${buildHref(child, root)}">
+            <span class="site-mega-row__media${child.image ? '' : ' site-mega-row__media--icon'}" ${
               child.image ? `style="background-image:url('${child.image}')"` : ''
             } aria-hidden="true">
               ${child.image ? '' : `<span class="material-symbols-outlined">${child.icon || 'image'}</span>`}
             </span>
-            <span class="site-mega-prod__name">${child.label}</span>
+            <span class="site-mega-row__copy">
+              <strong>${child.label}</strong>
+              ${child.desc ? `<small>${child.desc}</small>` : ''}
+            </span>
           </a>`
           )
           .join('')}
@@ -130,7 +132,7 @@ function renderDesktopNav(activeId, root) {
     if (!hasChildren) {
       return `<a class="site-nav-link${active ? ' is-active' : ''}" href="${href}"${item.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${item.label}</a>`
     }
-    const wide = item.mega === 'hardware' || item.mega === 'visual'
+    const wide = item.mega === 'hardware'
     return `
       <div class="site-nav-item${active ? ' is-active' : ''}${wide ? ' site-nav-item--wide' : ''}" data-nav-item>
         <a class="site-nav-link site-nav-link--parent${active ? ' is-active' : ''}" href="${href}" aria-haspopup="true" aria-expanded="false" data-nav-trigger>

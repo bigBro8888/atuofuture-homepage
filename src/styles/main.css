@@ -285,54 +285,88 @@
     position: static;
   }
 
-  .site-mega--hardware,
-  .site-mega--visual {
+  .site-mega--hardware {
     left: 50%;
     width: min(1240px, calc(100vw - 32px));
     transform: translate(-50%, 4px);
   }
 
-  .site-nav-item.is-open .site-mega--hardware,
-  .site-nav-item.is-open .site-mega--visual {
+  .site-nav-item.is-open .site-mega--hardware {
     transform: translate(-50%, 0);
   }
 
-  .site-mega__visual {
+  .site-mega--visual {
+    width: min(720px, calc(100vw - 32px));
+  }
+
+  .site-mega__glance {
     display: grid;
-    grid-template-columns: repeat(var(--mega-cols, 6), minmax(0, 1fr));
-    gap: 12px 8px;
-    padding: 22px 20px 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    padding: 12px;
     border: 1px solid rgba(15, 40, 80, 0.08);
-    border-radius: 8px;
+    border-radius: 10px;
     background: #f4f6f8;
     box-shadow: 0 22px 56px rgba(8, 18, 40, 0.22);
   }
 
-  .site-mega-prod--scene {
-    max-width: none;
+  .site-mega-row {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    color: #0b1c3a;
+    text-decoration: none;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
   }
 
-  .site-mega-prod--scene .site-mega-prod__thumb {
-    width: 100%;
-    max-width: 128px;
-    height: 80px;
-    border-radius: 10px;
-    background-color: #e8eef5;
-    background-size: cover;
-    background-position: center;
+  .site-mega-row:hover {
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(15, 40, 80, 0.08);
   }
 
-  .site-mega-prod__thumb--icon {
+  .site-mega-row__media {
+    display: block;
+    width: 72px;
+    height: 52px;
+    border-radius: 7px;
+    background: #d8e4f4 center / cover no-repeat;
+  }
+
+  .site-mega-row__media--icon {
     display: grid;
     place-items: center;
     background: #fff;
     color: #00c8b0;
   }
 
-  .site-mega-prod--scene .site-mega-prod__name {
-    font-size: 13px;
+  .site-mega-row__media--icon .material-symbols-outlined {
+    font-size: 22px;
+  }
+
+  .site-mega-row__copy {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .site-mega-row__copy strong {
+    font-size: 14px;
     font-weight: 700;
-    color: #0b1c3a;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  .site-mega-row__copy small {
+    font-size: 12px;
+    line-height: 1.4;
+    color: #62758f;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .site-mobile-nav-link--visual {
