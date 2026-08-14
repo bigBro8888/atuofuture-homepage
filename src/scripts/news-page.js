@@ -32,12 +32,12 @@ function renderFeatured(n) {
     <a class="nx-feature" href="../news-detail/?id=${encodeURIComponent(n.id)}" style="--nx-feature-image:url('${esc(n.cover)}')">
       <div class="nx-feature__media" aria-hidden="true"></div>
       <div class="nx-feature__shade" aria-hidden="true"></div>
-      <div class="nx-feature__copy">
+      <div class="nx-shell nx-feature__copy">
         <div class="nx-feature__meta">
           <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(n.category)}</span>
           <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
         </div>
-        <h2>${esc(n.title)}</h2>
+        <h1>${esc(n.title)}</h1>
         <p>${esc(n.summary)}</p>
         <span class="nx-feature__cta">
           阅读全文
@@ -64,19 +64,12 @@ function renderItem(n, index) {
 }
 
 function renderPage(active) {
-  const items = filterItems(active)
-  const [featured, ...rest] = items
-  const count = items.length
+  const featured = NEWS_ITEMS[0]
+  const items = filterItems(active).filter((n) => n.id !== featured?.id)
+  const count = filterItems(active).length
 
   return `
-    <section class="nx-hero">
-      <div class="nx-hero__bg" aria-hidden="true"></div>
-      <div class="nx-shell nx-hero__inner">
-        <p class="nx-hero__brand">Artink Insights</p>
-        <h1>新闻中心</h1>
-        <p class="nx-hero__lead">公司动态、产品更新与方案实践，看见空间智能如何落地。</p>
-      </div>
-    </section>
+    ${renderFeatured(featured)}
 
     <section class="nx-main">
       <div class="nx-shell">
@@ -98,15 +91,9 @@ function renderPage(active) {
 
         <div class="nx-board" id="news-list">
           ${
-            featured
-              ? `
-            ${renderFeatured(featured)}
-            ${
-              rest.length
-                ? `<div class="nx-stream">${rest.map((n, i) => renderItem(n, i)).join('')}</div>`
-                : ''
-            }`
-              : `<p class="nx-empty">该分类暂无内容</p>`
+            items.length
+              ? `<div class="nx-stream">${items.map((n, i) => renderItem(n, i)).join('')}</div>`
+              : `<p class="nx-empty">该分类暂无更多内容</p>`
           }
         </div>
       </div>
