@@ -1,5 +1,5 @@
 import { SITE_NAV_ITEMS } from '../data/site-nav.js'
-import { SHOW_APP_DOWNLOAD, SITE_CTA } from '../data/site-links.js'
+import { SHOW_APP_DOWNLOAD, SITE_CTA, APP_DOWNLOAD_PATH } from '../data/site-links.js'
 import { resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
 import { SOLUTIONS } from '../data/solutions.js'
 import { AGENTS_OVERVIEW } from '../data/agents-overview.js'
@@ -213,9 +213,9 @@ export function renderSiteNav(activeId) {
         </nav>
         <div class="site-header__actions hidden md:flex items-center gap-4">
           ${SHOW_APP_DOWNLOAD
-            ? `<button type="button" class="site-header__btn site-header__btn--ghost" data-app-download-open>
+            ? `<a href="${root}${APP_DOWNLOAD_PATH}" class="site-header__btn site-header__btn--ghost">
             <span class="material-symbols-outlined" aria-hidden="true">download</span> ${SITE_CTA.downloadLabel}
-          </button>`
+          </a>`
             : ''}
           <button type="button" class="site-header__btn site-header__btn--primary" data-demo-modal-open>${SITE_CTA.demoLabel}</button>
         </div>
@@ -238,7 +238,7 @@ export function renderSiteNav(activeId) {
           </nav>
           <div class="site-mobile-drawer__actions">
             ${SHOW_APP_DOWNLOAD
-              ? `<button type="button" class="site-header__btn site-header__btn--ghost w-full" data-app-download-open>${SITE_CTA.downloadLabel}</button>`
+              ? `<a href="${root}${APP_DOWNLOAD_PATH}" class="site-header__btn site-header__btn--ghost w-full">${SITE_CTA.downloadLabel}</a>`
               : ''}
             <button type="button" class="site-header__btn site-header__btn--primary w-full" data-demo-modal-open>${SITE_CTA.demoLabel}</button>
           </div>

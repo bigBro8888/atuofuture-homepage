@@ -555,11 +555,15 @@
   }
 
   .site-header__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     padding: 0.5rem 1.5rem;
     border-radius: 9999px;
     font-size: 16px;
     font-weight: 500;
     white-space: nowrap;
+    text-decoration: none;
     transition: all 0.2s ease;
   }
 
