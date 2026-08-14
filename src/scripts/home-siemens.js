@@ -20,6 +20,19 @@ export function initSiemensHome() {
   bindDemoAnchors()
 }
 
+function defaultHomeAgentItems() {
+  return AGENTS_OVERVIEW.map((agent) => {
+    const banner = HOME_AGENT_BANNERS[agent.id] || {}
+    return {
+      id: agent.id,
+      name: agent.name,
+      sceneTitle: banner.title || agent.shortName,
+      sceneCaption: banner.caption || agent.blurb,
+      imageUrl: banner.image || agent.sceneImage,
+    }
+  })
+}
+
 /** 首页长图：后续直接替换 public/images/home-agents/{id}.jpg */
 const HOME_AGENT_BANNERS = {
   space: { title: '人员进入', caption: '灯光、空调和信息屏自动准备', image: '/images/home-agents/space.jpg' },
@@ -32,32 +45,37 @@ const HOME_AGENT_BANNERS = {
   asset: { title: '现场盘点', caption: '设备在哪、谁借走了，当场能查到', image: '/images/home-agents/asset.jpg' },
 }
 
-function mountHomeAgentStories() {
+export function applyCmsHomeAgents(items) {
+  if (!Array.isArray(items) || !items.length) return
+  mountHomeAgentStories(items)
+}
+
+function mountHomeAgentStories(cmsItems) {
   const root = document.querySelector('[data-home-agent-stories]')
   if (!root) return
 
-  const total = AGENTS_OVERVIEW.length
+  const items = (cmsItems?.length ? cmsItems : defaultHomeAgentItems()).map((item, index) => ({
+    id: item.id || `agent-${index + 1}`,
+    name: item.name || '智能体',
+    sceneTitle: item.sceneTitle || '',
+    sceneCaption: item.sceneCaption || '',
+    imageUrl: item.imageUrl || '/images/home-agents/space.jpg',
+  }))
+  const total = items.length
   root.className = 'sm-agent-stage'
   root.innerHTML = `
     <div class="sm-agent-stage__frame">
       <div class="sm-agent-film" data-agent-film>
-        ${AGENTS_OVERVIEW.map((a, i) => {
-          const banner = HOME_AGENT_BANNERS[a.id] || {
-            title: a.shortName,
-            caption: a.blurb,
-            image: a.sceneImage,
-          }
-          return `
-          <article class="sm-agent-slide${i === 0 ? ' is-active' : ''}" data-agent-slide="${esc(a.id)}" aria-hidden="${i === 0 ? 'false' : 'true'}">
+        ${items.map((item, i) => `
+          <article class="sm-agent-slide${i === 0 ? ' is-active' : ''}" data-agent-slide="${esc(item.id)}" aria-hidden="${i === 0 ? 'false' : 'true'}">
             <figure class="sm-agent-banner">
-              <img src="${esc(banner.image)}" alt="${esc(a.name)}" />
+              <img src="${esc(item.imageUrl)}" alt="${esc(item.name)}" />
               <figcaption>
-                <strong>${esc(banner.title)}</strong>
-                <span>${esc(banner.caption)}</span>
+                <strong>${esc(item.sceneTitle)}</strong>
+                <span>${esc(item.sceneCaption)}</span>
               </figcaption>
             </figure>
-          </article>`
-        }).join('')}
+          </article>`).join('')}
       </div>
     </div>
     <div class="sm-agent-scroll" data-agent-scroll>
@@ -65,20 +83,20 @@ function mountHomeAgentStories() {
         <span class="sm-agent-scroll__thumb" data-agent-scroll-thumb style="width:${100 / total}%"></span>
       </button>
       <div class="sm-agent-scroll__marks" aria-hidden="true">
-        ${AGENTS_OVERVIEW.map(() => '<span></span>').join('')}
+        ${items.map(() => '<span></span>').join('')}
       </div>
     </div>
     <div class="sm-agent-names" role="tablist" aria-label="空间智能体">
       <span class="sm-agent-names__ink" data-agent-ink aria-hidden="true"></span>
-      ${AGENTS_OVERVIEW.map(
-        (a, i) => `
+      ${items.map(
+        (item, i) => `
         <button
           type="button"
           class="sm-agent-name${i === 0 ? ' is-active' : ''}"
           role="tab"
           aria-selected="${i === 0 ? 'true' : 'false'}"
-          data-agent-tab="${esc(a.id)}"
-        >${esc(a.name)}</button>`
+          data-agent-tab="${esc(item.id)}"
+        >${esc(item.name)}</button>`
       ).join('')}
     </div>
   `

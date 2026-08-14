@@ -5,7 +5,7 @@ const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage
 const HOME_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏轮播', desc: '多屏大图，可新增和逐屏编辑' },
   { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
-  { id: 'agents', no: '03', title: '空间智能体', desc: '八个智能体一览区标题' },
+  { id: 'agents', no: '03', title: '空间智能体', desc: '八个智能体可逐个改图和文案' },
   { id: 'solutions', no: '04', title: '产品与方案', desc: '方案横滑卡片' },
   { id: 'news', no: '05', title: '新闻动态', desc: '三列新闻卡片' },
   { id: 'pitch', no: '06', title: '探索安托未来', desc: '底部宫格导语' },
@@ -296,12 +296,31 @@ function renderHomeEditor(content) {
       </fieldset>
       <fieldset data-home-section="agents">
         <legend>空间智能体</legend>
-        <p class="admin-form-section__hint">只改这一区的标题与说明。底部八个智能体名称来自「空间智能体」独立页。</p>
+        <p class="admin-form-section__hint">上方是整区标题。下面每个智能体对应前台一张 21:9 长图和底部名称，可新增、删除、调序。建议图片 3360×1440。</p>
         <div class="admin-form-grid">
           ${homeField('agents.kicker', '眉题', agents.kicker)}
           ${homeField('agents.title', '主标题', agents.title, { wide: true })}
           ${homeField('agents.subtitle', '说明', agents.subtitle, { type: 'textarea', wide: true, rows: 4 })}
         </div>
+        <div class="admin-home-list">${(agents.items || []).map((item, index) => `
+          <details ${index === 0 ? 'open' : ''} data-agent-item>
+            <summary>
+              <span>智能体 ${index + 1}：${escapeHtml(item.name || '未命名')}</span>
+              <span class="admin-slide-tools">
+                <button type="button" data-agent-move="-1" ${index === 0 ? 'disabled' : ''}>上移</button>
+                <button type="button" data-agent-move="1" ${index === (agents.items || []).length - 1 ? 'disabled' : ''}>下移</button>
+                <button type="button" data-agent-remove ${(agents.items || []).length <= 1 ? 'disabled' : ''}>删除</button>
+              </span>
+            </summary>
+            <div class="admin-form-grid">
+              ${homeField(`agents.items.${index}.name`, '底部名称', item.name, { wide: true })}
+              ${homeField(`agents.items.${index}.sceneTitle`, '画面标题', item.sceneTitle, { help: '叠在长图左下角，如「人员进入」' })}
+              ${homeField(`agents.items.${index}.sceneCaption`, '画面说明', item.sceneCaption, { wide: true })}
+              ${homeField(`agents.items.${index}.imageUrl`, '21:9 场景图', item.imageUrl, { image: true, wide: true, help: '建议 21:9，左下留暗部给文字' })}
+              ${homeField(`agents.items.${index}.id`, '内部编号', item.id, { help: '一般不用改，用于切换定位' })}
+            </div>
+          </details>`).join('')}</div>
+        <button type="button" class="admin-add-slide" data-agent-add>+ 新增一个智能体</button>
       </fieldset>
       <fieldset data-home-section="solutions">
         <legend>产品与方案</legend>
@@ -379,8 +398,13 @@ function collectHomeContent() {
     if (field.dataset.homeField.endsWith('.tags')) value = value.split(/[，,]/).map((tag) => tag.trim()).filter(Boolean)
     setHomeValue(content, field.dataset.homeField, value)
   })
-  const count = document.querySelectorAll('[data-hero-slide]').length
-  if (count) content.heroSlides = (content.heroSlides || []).slice(0, count)
+  const heroCount = document.querySelectorAll('[data-hero-slide]').length
+  if (heroCount) content.heroSlides = (content.heroSlides || []).slice(0, heroCount)
+  const agentCount = document.querySelectorAll('[data-agent-item]').length
+  if (agentCount) {
+    content.agents = content.agents || {}
+    content.agents.items = (content.agents.items || []).slice(0, agentCount)
+  }
   return content
 }
 
@@ -415,6 +439,42 @@ function moveHeroSlide(index, offset) {
   if (!content.heroSlides?.[index] || next < 0 || next >= content.heroSlides.length) return
   const [slide] = content.heroSlides.splice(index, 1)
   content.heroSlides.splice(next, 0, slide)
+  state.homePage.draftContent = content
+  renderHomeEditor(content)
+}
+
+const EMPTY_HOME_AGENT = { id: '', name: '新智能体', sceneTitle: '', sceneCaption: '', imageUrl: '/images/home-agents/space.jpg' }
+
+function addHomeAgent() {
+  const content = collectHomeContent()
+  content.agents = content.agents || {}
+  content.agents.items = content.agents.items || []
+  if (content.agents.items.length >= 12) {
+    toast('最多 12 个智能体', true)
+    return
+  }
+  content.agents.items.push({ ...EMPTY_HOME_AGENT, id: `agent-${content.agents.items.length + 1}` })
+  state.homePage.draftContent = content
+  renderHomeEditor(content)
+}
+
+function removeHomeAgent(index) {
+  const content = collectHomeContent()
+  if (!content.agents?.items || content.agents.items.length <= 1) {
+    toast('至少保留一个智能体', true)
+    return
+  }
+  content.agents.items.splice(index, 1)
+  state.homePage.draftContent = content
+  renderHomeEditor(content)
+}
+
+function moveHomeAgent(index, offset) {
+  const content = collectHomeContent()
+  const next = index + offset
+  if (!content.agents?.items?.[index] || next < 0 || next >= content.agents.items.length) return
+  const [item] = content.agents.items.splice(index, 1)
+  content.agents.items.splice(next, 0, item)
   state.homePage.draftContent = content
   renderHomeEditor(content)
 }
@@ -935,6 +995,27 @@ document.querySelector('[data-home-form]').addEventListener('click', (event) => 
     event.stopPropagation()
     const index = [...document.querySelectorAll('[data-hero-slide]')].indexOf(move.closest('[data-hero-slide]'))
     if (index >= 0) moveHeroSlide(index, Number(move.dataset.heroMove))
+    return
+  }
+  if (event.target.closest('[data-agent-add]')) {
+    event.preventDefault()
+    addHomeAgent()
+    return
+  }
+  const agentRemove = event.target.closest('[data-agent-remove]')
+  if (agentRemove) {
+    event.preventDefault()
+    event.stopPropagation()
+    const index = [...document.querySelectorAll('[data-agent-item]')].indexOf(agentRemove.closest('[data-agent-item]'))
+    if (index >= 0) removeHomeAgent(index)
+    return
+  }
+  const agentMove = event.target.closest('[data-agent-move]')
+  if (agentMove) {
+    event.preventDefault()
+    event.stopPropagation()
+    const index = [...document.querySelectorAll('[data-agent-item]')].indexOf(agentMove.closest('[data-agent-item]'))
+    if (index >= 0) moveHomeAgent(index, Number(agentMove.dataset.agentMove))
   }
 })
 

@@ -1,5 +1,5 @@
 import { getHomeContent } from '../services/home-content-api.js'
-import { applyCmsHeroSlides } from './home-siemens.js'
+import { applyCmsHeroSlides, applyCmsHomeAgents } from './home-siemens.js'
 
 function text(selector, value, root = document) {
   const element = root.querySelector(selector)
@@ -138,6 +138,7 @@ export function applyHomeContent(content) {
   text('[data-home-agents-kicker]', content.agents?.kicker)
   text('[data-home-agents-title]', content.agents?.title)
   text('[data-home-agents-subtitle]', content.agents?.subtitle)
+  if (content.agents?.items?.length) applyCmsHomeAgents(content.agents.items)
 
   text('[data-home-news-kicker]', content.news?.kicker)
   text('[data-home-news-title]', content.news?.title)
