@@ -20,12 +20,55 @@ export function initSiemensHome() {
   bindDemoAnchors()
 }
 
+const HOME_AGENT_CASES = {
+  space: {
+    scene: '总部办公',
+    title: '人一进办公室，灯和空调自己开了',
+    story: '行政不用再逐间开关。有人来就准备好环境，人走了自动降载，设备异常直接派工单。',
+  },
+  energy: {
+    scene: '楼宇节能',
+    title: '没人的会议室，不再空转一整晚',
+    story: '能耗不再只看总表。空着就降载，异常用电及时告警，月底能说清电花在哪。',
+  },
+  meeting: {
+    scene: '会议室',
+    title: '开会前十分钟，投影和空调已经准备好',
+    story: '预约确认后，签到、开门、开灯、接通云视频按顺序完成。开完会，房间自动复位。',
+  },
+  exhibition: {
+    scene: '企业展厅',
+    title: '参观走到哪，大屏和讲解跟到哪',
+    story: '讲解不用靠人临时切内容。灯光、孪生和大屏按动线切换，参观体验每次都一样稳。',
+  },
+  visitor: {
+    scene: '大堂接待',
+    title: '访客到门口，通行和接待已经安排好',
+    story: '邀约发出后，登记、门禁、停车和接待人通知一次完成。客人走了，权限自动收回。',
+  },
+  opc: {
+    scene: '商业招商',
+    title: '一套房源，从带看到签约不断档',
+    story: '可租空间统一上架，客户线上看、预约带看、签约回传，招商不用在多个系统里来回搬。',
+  },
+  hospitality: {
+    scene: '酒店公寓',
+    title: '办完入住，门锁和房间已经准备好',
+    story: '分房、授权、客房设备和水电计费连在一条链上。退房后权限回收，房态自动复位。',
+  },
+  asset: {
+    scene: '资产盘点',
+    title: '设备在哪、谁借走了，当场能查到',
+    story: '盘点、领用、借还不再靠表格对。位置和状态留痕，找设备和审计都更快。',
+  },
+}
+
 function mountHomeAgentStories() {
   const root = document.querySelector('[data-home-agent-stories]')
   if (!root) return
 
   root.innerHTML = `
-    <div class="sm-tabs__nav" role="tablist" aria-orientation="vertical" aria-label="空间智能体">
+    <div class="sm-tabs__nav" role="tablist" aria-orientation="vertical" aria-label="空间场景">
       <span class="sm-tabs__indicator" aria-hidden="true"></span>
       ${AGENTS_OVERVIEW.map(
         (a, i) => `
@@ -39,37 +82,41 @@ function mountHomeAgentStories() {
       ).join('')}
     </div>
     <div class="sm-tabs__panels">
-      ${AGENTS_OVERVIEW.map(
-        (a, i) => `
+      ${AGENTS_OVERVIEW.map((a, i) => {
+        const c = HOME_AGENT_CASES[a.id] || { scene: a.shortName, title: a.value, story: a.blurb }
+        return `
         <div class="sm-tabs__panel${i === 0 ? ' is-active' : ''}" data-sm-panel="${esc(a.id)}" role="tabpanel"${i ? ' hidden' : ''}>
           <article class="sm-story">
-            <div class="sm-story__media" style="background-image:url('${esc(a.sceneImage)}')" role="img" aria-hidden="true"></div>
+            <div class="sm-story__media" style="background-image:url('${esc(a.sceneImage)}')">
+              <div class="sm-story__caption">
+                <span>场景故事 · ${esc(c.scene)}</span>
+                <strong>${esc(c.title)}</strong>
+              </div>
+            </div>
             <div class="sm-story__copy">
-              <strong class="sm-kicker sm-kicker--blue">${esc(a.name)}</strong>
-              <h3>${esc(a.value)}</h3>
-              <p>${esc(a.blurb)}</p>
+              <p class="sm-story__lead">${esc(c.story)}</p>
               <ol class="sm-story__flow">
                 <li>
-                  <span>现场发生</span>
+                  <span>当时</span>
                   <p>${esc(a.trigger)}</p>
                 </li>
                 <li>
-                  <span>智能体执行</span>
+                  <span>系统做了</span>
                   <p>${esc(a.action)}</p>
                 </li>
                 <li>
-                  <span>得到结果</span>
+                  <span>结果</span>
                   <p>${esc(a.result)}</p>
                 </li>
               </ol>
               <a class="sm-text-link" href="agent-detail/?id=${encodeURIComponent(a.id)}">
-                查看该智能体
+                看这个场景怎么落地
                 <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
               </a>
             </div>
           </article>
         </div>`
-      ).join('')}
+      }).join('')}
     </div>
   `
 }
