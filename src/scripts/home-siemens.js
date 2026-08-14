@@ -69,7 +69,7 @@ function mountHomeAgentStories(cmsItems) {
         ${items.map((item, i) => `
           <article class="sm-agent-slide${i === 0 ? ' is-active' : ''}" data-agent-slide="${esc(item.id)}" aria-hidden="${i === 0 ? 'false' : 'true'}">
             <figure class="sm-agent-banner">
-              <img src="${esc(item.imageUrl)}" alt="${esc(item.name)}" />
+              <img ${i === 0 ? `src="${esc(item.imageUrl)}"` : `data-src="${esc(item.imageUrl)}"`} alt="${esc(item.name)}" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} />
               <figcaption>
                 <strong>${esc(item.sceneTitle)}</strong>
                 <span>${esc(item.sceneCaption)}</span>
@@ -148,6 +148,12 @@ function bindHomeAgentStage(root) {
       slide.classList.toggle('is-active', i === index)
       slide.classList.toggle('is-prev', i === prev && i !== index)
       slide.setAttribute('aria-hidden', i === index ? 'false' : 'true')
+      if (i === index) {
+        const img = slide.querySelector('img[data-src]')
+        if (img && !img.getAttribute('src')) {
+          img.src = img.getAttribute('data-src')
+        }
+      }
     })
     if (thumb) {
       thumb.style.width = `${100 / total}%`

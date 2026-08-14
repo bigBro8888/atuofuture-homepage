@@ -72,7 +72,7 @@ export const defaultHomeContent = {
     subtitle: '会议、访客、能耗、展厅、酒店公寓……每个智能体负责一类真实任务。',
     ctaLabel: '查看智能体',
     ctaUrl: '/agents/',
-    imageUrl: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=400&q=70',
+    imageUrl: '/images/home-agents/space.jpg',
   },
   agents: {
     kicker: 'Atuo Future · 安托未来',
