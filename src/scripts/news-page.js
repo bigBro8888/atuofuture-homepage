@@ -26,25 +26,49 @@ function filterItems(active) {
   return active === '全部' ? NEWS_ITEMS : NEWS_ITEMS.filter((n) => n.category === active)
 }
 
-function renderFeatured(n) {
-  if (!n) return ''
+function renderLeadMain(n) {
   return `
-    <a class="nx-feature" href="../news-detail/?id=${encodeURIComponent(n.id)}" style="--nx-feature-image:url('${esc(n.cover)}')">
-      <div class="nx-feature__media" aria-hidden="true"></div>
-      <div class="nx-feature__shade" aria-hidden="true"></div>
-      <div class="nx-shell nx-feature__copy">
-        <div class="nx-feature__meta">
+    <a class="nx-lead__main" href="../news-detail/?id=${encodeURIComponent(n.id)}">
+      <div class="nx-lead__photo" style="background-image:url('${esc(n.cover)}')" role="img" aria-hidden="true"></div>
+      <div class="nx-lead__body">
+        <div class="nx-item__meta">
           <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(n.category)}</span>
           <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
         </div>
         <h1>${esc(n.title)}</h1>
         <p>${esc(n.summary)}</p>
-        <span class="nx-feature__cta">
-          阅读全文
-          <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
-        </span>
       </div>
     </a>`
+}
+
+function renderLeadSide(n) {
+  return `
+    <a class="nx-lead__story" href="../news-detail/?id=${encodeURIComponent(n.id)}">
+      <div class="nx-lead__story-photo" style="background-image:url('${esc(n.cover)}')" role="img" aria-hidden="true"></div>
+      <div class="nx-lead__story-body">
+        <div class="nx-item__meta">
+          <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(n.category)}</span>
+          <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
+        </div>
+        <h2>${esc(n.title)}</h2>
+      </div>
+    </a>`
+}
+
+function renderLead(items) {
+  if (!items.length) return ''
+  const [main, ...side] = items
+  return `
+    <section class="nx-lead">
+      <div class="nx-shell nx-lead__grid">
+        ${renderLeadMain(main)}
+        ${
+          side.length
+            ? `<div class="nx-lead__side">${side.map((n) => renderLeadSide(n)).join('')}</div>`
+            : ''
+        }
+      </div>
+    </section>`
 }
 
 function renderItem(n, index) {
@@ -64,12 +88,13 @@ function renderItem(n, index) {
 }
 
 function renderPage(active) {
-  const featured = NEWS_ITEMS[0]
-  const items = filterItems(active).filter((n) => n.id !== featured?.id)
-  const count = filterItems(active).length
+  const pool = filterItems(active)
+  const lead = pool.slice(0, 4)
+  const rest = pool.slice(4)
+  const count = pool.length
 
   return `
-    ${renderFeatured(featured)}
+    ${renderLead(lead)}
 
     <section class="nx-main">
       <div class="nx-shell">
@@ -91,9 +116,11 @@ function renderPage(active) {
 
         <div class="nx-board" id="news-list">
           ${
-            items.length
-              ? `<div class="nx-stream">${items.map((n, i) => renderItem(n, i)).join('')}</div>`
-              : `<p class="nx-empty">该分类暂无更多内容</p>`
+            rest.length
+              ? `<div class="nx-stream">${rest.map((n, i) => renderItem(n, i)).join('')}</div>`
+              : pool.length
+                ? ''
+                : `<p class="nx-empty">该分类暂无内容</p>`
           }
         </div>
       </div>
