@@ -36,7 +36,11 @@ function resolveVisualItems(item) {
       const agent = AGENTS_OVERVIEW.find((a) => a.id === child.id)
       return { ...child, image: agent?.sceneImage || '', icon: agent?.icon || 'smart_toy' }
     }
-    return child
+    return {
+      ...child,
+      image: child.image || '',
+      icon: child.icon || 'image',
+    }
   })
 }
 

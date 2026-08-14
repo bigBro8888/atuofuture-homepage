@@ -47,11 +47,12 @@ export const SITE_NAV_ITEMS = [
     id: 'about',
     label: '关于我们',
     segment: 'about/',
+    mega: 'visual',
     children: [
-      { id: 'about-intro', label: '公司介绍', desc: '物理AI与空间智能定位', segment: 'about/#intro' },
-      { id: 'about-team', label: '团队与能力', desc: '软件、IoT与交付能力', segment: 'about/#team' },
-      { id: 'about-delivery', label: '项目实践', desc: '实施流程与交付方式', segment: 'about/#delivery' },
-      { id: 'about-contact', label: '联系我们', desc: '预约演示与商务对接', segment: 'about/#contact' },
+      { id: 'about-intro', label: '公司介绍', desc: '物理AI与空间智能定位', segment: 'about/#intro', image: '/images/home-advantages/advantage-ai-agent.webp', icon: 'apartment' },
+      { id: 'about-team', label: '团队与能力', desc: '软件、IoT与交付能力', segment: 'about/#team', image: '/images/home-advantages/advantage-hardware-system.webp', icon: 'groups' },
+      { id: 'about-delivery', label: '项目实践', desc: '实施流程与交付方式', segment: 'about/#delivery', image: '/images/solutions/building.jpg', icon: 'account_tree' },
+      { id: 'about-contact', label: '联系我们', desc: '预约演示与商务对接', segment: 'about/#contact', image: '/images/solutions/cta.jpg', icon: 'call' },
     ],
   },
 ]
