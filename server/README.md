@@ -4,7 +4,7 @@
 
 1. 复制 `.env.example` 为 `.env`，至少修改 `JWT_SECRET`、`ADMIN_EMAIL`、`ADMIN_PASSWORD`。
 2. 分别运行 `npm run dev:api` 与 `npm run dev`。
-3. 打开 `http://localhost:5188/app-download/`；后台为 `http://localhost:5188/admin/apps/`。
+3. 打开 `http://localhost:5188/app-download/`；后台为 `http://localhost:5188/admin/`（旧地址 `/admin/apps/` 会跳转过去）。
 
 首次启动会在 `server/data/store.json` 创建开发数据和初始管理员。生产环境不得继续使用示例密码。
 

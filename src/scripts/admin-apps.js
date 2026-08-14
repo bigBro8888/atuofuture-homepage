@@ -1,9 +1,10 @@
 const API = '/api/admin'
 const state = { user: null, app: null, homePage: null, aboutPage: null }
 const titles = {
-  overview: ['App 下载概览', '监控当前版本与分发服务状态'],
-  config: ['页面配置', '统一管理 App 下载页、官网首页与关于我们'],
-  home: ['PC 首页内容', '编辑草稿并发布官网核心运营内容'],
+  overview: ['官网后台概览', '网站内容、App 下载与发布状态'],
+  home: ['官网首页', '编辑草稿并发布官网核心运营内容'],
+  about: ['关于我们', '编辑公司介绍、客户与联系方式'],
+  config: ['App 下载页', '管理下载页文案、Banner、商店链接与按钮'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
   analytics: ['下载统计', '查看匿名点击趋势和终端分布'],
   users: ['账号权限', '按职责管理后台访问权限'],
@@ -71,7 +72,9 @@ function showAdmin(user) {
   document.querySelector('[data-user-role]').textContent = roleNames[user.role] || user.role
   document.querySelector('[data-user-avatar]').textContent = (user.name || user.email).slice(0, 1).toUpperCase()
   document.querySelectorAll('[data-super-only]').forEach((element) => { element.hidden = user.role !== 'super_admin' })
+  const initial = location.hash.replace('#', '')
   loadOverview()
+  if (initial && titles[initial] && initial !== 'overview') openTab(initial, { skipHash: true })
 }
 
 function showLogin() {
@@ -94,42 +97,28 @@ async function loadOverview() {
   }
 }
 
-function openTab(name) {
-  if (name === 'config') {
-    openPageConfig('config')
-    return
-  }
+function openTab(name, options = {}) {
+  if (!titles[name]) name = 'overview'
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === name))
   document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === name))
   const [title, subtitle] = titles[name]
   document.querySelector('[data-page-title]').textContent = title
   document.querySelector('[data-page-subtitle]').textContent = subtitle
   document.querySelector('.admin-sidebar').classList.remove('is-open')
-  if (name === 'home') loadHomePage()
-  if (name === 'releases') loadReleases()
-  if (name === 'analytics') loadStats()
-  if (name === 'users' && state.user.role === 'super_admin') loadUsers()
-  if (name === 'audit' && state.user.role === 'super_admin') loadAudit()
-}
-
-function openPageConfig(name) {
-  document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === 'config'))
-  document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === name))
-  document.querySelectorAll('[data-page-config-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.pageConfigTab === name))
-  document.querySelector('[data-page-title]').textContent = '页面配置'
-  document.querySelector('[data-page-subtitle]').textContent = name === 'home'
-    ? '编辑官网首页并控制发布'
-    : name === 'about'
-      ? '编辑关于我们并控制发布'
-      : '管理 App 下载页桌面端与移动端内容'
-  document.querySelector('.admin-sidebar').classList.remove('is-open')
-  if (name === 'home') loadHomePage()
-  else if (name === 'about') loadAboutPage()
-  else {
+  if (!options.skipHash && location.hash !== `#${name}`) {
+    history.replaceState(null, '', `#${name}`)
+  }
+  if (name === 'config') {
     loadConfig()
     window.scrollTo({ top: 0 })
     updateAnchorState()
   }
+  if (name === 'home') loadHomePage()
+  if (name === 'about') loadAboutPage()
+  if (name === 'releases') loadReleases()
+  if (name === 'analytics') loadStats()
+  if (name === 'users' && state.user.role === 'super_admin') loadUsers()
+  if (name === 'audit' && state.user.role === 'super_admin') loadAudit()
 }
 
 const featureIconOptions = [
@@ -581,8 +570,10 @@ document.querySelector('[data-logout]').addEventListener('click', async () => {
 })
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => openTab(button.dataset.tab)))
 document.querySelectorAll('[data-jump]').forEach((button) => button.addEventListener('click', () => openTab(button.dataset.jump)))
-document.querySelectorAll('[data-page-config-tab]').forEach((button) => button.addEventListener('click', () => openPageConfig(button.dataset.pageConfigTab)))
-document.querySelectorAll('[data-page-config-open]').forEach((button) => button.addEventListener('click', () => openPageConfig(button.dataset.pageConfigOpen)))
+window.addEventListener('hashchange', () => {
+  const name = location.hash.replace('#', '')
+  if (name && titles[name]) openTab(name, { skipHash: true })
+})
 document.querySelector('[data-mobile-menu]').addEventListener('click', () => document.querySelector('.admin-sidebar').classList.toggle('is-open'))
 
 document.querySelector('[name="heroImageUrl"]').addEventListener('input', (event) => {
@@ -665,7 +656,7 @@ document.querySelector('[data-config-form]').addEventListener('submit', async (e
       form.elements.desktopBannerUrl.value = uploaded.url
     }
     await api('/app', { method: 'PUT', body: JSON.stringify(body) })
-    toast('页面配置已保存并生效')
+    toast('App 下载页配置已保存并生效')
     loadOverview()
   } catch (error) {
     toast(error.message, true)
