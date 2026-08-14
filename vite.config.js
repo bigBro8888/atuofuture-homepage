@@ -20,7 +20,6 @@ export default defineConfig({
         newsDetail: resolve(__dirname, 'news-detail/index.html'),
         appDownload: resolve(__dirname, 'app-download/index.html'),
         admin: resolve(__dirname, 'admin/index.html'),
-        adminApps: resolve(__dirname, 'admin/apps/index.html'),
       },
     },
   },
