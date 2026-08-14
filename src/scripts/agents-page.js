@@ -1,5 +1,7 @@
 import { loadSimplePageContent } from '../services/site-settings-api.js'
+import {
   AGENTS_CAPABILITY_CHAIN,
+  AGENTS_OVERVIEW,
   resolveAgentOverviewId,
 } from '../data/agents-overview.js'
 import {
