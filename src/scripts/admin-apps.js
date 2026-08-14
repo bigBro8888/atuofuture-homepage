@@ -28,13 +28,24 @@ const titles = {
 }
 const roleNames = { super_admin: '超级管理员', editor: '运营编辑', publisher: '发布管理员', analyst: '数据查看员' }
 
+const API_ERROR_TEXT = {
+  authentication_required: '登录已失效，请重新登录',
+  invalid_session: '登录已失效，请重新登录',
+  invalid_credentials: '邮箱或密码不正确',
+  permission_denied: '没有操作权限',
+  too_many_attempts: '尝试次数过多，请稍后再试',
+}
+
 async function api(path, options = {}) {
   const headers = { Accept: 'application/json', ...options.headers }
   if (options.body && !(options.body instanceof FormData)) headers['Content-Type'] = 'application/json'
   const response = await fetch(`${API}${path}`, { credentials: 'same-origin', ...options, headers })
   if (response.status === 204) return null
   const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data.message || data.error || `请求失败（${response.status}）`)
+  if (!response.ok) {
+    if (response.status === 401 && path !== '/login' && path !== '/me') showLogin()
+    throw new Error(API_ERROR_TEXT[data.error] || data.message || data.error || `请求失败（${response.status}）`)
+  }
   return data
 }
 

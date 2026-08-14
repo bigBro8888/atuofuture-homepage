@@ -35,8 +35,8 @@ export function requireAuth(permission) {
 export function sessionCookieOptions() {
   return {
     httpOnly: true,
-    secure: config.nodeEnv === 'production',
-    sameSite: 'strict',
+    secure: config.cookieSecure,
+    sameSite: 'lax',
     maxAge: 8 * 60 * 60 * 1000,
     path: '/',
   }

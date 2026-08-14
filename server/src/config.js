@@ -8,6 +8,7 @@ export const config = {
   port: Number(process.env.PORT || 8787),
   host: process.env.HOST || '127.0.0.1',
   nodeEnv: process.env.NODE_ENV || 'development',
+  cookieSecure: String(process.env.COOKIE_SECURE || '').toLowerCase() === 'true',
   jwtSecret: process.env.JWT_SECRET || 'change-this-secret-before-production',
   adminEmail: process.env.ADMIN_EMAIL || 'admin@atuofuture.com',
   adminPassword: process.env.ADMIN_PASSWORD || 'ChangeMe123!',
