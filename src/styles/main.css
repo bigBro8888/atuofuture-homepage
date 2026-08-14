@@ -4055,7 +4055,8 @@ body.demo-modal-open {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
-.ab-footprint__grid a {
+.ab-footprint__grid a,
+.ab-footprint__grid span {
   display: flex;
   align-items: center;
   min-height: 72px;
@@ -4082,7 +4083,8 @@ body.demo-modal-open {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
-.ab-offer__grid a {
+.ab-offer__grid a,
+.ab-offer__grid article {
   display: block;
   text-decoration: none;
   color: inherit;

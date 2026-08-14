@@ -10,11 +10,13 @@ export const BRAND = {
 }
 
 export const CONTACT = {
-  email: 'contact@atuofuture.com',
+  email: 'service@atuofuture.com',
+  emailSecondary: 'sherri@atuofuture.com',
   /** 占位号码已停用，有正式号码后再填写 */
   phone: '',
   phoneDisplay: '',
-  businessScope: '楼宇 / 园区 / 学校 / 酒店 / 公寓 / 商业资产',
+  address: '杭州市余杭区阿里巴巴数字生态创新园 1 号楼 5 层',
+  businessScope: '物联网与智能硬件',
 }
 
 export function contactMailto() {
