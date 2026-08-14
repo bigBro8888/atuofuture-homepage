@@ -1,13 +1,77 @@
-/** 首页西门子式模块交互：Hero 轮播、Tab、方案横滑 */
+/** 首页西门子式模块交互：Hero 轮播、智能体故事、方案横滑 */
 
 import { mountHomeAdvantages } from '../components/home-advantages/index.js'
 import { HOME_ADVANTAGES_INTERVAL_MS } from '../data/home-advantages.js'
+import { AGENTS_OVERVIEW } from '../data/agents-overview.js'
+
+function esc(str = '') {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
 
 export function initSiemensHome() {
+  mountHomeAgentStories()
   initHeroCarousel()
   initCapabilityTabs()
   initSolutionsCarousel()
   bindDemoAnchors()
+}
+
+function mountHomeAgentStories() {
+  const root = document.querySelector('[data-home-agent-stories]')
+  if (!root) return
+
+  root.innerHTML = `
+    <div class="sm-tabs__nav" role="tablist" aria-orientation="vertical" aria-label="空间智能体">
+      <span class="sm-tabs__indicator" aria-hidden="true"></span>
+      ${AGENTS_OVERVIEW.map(
+        (a, i) => `
+        <button
+          type="button"
+          class="sm-tabs__tab${i === 0 ? ' is-active' : ''}"
+          role="tab"
+          aria-selected="${i === 0 ? 'true' : 'false'}"
+          data-sm-tab="${esc(a.id)}"
+        >${esc(a.shortName)}</button>`
+      ).join('')}
+    </div>
+    <div class="sm-tabs__panels">
+      ${AGENTS_OVERVIEW.map(
+        (a, i) => `
+        <div class="sm-tabs__panel${i === 0 ? ' is-active' : ''}" data-sm-panel="${esc(a.id)}" role="tabpanel"${i ? ' hidden' : ''}>
+          <article class="sm-story">
+            <div class="sm-story__media" style="background-image:url('${esc(a.sceneImage)}')" role="img" aria-hidden="true"></div>
+            <div class="sm-story__copy">
+              <strong class="sm-kicker sm-kicker--blue">${esc(a.name)}</strong>
+              <h3>${esc(a.value)}</h3>
+              <p>${esc(a.blurb)}</p>
+              <ol class="sm-story__flow">
+                <li>
+                  <span>现场发生</span>
+                  <p>${esc(a.trigger)}</p>
+                </li>
+                <li>
+                  <span>智能体执行</span>
+                  <p>${esc(a.action)}</p>
+                </li>
+                <li>
+                  <span>得到结果</span>
+                  <p>${esc(a.result)}</p>
+                </li>
+              </ol>
+              <a class="sm-text-link" href="agent-detail/?id=${encodeURIComponent(a.id)}">
+                查看该智能体
+                <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+              </a>
+            </div>
+          </article>
+        </div>`
+      ).join('')}
+    </div>
+  `
 }
 
 function bindDemoAnchors() {
