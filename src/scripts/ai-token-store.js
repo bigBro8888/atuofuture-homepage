@@ -1,5 +1,7 @@
 /** AI Token 商城交互：计费周期切换、定价表分类、成本估算器 */
 
+import { loadSimplePageContent } from '../services/site-settings-api.js'
+
 const PRICE_SHEET = {
   text: [
     { name: 'Atuo-Max（GPT-4o 级）', tag: '旗舰', desc: '复杂推理、长上下文、场景剧本生成', input: '¥0.012 / 1K', output: '¥0.036 / 1K' },
@@ -141,7 +143,15 @@ function initConsoleBuy() {
   })
 }
 
-export function initAiTokenStore() {
+export async function initAiTokenStore() {
+  const cms = await loadSimplePageContent('ai-token')
+  if (cms?.title) document.querySelector('.token-hero__title')?.replaceChildren(document.createTextNode(cms.title))
+  if (cms?.subtitle) document.querySelector('.token-hero__subtitle')?.replaceChildren(document.createTextNode(cms.subtitle))
+  if (cms?.ctaLabel) {
+    const cta = document.querySelector('.token-hero__cta--primary')
+    const icon = cta?.querySelector('.material-symbols-outlined')
+    if (cta && icon) cta.replaceChildren(icon, document.createTextNode(` ${cms.ctaLabel}`))
+  }
   initBillingToggle()
   initPriceTabs()
   initCalculator()

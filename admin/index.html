@@ -24,13 +24,19 @@
       <div class="admin-brand"><span>A</span><div><strong>安托未来</strong><small>WEBSITE ADMIN</small></div></div>
       <nav aria-label="后台导航">
         <div class="admin-nav-group">
-          <small>总览</small>
-          <button class="is-active" type="button" data-tab="overview"><span class="material-symbols-outlined">dashboard</span>概览</button>
+          <small>全站</small>
+          <button type="button" data-tab="site"><span class="material-symbols-outlined">palette</span>全站设置</button>
+          <button class="is-active" type="button" data-tab="overview"><span class="material-symbols-outlined">account_tree</span>页面目录</button>
         </div>
         <div class="admin-nav-group">
           <small>网站内容</small>
           <button type="button" data-tab="home"><span class="material-symbols-outlined">web</span>官网首页</button>
           <button type="button" data-tab="about"><span class="material-symbols-outlined">apartment</span>关于我们</button>
+          <button type="button" data-tab="page-solutions"><span class="material-symbols-outlined">domain</span>行业解决方案</button>
+          <button type="button" data-tab="page-agents"><span class="material-symbols-outlined">smart_toy</span>空间智能体</button>
+          <button type="button" data-tab="page-hardware"><span class="material-symbols-outlined">memory</span>智能硬件</button>
+          <button type="button" data-tab="page-news"><span class="material-symbols-outlined">newspaper</span>新闻中心</button>
+          <button type="button" data-tab="page-ai-token"><span class="material-symbols-outlined">token</span>AI Token</button>
           <button type="button" data-tab="config"><span class="material-symbols-outlined">install_mobile</span>App 下载页</button>
         </div>
         <div class="admin-nav-group">
@@ -53,13 +59,17 @@
     <main class="admin-main">
       <header class="admin-topbar">
         <button class="admin-mobile-menu" type="button" data-mobile-menu><span class="material-symbols-outlined">menu</span></button>
-        <div><h1 data-page-title>官网后台概览</h1><p data-page-subtitle>网站内容、App 下载与发布状态</p></div>
+        <div><h1 data-page-title>页面目录</h1><p data-page-subtitle>每个前台路径对应一块后台配置，结构与官网导航一致</p></div>
         <div class="admin-user"><span data-user-avatar>A</span><div><strong data-user-name>管理员</strong><small data-user-role>--</small></div><button type="button" data-logout title="退出登录"><span class="material-symbols-outlined">logout</span></button></div>
       </header>
 
       <div class="admin-toast" data-toast role="status" aria-live="polite"></div>
 
       <section class="admin-panel is-active" data-panel="overview">
+        <article class="admin-card">
+          <div class="admin-card__head"><div><h2>前台路径对照</h2><p>点击即可进入对应页面配置，路径与线上地址一致</p></div></div>
+          <div class="admin-sitemap" data-sitemap></div>
+        </article>
         <div class="admin-metrics">
           <article><span class="material-symbols-outlined">android</span><small>Android 当前版本</small><strong data-overview-version>--</strong><em data-version-source>等待同步</em></article>
           <article><span class="material-symbols-outlined">download</span><small>近 30 天下载点击</small><strong data-overview-downloads>--</strong><em>Android + iOS</em></article>
@@ -159,6 +169,36 @@
             </div>
           </fieldset>
           <div class="admin-form-actions"><button type="submit">保存并发布配置</button></div>
+        </form>
+      </section>
+
+      <section class="admin-panel" data-panel="site">
+        <form class="admin-card admin-home-form" data-site-form>
+          <div class="admin-card__head">
+            <div><h2>全站设置</h2><p>Logo、品牌名、顶栏按钮、联系方式。发布后全站顶栏与页脚立即生效。</p></div>
+            <div class="admin-home-status"><span data-site-draft-time>草稿未加载</span><b data-site-publish-status>--</b></div>
+          </div>
+          <div class="admin-home-editor" data-site-editor></div>
+          <div class="admin-home-actions">
+            <a href="/" target="_blank">预览官网</a>
+            <button type="button" data-site-save>保存草稿</button>
+            <button type="button" data-site-publish>发布到全站</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-panel" data-panel="simple">
+        <form class="admin-card admin-home-form" data-simple-form>
+          <div class="admin-card__head">
+            <div><h2 data-simple-title>页面首屏</h2><p>路径 <code data-simple-path>--</code> · 修改标题、说明与 Banner 后发布，前台该页首屏会更新。</p></div>
+            <div class="admin-home-status"><span data-simple-draft-time>草稿未加载</span><b data-simple-publish-status>--</b></div>
+          </div>
+          <div class="admin-home-editor" data-simple-editor></div>
+          <div class="admin-home-actions">
+            <a href="/" target="_blank" data-simple-preview>预览该页</a>
+            <button type="button" data-simple-save>保存草稿</button>
+            <button type="button" data-simple-publish>发布到前台</button>
+          </div>
         </form>
       </section>
 

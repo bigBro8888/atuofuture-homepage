@@ -1,3 +1,4 @@
+import { loadSimplePageContent } from '../services/site-settings-api.js'
 import {
   SOLUTIONS,
   SOLUTIONS_HERO,
@@ -23,16 +24,20 @@ function agentLabel(id) {
 
 function renderHero() {
   const h = SOLUTIONS_HERO
+  const title = cmsHero?.title || h.title
+  const desc = cmsHero?.subtitle || h.desc
+  const image = cmsHero?.bannerUrl || h.image
+  const cta = cmsHero?.ctaLabel || '预约方案演示'
   return `
-    <section class="sol-home-hero" style="--sol-hero-image:url('${esc(h.image)}')">
+    <section class="sol-home-hero" style="--sol-hero-image:url('${esc(image)}')">
       <div class="sol-home-hero__media" aria-hidden="true"></div>
       <div class="sol-home-hero__shade" aria-hidden="true"></div>
       <div class="sol-home-shell sol-home-hero__inner">
         <div class="sol-home-hero__copy">
-          <h1>${esc(h.title)}</h1>
-          <p>${esc(h.desc)}</p>
+          <h1>${esc(title)}</h1>
+          <p>${esc(desc)}</p>
           <div class="sol-home-hero__actions">
-            <button type="button" class="sol-btn sol-btn--primary" data-demo-modal-open>预约方案演示</button>
+            <button type="button" class="sol-btn sol-btn--primary" data-demo-modal-open>${esc(cta)}</button>
             <a class="sol-btn sol-btn--ghost" href="#sol-base">了解整体架构</a>
           </div>
         </div>
@@ -599,9 +604,12 @@ function initHomeInteractions(root) {
   })
 }
 
-export function initSolutionsPage() {
+let cmsHero = null
+
+export async function initSolutionsPage() {
   const root = document.getElementById('solutions-root')
   if (!root) return
+  cmsHero = await loadSimplePageContent('solutions')
   const raw = new URLSearchParams(window.location.search).get('id')
   const id = resolveSolutionId(raw)
   root.innerHTML = id ? renderDetail(id) : renderList()

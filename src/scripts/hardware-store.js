@@ -1,3 +1,4 @@
+import { loadSimplePageContent } from '../services/site-settings-api.js'
 import {
   HARDWARE_LINES,
   HARDWARE_SPACE_FLOW,
@@ -54,18 +55,22 @@ function linePreviewItems(lineId) {
 }
 
 function renderHero() {
+  const title = cmsHero?.title || '连接空间、商品与真实业务'
+  const subtitle = cmsHero?.subtitle || '安托未来以空间智能、电子纸与边缘连接能力，构建覆盖企业空间、新零售与智能终端的硬件产品体系。'
+  const banner = cmsHero?.bannerUrl || '/images/hardware/hero-bg-3840.png'
+  const cta = cmsHero?.ctaLabel || '获取选型建议'
   return `
     <section class="hwc-hero">
       <div class="hwc-hero__bg" aria-hidden="true">
-        <img src="/images/hardware/hero-bg-3840.png" alt="" width="3840" height="1054" decoding="async" fetchpriority="high" />
+        <img src="${esc(banner)}" alt="" width="3840" height="1054" decoding="async" fetchpriority="high" />
       </div>
       <div class="hwc-shell hwc-hero__content">
         <div class="hwc-hero__copy">
-          <h1>连接空间、商品与真实业务</h1>
-          <p>安托未来以空间智能、电子纸与边缘连接能力，构建覆盖企业空间、新零售与智能终端的硬件产品体系。</p>
+          <h1>${esc(title)}</h1>
+          <p>${esc(subtitle)}</p>
           <div class="hwc-hero__actions">
             <a class="hwc-btn hwc-btn--cyan hwc-btn--hero" href="#hwc-space">浏览全部产品</a>
-            <button type="button" class="hwc-btn hwc-btn--outline-dark" data-demo-modal-open>获取选型建议</button>
+            <button type="button" class="hwc-btn hwc-btn--outline-dark" data-demo-modal-open>${esc(cta)}</button>
           </div>
         </div>
       </div>
@@ -337,9 +342,12 @@ function renderCta() {
     </section>`
 }
 
-export function initHardwareStore() {
+let cmsHero = null
+
+export async function initHardwareStore() {
   const root = document.getElementById('hardware-root')
   if (!root) return
+  cmsHero = await loadSimplePageContent('hardware')
 
   root.innerHTML = `
     <div class="hwc-first">

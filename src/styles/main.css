@@ -10608,6 +10608,22 @@ body.demo-modal-open {
   width: min(1180px, calc(100% - 64px));
   margin: 0 auto;
 }
+.nx-intro {
+  padding: 28px 0 8px;
+}
+.nx-intro h1 {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 3.2vw, 42px);
+  letter-spacing: -.03em;
+  color: #10233f;
+}
+.nx-intro p {
+  margin: 0;
+  max-width: 52ch;
+  color: #5a6b82;
+  font-size: 15px;
+  line-height: 1.7;
+}
 .nx-main {
   position: relative;
   padding: 8px 0 96px;

@@ -8,6 +8,8 @@ import { addAudit, save } from '../../lib/store.js'
 import { requireAuth } from '../admin/auth.js'
 import { getHomePageConfig, validateHomeContent } from './home-service.js'
 import { getAboutPageConfig, validateAboutContent } from './about-service.js'
+import { getSiteSettingsPage, validateSiteSettings } from './site-settings-service.js'
+import { SIMPLE_PAGE_KEYS, getSimplePageConfig, validateSimplePage } from './simple-page-service.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -105,6 +107,88 @@ adminPagesRouter.post('/about/publish', requireAuth('config:write'), async (requ
   page.updatedAt = page.publishedAt
   await save()
   await addAudit(request.admin, 'about.content.publish', 'about', { publishedAt: page.publishedAt })
+  response.json({ page })
+})
+
+publicPagesRouter.get('/site', (request, response) => {
+  const page = getSiteSettingsPage()
+  response.set('Cache-Control', 'no-cache')
+  response.json({
+    pageKey: 'site',
+    content: page.status === 'published' ? page.publishedContent : page.draftContent,
+    publishedAt: page.publishedAt,
+  })
+})
+
+adminPagesRouter.get('/site', requireAuth(), (request, response) => {
+  response.json({ page: getSiteSettingsPage() })
+})
+
+adminPagesRouter.put('/site/draft', requireAuth('config:write'), async (request, response) => {
+  try {
+    const page = getSiteSettingsPage()
+    page.draftContent = validateSiteSettings(request.body?.content)
+    page.updatedAt = new Date().toISOString()
+    await save()
+    await addAudit(request.admin, 'site.settings.update', 'site', {})
+    response.json({ page })
+  } catch (error) {
+    response.status(400).json({ error: 'invalid_site_settings', message: error.message })
+  }
+})
+
+adminPagesRouter.post('/site/publish', requireAuth('config:write'), async (request, response) => {
+  const page = getSiteSettingsPage()
+  page.publishedContent = structuredClone(page.draftContent)
+  page.status = 'published'
+  page.publishedAt = new Date().toISOString()
+  page.updatedAt = page.publishedAt
+  await save()
+  await addAudit(request.admin, 'site.settings.publish', 'site', { publishedAt: page.publishedAt })
+  response.json({ page })
+})
+
+publicPagesRouter.get('/simple/:key', (request, response) => {
+  const page = getSimplePageConfig(request.params.key)
+  if (!page || page.status !== 'published' || !page.publishedContent) {
+    return response.status(404).json({ error: 'page_not_published' })
+  }
+  response.set('Cache-Control', 'no-cache')
+  response.json({
+    pageKey: page.pageKey,
+    content: page.publishedContent,
+    publishedAt: page.publishedAt,
+  })
+})
+
+adminPagesRouter.get('/simple/:key', requireAuth(), (request, response) => {
+  if (!SIMPLE_PAGE_KEYS.includes(request.params.key)) return response.status(404).json({ error: 'unknown_page' })
+  response.json({ page: getSimplePageConfig(request.params.key) })
+})
+
+adminPagesRouter.put('/simple/:key/draft', requireAuth('config:write'), async (request, response) => {
+  try {
+    const page = getSimplePageConfig(request.params.key)
+    if (!page) return response.status(404).json({ error: 'unknown_page' })
+    page.draftContent = validateSimplePage(request.params.key, request.body?.content)
+    page.updatedAt = new Date().toISOString()
+    await save()
+    await addAudit(request.admin, 'simple.page.update', request.params.key, {})
+    response.json({ page })
+  } catch (error) {
+    response.status(400).json({ error: 'invalid_page_content', message: error.message })
+  }
+})
+
+adminPagesRouter.post('/simple/:key/publish', requireAuth('config:write'), async (request, response) => {
+  const page = getSimplePageConfig(request.params.key)
+  if (!page) return response.status(404).json({ error: 'unknown_page' })
+  page.publishedContent = structuredClone(page.draftContent)
+  page.status = 'published'
+  page.publishedAt = new Date().toISOString()
+  page.updatedAt = page.publishedAt
+  await save()
+  await addAudit(request.admin, 'simple.page.publish', request.params.key, { publishedAt: page.publishedAt })
   response.json({ page })
 })
 

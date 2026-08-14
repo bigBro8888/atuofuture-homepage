@@ -79,7 +79,13 @@ textarea { resize: vertical; }
 
 .admin-panel { display: none; padding-top: 30px; }
 .admin-panel.is-active { display: block; }
-.admin-page-config-nav { display: inline-flex; gap: 5px; margin-bottom: 14px; padding: 4px; border: 1px solid #dfe6ef; border-radius: 11px; background: #fff; }
+.admin-sitemap { display: grid; gap: 8px; padding: 8px 16px 18px; }
+.admin-sitemap__row { display: grid; grid-template-columns: 1.1fr 1.2fr .7fr auto; gap: 12px; align-items: center; width: 100%; padding: 12px 14px; border: 1px solid #e3e9f1; border-radius: 12px; background: #f8fafc; text-align: left; }
+.admin-sitemap__row:hover { border-color: #b9d0ff; background: #f3f7ff; }
+.admin-sitemap__row strong { font-size: 13px; }
+.admin-sitemap__row code { color: #1769ff; font-size: 12px; }
+.admin-sitemap__row span { color: #8290a6; font-size: 11px; }
+.admin-sitemap__row em { color: #1769ff; font-size: 11px; font-style: normal; font-weight: 700; }
 .admin-page-config-nav button { padding: 8px 15px; border: 0; border-radius: 8px; color: #667085; background: transparent; font-size: 10px; font-weight: 700; }
 .admin-page-config-nav button.is-active { color: #fff; background: #1769ff; }
 .admin-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }

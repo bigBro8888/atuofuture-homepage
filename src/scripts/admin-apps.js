@@ -1,10 +1,18 @@
+import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
+
 const API = '/api/admin'
-const state = { user: null, app: null, homePage: null, aboutPage: null }
+const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '' }
 const titles = {
-  overview: ['官网后台概览', '网站内容、App 下载与发布状态'],
-  home: ['官网首页', '编辑草稿并发布官网核心运营内容'],
-  about: ['关于我们', '编辑公司介绍、客户与联系方式'],
-  config: ['App 下载页', '管理下载页文案、Banner、商店链接与按钮'],
+  overview: ['页面目录', '每个前台路径对应一块后台配置，结构与官网导航一致'],
+  site: ['全站设置', 'Logo、品牌名、顶栏按钮与联系方式'],
+  home: ['官网首页', '路径 / · 编辑草稿并发布'],
+  about: ['关于我们', '路径 /about/ · 编辑草稿并发布'],
+  'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏标题与 Banner'],
+  'page-agents': ['空间智能体', '路径 /agents/ · 首屏标题与 Banner'],
+  'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏标题与 Banner'],
+  'page-news': ['新闻中心', '路径 /news/ · 列表页标题'],
+  'page-ai-token': ['AI Token', '路径 /ai-token/ · 首屏标题'],
+  config: ['App 下载页', '路径 /app-download/ · 文案、Banner、商店链接'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
   analytics: ['下载统计', '查看匿名点击趋势和终端分布'],
   users: ['账号权限', '按职责管理后台访问权限'],
@@ -64,6 +72,19 @@ function showDesktopBannerPreview(source) {
   preview.hidden = false
 }
 
+function renderSitemap() {
+  const host = document.querySelector('[data-sitemap]')
+  if (!host) return
+  host.innerHTML = ADMIN_SITEMAP.map((item) => `
+    <button type="button" class="admin-sitemap__row" data-jump="${escapeHtml(item.hash)}">
+      <strong>${escapeHtml(item.label)}</strong>
+      <code>${escapeHtml(item.path)}</code>
+      <span>${escapeHtml(item.group)}</span>
+      <em>进入配置</em>
+    </button>
+  `).join('')
+}
+
 function showAdmin(user) {
   state.user = user
   document.querySelector('[data-login-view]').hidden = true
@@ -72,6 +93,7 @@ function showAdmin(user) {
   document.querySelector('[data-user-role]').textContent = roleNames[user.role] || user.role
   document.querySelector('[data-user-avatar]').textContent = (user.name || user.email).slice(0, 1).toUpperCase()
   document.querySelectorAll('[data-super-only]').forEach((element) => { element.hidden = user.role !== 'super_admin' })
+  renderSitemap()
   const initial = location.hash.replace('#', '')
   loadOverview()
   if (initial && titles[initial] && initial !== 'overview') openTab(initial, { skipHash: true })
@@ -99,8 +121,9 @@ async function loadOverview() {
 
 function openTab(name, options = {}) {
   if (!titles[name]) name = 'overview'
+  const panelName = name.startsWith('page-') ? 'simple' : name
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === name))
-  document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === name))
+  document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === panelName))
   const [title, subtitle] = titles[name]
   document.querySelector('[data-page-title]').textContent = title
   document.querySelector('[data-page-subtitle]').textContent = subtitle
@@ -108,11 +131,14 @@ function openTab(name, options = {}) {
   if (!options.skipHash && location.hash !== `#${name}`) {
     history.replaceState(null, '', `#${name}`)
   }
+  if (name === 'overview') renderSitemap()
+  if (name === 'site') loadSitePage()
   if (name === 'config') {
     loadConfig()
     window.scrollTo({ top: 0 })
     updateAnchorState()
   }
+  if (name.startsWith('page-')) loadSimplePage(name.slice('page-'.length))
   if (name === 'home') loadHomePage()
   if (name === 'about') loadAboutPage()
   if (name === 'releases') loadReleases()
@@ -487,6 +513,125 @@ async function saveAboutDraft({ quiet = false } = {}) {
   return page
 }
 
+function updateSiteStatus(page) {
+  document.querySelector('[data-site-draft-time]').textContent = `草稿更新：${dateTime(page.updatedAt)}`
+  document.querySelector('[data-site-publish-status]').textContent = page.publishedAt ? `已发布 ${dateTime(page.publishedAt)}` : '尚未发布'
+}
+
+function renderSiteEditor(content) {
+  const editor = document.querySelector('[data-site-editor]')
+  editor.innerHTML = `
+    <fieldset>
+      <legend>品牌与 Logo</legend>
+      <div class="admin-form-grid">
+        ${homeField('brandZh', '中文品牌名', content.brandZh)}
+        ${homeField('brandEn', '英文品牌名', content.brandEn)}
+        ${homeField('logoLightUrl', '浅色底 Logo', content.logoLightUrl, { image: true, wide: true, help: '用于官网顶栏、页脚。可填 /assets/... 或上传' })}
+        ${homeField('logoDarkUrl', '深色/下载页 Logo', content.logoDarkUrl, { image: true, wide: true, help: '用于 App 下载页等浅色或彩色 Logo' })}
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>顶栏按钮</legend>
+      <div class="admin-form-grid">
+        ${homeField('downloadLabel', '下载按钮文案', content.downloadLabel)}
+        ${homeField('demoLabel', '预约演示文案', content.demoLabel)}
+        <label><span>显示下载入口</span><select data-home-field="showAppDownload"><option value="true" ${content.showAppDownload !== false ? 'selected' : ''}>显示</option><option value="false" ${content.showAppDownload === false ? 'selected' : ''}>隐藏</option></select></label>
+        <label><span>显示 AI Token 入口</span><select data-home-field="showTokenEntry"><option value="true" ${content.showTokenEntry !== false ? 'selected' : ''}>显示</option><option value="false" ${content.showTokenEntry === false ? 'selected' : ''}>隐藏</option></select></label>
+        ${homeField('tokenSiteUrl', 'AI Token 外链', content.tokenSiteUrl, { wide: true })}
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>联系方式</legend>
+      <div class="admin-form-grid">
+        ${homeField('email', '主邮箱', content.email)}
+        ${homeField('emailSecondary', '备用邮箱', content.emailSecondary)}
+        ${homeField('phoneDisplay', '电话展示', content.phoneDisplay)}
+        ${homeField('phone', '电话号码', content.phone)}
+        ${homeField('address', '地址', content.address, { wide: true })}
+        ${homeField('footerNote', '页脚版权', content.footerNote, { wide: true })}
+      </div>
+    </fieldset>
+  `
+}
+
+function collectSiteContent() {
+  const content = {}
+  document.querySelectorAll('[data-site-editor] [data-home-field]').forEach((field) => {
+    const value = field.tagName === 'SELECT' ? field.value === 'true' : field.value
+    content[field.dataset.homeField] = value
+  })
+  return content
+}
+
+async function loadSitePage() {
+  try {
+    const { page } = await api('/pages/site')
+    state.sitePage = page
+    renderSiteEditor(page.draftContent)
+    updateSiteStatus(page)
+  } catch (error) { toast(error.message, true) }
+}
+
+async function saveSiteDraft({ quiet = false } = {}) {
+  const content = collectSiteContent()
+  const { page } = await api('/pages/site/draft', { method: 'PUT', body: JSON.stringify({ content }) })
+  state.sitePage = page
+  updateSiteStatus(page)
+  if (!quiet) toast('全站设置草稿已保存')
+  return page
+}
+
+function updateSimpleStatus(page) {
+  document.querySelector('[data-simple-draft-time]').textContent = `草稿更新：${dateTime(page.updatedAt)}`
+  document.querySelector('[data-simple-publish-status]').textContent = page.publishedAt ? `已发布 ${dateTime(page.publishedAt)}` : '尚未发布'
+}
+
+function renderSimpleEditor(key, content) {
+  const item = ADMIN_SITEMAP.find((entry) => entry.key === key)
+  document.querySelector('[data-simple-title]').textContent = item?.label || key
+  document.querySelector('[data-simple-path]').textContent = item?.path || `/${key}/`
+  const preview = document.querySelector('[data-simple-preview]')
+  if (preview && item) preview.href = item.path === '全站共用' ? '/' : item.path
+  document.querySelector('[data-simple-editor]').innerHTML = `
+    <fieldset>
+      <legend>首屏信息</legend>
+      <div class="admin-form-grid">
+        ${homeField('title', '主标题', content.title, { wide: true })}
+        ${homeField('subtitle', '说明', content.subtitle, { type: 'textarea', wide: true })}
+        ${homeField('bannerUrl', 'Banner 图', content.bannerUrl, { image: true, wide: true })}
+        ${homeField('ctaLabel', '主按钮文案', content.ctaLabel)}
+      </div>
+    </fieldset>
+  `
+}
+
+function collectSimpleContent() {
+  const content = {}
+  document.querySelectorAll('[data-simple-editor] [data-home-field]').forEach((field) => {
+    content[field.dataset.homeField] = field.value
+  })
+  return content
+}
+
+async function loadSimplePage(key) {
+  state.simpleKey = key
+  try {
+    const { page } = await api(`/pages/simple/${encodeURIComponent(key)}`)
+    state.simplePage = page
+    renderSimpleEditor(key, page.draftContent)
+    updateSimpleStatus(page)
+  } catch (error) { toast(error.message, true) }
+}
+
+async function saveSimpleDraft({ quiet = false } = {}) {
+  const content = collectSimpleContent()
+  const { page } = await api(`/pages/simple/${encodeURIComponent(state.simpleKey)}/draft`, { method: 'PUT', body: JSON.stringify({ content }) })
+  state.simplePage = page
+  updateSimpleStatus(page)
+  if (!quiet) toast('页面草稿已保存，线上内容尚未改变')
+  return page
+}
+
 async function loadReleases() {
   try {
     const { releases } = await api('/releases')
@@ -570,6 +715,10 @@ document.querySelector('[data-logout]').addEventListener('click', async () => {
 })
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => openTab(button.dataset.tab)))
 document.querySelectorAll('[data-jump]').forEach((button) => button.addEventListener('click', () => openTab(button.dataset.jump)))
+document.querySelector('[data-sitemap]')?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-jump]')
+  if (button) openTab(button.dataset.jump)
+})
 window.addEventListener('hashchange', () => {
   const name = location.hash.replace('#', '')
   if (name && titles[name]) openTab(name, { skipHash: true })
@@ -788,6 +937,98 @@ document.querySelector('[data-about-publish]').addEventListener('click', async (
     toast(error.message, true)
   } finally {
     button.disabled = false
+  }
+})
+
+document.querySelector('[data-site-form]').addEventListener('submit', (event) => event.preventDefault())
+document.querySelector('[data-site-save]').addEventListener('click', async (event) => {
+  const button = event.currentTarget
+  button.disabled = true
+  try { await saveSiteDraft() } catch (error) { toast(error.message, true) } finally { button.disabled = false }
+})
+document.querySelector('[data-site-publish]').addEventListener('click', async (event) => {
+  if (!window.confirm('确认发布全站设置？Logo 与联系方式会立即出现在所有页面。')) return
+  const button = event.currentTarget
+  button.disabled = true
+  try {
+    await saveSiteDraft({ quiet: true })
+    const { page } = await api('/pages/site/publish', { method: 'POST' })
+    state.sitePage = page
+    updateSiteStatus(page)
+    toast('全站设置已发布')
+  } catch (error) { toast(error.message, true) } finally { button.disabled = false }
+})
+document.querySelector('[data-site-editor]').addEventListener('input', (event) => {
+  const field = event.target.closest('[data-home-field]')
+  if (!field) return
+  const preview = document.querySelector(`[data-site-editor] [data-home-preview-for="${field.dataset.homeField}"]`)
+  if (preview) {
+    preview.src = field.value.trim()
+    preview.hidden = !field.value.trim()
+  }
+})
+document.querySelector('[data-site-editor]').addEventListener('change', async (event) => {
+  const upload = event.target.closest('[data-home-upload-for]')
+  const file = upload?.files?.[0]
+  if (!upload || !file) return
+  upload.disabled = true
+  try {
+    const formData = new FormData()
+    formData.append('image', file)
+    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+    const field = document.querySelector(`[data-site-editor] [data-home-field="${upload.dataset.homeUploadFor}"]`)
+    field.value = url
+    field.dispatchEvent(new Event('input', { bubbles: true }))
+    toast('图片上传成功，请继续保存草稿')
+  } catch (error) { toast(error.message, true) } finally {
+    upload.disabled = false
+    upload.value = ''
+  }
+})
+
+document.querySelector('[data-simple-form]').addEventListener('submit', (event) => event.preventDefault())
+document.querySelector('[data-simple-save]').addEventListener('click', async (event) => {
+  const button = event.currentTarget
+  button.disabled = true
+  try { await saveSimpleDraft() } catch (error) { toast(error.message, true) } finally { button.disabled = false }
+})
+document.querySelector('[data-simple-publish]').addEventListener('click', async (event) => {
+  if (!window.confirm('确认发布该页首屏内容？')) return
+  const button = event.currentTarget
+  button.disabled = true
+  try {
+    await saveSimpleDraft({ quiet: true })
+    const { page } = await api(`/pages/simple/${encodeURIComponent(state.simpleKey)}/publish`, { method: 'POST' })
+    state.simplePage = page
+    updateSimpleStatus(page)
+    toast('页面首屏已发布')
+  } catch (error) { toast(error.message, true) } finally { button.disabled = false }
+})
+document.querySelector('[data-simple-editor]').addEventListener('input', (event) => {
+  const field = event.target.closest('[data-home-field]')
+  if (!field) return
+  const preview = document.querySelector(`[data-simple-editor] [data-home-preview-for="${field.dataset.homeField}"]`)
+  if (preview) {
+    preview.src = field.value.trim()
+    preview.hidden = !field.value.trim()
+  }
+})
+document.querySelector('[data-simple-editor]').addEventListener('change', async (event) => {
+  const upload = event.target.closest('[data-home-upload-for]')
+  const file = upload?.files?.[0]
+  if (!upload || !file) return
+  upload.disabled = true
+  try {
+    const formData = new FormData()
+    formData.append('image', file)
+    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+    const field = document.querySelector(`[data-simple-editor] [data-home-field="${upload.dataset.homeUploadFor}"]`)
+    field.value = url
+    field.dispatchEvent(new Event('input', { bubbles: true }))
+    toast('图片上传成功，请继续保存草稿')
+  } catch (error) { toast(error.message, true) } finally {
+    upload.disabled = false
+    upload.value = ''
   }
 })
 

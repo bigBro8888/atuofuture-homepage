@@ -1,4 +1,5 @@
 import { NEWS_ITEMS, formatNewsDate } from '../data/news.js'
+import { loadSimplePageContent } from '../services/site-settings-api.js'
 
 function esc(str = '') {
   return String(str)
@@ -69,6 +70,7 @@ function renderPage(active) {
   const count = pool.length
 
   return `
+    ${cmsHero?.title ? `<section class="nx-intro"><div class="nx-shell"><h1>${esc(cmsHero.title)}</h1>${cmsHero.subtitle ? `<p>${esc(cmsHero.subtitle)}</p>` : ''}</div></section>` : ''}
     ${renderLead(featured)}
 
     <section class="nx-main">
@@ -102,9 +104,12 @@ function renderPage(active) {
     </section>`
 }
 
-export function initNewsPage() {
+let cmsHero = null
+
+export async function initNewsPage() {
   const root = document.getElementById('news-root')
   if (!root) return
+  cmsHero = await loadSimplePageContent('news')
 
   let active = '全部'
 

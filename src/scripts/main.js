@@ -14,6 +14,7 @@ import { initAiTokenStore } from './ai-token-store.js'
 import { initOrder } from './order.js'
 import { loadAndApplyHomeContent } from './home-content.js'
 import { loadAndApplyAboutContent } from './about-page.js'
+import { loadAndApplySiteSettings } from '../services/site-settings-api.js'
 import { initSiemensHome } from './home-siemens.js'
 
 function initTokenLinks() {
@@ -743,6 +744,7 @@ function bootstrap() {
   initNavScroll('header, .site-header')
   initSiteNav()
   initSiteFooter()
+  void loadAndApplySiteSettings()
   initMobileDrawer()
   initAppDownloadModal()
   initAgentChat()
