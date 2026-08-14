@@ -34,7 +34,34 @@ function setText(selector, value) {
   document.querySelectorAll(selector).forEach((element) => { element.textContent = value })
 }
 
-// 展示图完全依赖后台配置，未配置时隐藏整块占位，避免留下空白卡片。
+function cssImageUrl(url) {
+  return `url(${JSON.stringify(url)})`
+}
+
+function imageExists(url) {
+  return new Promise((resolve) => {
+    const image = new Image()
+    image.onload = () => resolve(image.naturalWidth > 80 && image.naturalHeight > 80)
+    image.onerror = () => resolve(false)
+    image.src = url
+  })
+}
+
+async function applyDesktopBanner(preferred) {
+  const hero = document.querySelector('.download-hero')
+  if (!hero) return
+  const candidates = [...new Set([
+    preferred,
+    '/images/app-download/back.png',
+    '/app-download/pic/back.png',
+  ].filter(Boolean))]
+  for (const url of candidates) {
+    if (await imageExists(url)) {
+      hero.style.setProperty('--download-desktop-banner', cssImageUrl(url))
+      return
+    }
+  }
+}
 function hideHeroVisual() {
   const visual = document.querySelector('.download-hero__visual')
   if (visual) visual.style.display = 'none'
@@ -259,9 +286,7 @@ async function init() {
     setText('[data-download-title]', config.downloadTitle || config.name)
     setText('[data-download-subtitle]', config.downloadSubtitle || '随时随地，连接并管理智能空间')
     setText('[data-download-description]', config.downloadDescription || config.description)
-    if (config.desktopBannerUrl) {
-      document.querySelector('.download-hero')?.style.setProperty('--download-desktop-banner', `url("${config.desktopBannerUrl}")`)
-    }
+    await applyDesktopBanner(config.desktopBannerUrl)
     if (config.iconUrl) {
       const icon = document.querySelector('[data-app-icon]')
       const fallback = document.querySelector('[data-app-icon-fallback]')

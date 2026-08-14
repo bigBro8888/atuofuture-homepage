@@ -104,7 +104,22 @@
 .download-wechat-tip .download-browser-open { flex: 0 0 auto; padding: 7px 11px; border: 1px solid rgba(255,255,255,.32); border-radius: 999px; color: #fff; font-size: 10px; font-weight: 700; white-space: nowrap; background: rgba(255,255,255,.12); }
 .download-wechat-tip button .download-native-symbol { font-size: 18px; }
 
-.download-hero { position: relative; width: 100%; min-height: 0; aspect-ratio: 21 / 9; padding: 72px 40px 0; overflow: hidden; background-image: var(--download-desktop-banner, linear-gradient(120deg, #e9f0fa 0%, #f8fbff 48%, #edf3fc 100%)); background-position: center; background-size: cover; background-repeat: no-repeat; }
+.download-hero {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 21 / 9;
+  padding: 72px 40px 0;
+  overflow: hidden;
+  background-color: #f4f7fb;
+  background-image:
+    linear-gradient(90deg, rgba(250,249,255,.86) 0%, rgba(250,249,255,.55) 34%, rgba(250,249,255,.12) 56%, transparent 72%),
+    var(--download-desktop-banner, none),
+    linear-gradient(120deg, #e9f0fa 0%, #f8fbff 48%, #edf3fc 100%);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
 .download-hero__inner { position: relative; z-index: 1; width: min(1200px, 100%); height: 100%; min-height: 0; margin: 0 auto; display: grid; grid-template-columns: 48% 52%; align-items: center; gap: 24px; }
 .download-chip { display: inline-flex; padding: 7px 14px; border: 1px solid rgba(0, 86, 198, 0.18); border-radius: 999px; color: var(--dl-primary); background: rgba(16, 109, 244, 0.06); font-size: 11px; font-weight: 600; }
 .download-mobile-top { display: none; }

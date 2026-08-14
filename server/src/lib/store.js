@@ -62,7 +62,7 @@ const initialData = {
     description: '通过 Artink App 管理电子纸设备、同步创意内容，开启更轻盈的智能生活。',
     iconUrl: '',
     heroImageUrl: '',
-    desktopBannerUrl: '',
+    desktopBannerUrl: '/images/app-download/back.png',
     downloadTitle: 'AI投屏',
     downloadSubtitle: '随时随地，连接并管理智能空间',
     downloadDescription: '通过 Artink App 管理电子纸设备、同步创意内容，开启更轻盈的智能生活。',
