@@ -3949,23 +3949,13 @@ body.demo-modal-open {
   gap: 48px;
   align-items: center;
 }
-.ab-nowrap { white-space: nowrap; }
-.ab-hero__text h1,
-.ab-story__copy h2,
-.ab-values__title,
-.ab-footprint h2,
-.ab-offer h2,
-.ab-path h2,
-.ab-contact h2 {
-  text-wrap: balance;
-  line-break: strict;
-}
 .ab-hero__text h1 {
   margin: 0 0 18px;
-  font-size: clamp(32px, 3.8vw, 46px);
-  line-height: 1.25;
+  font-size: clamp(36px, 4.6vw, 52px);
+  line-height: 1.18;
   font-weight: 750;
   color: #12122a;
+  white-space: nowrap;
 }
 .ab-hero__text p {
   margin: 0 0 28px;
