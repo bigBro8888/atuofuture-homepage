@@ -20,105 +20,202 @@ export function initSiemensHome() {
   bindDemoAnchors()
 }
 
-const HOME_AGENT_CASES = {
-  space: {
-    scene: '总部办公',
-    title: '人一进办公室，灯和空调自己开了',
-    story: '行政不用再逐间开关。有人来就准备好环境，人走了自动降载，设备异常直接派工单。',
-  },
-  energy: {
-    scene: '楼宇节能',
-    title: '没人的会议室，不再空转一整晚',
-    story: '能耗不再只看总表。空着就降载，异常用电及时告警，月底能说清电花在哪。',
-  },
-  meeting: {
-    scene: '会议室',
-    title: '开会前十分钟，投影和空调已经准备好',
-    story: '预约确认后，签到、开门、开灯、接通云视频按顺序完成。开完会，房间自动复位。',
-  },
-  exhibition: {
-    scene: '企业展厅',
-    title: '参观走到哪，大屏和讲解跟到哪',
-    story: '讲解不用靠人临时切内容。灯光、孪生和大屏按动线切换，参观体验每次都一样稳。',
-  },
-  visitor: {
-    scene: '大堂接待',
-    title: '访客到门口，通行和接待已经安排好',
-    story: '邀约发出后，登记、门禁、停车和接待人通知一次完成。客人走了，权限自动收回。',
-  },
-  opc: {
-    scene: '商业招商',
-    title: '一套房源，从带看到签约不断档',
-    story: '可租空间统一上架，客户线上看、预约带看、签约回传，招商不用在多个系统里来回搬。',
-  },
-  hospitality: {
-    scene: '酒店公寓',
-    title: '办完入住，门锁和房间已经准备好',
-    story: '分房、授权、客房设备和水电计费连在一条链上。退房后权限回收，房态自动复位。',
-  },
-  asset: {
-    scene: '资产盘点',
-    title: '设备在哪、谁借走了，当场能查到',
-    story: '盘点、领用、借还不再靠表格对。位置和状态留痕，找设备和审计都更快。',
-  },
+const HOME_AGENT_MOMENTS = {
+  space: [
+    { title: '人员进入', caption: '灯光、空调和信息屏自动准备', image: '/images/agents/space.jpg' },
+    { title: '空间无人', caption: '灯光、空调自动降载', image: '/images/agents/meeting.jpg' },
+    { title: '设备异常', caption: '自动定位问题并发起工单', image: '/images/agents/energy.jpg' },
+  ],
+  energy: [
+    { title: '空间空闲', caption: '照明和空调按占用降载', image: '/images/agents/energy.jpg' },
+    { title: '用电异常', caption: '分区计量立刻标出空耗', image: '/images/solutions/building.jpg' },
+    { title: '策略生效', caption: '回读曲线，确认已经省下来', image: '/images/agents/space.jpg' },
+  ],
+  meeting: [
+    { title: '会前十分钟', caption: '门禁、投影和空调已准备', image: '/images/agents/meeting.jpg' },
+    { title: '会议进行', caption: '签到、中控和云视频按序接通', image: '/images/agents/visitor.jpg' },
+    { title: '会议结束', caption: '设备关闭，房间自动复位', image: '/images/agents/space.jpg' },
+  ],
+  exhibition: [
+    { title: '参观开始', caption: '讲解脚本和大屏同步启动', image: '/images/agents/exhibition.jpg' },
+    { title: '走到节点', caption: '灯光、孪生和展项跟着切换', image: '/images/agents/hero.jpg' },
+    { title: '参观结束', caption: '路径和互动数据自动沉淀', image: '/images/solutions/campus.jpg' },
+  ],
+  visitor: [
+    { title: '客户到访', caption: '门禁、派梯和接待人已安排', image: '/images/agents/visitor.jpg' },
+    { title: '会面进行', caption: '通行权限和会议室已准备', image: '/images/solutions/building.jpg' },
+    { title: '访客离场', caption: '权限自动收回，记录留档', image: '/images/agents/meeting.jpg' },
+  ],
+  opc: [
+    { title: '房源上架', caption: '可招商空间统一对外展示', image: '/images/solutions/commercial.jpg' },
+    { title: '预约带看', caption: '客户线上看，现场带看不断档', image: '/images/solutions/campus.jpg' },
+    { title: '签约入驻', caption: '订单回传，招商进度可跟踪', image: '/images/agents/opc.jpg' },
+  ],
+  hospitality: [
+    { title: '办理入住', caption: '分房完成，门锁权限已下发', image: '/images/solutions/hotel.jpg' },
+    { title: '客房准备', caption: '灯光、空调和场景自动就位', image: '/images/solutions/apartment.jpg' },
+    { title: '办理退房', caption: '水电计费、权限回收、房态复位', image: '/images/agents/hospitality.jpg' },
+  ],
+  asset: [
+    { title: '现场盘点', caption: '设备在哪，当场能查到', image: '/images/agents/asset.jpg' },
+    { title: '借还调拨', caption: '谁领走、调到哪，全程留痕', image: '/images/solutions/campus.jpg' },
+    { title: '状态异常', caption: '位置或状态变化立刻告警', image: '/images/solutions/building.jpg' },
+  ],
 }
 
 function mountHomeAgentStories() {
   const root = document.querySelector('[data-home-agent-stories]')
   if (!root) return
 
+  const total = AGENTS_OVERVIEW.length
+  root.className = 'sm-agent-stage'
   root.innerHTML = `
-    <div class="sm-tabs__nav" role="tablist" aria-orientation="vertical" aria-label="空间场景">
-      <span class="sm-tabs__indicator" aria-hidden="true"></span>
+    <div class="sm-agent-stage__frame">
+      <div class="sm-agent-film" data-agent-film>
+        ${AGENTS_OVERVIEW.map((a, i) => {
+          const moments = HOME_AGENT_MOMENTS[a.id] || [
+            { title: a.shortName, caption: a.blurb, image: a.sceneImage },
+          ]
+          return `
+          <article class="sm-agent-slide${i === 0 ? ' is-active' : ''}" data-agent-slide="${esc(a.id)}" aria-hidden="${i === 0 ? 'false' : 'true'}">
+            <div class="sm-agent-tri">
+              ${moments
+                .map(
+                  (m) => `
+                <figure class="sm-agent-panel">
+                  <img src="${esc(m.image)}" alt="" />
+                  <figcaption>
+                    <strong>${esc(m.title)}</strong>
+                    <span>${esc(m.caption)}</span>
+                  </figcaption>
+                </figure>`
+                )
+                .join('')}
+            </div>
+          </article>`
+        }).join('')}
+      </div>
+    </div>
+    <div class="sm-agent-scroll" data-agent-scroll>
+      <button type="button" class="sm-agent-scroll__track" data-agent-scroll-track aria-label="切换智能体场景">
+        <span class="sm-agent-scroll__thumb" data-agent-scroll-thumb style="width:${100 / total}%"></span>
+      </button>
+      <div class="sm-agent-scroll__marks" aria-hidden="true">
+        ${AGENTS_OVERVIEW.map(() => '<span></span>').join('')}
+      </div>
+    </div>
+    <div class="sm-agent-names" role="tablist" aria-label="空间智能体">
+      <span class="sm-agent-names__ink" data-agent-ink aria-hidden="true"></span>
       ${AGENTS_OVERVIEW.map(
         (a, i) => `
         <button
           type="button"
-          class="sm-tabs__tab${i === 0 ? ' is-active' : ''}"
+          class="sm-agent-name${i === 0 ? ' is-active' : ''}"
           role="tab"
           aria-selected="${i === 0 ? 'true' : 'false'}"
-          data-sm-tab="${esc(a.id)}"
-        >${esc(a.shortName)}</button>`
+          data-agent-tab="${esc(a.id)}"
+        >${esc(a.name)}</button>`
       ).join('')}
     </div>
-    <div class="sm-tabs__panels">
-      ${AGENTS_OVERVIEW.map((a, i) => {
-        const c = HOME_AGENT_CASES[a.id] || { scene: a.shortName, title: a.value, story: a.blurb }
-        return `
-        <div class="sm-tabs__panel${i === 0 ? ' is-active' : ''}" data-sm-panel="${esc(a.id)}" role="tabpanel"${i ? ' hidden' : ''}>
-          <article class="sm-story">
-            <div class="sm-story__media" style="background-image:url('${esc(a.sceneImage)}')">
-              <div class="sm-story__caption">
-                <span>场景故事 · ${esc(c.scene)}</span>
-                <strong>${esc(c.title)}</strong>
-              </div>
-            </div>
-            <div class="sm-story__copy">
-              <p class="sm-story__lead">${esc(c.story)}</p>
-              <ol class="sm-story__flow">
-                <li>
-                  <span>当时</span>
-                  <p>${esc(a.trigger)}</p>
-                </li>
-                <li>
-                  <span>系统做了</span>
-                  <p>${esc(a.action)}</p>
-                </li>
-                <li>
-                  <span>结果</span>
-                  <p>${esc(a.result)}</p>
-                </li>
-              </ol>
-              <a class="sm-text-link" href="agent-detail/?id=${encodeURIComponent(a.id)}">
-                看这个场景怎么落地
-                <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
-              </a>
-            </div>
-          </article>
-        </div>`
-      }).join('')}
-    </div>
   `
+
+  bindHomeAgentStage(root)
+}
+
+function bindHomeAgentStage(root) {
+  const tabs = [...root.querySelectorAll('[data-agent-tab]')]
+  const slides = [...root.querySelectorAll('[data-agent-slide]')]
+  const film = root.querySelector('[data-agent-film]')
+  const names = root.querySelector('.sm-agent-names')
+  const ink = root.querySelector('[data-agent-ink]')
+  const thumb = root.querySelector('[data-agent-scroll-thumb]')
+  const trackBtn = root.querySelector('[data-agent-scroll-track]')
+  if (!tabs.length || !slides.length || !film) return
+
+  let index = 0
+  let dragging = false
+  let didDrag = false
+
+  function moveInk(instant = false) {
+    const tab = tabs[index]
+    if (!ink || !names || !tab) return
+    const navRect = names.getBoundingClientRect()
+    const tabRect = tab.getBoundingClientRect()
+    if (instant) ink.style.transition = 'none'
+    ink.style.width = `${tabRect.width}px`
+    ink.style.transform = `translate3d(${tabRect.left - navRect.left}px, 0, 0)`
+    if (instant) {
+      ink.offsetHeight
+      ink.style.transition = ''
+    }
+  }
+
+  function goTo(next, { instant = false } = {}) {
+    const total = tabs.length
+    const wrapped = ((next % total) + total) % total
+    if (wrapped === index && !instant) return
+    const prev = index
+    index = wrapped
+
+    tabs.forEach((tab, i) => {
+      const on = i === index
+      tab.classList.toggle('is-active', on)
+      tab.setAttribute('aria-selected', on ? 'true' : 'false')
+    })
+    slides.forEach((slide, i) => {
+      slide.classList.toggle('is-active', i === index)
+      slide.classList.toggle('is-prev', i === prev && i !== index)
+      slide.setAttribute('aria-hidden', i === index ? 'false' : 'true')
+    })
+    if (thumb) {
+      thumb.style.width = `${100 / total}%`
+      thumb.style.transform = `translate3d(${index * 100}%, 0, 0)`
+    }
+    moveInk(instant)
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => goTo(i))
+  })
+
+  trackBtn?.addEventListener('click', (e) => {
+    if (didDrag) {
+      didDrag = false
+      return
+    }
+    const rect = trackBtn.getBoundingClientRect()
+    const ratio = (e.clientX - rect.left) / rect.width
+    goTo(Math.min(tabs.length - 1, Math.floor(ratio * tabs.length)))
+  })
+
+  trackBtn?.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return
+    dragging = true
+    didDrag = false
+    trackBtn.setPointerCapture(e.pointerId)
+  })
+  trackBtn?.addEventListener('pointermove', (e) => {
+    if (!dragging) return
+    didDrag = true
+    const rect = trackBtn.getBoundingClientRect()
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    goTo(Math.round(ratio * (tabs.length - 1)))
+  })
+  trackBtn?.addEventListener('pointerup', () => {
+    dragging = false
+  })
+
+  let touchX = 0
+  film.addEventListener('touchstart', (e) => {
+    touchX = e.changedTouches[0].clientX
+  }, { passive: true })
+  film.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchX
+    if (Math.abs(dx) > 48) goTo(index + (dx < 0 ? 1 : -1))
+  }, { passive: true })
+
+  window.addEventListener('resize', () => moveInk(true))
+  requestAnimationFrame(() => goTo(0, { instant: true }))
 }
 
 function bindDemoAnchors() {
