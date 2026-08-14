@@ -7,6 +7,7 @@ import { config } from '../../config.js'
 import { addAudit, save } from '../../lib/store.js'
 import { requireAuth } from '../admin/auth.js'
 import { getHomePageConfig, validateHomeContent } from './home-service.js'
+import { getAboutPageConfig, validateAboutContent } from './about-service.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -61,6 +62,49 @@ adminPagesRouter.post('/home/publish', requireAuth('config:write'), async (reque
   page.updatedAt = page.publishedAt
   await save()
   await addAudit(request.admin, 'home.content.publish', 'home', { publishedAt: page.publishedAt })
+  response.json({ page })
+})
+
+publicPagesRouter.get('/about', (request, response) => {
+  const page = getAboutPageConfig()
+  if (page.status !== 'published' || !page.publishedContent) {
+    return response.status(404).json({ error: 'page_not_published' })
+  }
+  response.set('Cache-Control', 'no-cache')
+  response.json({
+    pageKey: page.pageKey,
+    locale: page.locale,
+    content: page.publishedContent,
+    publishedAt: page.publishedAt,
+  })
+})
+
+adminPagesRouter.get('/about', requireAuth(), (request, response) => {
+  const page = getAboutPageConfig()
+  response.json({ page })
+})
+
+adminPagesRouter.put('/about/draft', requireAuth('config:write'), async (request, response) => {
+  try {
+    const page = getAboutPageConfig()
+    page.draftContent = validateAboutContent(request.body?.content)
+    page.updatedAt = new Date().toISOString()
+    await save()
+    await addAudit(request.admin, 'about.content.update', 'about', { sections: Object.keys(page.draftContent) })
+    response.json({ page })
+  } catch (error) {
+    response.status(400).json({ error: 'invalid_about_content', message: error.message })
+  }
+})
+
+adminPagesRouter.post('/about/publish', requireAuth('config:write'), async (request, response) => {
+  const page = getAboutPageConfig()
+  page.publishedContent = structuredClone(page.draftContent)
+  page.status = 'published'
+  page.publishedAt = new Date().toISOString()
+  page.updatedAt = page.publishedAt
+  await save()
+  await addAudit(request.admin, 'about.content.publish', 'about', { publishedAt: page.publishedAt })
   response.json({ page })
 })
 

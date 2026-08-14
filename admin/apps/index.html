@@ -56,6 +56,7 @@
               <button type="button" data-jump="releases"><span class="material-symbols-outlined">upload</span><b>发布 Android 新版本</b><small>上传 APK 并更新版本源</small></button>
               <button type="button" data-jump="config"><span class="material-symbols-outlined">app_settings_alt</span><b>编辑下载页</b><small>维护介绍与 iOS 链接</small></button>
               <button type="button" data-page-config-open="home"><span class="material-symbols-outlined">web</span><b>编辑官网首页</b><small>保存草稿并确认发布</small></button>
+              <button type="button" data-page-config-open="about"><span class="material-symbols-outlined">apartment</span><b>编辑关于我们</b><small>公司介绍、客户与联系方式</small></button>
               <button type="button" data-jump="analytics"><span class="material-symbols-outlined">query_stats</span><b>查看下载趋势</b><small>按平台和浏览器分析</small></button>
             </div>
           </article>
@@ -67,7 +68,7 @@
       </section>
 
       <section class="admin-panel" data-panel="config">
-        <div class="admin-page-config-nav"><button class="is-active" type="button" data-page-config-tab="config">App 下载页</button><button type="button" data-page-config-tab="home">官网首页</button></div>
+        <div class="admin-page-config-nav"><button class="is-active" type="button" data-page-config-tab="config">App 下载页</button><button type="button" data-page-config-tab="home">官网首页</button><button type="button" data-page-config-tab="about">关于我们</button></div>
         <nav class="admin-anchor-nav" data-anchor-nav aria-label="下载页配置分区">
           <button class="is-active" type="button" data-anchor="basic">应用基础信息</button>
           <button type="button" data-anchor="copy">首屏文案</button>
@@ -146,7 +147,7 @@
       </section>
 
       <section class="admin-panel" data-panel="home">
-        <div class="admin-page-config-nav"><button type="button" data-page-config-tab="config">App 下载页</button><button class="is-active" type="button" data-page-config-tab="home">官网首页</button></div>
+        <div class="admin-page-config-nav"><button type="button" data-page-config-tab="config">App 下载页</button><button class="is-active" type="button" data-page-config-tab="home">官网首页</button><button type="button" data-page-config-tab="about">关于我们</button></div>
         <form class="admin-card admin-home-form" data-home-form>
           <div class="admin-card__head">
             <div><h2>PC 首页内容</h2><p>编辑内容先保存为草稿，确认发布后访客才能看到</p></div>
@@ -157,6 +158,22 @@
             <a href="/" target="_blank">预览当前线上首页</a>
             <button type="button" data-home-save>保存草稿</button>
             <button type="button" data-home-publish>发布到首页</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-panel" data-panel="about">
+        <div class="admin-page-config-nav"><button type="button" data-page-config-tab="config">App 下载页</button><button type="button" data-page-config-tab="home">官网首页</button><button class="is-active" type="button" data-page-config-tab="about">关于我们</button></div>
+        <form class="admin-card admin-home-form" data-about-form>
+          <div class="admin-card__head">
+            <div><h2>关于我们内容</h2><p>编辑草稿并发布后，访客在 /about/ 看到最新文案与图片</p></div>
+            <div class="admin-home-status"><span data-about-draft-time>草稿未加载</span><b data-about-publish-status>--</b></div>
+          </div>
+          <div class="admin-home-editor" data-about-editor></div>
+          <div class="admin-home-actions">
+            <a href="/about/" target="_blank">预览当前线上关于我们</a>
+            <button type="button" data-about-save>保存草稿</button>
+            <button type="button" data-about-publish>发布到关于我们</button>
           </div>
         </form>
       </section>

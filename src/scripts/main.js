@@ -13,6 +13,7 @@ import { initNewsDetailPage } from './news-detail.js'
 import { initAiTokenStore } from './ai-token-store.js'
 import { initOrder } from './order.js'
 import { loadAndApplyHomeContent } from './home-content.js'
+import { loadAndApplyAboutContent } from './about-page.js'
 import { initSiemensHome } from './home-siemens.js'
 
 function initTokenLinks() {
@@ -734,6 +735,9 @@ function bootstrap() {
   // 首页 CMS 内容不阻塞首屏初始化（线上无 API 时最多会卡 2.5s）
   if (page === 'home') {
     void loadAndApplyHomeContent()
+  }
+  if (page === 'about') {
+    void loadAndApplyAboutContent()
   }
 
   initNavScroll('header, .site-header')

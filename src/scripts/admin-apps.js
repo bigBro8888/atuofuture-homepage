@@ -1,8 +1,8 @@
 const API = '/api/admin'
-const state = { user: null, app: null, homePage: null }
+const state = { user: null, app: null, homePage: null, aboutPage: null }
 const titles = {
   overview: ['App 下载概览', '监控当前版本与分发服务状态'],
-  config: ['页面配置', '统一管理 App 下载页与官网首页'],
+  config: ['页面配置', '统一管理 App 下载页、官网首页与关于我们'],
   home: ['PC 首页内容', '编辑草稿并发布官网核心运营内容'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
   analytics: ['下载统计', '查看匿名点击趋势和终端分布'],
@@ -117,9 +117,14 @@ function openPageConfig(name) {
   document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === name))
   document.querySelectorAll('[data-page-config-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.pageConfigTab === name))
   document.querySelector('[data-page-title]').textContent = '页面配置'
-  document.querySelector('[data-page-subtitle]').textContent = name === 'home' ? '编辑官网首页并控制发布' : '管理 App 下载页桌面端与移动端内容'
+  document.querySelector('[data-page-subtitle]').textContent = name === 'home'
+    ? '编辑官网首页并控制发布'
+    : name === 'about'
+      ? '编辑关于我们并控制发布'
+      : '管理 App 下载页桌面端与移动端内容'
   document.querySelector('.admin-sidebar').classList.remove('is-open')
   if (name === 'home') loadHomePage()
+  else if (name === 'about') loadAboutPage()
   else {
     loadConfig()
     window.scrollTo({ top: 0 })
@@ -334,6 +339,162 @@ async function saveHomeDraft({ quiet = false } = {}) {
   state.homePage = page
   updateHomeStatus(page)
   if (!quiet) toast('PC 首页草稿已保存，线上内容尚未改变')
+  return page
+}
+
+function aboutField(path, label, value, options = {}) {
+  const type = options.type || 'text'
+  const control = type === 'textarea'
+    ? `<textarea data-about-field="${path}" rows="${options.rows || 3}">${escapeHtml(value)}</textarea>`
+    : `<input data-about-field="${path}" type="text" value="${escapeHtml(value)}" />`
+  const media = options.image
+    ? `<div class="admin-home-media">
+        <img data-about-preview-for="${path}" src="${escapeHtml(value)}" alt="" ${value ? '' : 'hidden'} />
+        <label class="admin-home-upload">上传本地图片<input type="file" accept="image/jpeg,image/png,image/webp" data-about-upload-for="${path}" /></label>
+      </div>`
+    : ''
+  return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${control}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
+}
+
+function renderAboutEditor(content) {
+  const editor = document.querySelector('[data-about-editor]')
+  editor.innerHTML = `
+    <fieldset>
+      <legend>首屏主张</legend>
+      <div class="admin-form-grid">
+        ${aboutField('hero.title', '主标题', content.hero.title)}
+        ${aboutField('hero.body', '介绍', content.hero.body, { type: 'textarea', wide: true, rows: 4 })}
+        ${aboutField('hero.primaryLabel', '主按钮文字', content.hero.primaryLabel)}
+        ${aboutField('hero.primaryHref', '主按钮链接', content.hero.primaryHref)}
+        ${aboutField('hero.secondaryLabel', '次按钮文字', content.hero.secondaryLabel)}
+        ${aboutField('hero.secondaryHref', '次按钮链接', content.hero.secondaryHref)}
+        ${aboutField('hero.imageUrl', '右侧图片', content.hero.imageUrl, { image: true, wide: true })}
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>公司介绍</legend>
+      <div class="admin-form-grid">
+        ${aboutField('story.label', '小标题', content.story.label)}
+        ${aboutField('story.title', '标题', content.story.title)}
+        ${aboutField('story.body1', '第一段', content.story.body1, { type: 'textarea', wide: true })}
+        ${aboutField('story.body2', '第二段', content.story.body2, { type: 'textarea', wide: true })}
+        ${aboutField('story.imageUrl', '左侧图片', content.story.imageUrl, { image: true, wide: true })}
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>使命、价值观与愿景</legend>
+      <div class="admin-form-grid">
+        ${aboutField('values.label', '小标题', content.values.label)}
+        ${aboutField('values.title', '标题', content.values.title)}
+      </div>
+      <div class="admin-home-list">${content.values.items.map((item, index) => `
+        <details ${index === 0 ? 'open' : ''}>
+          <summary>${escapeHtml(item.title)}</summary>
+          <div class="admin-form-grid">
+            ${aboutField(`values.items.${index}.icon`, '图标名称', item.icon)}
+            ${aboutField(`values.items.${index}.title`, '名称', item.title)}
+            ${aboutField(`values.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}
+          </div>
+        </details>`).join('')}
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>客户与网络</legend>
+      <div class="admin-form-grid">
+        ${aboutField('partners.label', '小标题', content.partners.label)}
+        ${aboutField('partners.title', '标题', content.partners.title)}
+        ${aboutField('partners.intro', '说明', content.partners.intro, { type: 'textarea', wide: true })}
+      </div>
+      <div class="admin-home-list">${content.partners.items.map((item, index) => `
+        <details>
+          <summary>客户 ${index + 1}</summary>
+          <div class="admin-form-grid">
+            ${aboutField(`partners.items.${index}.name`, '名称', item.name)}
+          </div>
+        </details>`).join('')}
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>责任与承诺</legend>
+      <div class="admin-form-grid">
+        ${aboutField('duties.label', '小标题', content.duties.label)}
+        ${aboutField('duties.title', '标题', content.duties.title)}
+      </div>
+      <div class="admin-home-list">${content.duties.items.map((item, index) => `
+        <details>
+          <summary>${escapeHtml(item.title)}</summary>
+          <div class="admin-form-grid">
+            ${aboutField(`duties.items.${index}.title`, '标题', item.title)}
+            ${aboutField(`duties.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}
+            ${aboutField(`duties.items.${index}.imageUrl`, '图片', item.imageUrl, { image: true, wide: true })}
+          </div>
+        </details>`).join('')}
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>加入我们</legend>
+      <div class="admin-form-grid">
+        ${aboutField('join.label', '小标题', content.join.label)}
+        ${aboutField('join.title', '标题', content.join.title)}
+      </div>
+      <div class="admin-home-list">${content.join.items.map((item, index) => `
+        <details>
+          <summary>${escapeHtml(item.title)}</summary>
+          <div class="admin-form-grid">
+            ${aboutField(`join.items.${index}.step`, '序号', item.step)}
+            ${aboutField(`join.items.${index}.title`, '标题', item.title)}
+            ${aboutField(`join.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}
+          </div>
+        </details>`).join('')}
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>联系我们</legend>
+      <div class="admin-form-grid">
+        ${aboutField('contact.label', '小标题', content.contact.label)}
+        ${aboutField('contact.title', '标题', content.contact.title)}
+        ${aboutField('contact.lead', '说明', content.contact.lead, { type: 'textarea', wide: true })}
+        ${aboutField('contact.email1', '邮箱 1', content.contact.email1)}
+        ${aboutField('contact.email2', '邮箱 2', content.contact.email2)}
+        ${aboutField('contact.addressZh', '中文地址', content.contact.addressZh, { wide: true })}
+        ${aboutField('contact.addressEn', '英文地址', content.contact.addressEn, { wide: true })}
+        ${aboutField('contact.joinTitle', '加入标题', content.contact.joinTitle)}
+        ${aboutField('contact.joinBody', '加入说明', content.contact.joinBody, { type: 'textarea', wide: true })}
+        ${aboutField('contact.joinLabel', '按钮文字', content.contact.joinLabel)}
+        ${aboutField('contact.joinHref', '按钮链接', content.contact.joinHref, { wide: true })}
+      </div>
+    </fieldset>
+  `
+}
+
+function collectAboutContent() {
+  const content = structuredClone(state.aboutPage.draftContent)
+  document.querySelectorAll('[data-about-field]').forEach((field) => {
+    setHomeValue(content, field.dataset.aboutField, field.value.trim())
+  })
+  return content
+}
+
+function updateAboutStatus(page) {
+  document.querySelector('[data-about-draft-time]').textContent = `草稿更新：${dateTime(page.updatedAt)}`
+  document.querySelector('[data-about-publish-status]').textContent = page.publishedAt ? `已发布 ${dateTime(page.publishedAt)}` : '尚未发布'
+}
+
+async function loadAboutPage() {
+  try {
+    const { page } = await api('/pages/about')
+    state.aboutPage = page
+    renderAboutEditor(page.draftContent)
+    updateAboutStatus(page)
+  } catch (error) { toast(error.message, true) }
+}
+
+async function saveAboutDraft({ quiet = false } = {}) {
+  const content = collectAboutContent()
+  const { page } = await api('/pages/about/draft', { method: 'PUT', body: JSON.stringify({ content }) })
+  state.aboutPage = page
+  updateAboutStatus(page)
+  if (!quiet) toast('关于我们草稿已保存，线上内容尚未改变')
   return page
 }
 
@@ -569,6 +730,69 @@ document.querySelector('[data-home-publish]').addEventListener('click', async (e
     state.homePage = page
     updateHomeStatus(page)
     toast('PC 首页内容已正式发布')
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    button.disabled = false
+  }
+})
+
+document.querySelector('[data-about-editor]').addEventListener('input', (event) => {
+  const field = event.target.closest('[data-about-field]')
+  if (!field) return
+  const preview = document.querySelector(`[data-about-preview-for="${field.dataset.aboutField}"]`)
+  if (preview) {
+    preview.src = field.value.trim()
+    preview.hidden = !field.value.trim()
+  }
+})
+
+document.querySelector('[data-about-form]').addEventListener('submit', (event) => event.preventDefault())
+
+document.querySelector('[data-about-editor]').addEventListener('change', async (event) => {
+  const upload = event.target.closest('[data-about-upload-for]')
+  const file = upload?.files?.[0]
+  if (!upload || !file) return
+  const path = upload.dataset.aboutUploadFor
+  upload.disabled = true
+  try {
+    const formData = new FormData()
+    formData.append('image', file)
+    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+    const field = document.querySelector(`[data-about-field="${path}"]`)
+    field.value = url
+    field.dispatchEvent(new Event('input', { bubbles: true }))
+    toast('图片上传成功，请继续保存草稿')
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    upload.disabled = false
+    upload.value = ''
+  }
+})
+
+document.querySelector('[data-about-save]').addEventListener('click', async (event) => {
+  const button = event.currentTarget
+  button.disabled = true
+  try {
+    await saveAboutDraft()
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    button.disabled = false
+  }
+})
+
+document.querySelector('[data-about-publish]').addEventListener('click', async (event) => {
+  if (!window.confirm('确认将当前草稿发布到关于我们？发布后访客将看到新内容。')) return
+  const button = event.currentTarget
+  button.disabled = true
+  try {
+    await saveAboutDraft({ quiet: true })
+    const { page } = await api('/pages/about/publish', { method: 'POST' })
+    state.aboutPage = page
+    updateAboutStatus(page)
+    toast('关于我们内容已正式发布')
   } catch (error) {
     toast(error.message, true)
   } finally {
