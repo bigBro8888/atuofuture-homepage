@@ -464,7 +464,10 @@ function collectHomeContent() {
     content.agents.items = (content.agents.items || []).slice(0, agentCount)
   }
   const solCount = document.querySelectorAll('[data-list-item="solutions"]').length
-  if (solCount) content.solutions.items = (content.solutions.items || []).slice(0, solCount)
+  if (solCount) {
+    content.solutions = content.solutions || {}
+    content.solutions.items = (content.solutions.items || []).slice(0, solCount)
+  }
   const newsCount = document.querySelectorAll('[data-list-item="news"]').length
   if (newsCount) {
     content.news = content.news || {}
