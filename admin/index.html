@@ -12,7 +12,7 @@
       <div class="admin-brand"><span>A</span><div><strong>安托未来</strong><small>WEBSITE ADMIN</small></div></div>
       <h1>登录官网后台</h1>
       <p>统一管理官网内容、App 下载页、版本发布与数据。</p>
-      <label><span>管理员邮箱</span><input type="email" name="email" autocomplete="username" required /></label>
+      <label><span>账号</span><input type="text" name="account" autocomplete="username" required /></label>
       <label><span>密码</span><input type="password" name="password" autocomplete="current-password" required /></label>
       <div class="admin-form-message" data-login-message aria-live="polite"></div>
       <button type="submit">安全登录</button>
@@ -265,10 +265,9 @@
       <section class="admin-panel" data-panel="users">
         <div class="admin-grid-two">
           <form class="admin-card admin-user-form" data-user-form>
-            <div class="admin-card__head"><div><h2>创建管理员</h2><p>按职责分配最小必要权限</p></div></div>
-            <label><span>姓名</span><input name="name" required /></label>
-            <label><span>邮箱</span><input type="email" name="email" required /></label>
-            <label><span>初始密码</span><input type="password" name="password" minlength="10" required /></label>
+            <div class="admin-card__head"><div><h2>创建管理员</h2><p>填写账号和密码即可，密码 6 位起，格式不限</p></div></div>
+            <label><span>用户账号</span><input name="account" required minlength="2" maxlength="40" autocomplete="off" placeholder="登录用的账号，不必是邮箱" /></label>
+            <label><span>密码</span><input type="password" name="password" minlength="6" required autocomplete="new-password" placeholder="至少 6 位，大小写和符号随意" /></label>
             <label><span>角色</span><select name="role"><option value="editor">运营编辑</option><option value="publisher">发布管理员</option><option value="analyst">数据查看员</option><option value="super_admin">超级管理员</option></select></label>
             <button type="submit">创建账号</button>
           </form>

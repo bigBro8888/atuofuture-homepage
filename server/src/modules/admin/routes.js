@@ -39,8 +39,8 @@ adminRouter.post('/login', async (request, response) => {
   }
   if (attempts.count >= 8) return response.status(429).json({ error: 'too_many_attempts' })
 
-  const email = String(request.body?.email || '').trim().toLowerCase()
-  const user = db().adminUsers.find((item) => item.email === email && item.enabled)
+  const account = String(request.body?.account || request.body?.email || '').trim().toLowerCase()
+  const user = db().adminUsers.find((item) => item.email === account && item.enabled)
   if (!user || !(await bcrypt.compare(String(request.body?.password || ''), user.passwordHash))) {
     attempts.count += 1
     loginAttempts.set(key, attempts)
@@ -169,17 +169,25 @@ adminRouter.get('/users', requireAuth('users:write'), (request, response) => {
 })
 
 adminRouter.post('/users', requireAuth('users:write'), async (request, response) => {
-  const email = String(request.body.email || '').trim().toLowerCase()
+  const account = String(request.body.account || request.body.email || '').trim().toLowerCase()
   const password = String(request.body.password || '')
-  const role = String(request.body.role || '')
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 10 || !validRoles.has(role)) {
-    return response.status(400).json({ error: 'invalid_user', message: '请检查邮箱、角色，密码至少 10 位' })
+  const role = String(request.body.role || 'editor')
+  if (!account || /\s/.test(account) || account.length < 2 || account.length > 40) {
+    return response.status(400).json({ error: 'invalid_user', message: '账号 2–40 个字符，不能有空格' })
   }
-  if (db().adminUsers.some((user) => user.email === email)) return response.status(409).json({ error: 'email_exists' })
+  if (password.length < 6 || password.length > 128) {
+    return response.status(400).json({ error: 'invalid_user', message: '密码至少 6 位即可，格式不限' })
+  }
+  if (!validRoles.has(role)) {
+    return response.status(400).json({ error: 'invalid_user', message: '请选择角色' })
+  }
+  if (db().adminUsers.some((user) => user.email === account)) {
+    return response.status(409).json({ error: 'account_exists', message: '该账号已存在' })
+  }
   const user = {
     id: randomUUID(),
-    email,
-    name: String(request.body.name || email).trim().slice(0, 80),
+    email: account,
+    name: String(request.body.name || account).trim().slice(0, 80) || account,
     passwordHash: await bcrypt.hash(password, 12),
     role,
     enabled: true,
@@ -187,7 +195,7 @@ adminRouter.post('/users', requireAuth('users:write'), async (request, response)
   }
   db().adminUsers.push(user)
   await save()
-  await addAudit(request.admin, 'admin_user.create', user.id, { email, role })
+  await addAudit(request.admin, 'admin_user.create', user.id, { account, role })
   response.status(201).json({ user: publicUser(user) })
 })
 

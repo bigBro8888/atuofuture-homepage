@@ -31,9 +31,11 @@ const roleNames = { super_admin: '超级管理员', editor: '运营编辑', publ
 const API_ERROR_TEXT = {
   authentication_required: '登录已失效，请重新登录',
   invalid_session: '登录已失效，请重新登录',
-  invalid_credentials: '邮箱或密码不正确',
+  invalid_credentials: '账号或密码不正确',
   permission_denied: '没有操作权限',
   too_many_attempts: '尝试次数过多，请稍后再试',
+  account_exists: '该账号已存在',
+  email_exists: '该账号已存在',
 }
 
 async function api(path, options = {}) {
@@ -835,7 +837,7 @@ async function loadUsers() {
   try {
     const { users } = await api('/users')
     document.querySelector('[data-user-list]').innerHTML = users.map((user) => `
-      <div class="admin-user-item"><div><strong>${escapeHtml(user.name)}</strong><small>${escapeHtml(user.email)} · ${dateTime(user.createdAt)}</small></div><em>${escapeHtml(roleNames[user.role] || user.role)}</em></div>
+      <div class="admin-user-item"><div><strong>${escapeHtml(user.email)}</strong><small>${escapeHtml(roleNames[user.role] || user.role)} · ${dateTime(user.createdAt)}</small></div></div>
     `).join('')
   } catch (error) { toast(error.message, true) }
 }
@@ -862,7 +864,7 @@ document.querySelector('[data-login-form]').addEventListener('submit', async (ev
     form.reset()
     showAdmin(user)
   } catch (error) {
-    message.textContent = error.message === 'invalid_credentials' ? '邮箱或密码错误' : error.message
+    message.textContent = error.message === 'invalid_credentials' ? '账号或密码错误' : error.message
   } finally { button.disabled = false }
 })
 
