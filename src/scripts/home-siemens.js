@@ -12,6 +12,45 @@ function esc(str = '') {
     .replace(/"/g, '&quot;')
 }
 
+export function applyCmsHomeSolutions(items) {
+  const track = document.querySelector('[data-sm-sol-track]')
+  if (!track || !items?.length) return
+  track.innerHTML = items.map((item) => `
+    <article class="sm-sol-card" data-home-sol-card>
+      <div class="sm-sol-card__media"${item.imageUrl ? ` style="background-image:url('${esc(item.imageUrl)}')"` : ''}><span class="sm-sol-card__badge">${esc(item.chip || '')}</span></div>
+      <div class="sm-sol-card__body"><h3>${esc(item.title || '')}</h3><p>${esc(item.description || '')}</p><a href="${esc(item.linkUrl || 'solutions/')}">了解更多信息 <span class="material-symbols-outlined">arrow_forward</span></a></div>
+    </article>`).join('')
+  initSolutionsCarousel()
+}
+
+export function applyCmsHomeNews(items) {
+  const grid = document.querySelector('.sm-news-grid')
+  if (!grid || !items?.length) return
+  grid.innerHTML = items.map((item) => `
+    <a class="sm-news-card" href="${esc(item.linkUrl || 'news/')}" data-home-news-item>
+      <div class="sm-news-card__media"${item.imageUrl ? ` style="background-image:url('${esc(item.imageUrl)}')"` : ''}></div>
+      <strong class="sm-kicker">${esc(item.category || '')}</strong>
+      <h3>${esc(item.title || '')}</h3>
+      <p>${esc(item.description || '')}</p>
+    </a>`).join('')
+}
+
+export function applyCmsHomePitch(items) {
+  const grid = document.querySelector('[data-home-pitch-grid]')
+  if (!grid || !items?.length) return
+  grid.innerHTML = items.map((item) => {
+    const variant = item.variant === 'wave' || item.variant === 'mint' ? item.variant : 'photo'
+    const demo = item.openDemo ? ' data-demo-modal-open' : ''
+    const href = item.openDemo ? '#' : esc(item.href || '/')
+    const bg = variant === 'photo' && item.imageUrl ? ` style="background-image:url('${esc(item.imageUrl)}')"` : ''
+    return `<a class="sm-pitch__tile sm-pitch__tile--${variant}" href="${href}"${demo}${bg}>
+      <span>${esc(item.kicker || '')}</span>
+      <strong>${esc(item.title || '')}</strong>
+      <em>${esc(item.moreLabel || '阅读更多信息')} <span class="material-symbols-outlined">arrow_forward</span></em>
+    </a>`
+  }).join('')
+}
+
 export function initSiemensHome() {
   mountHomeAgentStories()
   initHeroCarousel()
@@ -541,8 +580,10 @@ function initSolutionsCarousel() {
   const dotsWrap = root.querySelector('[data-sm-sol-dots]')
   const prev = root.querySelector('[data-sm-sol-prev]')
   const next = root.querySelector('[data-sm-sol-next]')
-  const cards = [...root.querySelectorAll('.sm-sol-card')]
-  if (!track || !dotsWrap || !cards.length) return
+  if (!track || !dotsWrap) return
+
+  const cards = () => [...root.querySelectorAll('.sm-sol-card')]
+  if (!cards().length) return
 
   let page = 0
 
@@ -553,7 +594,7 @@ function initSolutionsCarousel() {
   }
 
   function pageCount() {
-    return Math.max(1, Math.ceil(cards.length / perPage()))
+    return Math.max(1, Math.ceil(cards().length / perPage()))
   }
 
   function renderDots() {
@@ -570,9 +611,10 @@ function initSolutionsCarousel() {
   }
 
   function go(i) {
+    const list = cards()
     const count = pageCount()
     page = Math.max(0, Math.min(i, count - 1))
-    const first = cards[page * perPage()]
+    const first = list[page * perPage()]
     const offset = first ? first.offsetLeft : 0
     track.style.transform = `translateX(-${offset}px)`
     dotsWrap.querySelectorAll('.sm-sol-pager__dot').forEach((dot, n) => {
@@ -582,12 +624,15 @@ function initSolutionsCarousel() {
     if (next) next.disabled = page >= count - 1
   }
 
-  prev?.addEventListener('click', () => go(page - 1))
-  next?.addEventListener('click', () => go(page + 1))
-  window.addEventListener('resize', () => {
-    renderDots()
-    go(Math.min(page, pageCount() - 1))
-  })
+  if (!root._solBound) {
+    root._solBound = true
+    prev?.addEventListener('click', () => go(page - 1))
+    next?.addEventListener('click', () => go(page + 1))
+    window.addEventListener('resize', () => {
+      renderDots()
+      go(Math.min(page, pageCount() - 1))
+    })
+  }
 
   renderDots()
   go(0)

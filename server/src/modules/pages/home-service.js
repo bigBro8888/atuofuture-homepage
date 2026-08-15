@@ -104,6 +104,12 @@ export const defaultHomeContent = {
   pitch: {
     label: '探索安托未来',
     title: '我们把物理空间，做成可感知、可调度、可运营的智能系统',
+    items: [
+      { variant: 'photo', kicker: '关于我们', title: '了解是什么驱使我们去升级空间', href: '/about/', moreLabel: '阅读更多信息', imageUrl: '/images/home-advantages/advantage-open-interface.webp', openDemo: false },
+      { variant: 'wave', kicker: '智能体', title: '八大空间智能体如何改变运营？', href: '/agents/', moreLabel: '阅读更多信息', imageUrl: '', openDemo: false },
+      { variant: 'mint', kicker: '预约演示', title: '变革从一次方案沟通开始。', href: '#', moreLabel: '了解更多信息', imageUrl: '', openDemo: true },
+      { variant: 'photo', kicker: '智能硬件', title: '端边云一体，开放可集成，也可自闭环。', href: '/hardware/', moreLabel: '阅读更多信息', imageUrl: '/images/home-advantages/advantage-hardware-system.webp', openDemo: false },
+    ],
   },
 }
 
@@ -179,12 +185,12 @@ export function validateHomeContent(value = {}) {
       subtitle: cleanText(solutions.subtitle, defaultHomeContent.solutions.subtitle, 500),
       moreLabel: cleanText(solutions.moreLabel, defaultHomeContent.solutions.moreLabel, 60),
       moreUrl: cleanUrl(solutions.moreUrl, defaultHomeContent.solutions.moreUrl),
-      items: fixedItems(solutions.items, defaultHomeContent.solutions.items, (item, fallback) => ({
+      items: listItems(solutions.items, defaultHomeContent.solutions.items, (item, fallback) => ({
         chip: cleanText(item.chip, fallback.chip, 40),
         title: cleanText(item.title, fallback.title, 100),
         description: cleanText(item.description, fallback.description, 500),
-        tags: (Array.isArray(item.tags) ? item.tags : fallback.tags).slice(0, 6).map((tag) => cleanText(tag, '', 30)).filter(Boolean),
-        imageUrl: cleanUrl(item.imageUrl),
+        tags: (Array.isArray(item.tags) ? item.tags : fallback.tags || []).slice(0, 6).map((tag) => cleanText(tag, '', 30)).filter(Boolean),
+        imageUrl: cleanUrl(item.imageUrl, fallback.imageUrl),
         linkUrl: cleanUrl(item.linkUrl, fallback.linkUrl),
       })),
     },
@@ -237,7 +243,7 @@ export function validateHomeContent(value = {}) {
       subtitle: cleanText(news.subtitle, defaultHomeContent.news.subtitle, 300),
       moreLabel: cleanText(news.moreLabel, defaultHomeContent.news.moreLabel, 30),
       moreUrl: cleanUrl(news.moreUrl, defaultHomeContent.news.moreUrl),
-      items: fixedItems(news.items, defaultHomeContent.news.items, (item, fallback) => ({
+      items: listItems(news.items, defaultHomeContent.news.items, (item, fallback) => ({
         category: cleanText(item.category, fallback.category, 20),
         title: cleanText(item.title, fallback.title, 80),
         description: cleanText(item.description, fallback.description, 200),
@@ -248,6 +254,15 @@ export function validateHomeContent(value = {}) {
     pitch: {
       label: cleanText(pitch.label, defaultHomeContent.pitch.label, 40),
       title: cleanText(pitch.title, defaultHomeContent.pitch.title, 120),
+      items: listItems(pitch.items, defaultHomeContent.pitch.items, (item, fallback) => ({
+        variant: ['photo', 'wave', 'mint'].includes(item.variant) ? item.variant : (fallback.variant || 'photo'),
+        kicker: cleanText(item.kicker, fallback.kicker, 40),
+        title: cleanText(item.title, fallback.title, 120),
+        href: cleanUrl(item.href, fallback.href || '/'),
+        moreLabel: cleanText(item.moreLabel, fallback.moreLabel || '阅读更多信息', 30),
+        imageUrl: cleanUrl(item.imageUrl, fallback.imageUrl),
+        openDemo: Boolean(item.openDemo),
+      })),
     },
   }
 }
@@ -283,6 +298,13 @@ export function getHomePageConfig() {
       ...structuredClone(defaultHomeContent.agents),
       ...page.draftContent.agents,
       items: structuredClone(defaultHomeContent.agents.items),
+    }
+  }
+  if (!page.draftContent.pitch?.items?.length) {
+    page.draftContent.pitch = {
+      ...structuredClone(defaultHomeContent.pitch),
+      ...page.draftContent.pitch,
+      items: structuredClone(defaultHomeContent.pitch.items),
     }
   }
   return page

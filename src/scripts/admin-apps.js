@@ -6,9 +6,9 @@ const HOME_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏轮播', desc: '多屏大图，可新增和逐屏编辑' },
   { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
   { id: 'agents', no: '03', title: '空间智能体', desc: '八个智能体可逐个改图和文案' },
-  { id: 'solutions', no: '04', title: '产品与方案', desc: '方案横滑卡片' },
-  { id: 'news', no: '05', title: '新闻动态', desc: '三列新闻卡片' },
-  { id: 'pitch', no: '06', title: '探索安托未来', desc: '底部宫格导语' },
+  { id: 'solutions', no: '04', title: '产品与方案', desc: '方案卡可新增删除' },
+  { id: 'news', no: '05', title: '新闻动态', desc: '新闻卡可新增删除' },
+  { id: 'pitch', no: '06', title: '探索安托未来', desc: '底部宫格卡片可新增删除' },
 ]
 const titles = {
   overview: ['页面目录', '每个前台路径对应一块后台配置，结构与官网导航一致'],
@@ -234,9 +234,17 @@ async function loadConfig() {
 
 function homeField(path, label, value, options = {}) {
   const type = options.type || 'text'
-  const field = type === 'textarea'
-    ? `<textarea data-home-field="${path}" rows="${options.rows || 3}">${escapeHtml(value ?? '')}</textarea>`
-    : `<input data-home-field="${path}" data-home-type="${type}" type="${type === 'number' ? 'number' : 'text'}" value="${escapeHtml(value ?? '')}" ${type === 'number' ? 'min="0"' : ''} />`
+  let field
+  if (type === 'textarea') {
+    field = `<textarea data-home-field="${path}" rows="${options.rows || 3}">${escapeHtml(value ?? '')}</textarea>`
+  } else if (type === 'select') {
+    const opts = (options.options || []).map(([key, text]) => `<option value="${escapeHtml(key)}"${String(value) === String(key) ? ' selected' : ''}>${escapeHtml(text)}</option>`).join('')
+    field = `<select data-home-field="${path}">${opts}</select>`
+  } else if (type === 'checkbox') {
+    field = `<input data-home-field="${path}" data-home-type="checkbox" type="checkbox"${value ? ' checked' : ''} />`
+  } else {
+    field = `<input data-home-field="${path}" data-home-type="${type}" type="${type === 'number' ? 'number' : 'text'}" value="${escapeHtml(value ?? '')}" ${type === 'number' ? 'min="0"' : ''} />`
+  }
   const media = options.image
     ? `<div class="admin-home-media">
         <img data-home-preview-for="${path}" src="${escapeHtml(value ?? '')}" alt="" ${value ? '' : 'hidden'} />
@@ -244,6 +252,14 @@ function homeField(path, label, value, options = {}) {
       </div>`
     : ''
   return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${field}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
+}
+
+function listTools(kind, index, total, min = 1) {
+  return `<span class="admin-slide-tools">
+    <button type="button" data-list-kind="${kind}" data-list-move="-1" ${index === 0 ? 'disabled' : ''}>上移</button>
+    <button type="button" data-list-kind="${kind}" data-list-move="1" ${index === total - 1 ? 'disabled' : ''}>下移</button>
+    <button type="button" data-list-kind="${kind}" data-list-remove ${total <= min ? 'disabled' : ''}>删除</button>
+  </span>`
 }
 
 function showHomeSection(id) {
@@ -337,7 +353,7 @@ function renderHomeEditor(content) {
       </fieldset>
       <fieldset data-home-section="solutions">
         <legend>产品与方案</legend>
-        <p class="admin-form-section__hint">首页横滑方案卡。点开单张编辑。</p>
+        <p class="admin-form-section__hint">首页横滑方案卡，可新增、删除、调序，发布后前台同步张数。</p>
         <div class="admin-form-grid">
           ${homeField('solutions.eyebrow', '眉题', content.solutions.eyebrow)}
           ${homeField('solutions.title', '区块标题', content.solutions.title)}
@@ -345,8 +361,12 @@ function renderHomeEditor(content) {
           ${homeField('solutions.moreLabel', '更多按钮文字', content.solutions.moreLabel)}
           ${homeField('solutions.moreUrl', '更多按钮链接', content.solutions.moreUrl)}
         </div>
-        <div class="admin-home-list">${content.solutions.items.map((item, index) => `
-          <details ${index === 0 ? 'open' : ''}><summary>方案 ${index + 1}：${escapeHtml(item.title)}</summary>
+        <div class="admin-home-list">${(content.solutions.items || []).map((item, index) => `
+          <details ${index === 0 ? 'open' : ''} data-list-item="solutions">
+            <summary>
+              <span>方案 ${index + 1}：${escapeHtml(item.title || '未填写')}</span>
+              ${listTools('solutions', index, (content.solutions.items || []).length)}
+            </summary>
             <div class="admin-form-grid">
               ${homeField(`solutions.items.${index}.chip`, '角标', item.chip)}
               ${homeField(`solutions.items.${index}.title`, '标题', item.title)}
@@ -356,10 +376,11 @@ function renderHomeEditor(content) {
               ${homeField(`solutions.items.${index}.linkUrl`, '详情链接', item.linkUrl)}
             </div>
           </details>`).join('')}</div>
+        <button type="button" class="admin-add-slide" data-list-kind="solutions" data-list-add>+ 新增一张方案卡</button>
       </fieldset>
       <fieldset data-home-section="news">
         <legend>新闻动态</legend>
-        <p class="admin-form-section__hint">首页三列新闻。完整列表在「新闻中心」页。</p>
+        <p class="admin-form-section__hint">首页新闻卡可新增、删除、调序。完整新闻中心仍在独立页面。</p>
         <div class="admin-form-grid">
           ${homeField('news.kicker', '眉题', news.kicker)}
           ${homeField('news.title', '区块标题', news.title)}
@@ -368,7 +389,11 @@ function renderHomeEditor(content) {
           ${homeField('news.moreUrl', '更多链接', news.moreUrl)}
         </div>
         <div class="admin-home-list">${(news.items || []).map((item, index) => `
-          <details ${index === 0 ? 'open' : ''}><summary>新闻 ${index + 1}：${escapeHtml(item.title)}</summary>
+          <details ${index === 0 ? 'open' : ''} data-list-item="news">
+            <summary>
+              <span>新闻 ${index + 1}：${escapeHtml(item.title || '未填写')}</span>
+              ${listTools('news', index, (news.items || []).length)}
+            </summary>
             <div class="admin-form-grid">
               ${homeField(`news.items.${index}.category`, '分类', item.category)}
               ${homeField(`news.items.${index}.title`, '标题', item.title, { wide: true })}
@@ -377,14 +402,32 @@ function renderHomeEditor(content) {
               ${homeField(`news.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, wide: true })}
             </div>
           </details>`).join('')}</div>
+        <button type="button" class="admin-add-slide" data-list-kind="news" data-list-add>+ 新增一条新闻</button>
       </fieldset>
       <fieldset data-home-section="pitch">
         <legend>探索安托未来</legend>
-        <p class="admin-form-section__hint">首页底部深蓝宫格区的标题。</p>
+        <p class="admin-form-section__hint">底部宫格每一张都是独立模块：可改样式、图、跳转，也可新增删除。</p>
         <div class="admin-form-grid">
           ${homeField('pitch.label', '小标题', pitch.label)}
           ${homeField('pitch.title', '主标题', pitch.title, { type: 'textarea', wide: true })}
         </div>
+        <div class="admin-home-list">${(pitch.items || []).map((item, index) => `
+          <details ${index === 0 ? 'open' : ''} data-list-item="pitch">
+            <summary>
+              <span>宫格 ${index + 1}：${escapeHtml(item.kicker || item.title || '未填写')}</span>
+              ${listTools('pitch', index, (pitch.items || []).length)}
+            </summary>
+            <div class="admin-form-grid">
+              ${homeField(`pitch.items.${index}.kicker`, '卡片小标题', item.kicker)}
+              ${homeField(`pitch.items.${index}.title`, '卡片主文案', item.title, { type: 'textarea', wide: true })}
+              ${homeField(`pitch.items.${index}.moreLabel`, '底部链接文字', item.moreLabel)}
+              ${homeField(`pitch.items.${index}.href`, '跳转链接', item.href)}
+              ${homeField(`pitch.items.${index}.variant`, '卡片样式', item.variant || 'photo', { type: 'select', options: [['photo', '图片卡'], ['wave', '深蓝波纹'], ['mint', '绿色纯色']] })}
+              ${homeField(`pitch.items.${index}.imageUrl`, '背景图（图片卡用）', item.imageUrl, { image: true, wide: true })}
+              ${homeField(`pitch.items.${index}.openDemo`, '点击打开预约演示', item.openDemo, { type: 'checkbox' })}
+            </div>
+          </details>`).join('')}</div>
+        <button type="button" class="admin-add-slide" data-list-kind="pitch" data-list-add>+ 新增一张宫格</button>
       </fieldset>
     </div>`
   showHomeSection(state.homeSection)
@@ -406,9 +449,11 @@ function setHomeValue(target, path, value) {
 function collectHomeContent() {
   const content = structuredClone(state.homePage.draftContent)
   document.querySelectorAll('[data-home-editor] [data-home-field]').forEach((field) => {
-    let value = field.value.trim()
-    if (field.dataset.homeType === 'number') value = Number(value)
-    if (field.dataset.homeField.endsWith('.tags')) value = value.split(/[，,]/).map((tag) => tag.trim()).filter(Boolean)
+    let value
+    if (field.dataset.homeType === 'checkbox') value = field.checked
+    else if (field.dataset.homeType === 'number') value = Number(field.value.trim())
+    else value = field.value.trim()
+    if (field.dataset.homeField.endsWith('.tags')) value = String(field.value || '').split(/[，,]/).map((tag) => tag.trim()).filter(Boolean)
     setHomeValue(content, field.dataset.homeField, value)
   })
   const heroCount = document.querySelectorAll('[data-hero-slide]').length
@@ -418,10 +463,77 @@ function collectHomeContent() {
     content.agents = content.agents || {}
     content.agents.items = (content.agents.items || []).slice(0, agentCount)
   }
+  const solCount = document.querySelectorAll('[data-list-item="solutions"]').length
+  if (solCount) content.solutions.items = (content.solutions.items || []).slice(0, solCount)
+  const newsCount = document.querySelectorAll('[data-list-item="news"]').length
+  if (newsCount) {
+    content.news = content.news || {}
+    content.news.items = (content.news.items || []).slice(0, newsCount)
+  }
+  const pitchCount = document.querySelectorAll('[data-list-item="pitch"]').length
+  if (pitchCount) {
+    content.pitch = content.pitch || {}
+    content.pitch.items = (content.pitch.items || []).slice(0, pitchCount)
+  }
   return content
 }
 
-const EMPTY_HERO_SLIDE = { label: '', title: '', description: '', actionLabel: '了解更多', actionHref: '/', background: '' }
+const EMPTY_HOME_LIST = {
+  solutions: { chip: '智能体 + 硬件', title: '新方案', description: '', tags: [], imageUrl: '', linkUrl: '/solutions/' },
+  news: { category: '公司动态', title: '新闻标题', description: '', imageUrl: '', linkUrl: '/news/' },
+  pitch: { variant: 'photo', kicker: '新入口', title: '填写导语', href: '/', moreLabel: '阅读更多信息', imageUrl: '', openDemo: false },
+}
+
+function homeListItems(content, kind) {
+  if (kind === 'solutions') {
+    content.solutions = content.solutions || {}
+    content.solutions.items = content.solutions.items || []
+    return content.solutions.items
+  }
+  if (kind === 'news') {
+    content.news = content.news || {}
+    content.news.items = content.news.items || []
+    return content.news.items
+  }
+  content.pitch = content.pitch || {}
+  content.pitch.items = content.pitch.items || []
+  return content.pitch.items
+}
+
+function addHomeListItem(kind) {
+  const content = collectHomeContent()
+  const items = homeListItems(content, kind)
+  if (items.length >= 12) {
+    toast('最多 12 条', true)
+    return
+  }
+  items.push({ ...EMPTY_HOME_LIST[kind] })
+  state.homePage.draftContent = content
+  renderHomeEditor(content)
+}
+
+function removeHomeListItem(kind, index) {
+  const content = collectHomeContent()
+  const items = homeListItems(content, kind)
+  if (items.length <= 1) {
+    toast('至少保留一条', true)
+    return
+  }
+  items.splice(index, 1)
+  state.homePage.draftContent = content
+  renderHomeEditor(content)
+}
+
+function moveHomeListItem(kind, index, offset) {
+  const content = collectHomeContent()
+  const items = homeListItems(content, kind)
+  const next = index + offset
+  if (!items[index] || next < 0 || next >= items.length) return
+  const [item] = items.splice(index, 1)
+  items.splice(next, 0, item)
+  state.homePage.draftContent = content
+  renderHomeEditor(content)
+}
 
 function addHeroSlide() {
   const content = collectHomeContent()
@@ -1029,6 +1141,30 @@ document.querySelector('[data-home-form]').addEventListener('click', (event) => 
     event.stopPropagation()
     const index = [...document.querySelectorAll('[data-agent-item]')].indexOf(agentMove.closest('[data-agent-item]'))
     if (index >= 0) moveHomeAgent(index, Number(agentMove.dataset.agentMove))
+    return
+  }
+  const listAdd = event.target.closest('[data-list-add]')
+  if (listAdd) {
+    event.preventDefault()
+    addHomeListItem(listAdd.dataset.listKind)
+    return
+  }
+  const listRemove = event.target.closest('[data-list-remove]')
+  if (listRemove) {
+    event.preventDefault()
+    event.stopPropagation()
+    const kind = listRemove.dataset.listKind
+    const index = [...document.querySelectorAll(`[data-list-item="${kind}"]`)].indexOf(listRemove.closest('[data-list-item]'))
+    if (index >= 0) removeHomeListItem(kind, index)
+    return
+  }
+  const listMove = event.target.closest('[data-list-move]')
+  if (listMove) {
+    event.preventDefault()
+    event.stopPropagation()
+    const kind = listMove.dataset.listKind
+    const index = [...document.querySelectorAll(`[data-list-item="${kind}"]`)].indexOf(listMove.closest('[data-list-item]'))
+    if (index >= 0) moveHomeListItem(kind, index, Number(listMove.dataset.listMove))
   }
 })
 

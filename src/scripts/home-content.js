@@ -1,5 +1,5 @@
 import { getHomeContent } from '../services/home-content-api.js'
-import { applyCmsHeroSlides, applyCmsHomeAgents } from './home-siemens.js'
+import { applyCmsHeroSlides, applyCmsHomeAgents, applyCmsHomeNews, applyCmsHomePitch, applyCmsHomeSolutions } from './home-siemens.js'
 
 function text(selector, value, root = document) {
   const element = root.querySelector(selector)
@@ -86,17 +86,7 @@ export function applyHomeContent(content) {
   text('[data-home-solutions-more-label]', content.solutions?.moreLabel)
   const solutionsMore = document.querySelector('[data-home-solutions-more]')
   if (solutionsMore && content.solutions?.moreUrl) solutionsMore.setAttribute('href', content.solutions.moreUrl)
-  document.querySelectorAll('[data-home-sol-card]').forEach((card, index) => {
-    const item = content.solutions?.items?.[index]
-    if (!item) return
-    text('.sm-sol-card__badge', item.chip, card)
-    text('h3', item.title, card)
-    text('p', item.description, card)
-    const media = card.querySelector('.sm-sol-card__media')
-    if (media && item.imageUrl) media.style.backgroundImage = `url("${item.imageUrl}")`
-    const link = card.querySelector('a')
-    if (link && item.linkUrl) link.setAttribute('href', item.linkUrl)
-  })
+  if (content.solutions?.items?.length) applyCmsHomeSolutions(content.solutions.items)
   document.querySelectorAll('[data-sol-card]').forEach((card, index) => {
     const item = content.solutions?.items?.[index]
     if (!item) return
@@ -146,22 +136,14 @@ export function applyHomeContent(content) {
   text('[data-home-news-more-label]', content.news?.moreLabel)
   const newsMore = document.querySelector('[data-home-news-more]')
   if (newsMore && content.news?.moreUrl) newsMore.setAttribute('href', content.news.moreUrl)
-  document.querySelectorAll('[data-home-news-item]').forEach((card, index) => {
-    const item = content.news?.items?.[index]
-    if (!item) return
-    text('.sm-kicker', item.category, card)
-    text('h3', item.title, card)
-    text('p', item.description, card)
-    if (item.linkUrl) card.setAttribute('href', item.linkUrl)
-    const media = card.querySelector('.sm-news-card__media')
-    if (media && item.imageUrl) media.style.backgroundImage = `url("${item.imageUrl}")`
-  })
+  if (content.news?.items?.length) applyCmsHomeNews(content.news.items)
 
   text('[data-home-pitch-label]', content.pitch?.label)
   if (content.pitch?.title) {
     const pitchTitle = document.querySelector('[data-home-pitch-title]')
     if (pitchTitle) pitchTitle.innerHTML = escapeHome(content.pitch.title).replace(/\n/g, '<br>')
   }
+  if (content.pitch?.items?.length) applyCmsHomePitch(content.pitch.items)
 
   if (content.heroSlides?.length) applyCmsHeroSlides(content.heroSlides)
 }
