@@ -1,4 +1,6 @@
 import { NEWS_ITEMS, getNewsById, formatNewsDate } from '../data/news.js'
+import { loadNewsFeedContent } from '../services/site-settings-api.js'
+import { hydrateNewsItem } from '../lib/format-news-body.js'
 
 function esc(str = '') {
   return String(str)
@@ -32,8 +34,9 @@ function renderSections(n) {
             <img src="${esc(n.cover)}" alt="${esc(n.title)}" loading="lazy" decoding="async" />
           </figure>`
         : ''
+      const heading = section.heading ? `<h3>${esc(section.heading)}</h3>` : ''
       return `
-        <h3>${esc(section.heading)}</h3>
+        ${heading}
         ${paras}
         ${figure}`
     })
@@ -48,8 +51,8 @@ function renderTags(tags = []) {
     </div>`
 }
 
-function renderRelated(currentId) {
-  const others = NEWS_ITEMS.filter((item) => item.id !== currentId).slice(0, 4)
+function renderRelated(currentId, allItems) {
+  const others = allItems.filter((item) => item.id !== currentId).slice(0, 4)
   if (!others.length) return ''
   return `
     <aside class="sx-news-article__related">
@@ -95,7 +98,7 @@ function renderDetail(n) {
       </div>
 
       ${renderTags(n.tags)}
-      ${renderRelated(n.id)}
+      ${renderRelated(n.id, allNewsItems)}
 
       <div class="sx-news-article__footer">
         <a class="sx-news-article__back" href="../news/">← 返回新闻列表</a>
@@ -103,10 +106,21 @@ function renderDetail(n) {
     </article>`
 }
 
-export function initNewsDetailPage() {
+let allNewsItems = NEWS_ITEMS
+
+function findNews(id) {
+  if (!id) return null
+  return allNewsItems.find((n) => n.id === id) || getNewsById(id)
+}
+
+export async function initNewsDetailPage() {
   const root = document.getElementById('news-detail-root')
   if (!root) return
+  const feed = await loadNewsFeedContent()
+  if (feed?.items?.length) {
+    allNewsItems = feed.items.map((item) => hydrateNewsItem(item)).filter(Boolean)
+  }
   const rawId = new URLSearchParams(window.location.search).get('id')
-  const news = getNewsById(rawId)
+  const news = findNews(rawId)
   root.innerHTML = news ? renderDetail(news) : renderNotFound(rawId)
 }

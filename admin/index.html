@@ -232,6 +232,23 @@
         </form>
       </section>
 
+      <section class="admin-panel" data-panel="news">
+        <form class="admin-card admin-home-form" data-news-form>
+          <div class="admin-card__head">
+            <div>
+              <h2>新闻中心</h2>
+              <p>路径 <code>/news/</code> · 点「新建新闻」填写标题和正文，保存即发布到前台</p>
+            </div>
+            <div class="admin-home-status"><span data-news-draft-time>尚未加载</span><b data-news-publish-status>--</b></div>
+          </div>
+          <div class="admin-home-editor" data-news-editor></div>
+          <div class="admin-home-actions">
+            <a href="/news/" target="_blank">预览新闻中心</a>
+            <button type="button" data-news-publish>发布列表页标题</button>
+          </div>
+        </form>
+      </section>
+
       <section class="admin-panel" data-panel="releases">
         <div class="admin-grid-release">
           <form class="admin-card admin-release-form" data-release-form>

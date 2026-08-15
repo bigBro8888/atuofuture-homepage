@@ -1,5 +1,6 @@
 import { NEWS_ITEMS, formatNewsDate } from '../data/news.js'
-import { loadSimplePageContent } from '../services/site-settings-api.js'
+import { loadNewsFeedContent, loadSimplePageContent } from '../services/site-settings-api.js'
+import { hydrateNewsItem } from '../lib/format-news-body.js'
 
 function esc(str = '') {
   return String(str)
@@ -23,8 +24,11 @@ function catKey(category) {
   return 'default'
 }
 
+let newsItems = NEWS_ITEMS
+let cmsHero = null
+
 function filterItems(active) {
-  return active === '全部' ? NEWS_ITEMS : NEWS_ITEMS.filter((n) => n.category === active)
+  return active === '全部' ? newsItems : newsItems.filter((n) => n.category === active)
 }
 
 function renderLead(n) {
@@ -104,12 +108,17 @@ function renderPage(active) {
     </section>`
 }
 
-let cmsHero = null
-
 export async function initNewsPage() {
   const root = document.getElementById('news-root')
   if (!root) return
-  cmsHero = await loadSimplePageContent('news')
+  const [feed, simple] = await Promise.all([loadNewsFeedContent(), loadSimplePageContent('news')])
+  if (feed?.items?.length) {
+    newsItems = feed.items.map((item) => hydrateNewsItem(item)).filter(Boolean)
+    cmsHero = { title: feed.title || simple?.title, subtitle: feed.subtitle || simple?.subtitle }
+  } else {
+    newsItems = NEWS_ITEMS
+    cmsHero = simple
+  }
 
   let active = '全部'
 

@@ -10,6 +10,7 @@ import { getHomePageConfig, validateHomeContent } from './home-service.js'
 import { getAboutPageConfig, validateAboutContent } from './about-service.js'
 import { getSiteSettingsPage, validateSiteSettings } from './site-settings-service.js'
 import { SIMPLE_PAGE_KEYS, getSimplePageConfig, validateSimplePage } from './simple-page-service.js'
+import { getNewsFeedConfig, validateNewsFeedContent } from './news-feed-service.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -145,6 +146,47 @@ adminPagesRouter.post('/site/publish', requireAuth('config:write'), async (reque
   page.updatedAt = page.publishedAt
   await save()
   await addAudit(request.admin, 'site.settings.publish', 'site', { publishedAt: page.publishedAt })
+  response.json({ page })
+})
+
+publicPagesRouter.get('/news-feed', (request, response) => {
+  const page = getNewsFeedConfig()
+  if (page.status !== 'published' || !page.publishedContent) {
+    return response.status(404).json({ error: 'page_not_published' })
+  }
+  response.set('Cache-Control', 'no-cache')
+  response.json({
+    pageKey: page.pageKey,
+    content: page.publishedContent,
+    publishedAt: page.publishedAt,
+  })
+})
+
+adminPagesRouter.get('/news-feed', requireAuth(), (request, response) => {
+  response.json({ page: getNewsFeedConfig() })
+})
+
+adminPagesRouter.put('/news-feed/draft', requireAuth('config:write'), async (request, response) => {
+  try {
+    const page = getNewsFeedConfig()
+    page.draftContent = validateNewsFeedContent(request.body?.content)
+    page.updatedAt = new Date().toISOString()
+    await save()
+    await addAudit(request.admin, 'news.feed.update', 'news-feed', { count: page.draftContent.items.length })
+    response.json({ page })
+  } catch (error) {
+    response.status(400).json({ error: 'invalid_news_feed', message: error.message })
+  }
+})
+
+adminPagesRouter.post('/news-feed/publish', requireAuth('config:write'), async (request, response) => {
+  const page = getNewsFeedConfig()
+  page.publishedContent = structuredClone(page.draftContent)
+  page.status = 'published'
+  page.publishedAt = new Date().toISOString()
+  page.updatedAt = page.publishedAt
+  await save()
+  await addAudit(request.admin, 'news.feed.publish', 'news-feed', { publishedAt: page.publishedAt })
   response.json({ page })
 })
 

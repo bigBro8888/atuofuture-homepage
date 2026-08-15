@@ -55,3 +55,11 @@ export async function loadSimplePageContent(key) {
     return null
   }
 }
+
+export async function loadNewsFeedContent() {
+  try {
+    return await getPublishedPage('/api/public/pages/news-feed')
+  } catch {
+    return null
+  }
+}

@@ -231,6 +231,7 @@ textarea { resize: vertical; }
   cursor: pointer;
 }
 .admin-item-modal__ok { border-color: #1769ff !important; color: #fff !important; background: #1769ff !important; }
+.admin-item-modal textarea[data-news-field="body"] { min-height: 220px; font-family: inherit; line-height: 1.6; }
 body.admin-modal-open { overflow: hidden; }
 .admin-home-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 16px; }
 .admin-home-metrics > div { padding: 13px; border: 1px solid #e7ecf3; border-radius: 11px; background: #fbfcfe; }

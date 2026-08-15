@@ -1,7 +1,7 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 
 const API = '/api/admin'
-const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', homeSection: 'hero' }
+const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', newsPage: null, homeSection: 'hero' }
 const HOME_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏轮播', desc: '多屏大图，可新增和逐屏编辑' },
   { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
@@ -18,7 +18,7 @@ const titles = {
   'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏标题与 Banner'],
   'page-agents': ['空间智能体', '路径 /agents/ · 首屏标题与 Banner'],
   'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏标题与 Banner'],
-  'page-news': ['新闻中心', '路径 /news/ · 列表页标题'],
+  'page-news': ['新闻中心', '路径 /news/ · 列表管理，点编辑即可改稿并发布'],
   'page-ai-token': ['AI Token', '路径 /ai-token/ · 首屏标题'],
   config: ['App 下载页', '路径 /app-download/ · 文案、Banner、商店链接'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
@@ -142,7 +142,7 @@ async function loadOverview() {
 
 function openTab(name, options = {}) {
   if (!titles[name]) name = 'overview'
-  const panelName = name.startsWith('page-') ? 'simple' : name
+  const panelName = name === 'page-news' ? 'news' : name.startsWith('page-') ? 'simple' : name
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === name))
   document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === panelName))
   const [title, subtitle] = titles[name]
@@ -159,7 +159,8 @@ function openTab(name, options = {}) {
     window.scrollTo({ top: 0 })
     updateAnchorState()
   }
-  if (name.startsWith('page-')) loadSimplePage(name.slice('page-'.length))
+  if (name === 'page-news') loadNewsFeed()
+  else if (name.startsWith('page-')) loadSimplePage(name.slice('page-'.length))
   if (name === 'home') loadHomePage()
   if (name === 'about') loadAboutPage()
   if (name === 'releases') loadReleases()
@@ -571,6 +572,7 @@ function openItemModal({ scope, kind, index, title, html }) {
   modal.dataset.index = String(index ?? '')
   document.querySelector('[data-item-modal-title]').textContent = title
   document.querySelector('[data-item-modal-body]').innerHTML = html
+  document.querySelector('[data-item-modal-apply]').textContent = scope === 'news' ? '发布上线' : '完成'
   modal.hidden = false
   document.body.classList.add('admin-modal-open')
 }
@@ -580,6 +582,8 @@ function closeItemModal() {
   modal.hidden = true
   document.body.classList.remove('admin-modal-open')
   document.querySelector('[data-item-modal-body]').innerHTML = ''
+  const apply = document.querySelector('[data-item-modal-apply]')
+  if (apply) apply.textContent = '完成'
 }
 
 function openHomeItemModal(kind, index) {
@@ -612,6 +616,10 @@ function applyItemModal() {
     state.aboutPage.draftContent = content
     closeItemModal()
     renderAboutEditor(content)
+    return
+  }
+  if (modal.dataset.scope === 'news') {
+    void publishNewsFromModal()
   }
 }
 
@@ -974,6 +982,157 @@ async function saveSimpleDraft({ quiet = false } = {}) {
   updateSimpleStatus(page)
   if (!quiet) toast('页面草稿已保存，线上内容尚未改变')
   return page
+}
+
+function newsField(path, label, value, options = {}) {
+  const type = options.type || 'text'
+  let field
+  if (type === 'textarea') {
+    field = `<textarea data-news-field="${path}" rows="${options.rows || 3}">${escapeHtml(value ?? '')}</textarea>`
+  } else if (type === 'select') {
+    const opts = (options.options || []).map(([key, text]) => `<option value="${escapeHtml(key)}"${String(value) === String(key) ? ' selected' : ''}>${escapeHtml(text)}</option>`).join('')
+    field = `<select data-news-field="${path}">${opts}</select>`
+  } else {
+    field = `<input data-news-field="${path}" type="${type}" value="${escapeHtml(value ?? '')}" />`
+  }
+  const media = options.image
+    ? `<div class="admin-home-media">
+        <img data-news-preview-for="${path}" src="${escapeHtml(value ?? '')}" alt="" ${value ? '' : 'hidden'} />
+        <label class="admin-home-upload">上传封面<input type="file" accept="image/jpeg,image/png,image/webp" data-news-upload-for="${path}" /></label>
+      </div>`
+    : ''
+  return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${field}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
+}
+
+function updateNewsStatus(page) {
+  document.querySelector('[data-news-draft-time]').textContent = `草稿 ${dateTime(page.updatedAt)}`
+  document.querySelector('[data-news-publish-status]').textContent = page.publishedAt ? `已发布 ${dateTime(page.publishedAt)}` : '尚未发布'
+}
+
+function renderNewsEditor(content) {
+  const items = [...(content.items || [])]
+  const editor = document.querySelector('[data-news-editor]')
+  editor.innerHTML = `
+    <fieldset>
+      <legend>列表页标题</legend>
+      <div class="admin-form-grid">
+        ${newsField('pageTitle', '主标题', content.title)}
+        ${newsField('pageSubtitle', '副标题', content.subtitle, { type: 'textarea', wide: true, rows: 2 })}
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>新闻列表</legend>
+      <p class="admin-form-section__hint">每条新闻一行。点「编辑」填标题、简介、日期、发布人、分类和正文，粘贴即可自动分段排版，点「发布上线」立刻出现在前台。</p>
+      <button type="button" class="admin-add-slide" data-news-add>+ 新建新闻</button>
+      <div class="admin-home-list" style="margin-top:12px">${items.map((item, index) => `
+        <div class="admin-item-row">
+          <div>
+            <strong>${escapeHtml(item.title || '未填写标题')}</strong>
+            <small>${escapeHtml(item.category || '')} · ${escapeHtml(item.date || '')} · ${escapeHtml(item.author || '')}</small>
+          </div>
+          <span class="admin-slide-tools">
+            <button type="button" data-news-edit="${index}">编辑</button>
+            <button type="button" data-news-remove="${index}">删除</button>
+          </span>
+        </div>`).join('') || '<p class="admin-form-section__hint">还没有新闻，先点上面的新建。</p>'}</div>
+    </fieldset>`
+}
+
+function collectNewsPageMeta() {
+  const title = document.querySelector('[data-news-editor] [data-news-field="pageTitle"]')?.value
+  const subtitle = document.querySelector('[data-news-editor] [data-news-field="pageSubtitle"]')?.value
+  return {
+    title: title ?? state.newsPage?.draftContent?.title ?? '新闻中心',
+    subtitle: subtitle ?? state.newsPage?.draftContent?.subtitle ?? '',
+  }
+}
+
+function collectNewsArticleFromModal() {
+  const get = (path) => document.querySelector(`[data-item-modal] [data-news-field="${path}"]`)?.value ?? ''
+  return {
+    id: get('id'),
+    title: get('title'),
+    summary: get('summary'),
+    date: get('date'),
+    author: get('author'),
+    category: get('category'),
+    cover: get('cover'),
+    tags: get('tags'),
+    body: get('body'),
+  }
+}
+
+function newsArticleFields(item = {}) {
+  const today = new Date().toISOString().slice(0, 10)
+  return `
+    <input type="hidden" data-news-field="id" value="${escapeHtml(item.id || '')}" />
+    ${newsField('title', '新闻标题', item.title || '', { wide: true })}
+    ${newsField('summary', '新闻简介', item.summary || '', { type: 'textarea', wide: true, rows: 3 })}
+    ${newsField('date', '发布日期', item.date || today, { type: 'date' })}
+    ${newsField('author', '发布人', item.author || '安托未来')}
+    ${newsField('category', '分类', item.category || '公司动态', { type: 'select', options: [['公司动态', '公司动态'], ['产品更新', '产品更新'], ['方案实践', '方案实践']] })}
+    ${newsField('cover', '封面图', item.cover || '', { image: true, wide: true })}
+    ${newsField('tags', '标签', Array.isArray(item.tags) ? item.tags.join('，') : (item.tags || ''), { wide: true, help: '可选，用逗号分隔' })}
+    ${newsField('body', '主题正文', item.body || '', { type: 'textarea', wide: true, rows: 12, help: '直接粘贴即可。空行分段；单独一行短句会当成小标题。' })}`
+}
+
+function openNewsModal(index) {
+  const items = state.newsPage?.draftContent?.items || []
+  const isNew = index < 0 || !items[index]
+  const item = isNew
+    ? { id: '', title: '', summary: '', date: new Date().toISOString().slice(0, 10), author: '安托未来', category: '公司动态', cover: '', tags: [], body: '' }
+    : items[index]
+  openItemModal({
+    scope: 'news',
+    kind: isNew ? 'create' : 'edit',
+    index: isNew ? -1 : index,
+    title: isNew ? '新建新闻' : '编辑新闻',
+    html: newsArticleFields(item),
+  })
+}
+
+async function persistNewsFeed(content, message) {
+  const { page: draftPage } = await api('/pages/news-feed/draft', { method: 'PUT', body: JSON.stringify({ content }) })
+  const { page } = await api('/pages/news-feed/publish', { method: 'POST' })
+  state.newsPage = page.publishedContent ? page : draftPage
+  renderNewsEditor(state.newsPage.draftContent)
+  updateNewsStatus(state.newsPage)
+  toast(message)
+}
+
+async function publishNewsFromModal() {
+  const modal = document.querySelector('[data-item-modal]')
+  const index = Number(modal.dataset.index)
+  const article = collectNewsArticleFromModal()
+  if (!article.title.trim()) {
+    toast('请填写新闻标题', true)
+    return
+  }
+  if (!article.body.trim()) {
+    toast('请粘贴或填写正文', true)
+    return
+  }
+  const meta = collectNewsPageMeta()
+  const items = [...(state.newsPage?.draftContent?.items || [])]
+  if (index >= 0 && items[index]) items[index] = { ...items[index], ...article }
+  else items.unshift(article)
+  try {
+    await persistNewsFeed({ ...meta, items }, '新闻已发布到前台')
+    closeItemModal()
+  } catch (error) {
+    toast(error.message, true)
+  }
+}
+
+async function loadNewsFeed() {
+  try {
+    const { page } = await api('/pages/news-feed')
+    state.newsPage = page
+    renderNewsEditor(page.draftContent)
+    updateNewsStatus(page)
+  } catch (error) {
+    toast(error.message, true)
+  }
 }
 
 async function loadReleases() {
@@ -1385,6 +1544,47 @@ document.querySelector('[data-about-publish]').addEventListener('click', async (
   }
 })
 
+document.querySelector('[data-news-form]').addEventListener('submit', (event) => event.preventDefault())
+document.querySelector('[data-news-editor]').addEventListener('click', async (event) => {
+  if (event.target.closest('[data-news-add]')) {
+    event.preventDefault()
+    openNewsModal(-1)
+    return
+  }
+  const edit = event.target.closest('[data-news-edit]')
+  if (edit) {
+    event.preventDefault()
+    openNewsModal(Number(edit.dataset.newsEdit))
+    return
+  }
+  const remove = event.target.closest('[data-news-remove]')
+  if (remove) {
+    event.preventDefault()
+    if (!window.confirm('删除后前台将不再展示这条新闻，确定吗？')) return
+    const index = Number(remove.dataset.newsRemove)
+    const meta = collectNewsPageMeta()
+    const items = [...(state.newsPage?.draftContent?.items || [])]
+    items.splice(index, 1)
+    try {
+      await persistNewsFeed({ ...meta, items }, '新闻已删除并发布')
+    } catch (error) {
+      toast(error.message, true)
+    }
+  }
+})
+document.querySelector('[data-news-publish]').addEventListener('click', async (event) => {
+  const button = event.currentTarget
+  button.disabled = true
+  try {
+    const meta = collectNewsPageMeta()
+    await persistNewsFeed({ ...meta, items: state.newsPage?.draftContent?.items || [] }, '新闻中心已更新')
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    button.disabled = false
+  }
+})
+
 document.querySelector('[data-site-form]').addEventListener('submit', (event) => event.preventDefault())
 document.querySelector('[data-site-save]').addEventListener('click', async (event) => {
   const button = event.currentTarget
@@ -1552,25 +1752,35 @@ document.querySelector('[data-item-modal]').addEventListener('input', (event) =>
       preview.hidden = !aboutEl.value.trim()
     }
   }
+  const newsEl = event.target.closest('[data-news-field]')
+  if (newsEl) {
+    const preview = document.querySelector(`[data-news-preview-for="${newsEl.dataset.newsField}"]`)
+    if (preview) {
+      preview.src = newsEl.value.trim()
+      preview.hidden = !newsEl.value.trim()
+    }
+  }
 })
 document.querySelector('[data-item-modal]').addEventListener('change', async (event) => {
   const homeUpload = event.target.closest('[data-home-upload-for]')
   const aboutUpload = event.target.closest('[data-about-upload-for]')
-  const upload = homeUpload || aboutUpload
+  const newsUpload = event.target.closest('[data-news-upload-for]')
+  const upload = homeUpload || aboutUpload || newsUpload
   const file = upload?.files?.[0]
   if (!upload || !file) return
-  const path = homeUpload ? upload.dataset.homeUploadFor : upload.dataset.aboutUploadFor
+  const path = homeUpload ? upload.dataset.homeUploadFor : aboutUpload ? upload.dataset.aboutUploadFor : upload.dataset.newsUploadFor
   upload.disabled = true
   try {
     const formData = new FormData()
     formData.append('image', file)
     const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
-    const field = document.querySelector(homeUpload ? `[data-home-field="${path}"]` : `[data-about-field="${path}"]`)
+    const selector = homeUpload ? `[data-home-field="${path}"]` : aboutUpload ? `[data-about-field="${path}"]` : `[data-news-field="${path}"]`
+    const field = document.querySelector(selector)
     if (field) {
       field.value = url
       field.dispatchEvent(new Event('input', { bubbles: true }))
     }
-    toast('图片上传成功，请点完成后再保存草稿')
+    toast(newsUpload ? '封面已上传，点发布上线即可' : '图片上传成功，请点完成后再保存草稿')
   } catch (error) {
     toast(error.message, true)
   } finally {
