@@ -280,6 +280,20 @@
       </section>
     </main>
   </div>
+  <div class="admin-item-modal" data-item-modal hidden>
+    <button type="button" class="admin-item-modal__backdrop" data-item-modal-close aria-label="关闭弹窗"></button>
+    <div class="admin-item-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="admin-item-modal-title">
+      <header>
+        <h3 id="admin-item-modal-title" data-item-modal-title>编辑</h3>
+        <button type="button" class="admin-item-modal__x" data-item-modal-close aria-label="关闭">×</button>
+      </header>
+      <div class="admin-form-grid" data-item-modal-body></div>
+      <footer>
+        <button type="button" data-item-modal-close>取消</button>
+        <button type="button" class="admin-item-modal__ok" data-item-modal-apply>完成</button>
+      </footer>
+    </div>
+  </div>
   <script type="module" src="/src/scripts/admin-apps.js"></script>
 </body>
 </html>

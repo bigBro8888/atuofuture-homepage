@@ -254,12 +254,21 @@ function homeField(path, label, value, options = {}) {
   return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${field}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
 }
 
+function compactRow(title, subtitle, tools) {
+  return `<div class="admin-item-row">
+    <div><strong>${escapeHtml(title)}</strong>${subtitle ? `<small>${escapeHtml(subtitle)}</small>` : ''}</div>
+    <span class="admin-slide-tools">${tools}</span>
+  </div>`
+}
+
+function itemEditButton(kind, index) {
+  return `<button type="button" data-item-edit="${kind}" data-item-index="${index}">编辑</button>`
+}
+
 function listTools(kind, index, total, min = 1) {
-  return `<span class="admin-slide-tools">
-    <button type="button" data-list-kind="${kind}" data-list-move="-1" ${index === 0 ? 'disabled' : ''}>上移</button>
+  return `<button type="button" data-list-kind="${kind}" data-list-move="-1" ${index === 0 ? 'disabled' : ''}>上移</button>
     <button type="button" data-list-kind="${kind}" data-list-move="1" ${index === total - 1 ? 'disabled' : ''}>下移</button>
-    <button type="button" data-list-kind="${kind}" data-list-remove ${total <= min ? 'disabled' : ''}>删除</button>
-  </span>`
+    <button type="button" data-list-kind="${kind}" data-list-remove ${total <= min ? 'disabled' : ''}>删除</button>`
 }
 
 function showHomeSection(id) {
@@ -290,26 +299,17 @@ function renderHomeEditor(content) {
     <div class="admin-home-stage">
       <fieldset data-home-section="hero">
         <legend>首屏轮播</legend>
-        <p class="admin-form-section__hint">首页顶部一共 ${slides.length} 屏，点开某一屏改文案和背景图。可新增、删除、调整顺序，发布后前台轮播同步。</p>
+        <p class="admin-form-section__hint">每屏一行，点「编辑」在弹窗里改文案和背景图。</p>
         <div class="admin-home-list" data-hero-slides>${slides.map((slide, index) => `
-          <details ${index === 0 ? 'open' : ''} data-hero-slide>
-            <summary>
-              <span>第 ${index + 1} 屏：${escapeHtml(slide.title || '未填写标题')}</span>
-              <span class="admin-slide-tools">
-                <button type="button" data-hero-move="-1" ${index === 0 ? 'disabled' : ''}>上移</button>
-                <button type="button" data-hero-move="1" ${index === slides.length - 1 ? 'disabled' : ''}>下移</button>
-                <button type="button" data-hero-remove ${slides.length <= 1 ? 'disabled' : ''}>删除</button>
-              </span>
-            </summary>
-            <div class="admin-form-grid">
-              ${homeField(`heroSlides.${index}.label`, '角标', slide.label, { help: '例如「能力 01」，可留空' })}
-              ${homeField(`heroSlides.${index}.title`, '主标题', slide.title, { wide: true })}
-              ${homeField(`heroSlides.${index}.description`, '说明', slide.description, { type: 'textarea', wide: true })}
-              ${homeField(`heroSlides.${index}.actionLabel`, '按钮文字', slide.actionLabel)}
-              ${homeField(`heroSlides.${index}.actionHref`, '按钮链接', slide.actionHref)}
-              ${homeField(`heroSlides.${index}.background`, '背景图', slide.background, { image: true, wide: true })}
-            </div>
-          </details>`).join('')}</div>
+          <div class="admin-item-row" data-hero-slide>
+            <div><strong>第 ${index + 1} 屏：${escapeHtml(slide.title || '未填写标题')}</strong></div>
+            <span class="admin-slide-tools">
+              ${itemEditButton('hero', index)}
+              <button type="button" data-hero-move="-1" ${index === 0 ? 'disabled' : ''}>上移</button>
+              <button type="button" data-hero-move="1" ${index === slides.length - 1 ? 'disabled' : ''}>下移</button>
+              <button type="button" data-hero-remove ${slides.length <= 1 ? 'disabled' : ''}>删除</button>
+            </span>
+          </div>`).join('')}</div>
         <button type="button" class="admin-add-slide" data-hero-add>+ 新增一屏</button>
       </fieldset>
       <fieldset data-home-section="banner">
@@ -325,35 +325,27 @@ function renderHomeEditor(content) {
       </fieldset>
       <fieldset data-home-section="agents">
         <legend>空间智能体</legend>
-        <p class="admin-form-section__hint">上方是整区标题。下面每个智能体对应前台一张 21:9 长图和底部名称，可新增、删除、调序。建议图片 3360×1440。</p>
+        <p class="admin-form-section__hint">整区标题在上面改。每个智能体点「编辑」弹窗修改，避免一长条展开。</p>
         <div class="admin-form-grid">
           ${homeField('agents.kicker', '眉题', agents.kicker)}
           ${homeField('agents.title', '主标题', agents.title, { wide: true })}
           ${homeField('agents.subtitle', '说明', agents.subtitle, { type: 'textarea', wide: true, rows: 4 })}
         </div>
         <div class="admin-home-list">${(agents.items || []).map((item, index) => `
-          <details ${index === 0 ? 'open' : ''} data-agent-item>
-            <summary>
-              <span>智能体 ${index + 1}：${escapeHtml(item.name || '未命名')}</span>
-              <span class="admin-slide-tools">
-                <button type="button" data-agent-move="-1" ${index === 0 ? 'disabled' : ''}>上移</button>
-                <button type="button" data-agent-move="1" ${index === (agents.items || []).length - 1 ? 'disabled' : ''}>下移</button>
-                <button type="button" data-agent-remove ${(agents.items || []).length <= 1 ? 'disabled' : ''}>删除</button>
-              </span>
-            </summary>
-            <div class="admin-form-grid">
-              ${homeField(`agents.items.${index}.name`, '底部名称', item.name, { wide: true })}
-              ${homeField(`agents.items.${index}.sceneTitle`, '画面标题', item.sceneTitle, { help: '叠在长图左下角，如「人员进入」' })}
-              ${homeField(`agents.items.${index}.sceneCaption`, '画面说明', item.sceneCaption, { wide: true })}
-              ${homeField(`agents.items.${index}.imageUrl`, '21:9 场景图', item.imageUrl, { image: true, wide: true, help: '建议 21:9，左下留暗部给文字' })}
-              ${homeField(`agents.items.${index}.id`, '内部编号', item.id, { help: '一般不用改，用于切换定位' })}
-            </div>
-          </details>`).join('')}</div>
+          <div class="admin-item-row" data-agent-item>
+            <div><strong>智能体 ${index + 1}：${escapeHtml(item.name || '未命名')}</strong><small>${escapeHtml(item.sceneTitle || '')}</small></div>
+            <span class="admin-slide-tools">
+              ${itemEditButton('agents', index)}
+              <button type="button" data-agent-move="-1" ${index === 0 ? 'disabled' : ''}>上移</button>
+              <button type="button" data-agent-move="1" ${index === (agents.items || []).length - 1 ? 'disabled' : ''}>下移</button>
+              <button type="button" data-agent-remove ${(agents.items || []).length <= 1 ? 'disabled' : ''}>删除</button>
+            </span>
+          </div>`).join('')}</div>
         <button type="button" class="admin-add-slide" data-agent-add>+ 新增一个智能体</button>
       </fieldset>
       <fieldset data-home-section="solutions">
         <legend>产品与方案</legend>
-        <p class="admin-form-section__hint">首页横滑方案卡，可新增、删除、调序，发布后前台同步张数。</p>
+        <p class="admin-form-section__hint">方案卡一行一条，点「编辑」弹窗修改。</p>
         <div class="admin-form-grid">
           ${homeField('solutions.eyebrow', '眉题', content.solutions.eyebrow)}
           ${homeField('solutions.title', '区块标题', content.solutions.title)}
@@ -362,25 +354,15 @@ function renderHomeEditor(content) {
           ${homeField('solutions.moreUrl', '更多按钮链接', content.solutions.moreUrl)}
         </div>
         <div class="admin-home-list">${(content.solutions.items || []).map((item, index) => `
-          <details ${index === 0 ? 'open' : ''} data-list-item="solutions">
-            <summary>
-              <span>方案 ${index + 1}：${escapeHtml(item.title || '未填写')}</span>
-              ${listTools('solutions', index, (content.solutions.items || []).length)}
-            </summary>
-            <div class="admin-form-grid">
-              ${homeField(`solutions.items.${index}.chip`, '角标', item.chip)}
-              ${homeField(`solutions.items.${index}.title`, '标题', item.title)}
-              ${homeField(`solutions.items.${index}.description`, '说明', item.description, { type: 'textarea', wide: true })}
-              ${homeField(`solutions.items.${index}.tags`, '标签（逗号分隔）', (item.tags || []).join('，'), { wide: true })}
-              ${homeField(`solutions.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, help: '留空保留当前默认图片' })}
-              ${homeField(`solutions.items.${index}.linkUrl`, '详情链接', item.linkUrl)}
-            </div>
-          </details>`).join('')}</div>
+          <div class="admin-item-row" data-list-item="solutions">
+            <div><strong>方案 ${index + 1}：${escapeHtml(item.title || '未填写')}</strong></div>
+            <span class="admin-slide-tools">${itemEditButton('solutions', index)}${listTools('solutions', index, (content.solutions.items || []).length)}</span>
+          </div>`).join('')}</div>
         <button type="button" class="admin-add-slide" data-list-kind="solutions" data-list-add>+ 新增一张方案卡</button>
       </fieldset>
       <fieldset data-home-section="news">
         <legend>新闻动态</legend>
-        <p class="admin-form-section__hint">首页新闻卡可新增、删除、调序。完整新闻中心仍在独立页面。</p>
+        <p class="admin-form-section__hint">新闻一行一条，点「编辑」弹窗修改。</p>
         <div class="admin-form-grid">
           ${homeField('news.kicker', '眉题', news.kicker)}
           ${homeField('news.title', '区块标题', news.title)}
@@ -389,44 +371,24 @@ function renderHomeEditor(content) {
           ${homeField('news.moreUrl', '更多链接', news.moreUrl)}
         </div>
         <div class="admin-home-list">${(news.items || []).map((item, index) => `
-          <details ${index === 0 ? 'open' : ''} data-list-item="news">
-            <summary>
-              <span>新闻 ${index + 1}：${escapeHtml(item.title || '未填写')}</span>
-              ${listTools('news', index, (news.items || []).length)}
-            </summary>
-            <div class="admin-form-grid">
-              ${homeField(`news.items.${index}.category`, '分类', item.category)}
-              ${homeField(`news.items.${index}.title`, '标题', item.title, { wide: true })}
-              ${homeField(`news.items.${index}.description`, '摘要', item.description, { type: 'textarea', wide: true })}
-              ${homeField(`news.items.${index}.linkUrl`, '详情链接', item.linkUrl)}
-              ${homeField(`news.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, wide: true })}
-            </div>
-          </details>`).join('')}</div>
+          <div class="admin-item-row" data-list-item="news">
+            <div><strong>新闻 ${index + 1}：${escapeHtml(item.title || '未填写')}</strong></div>
+            <span class="admin-slide-tools">${itemEditButton('news', index)}${listTools('news', index, (news.items || []).length)}</span>
+          </div>`).join('')}</div>
         <button type="button" class="admin-add-slide" data-list-kind="news" data-list-add>+ 新增一条新闻</button>
       </fieldset>
       <fieldset data-home-section="pitch">
         <legend>探索安托未来</legend>
-        <p class="admin-form-section__hint">底部宫格每一张都是独立模块：可改样式、图、跳转，也可新增删除。</p>
+        <p class="admin-form-section__hint">宫格一行一张，点「编辑」弹窗修改样式、图片和跳转。</p>
         <div class="admin-form-grid">
           ${homeField('pitch.label', '小标题', pitch.label)}
           ${homeField('pitch.title', '主标题', pitch.title, { type: 'textarea', wide: true })}
         </div>
         <div class="admin-home-list">${(pitch.items || []).map((item, index) => `
-          <details ${index === 0 ? 'open' : ''} data-list-item="pitch">
-            <summary>
-              <span>宫格 ${index + 1}：${escapeHtml(item.kicker || item.title || '未填写')}</span>
-              ${listTools('pitch', index, (pitch.items || []).length)}
-            </summary>
-            <div class="admin-form-grid">
-              ${homeField(`pitch.items.${index}.kicker`, '卡片小标题', item.kicker)}
-              ${homeField(`pitch.items.${index}.title`, '卡片主文案', item.title, { type: 'textarea', wide: true })}
-              ${homeField(`pitch.items.${index}.moreLabel`, '底部链接文字', item.moreLabel)}
-              ${homeField(`pitch.items.${index}.href`, '跳转链接', item.href)}
-              ${homeField(`pitch.items.${index}.variant`, '卡片样式', item.variant || 'photo', { type: 'select', options: [['photo', '图片卡'], ['wave', '深蓝波纹'], ['mint', '绿色纯色']] })}
-              ${homeField(`pitch.items.${index}.imageUrl`, '背景图（图片卡用）', item.imageUrl, { image: true, wide: true })}
-              ${homeField(`pitch.items.${index}.openDemo`, '点击打开预约演示', item.openDemo, { type: 'checkbox' })}
-            </div>
-          </details>`).join('')}</div>
+          <div class="admin-item-row" data-list-item="pitch">
+            <div><strong>宫格 ${index + 1}：${escapeHtml(item.kicker || item.title || '未填写')}</strong></div>
+            <span class="admin-slide-tools">${itemEditButton('pitch', index)}${listTools('pitch', index, (pitch.items || []).length)}</span>
+          </div>`).join('')}</div>
         <button type="button" class="admin-add-slide" data-list-kind="pitch" data-list-add>+ 新增一张宫格</button>
       </fieldset>
     </div>`
@@ -448,7 +410,7 @@ function setHomeValue(target, path, value) {
 
 function collectHomeContent() {
   const content = structuredClone(state.homePage.draftContent)
-  document.querySelectorAll('[data-home-editor] [data-home-field]').forEach((field) => {
+  document.querySelectorAll('[data-home-editor] [data-home-field], [data-item-modal]:not([hidden]) [data-home-field]').forEach((field) => {
     let value
     if (field.dataset.homeType === 'checkbox') value = field.checked
     else if (field.dataset.homeType === 'number') value = Number(field.value.trim())
@@ -479,6 +441,178 @@ function collectHomeContent() {
     content.pitch.items = (content.pitch.items || []).slice(0, pitchCount)
   }
   return content
+}
+
+function homeItemFields(kind, index, item) {
+  if (kind === 'hero') {
+    return `
+      ${homeField(`heroSlides.${index}.label`, '角标', item.label, { help: '例如「能力 01」，可留空' })}
+      ${homeField(`heroSlides.${index}.title`, '主标题', item.title, { wide: true })}
+      ${homeField(`heroSlides.${index}.description`, '说明', item.description, { type: 'textarea', wide: true })}
+      ${homeField(`heroSlides.${index}.actionLabel`, '按钮文字', item.actionLabel)}
+      ${homeField(`heroSlides.${index}.actionHref`, '按钮链接', item.actionHref)}
+      ${homeField(`heroSlides.${index}.background`, '背景图', item.background, { image: true, wide: true })}`
+  }
+  if (kind === 'agents') {
+    return `
+      ${homeField(`agents.items.${index}.name`, '底部名称', item.name, { wide: true })}
+      ${homeField(`agents.items.${index}.sceneTitle`, '画面标题', item.sceneTitle, { help: '叠在长图左下角，如「人员进入」' })}
+      ${homeField(`agents.items.${index}.sceneCaption`, '画面说明', item.sceneCaption, { wide: true })}
+      ${homeField(`agents.items.${index}.imageUrl`, '21:9 场景图', item.imageUrl, { image: true, wide: true, help: '建议 21:9，左下留暗部给文字' })}
+      ${homeField(`agents.items.${index}.id`, '内部编号', item.id, { help: '一般不用改，用于切换定位' })}`
+  }
+  if (kind === 'solutions') {
+    return `
+      ${homeField(`solutions.items.${index}.chip`, '角标', item.chip)}
+      ${homeField(`solutions.items.${index}.title`, '标题', item.title)}
+      ${homeField(`solutions.items.${index}.description`, '说明', item.description, { type: 'textarea', wide: true })}
+      ${homeField(`solutions.items.${index}.tags`, '标签（逗号分隔）', (item.tags || []).join('，'), { wide: true })}
+      ${homeField(`solutions.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, help: '留空保留当前默认图片' })}
+      ${homeField(`solutions.items.${index}.linkUrl`, '详情链接', item.linkUrl)}`
+  }
+  if (kind === 'news') {
+    return `
+      ${homeField(`news.items.${index}.category`, '分类', item.category)}
+      ${homeField(`news.items.${index}.title`, '标题', item.title, { wide: true })}
+      ${homeField(`news.items.${index}.description`, '摘要', item.description, { type: 'textarea', wide: true })}
+      ${homeField(`news.items.${index}.linkUrl`, '详情链接', item.linkUrl)}
+      ${homeField(`news.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, wide: true })}`
+  }
+  return `
+    ${homeField(`pitch.items.${index}.kicker`, '卡片小标题', item.kicker)}
+    ${homeField(`pitch.items.${index}.title`, '卡片主文案', item.title, { type: 'textarea', wide: true })}
+    ${homeField(`pitch.items.${index}.moreLabel`, '底部链接文字', item.moreLabel)}
+    ${homeField(`pitch.items.${index}.href`, '跳转链接', item.href)}
+    ${homeField(`pitch.items.${index}.variant`, '卡片样式', item.variant || 'photo', { type: 'select', options: [['photo', '图片卡'], ['wave', '深蓝波纹'], ['mint', '绿色纯色']] })}
+    ${homeField(`pitch.items.${index}.imageUrl`, '背景图（图片卡用）', item.imageUrl, { image: true, wide: true })}
+    ${homeField(`pitch.items.${index}.openDemo`, '点击打开预约演示', item.openDemo, { type: 'checkbox' })}`
+}
+
+function aboutSectionFields(key, content) {
+  if (key === 'hero') {
+    return `
+      ${aboutField('hero.title', '主标题', content.hero.title)}
+      ${aboutField('hero.body', '介绍', content.hero.body, { type: 'textarea', wide: true, rows: 4 })}
+      ${aboutField('hero.primaryLabel', '主按钮文字', content.hero.primaryLabel)}
+      ${aboutField('hero.primaryHref', '主按钮链接', content.hero.primaryHref)}
+      ${aboutField('hero.secondaryLabel', '次按钮文字', content.hero.secondaryLabel)}
+      ${aboutField('hero.secondaryHref', '次按钮链接', content.hero.secondaryHref)}
+      ${aboutField('hero.imageUrl', '右侧图片', content.hero.imageUrl, { image: true, wide: true })}`
+  }
+  if (key === 'story') {
+    return `
+      ${aboutField('story.label', '小标题', content.story.label)}
+      ${aboutField('story.title', '标题', content.story.title)}
+      ${aboutField('story.body1', '第一段', content.story.body1, { type: 'textarea', wide: true })}
+      ${aboutField('story.body2', '第二段', content.story.body2, { type: 'textarea', wide: true })}
+      ${aboutField('story.imageUrl', '左侧图片', content.story.imageUrl, { image: true, wide: true })}`
+  }
+  if (key === 'values') {
+    return `
+      ${aboutField('values.label', '小标题', content.values.label)}
+      ${aboutField('values.title', '标题', content.values.title)}`
+  }
+  if (key === 'partners') {
+    return `
+      ${aboutField('partners.label', '小标题', content.partners.label)}
+      ${aboutField('partners.title', '标题', content.partners.title)}
+      ${aboutField('partners.intro', '说明', content.partners.intro, { type: 'textarea', wide: true })}`
+  }
+  if (key === 'duties') {
+    return `
+      ${aboutField('duties.label', '小标题', content.duties.label)}
+      ${aboutField('duties.title', '标题', content.duties.title)}`
+  }
+  if (key === 'join') {
+    return `
+      ${aboutField('join.label', '小标题', content.join.label)}
+      ${aboutField('join.title', '标题', content.join.title)}`
+  }
+  return `
+    ${aboutField('contact.label', '小标题', content.contact.label)}
+    ${aboutField('contact.title', '标题', content.contact.title)}
+    ${aboutField('contact.lead', '说明', content.contact.lead, { type: 'textarea', wide: true })}
+    ${aboutField('contact.email1', '邮箱 1', content.contact.email1)}
+    ${aboutField('contact.email2', '邮箱 2', content.contact.email2)}
+    ${aboutField('contact.addressZh', '中文地址', content.contact.addressZh, { wide: true })}
+    ${aboutField('contact.addressEn', '英文地址', content.contact.addressEn, { wide: true })}
+    ${aboutField('contact.joinTitle', '加入标题', content.contact.joinTitle)}
+    ${aboutField('contact.joinBody', '加入说明', content.contact.joinBody, { type: 'textarea', wide: true })}
+    ${aboutField('contact.joinLabel', '按钮文字', content.contact.joinLabel)}
+    ${aboutField('contact.joinHref', '按钮链接', content.contact.joinHref, { wide: true })}`
+}
+
+function aboutItemFields(kind, index, item) {
+  if (kind === 'values') {
+    return `
+      ${aboutField(`values.items.${index}.icon`, '图标名称', item.icon)}
+      ${aboutField(`values.items.${index}.title`, '名称', item.title)}
+      ${aboutField(`values.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}`
+  }
+  if (kind === 'partners') {
+    return `${aboutField(`partners.items.${index}.name`, '名称', item.name)}`
+  }
+  if (kind === 'duties') {
+    return `
+      ${aboutField(`duties.items.${index}.title`, '标题', item.title)}
+      ${aboutField(`duties.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}
+      ${aboutField(`duties.items.${index}.imageUrl`, '图片', item.imageUrl, { image: true, wide: true })}`
+  }
+  return `
+    ${aboutField(`join.items.${index}.step`, '序号', item.step)}
+    ${aboutField(`join.items.${index}.title`, '标题', item.title)}
+    ${aboutField(`join.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}`
+}
+
+function openItemModal({ scope, kind, index, title, html }) {
+  const modal = document.querySelector('[data-item-modal]')
+  modal.dataset.scope = scope
+  modal.dataset.kind = kind
+  modal.dataset.index = String(index ?? '')
+  document.querySelector('[data-item-modal-title]').textContent = title
+  document.querySelector('[data-item-modal-body]').innerHTML = html
+  modal.hidden = false
+  document.body.classList.add('admin-modal-open')
+}
+
+function closeItemModal() {
+  const modal = document.querySelector('[data-item-modal]')
+  modal.hidden = true
+  document.body.classList.remove('admin-modal-open')
+  document.querySelector('[data-item-modal-body]').innerHTML = ''
+}
+
+function openHomeItemModal(kind, index) {
+  const content = collectHomeContent()
+  state.homePage.draftContent = content
+  const map = {
+    hero: [content.heroSlides?.[index], `编辑第 ${index + 1} 屏`],
+    agents: [content.agents?.items?.[index], `编辑智能体 ${index + 1}`],
+    solutions: [content.solutions?.items?.[index], `编辑方案 ${index + 1}`],
+    news: [content.news?.items?.[index], `编辑新闻 ${index + 1}`],
+    pitch: [content.pitch?.items?.[index], `编辑宫格 ${index + 1}`],
+  }
+  const [item, title] = map[kind] || []
+  if (!item) return
+  openItemModal({ scope: 'home', kind, index, title, html: homeItemFields(kind, index, item) })
+}
+
+function applyItemModal() {
+  const modal = document.querySelector('[data-item-modal]')
+  if (modal.hidden) return
+  if (modal.dataset.scope === 'home') {
+    const content = collectHomeContent()
+    state.homePage.draftContent = content
+    closeItemModal()
+    renderHomeEditor(content)
+    return
+  }
+  if (modal.dataset.scope === 'about' || modal.dataset.scope === 'about-section') {
+    const content = collectAboutContent()
+    state.aboutPage.draftContent = content
+    closeItemModal()
+    renderAboutEditor(content)
+  }
 }
 
 const EMPTY_HOME_LIST = {
@@ -646,112 +780,49 @@ function aboutField(path, label, value, options = {}) {
 
 function renderAboutEditor(content) {
   const editor = document.querySelector('[data-about-editor]')
+  const sectionRow = (key, title, subtitle) => `
+    <div class="admin-item-row">
+      <div><strong>${title}</strong><small>${subtitle}</small></div>
+      <span class="admin-slide-tools"><button type="button" data-about-section-edit="${key}">编辑</button></span>
+    </div>`
   editor.innerHTML = `
-    <fieldset>
-      <legend>首屏主张</legend>
-      <div class="admin-form-grid">
-        ${aboutField('hero.title', '主标题', content.hero.title)}
-        ${aboutField('hero.body', '介绍', content.hero.body, { type: 'textarea', wide: true, rows: 4 })}
-        ${aboutField('hero.primaryLabel', '主按钮文字', content.hero.primaryLabel)}
-        ${aboutField('hero.primaryHref', '主按钮链接', content.hero.primaryHref)}
-        ${aboutField('hero.secondaryLabel', '次按钮文字', content.hero.secondaryLabel)}
-        ${aboutField('hero.secondaryHref', '次按钮链接', content.hero.secondaryHref)}
-        ${aboutField('hero.imageUrl', '右侧图片', content.hero.imageUrl, { image: true, wide: true })}
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>公司介绍</legend>
-      <div class="admin-form-grid">
-        ${aboutField('story.label', '小标题', content.story.label)}
-        ${aboutField('story.title', '标题', content.story.title)}
-        ${aboutField('story.body1', '第一段', content.story.body1, { type: 'textarea', wide: true })}
-        ${aboutField('story.body2', '第二段', content.story.body2, { type: 'textarea', wide: true })}
-        ${aboutField('story.imageUrl', '左侧图片', content.story.imageUrl, { image: true, wide: true })}
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>使命、价值观与愿景</legend>
-      <div class="admin-form-grid">
-        ${aboutField('values.label', '小标题', content.values.label)}
-        ${aboutField('values.title', '标题', content.values.title)}
-      </div>
-      <div class="admin-home-list">${content.values.items.map((item, index) => `
-        <details ${index === 0 ? 'open' : ''}>
-          <summary>${escapeHtml(item.title)}</summary>
-          <div class="admin-form-grid">
-            ${aboutField(`values.items.${index}.icon`, '图标名称', item.icon)}
-            ${aboutField(`values.items.${index}.title`, '名称', item.title)}
-            ${aboutField(`values.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}
-          </div>
-        </details>`).join('')}
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>客户与网络</legend>
-      <div class="admin-form-grid">
-        ${aboutField('partners.label', '小标题', content.partners.label)}
-        ${aboutField('partners.title', '标题', content.partners.title)}
-        ${aboutField('partners.intro', '说明', content.partners.intro, { type: 'textarea', wide: true })}
-      </div>
-      <div class="admin-home-list">${content.partners.items.map((item, index) => `
-        <details>
-          <summary>客户 ${index + 1}</summary>
-          <div class="admin-form-grid">
-            ${aboutField(`partners.items.${index}.name`, '名称', item.name)}
-          </div>
-        </details>`).join('')}
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>责任与承诺</legend>
-      <div class="admin-form-grid">
-        ${aboutField('duties.label', '小标题', content.duties.label)}
-        ${aboutField('duties.title', '标题', content.duties.title)}
-      </div>
-      <div class="admin-home-list">${content.duties.items.map((item, index) => `
-        <details>
-          <summary>${escapeHtml(item.title)}</summary>
-          <div class="admin-form-grid">
-            ${aboutField(`duties.items.${index}.title`, '标题', item.title)}
-            ${aboutField(`duties.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}
-            ${aboutField(`duties.items.${index}.imageUrl`, '图片', item.imageUrl, { image: true, wide: true })}
-          </div>
-        </details>`).join('')}
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>加入我们</legend>
-      <div class="admin-form-grid">
-        ${aboutField('join.label', '小标题', content.join.label)}
-        ${aboutField('join.title', '标题', content.join.title)}
-      </div>
-      <div class="admin-home-list">${content.join.items.map((item, index) => `
-        <details>
-          <summary>${escapeHtml(item.title)}</summary>
-          <div class="admin-form-grid">
-            ${aboutField(`join.items.${index}.step`, '序号', item.step)}
-            ${aboutField(`join.items.${index}.title`, '标题', item.title)}
-            ${aboutField(`join.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}
-          </div>
-        </details>`).join('')}
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>联系我们</legend>
-      <div class="admin-form-grid">
-        ${aboutField('contact.label', '小标题', content.contact.label)}
-        ${aboutField('contact.title', '标题', content.contact.title)}
-        ${aboutField('contact.lead', '说明', content.contact.lead, { type: 'textarea', wide: true })}
-        ${aboutField('contact.email1', '邮箱 1', content.contact.email1)}
-        ${aboutField('contact.email2', '邮箱 2', content.contact.email2)}
-        ${aboutField('contact.addressZh', '中文地址', content.contact.addressZh, { wide: true })}
-        ${aboutField('contact.addressEn', '英文地址', content.contact.addressEn, { wide: true })}
-        ${aboutField('contact.joinTitle', '加入标题', content.contact.joinTitle)}
-        ${aboutField('contact.joinBody', '加入说明', content.contact.joinBody, { type: 'textarea', wide: true })}
-        ${aboutField('contact.joinLabel', '按钮文字', content.contact.joinLabel)}
-        ${aboutField('contact.joinHref', '按钮链接', content.contact.joinHref, { wide: true })}
-      </div>
-    </fieldset>
+    <div class="admin-home-list">
+      ${sectionRow('hero', '首屏主张', '主标题、介绍与按钮')}
+      ${sectionRow('story', '公司介绍', '文案与左侧图片')}
+      ${sectionRow('values', '使命、价值观与愿景', '整区标题')}
+    </div>
+    <div class="admin-home-list">${content.values.items.map((item, index) => `
+      <div class="admin-item-row">
+        <div><strong>${escapeHtml(item.title || `条目 ${index + 1}`)}</strong></div>
+        <span class="admin-slide-tools"><button type="button" data-about-item-edit="values" data-item-index="${index}">编辑</button></span>
+      </div>`).join('')}</div>
+    <div class="admin-home-list">
+      ${sectionRow('partners', '客户与网络', '整区标题与说明')}
+    </div>
+    <div class="admin-home-list">${content.partners.items.map((item, index) => `
+      <div class="admin-item-row">
+        <div><strong>客户 ${index + 1}：${escapeHtml(item.name || '未填写')}</strong></div>
+        <span class="admin-slide-tools"><button type="button" data-about-item-edit="partners" data-item-index="${index}">编辑</button></span>
+      </div>`).join('')}</div>
+    <div class="admin-home-list">
+      ${sectionRow('duties', '责任与承诺', '整区标题')}
+    </div>
+    <div class="admin-home-list">${content.duties.items.map((item, index) => `
+      <div class="admin-item-row">
+        <div><strong>${escapeHtml(item.title || `条目 ${index + 1}`)}</strong></div>
+        <span class="admin-slide-tools"><button type="button" data-about-item-edit="duties" data-item-index="${index}">编辑</button></span>
+      </div>`).join('')}</div>
+    <div class="admin-home-list">
+      ${sectionRow('join', '加入我们', '整区标题')}
+    </div>
+    <div class="admin-home-list">${content.join.items.map((item, index) => `
+      <div class="admin-item-row">
+        <div><strong>${escapeHtml(item.title || `步骤 ${index + 1}`)}</strong></div>
+        <span class="admin-slide-tools"><button type="button" data-about-item-edit="join" data-item-index="${index}">编辑</button></span>
+      </div>`).join('')}</div>
+    <div class="admin-home-list">
+      ${sectionRow('contact', '联系我们', '邮箱、地址与加入入口')}
+    </div>
   `
 }
 
@@ -1104,6 +1175,12 @@ document.querySelector('[data-home-form]').addEventListener('click', (event) => 
     showHomeSection(jump.dataset.homeGoto)
     return
   }
+  const itemEdit = event.target.closest('[data-item-edit]')
+  if (itemEdit) {
+    event.preventDefault()
+    openHomeItemModal(itemEdit.dataset.itemEdit, Number(itemEdit.dataset.itemIndex))
+    return
+  }
   if (event.target.closest('[data-hero-add]')) {
     event.preventDefault()
     addHeroSlide()
@@ -1233,6 +1310,29 @@ document.querySelector('[data-about-editor]').addEventListener('input', (event) 
 })
 
 document.querySelector('[data-about-form]').addEventListener('submit', (event) => event.preventDefault())
+document.querySelector('[data-about-form]').addEventListener('click', (event) => {
+  const sectionEdit = event.target.closest('[data-about-section-edit]')
+  if (sectionEdit) {
+    event.preventDefault()
+    const key = sectionEdit.dataset.aboutSectionEdit
+    const content = collectAboutContent()
+    state.aboutPage.draftContent = content
+    const titles = { hero: '编辑首屏主张', story: '编辑公司介绍', values: '编辑价值观标题', partners: '编辑客户与网络', duties: '编辑责任与承诺', join: '编辑加入我们', contact: '编辑联系我们' }
+    openItemModal({ scope: 'about-section', kind: key, title: titles[key] || '编辑', html: aboutSectionFields(key, content) })
+    return
+  }
+  const itemEdit = event.target.closest('[data-about-item-edit]')
+  if (itemEdit) {
+    event.preventDefault()
+    const kind = itemEdit.dataset.aboutItemEdit
+    const index = Number(itemEdit.dataset.itemIndex)
+    const content = collectAboutContent()
+    state.aboutPage.draftContent = content
+    const item = content[kind]?.items?.[index]
+    if (!item) return
+    openItemModal({ scope: 'about', kind, index, title: `编辑${item.title || item.name || '条目'}`, html: aboutItemFields(kind, index, item) })
+  }
+})
 
 document.querySelector('[data-about-editor]').addEventListener('change', async (event) => {
   const upload = event.target.closest('[data-about-upload-for]')
@@ -1421,5 +1521,62 @@ document.querySelector('[data-user-form]').addEventListener('submit', async (eve
 
 document.querySelector('[data-refresh-releases]').addEventListener('click', loadReleases)
 document.querySelector('[data-refresh-audit]').addEventListener('click', loadAudit)
+
+document.querySelector('[data-item-modal]').addEventListener('click', (event) => {
+  if (event.target.closest('[data-item-modal-close]')) {
+    closeItemModal()
+    return
+  }
+  if (event.target.closest('[data-item-modal-apply]')) {
+    event.preventDefault()
+    applyItemModal()
+  }
+})
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !document.querySelector('[data-item-modal]').hidden) closeItemModal()
+})
+document.querySelector('[data-item-modal]').addEventListener('input', (event) => {
+  const homeEl = event.target.closest('[data-home-field]')
+  if (homeEl) {
+    const preview = document.querySelector(`[data-home-preview-for="${homeEl.dataset.homeField}"]`)
+    if (preview) {
+      preview.src = homeEl.value.trim()
+      preview.hidden = !homeEl.value.trim()
+    }
+  }
+  const aboutEl = event.target.closest('[data-about-field]')
+  if (aboutEl) {
+    const preview = document.querySelector(`[data-about-preview-for="${aboutEl.dataset.aboutField}"]`)
+    if (preview) {
+      preview.src = aboutEl.value.trim()
+      preview.hidden = !aboutEl.value.trim()
+    }
+  }
+})
+document.querySelector('[data-item-modal]').addEventListener('change', async (event) => {
+  const homeUpload = event.target.closest('[data-home-upload-for]')
+  const aboutUpload = event.target.closest('[data-about-upload-for]')
+  const upload = homeUpload || aboutUpload
+  const file = upload?.files?.[0]
+  if (!upload || !file) return
+  const path = homeUpload ? upload.dataset.homeUploadFor : upload.dataset.aboutUploadFor
+  upload.disabled = true
+  try {
+    const formData = new FormData()
+    formData.append('image', file)
+    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+    const field = document.querySelector(homeUpload ? `[data-home-field="${path}"]` : `[data-about-field="${path}"]`)
+    if (field) {
+      field.value = url
+      field.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+    toast('图片上传成功，请点完成后再保存草稿')
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    upload.disabled = false
+    upload.value = ''
+  }
+})
 
 api('/me').then(({ user }) => showAdmin(user)).catch(showLogin)
