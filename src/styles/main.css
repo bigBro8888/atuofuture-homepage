@@ -606,6 +606,11 @@
     box-shadow: none;
   }
 
+  .site-header .site-header__btn--ghost.is-current {
+    border-color: #00e5c0;
+    color: #00e5c0;
+  }
+
   .site-header .site-header__btn--primary {
     border: 1px solid #00e5c0;
     background: #00e5c0;
