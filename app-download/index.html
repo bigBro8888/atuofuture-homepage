@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="description" content="下载 AI投屏（Artink），随时随地连接并管理智能空间。" />
+  <link rel="stylesheet" href="/src/styles/main.css" />
   <link rel="stylesheet" href="/src/styles/app-download.css" />
+  <link rel="preload" href="/assets/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin>
   <title>AI投屏下载</title>
 </head>
 <body class="unified-download" data-page="app-download" data-nav-depth="1" data-platform="desktop">
@@ -25,18 +27,7 @@
     <button type="button" data-guide-close aria-label="关闭提示"><span class="download-native-symbol">×</span></button>
   </div>
 
-  <header class="download-nav">
-    <a class="download-nav__brand" href="/" aria-label="返回安托未来官网">
-      <img src="/assets/artink-logo.png" alt="Artink" />
-    </a>
-    <nav class="download-nav__links" aria-label="下载页导航">
-      <a class="is-active" href="#download">产品下载</a>
-      <a href="#features">功能介绍</a>
-      <a href="#guide">安装帮助</a>
-      <a class="download-nav__back" href="/">返回官网</a>
-    </nav>
-    <a class="download-nav__mobile-back" href="/">返回官网 <span class="download-native-symbol">→</span></a>
-  </header>
+  <div id="site-header"></div>
 
   <main>
     <section class="download-hero" id="download">
@@ -167,6 +158,7 @@
     <div class="download-footer__bottom"><span>© 2026 AnTuo Future. All rights reserved.</span><span>官方安全下载 · 数据加密保护</span></div>
   </footer>
 
+  <script type="module" src="/src/scripts/main.js"></script>
   <script type="module" src="/src/scripts/app-download.js"></script>
 </body>
 </html>

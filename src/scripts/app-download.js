@@ -1,5 +1,4 @@
 import { detectPlatform, getAppConfig, getDownloadLinks } from '../services/app-download-api.js'
-import { loadAndApplySiteSettings } from '../services/site-settings-api.js'
 
 const detected = detectPlatform()
 const body = document.body
@@ -250,11 +249,6 @@ function bindInteractions() {
 
 async function init() {
   body.dataset.platform = activePlatform
-  void loadAndApplySiteSettings().then((content) => {
-    if (!content?.logoDarkUrl && !content?.logoLightUrl) return
-    const logo = document.querySelector('.download-nav__brand img')
-    if (logo) logo.src = content.logoDarkUrl || content.logoLightUrl
-  })
   if (detected.isDingTalk && detected.isAndroid) {
     browserGuide?.classList.add('is-open')
     browserGuide?.setAttribute('aria-hidden', 'false')

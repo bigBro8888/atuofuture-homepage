@@ -747,7 +747,7 @@ function bootstrap() {
   void loadAndApplySiteSettings()
   initMobileDrawer()
   initAppDownloadModal()
-  initAgentChat()
+  if (page !== 'app-download') initAgentChat()
   initDemoRequestModal()
   initTokenLinks()
 

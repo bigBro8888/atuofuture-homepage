@@ -213,7 +213,7 @@ export function renderSiteNav(activeId) {
         </nav>
         <div class="site-header__actions hidden md:flex items-center gap-4">
           ${SHOW_APP_DOWNLOAD
-            ? `<a href="${root}${APP_DOWNLOAD_PATH}" class="site-header__btn site-header__btn--ghost">
+            ? `<a href="${root}${APP_DOWNLOAD_PATH}" class="site-header__btn site-header__btn--ghost${activeId === 'app-download' ? ' is-current' : ''}">
             <span class="material-symbols-outlined" aria-hidden="true">download</span> ${SITE_CTA.downloadLabel}
           </a>`
             : ''}
@@ -238,7 +238,7 @@ export function renderSiteNav(activeId) {
           </nav>
           <div class="site-mobile-drawer__actions">
             ${SHOW_APP_DOWNLOAD
-              ? `<a href="${root}${APP_DOWNLOAD_PATH}" class="site-header__btn site-header__btn--ghost w-full">${SITE_CTA.downloadLabel}</a>`
+              ? `<a href="${root}${APP_DOWNLOAD_PATH}" class="site-header__btn site-header__btn--ghost w-full${activeId === 'app-download' ? ' is-current' : ''}">${SITE_CTA.downloadLabel}</a>`
               : ''}
             <button type="button" class="site-header__btn site-header__btn--primary w-full" data-demo-modal-open>${SITE_CTA.demoLabel}</button>
           </div>
