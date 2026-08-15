@@ -11887,6 +11887,11 @@ body.demo-modal-open {
   height: 4px;
   border-radius: 50%;
   background: #c5d0de;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+.sm-agent-scroll__marks span.is-active {
+  background: var(--sm-blue);
+  transform: scale(1.35);
 }
 .sm-agent-names {
   position: relative;

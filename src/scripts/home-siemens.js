@@ -83,7 +83,7 @@ function mountHomeAgentStories(cmsItems) {
         <span class="sm-agent-scroll__thumb" data-agent-scroll-thumb style="width:${100 / total}%"></span>
       </button>
       <div class="sm-agent-scroll__marks" aria-hidden="true">
-        ${items.map(() => '<span></span>').join('')}
+        ${items.map((_, i) => `<span${i === 0 ? ' class="is-active"' : ''}></span>`).join('')}
       </div>
     </div>
     <div class="sm-agent-names" role="tablist" aria-label="空间智能体">
@@ -111,6 +111,7 @@ function bindHomeAgentStage(root) {
   const names = root.querySelector('.sm-agent-names')
   const ink = root.querySelector('[data-agent-ink]')
   const thumb = root.querySelector('[data-agent-scroll-thumb]')
+  const marks = [...root.querySelectorAll('.sm-agent-scroll__marks span')]
   const trackBtn = root.querySelector('[data-agent-scroll-track]')
   if (!tabs.length || !slides.length || !film) return
 
@@ -159,6 +160,7 @@ function bindHomeAgentStage(root) {
       thumb.style.width = `${100 / total}%`
       thumb.style.transform = `translate3d(${index * 100}%, 0, 0)`
     }
+    marks.forEach((mark, i) => mark.classList.toggle('is-active', i === index))
     moveInk(instant)
   }
 
