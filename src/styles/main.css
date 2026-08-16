@@ -11239,10 +11239,12 @@ body.demo-modal-open {
   background: #000;
   aspect-ratio: 16 / 9;
 }
-.sx-news-article__player video {
+.sx-news-article__player video,
+.sx-news-article__player iframe {
   display: block;
   width: 100%;
   height: 100%;
+  border: 0;
 }
 .sx-news-article__content {
   font-size: 16px;

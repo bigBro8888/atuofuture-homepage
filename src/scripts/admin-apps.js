@@ -1005,7 +1005,7 @@ function newsField(path, label, value, options = {}) {
   } else if (options.hidden) {
     field = `<input data-news-field="${path}" type="hidden" value="${escapeHtml(value ?? '')}" />`
   } else {
-    field = `<input data-news-field="${path}" type="${type}" value="${escapeHtml(value ?? '')}" />`
+    field = `<input data-news-field="${path}" type="${type}" value="${escapeHtml(value ?? '')}"${options.placeholder ? ` placeholder="${escapeHtml(options.placeholder)}"` : ''} />`
   }
   const media = options.image
     ? `<div class="admin-home-media">
@@ -1152,7 +1152,7 @@ function newsArticleFields(item = {}) {
       ${newsRichEditorMarkup(item)}
     </div>
     <div data-news-panel="video"${type === 'video' ? '' : ' hidden'}>
-      ${newsField('videoUrl', '视频', item.videoUrl || '', { video: true, hidden: true, wide: true, help: '支持 MP4 / WebM，建议不超过 200MB。' })}
+      ${newsField('videoUrl', '视频链接', item.videoUrl || '', { video: true, wide: true, placeholder: 'https:// 粘贴视频链接，或下方上传文件', help: '可粘贴 MP4 直链、B站、YouTube 等地址，也可直接上传本地文件，建议不超过 200MB。' })}
     </div>
     ${newsPinHomeField(item)}`
 }
@@ -1255,7 +1255,7 @@ async function publishNewsFromModal() {
   }
   if (article.type === 'video') {
     if (!article.videoUrl.trim()) {
-      toast('请上传视频', true)
+      toast('请上传视频或填写视频链接', true)
       return
     }
   } else if (!article.body.trim() && !article.bodyHtml.trim()) {

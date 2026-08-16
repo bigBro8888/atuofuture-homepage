@@ -150,8 +150,8 @@ function cleanUrl(value, fallback = '') {
   if (!url) return fallback
   if (url.startsWith('/') && !url.startsWith('//')) return url.slice(0, 1000)
   const parsed = new URL(url)
-  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('图片链接必须是站内路径或 http(s)')
-  return parsed.toString().slice(0, 1000)
+  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('链接必须是站内路径或 http(s)')
+  return parsed.toString().slice(0, 2000)
 }
 
 function cleanTags(value) {
@@ -180,7 +180,7 @@ function validateItem(value = {}, fallback = {}) {
   const body = newsType === 'video' ? '' : cleanText(value.body || plainTextFromHtml(bodyHtml), fallback.body || '', 20000)
   const category = NEWS_CATEGORIES.includes(value.category) ? value.category : (fallback.category || '公司动态')
   const videoUrl = newsType === 'video' ? cleanUrl(value.videoUrl, fallback.videoUrl || '') : ''
-  if (newsType === 'video' && !videoUrl) throw new Error('请上传视频')
+  if (newsType === 'video' && !videoUrl) throw new Error('请上传视频或填写视频链接')
   return {
     id: cleanText(value.id, fallback.id || `n-${randomUUID().slice(0, 8)}`, 40) || `n-${randomUUID().slice(0, 8)}`,
     type: newsType,

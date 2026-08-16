@@ -1,6 +1,7 @@
 import { NEWS_ITEMS, getNewsById, formatNewsDate } from '../data/news.js'
 import { loadNewsFeedContent } from '../services/site-settings-api.js'
 import { hydrateNewsItem } from '../lib/format-news-body.js'
+import { resolveNewsVideo } from '../lib/news-video.js'
 
 function esc(str = '') {
   return String(str)
@@ -74,9 +75,15 @@ function renderRelated(currentId, allItems) {
 
 function renderBody(n) {
   if (n.type === 'video' && n.videoUrl) {
+    const video = resolveNewsVideo(n.videoUrl)
+    const player = !video
+      ? ''
+      : video.kind === 'embed'
+        ? `<iframe src="${esc(video.src)}" title="${esc(n.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>`
+        : `<video src="${esc(video.src)}" poster="${esc(n.cover || '')}" controls playsinline preload="metadata"></video>`
     return `
       <div class="sx-news-article__player">
-        <video src="${esc(n.videoUrl)}" poster="${esc(n.cover || '')}" controls playsinline preload="metadata"></video>
+        ${player}
       </div>
       ${n.summary ? `<p>${esc(n.summary)}</p>` : ''}`
   }
