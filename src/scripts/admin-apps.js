@@ -2,7 +2,7 @@ import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 import { bindNewsRichEditor, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
 
 const API = '/api/admin'
-const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', newsPage: null, homeSection: 'hero' }
+const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, homeSection: 'hero' }
 const HOME_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏轮播', desc: '多屏大图，可新增和逐屏编辑' },
   { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
@@ -965,40 +965,104 @@ function updateSimpleStatus(page) {
   document.querySelector('[data-simple-publish-status]').textContent = page.publishedAt ? `已发布 ${dateTime(page.publishedAt)}` : '尚未发布'
 }
 
+function simpleOutline(key, items = []) {
+  const hero = { id: 'hero', no: '01', title: '首屏信息', desc: '标题、说明与 Banner' }
+  if (key === 'hardware') {
+    return [
+      hero,
+      { id: 'space', no: '02', title: '空间智能', desc: '中控屏、桌牌、工位屏等' },
+      { id: 'retail', no: '03', title: '新零售与电子纸', desc: '价签、冷链与资产盘点' },
+      { id: 'consumer', no: '04', title: '3C 数码', desc: '手机壳与艺术相框' },
+    ]
+  }
+  if (key === 'solutions' || key === 'agents') {
+    return [
+      hero,
+      ...items.map((item, index) => ({
+        id: item.group || item.id,
+        no: String(index + 2).padStart(2, '0'),
+        title: item.title || '未命名',
+        desc: item.summary || '',
+      })),
+    ]
+  }
+  return [hero]
+}
+
+function showSimpleSection(id) {
+  const buttons = [...document.querySelectorAll('[data-simple-goto]')]
+  if (!buttons.length) return
+  if (!buttons.some((button) => button.dataset.simpleGoto === id)) id = 'hero'
+  state.simpleSection = id
+  buttons.forEach((button) => button.classList.toggle('is-active', button.dataset.simpleGoto === id))
+  document.querySelectorAll('[data-simple-section]').forEach((section) => {
+    section.hidden = section.dataset.simpleSection !== id
+  })
+}
+
+function renderSimpleItemFields(entry, index) {
+  return `
+    <div class="admin-item-row admin-simple-item" data-simple-item="${index}">
+      <input type="hidden" data-home-field="items.${index}.id" value="${escapeHtml(entry.id || '')}" />
+      <input type="hidden" data-home-field="items.${index}.group" value="${escapeHtml(entry.group || '')}" />
+      ${entry.imageUrl ? `<img class="admin-simple-item__thumb" src="${escapeHtml(entry.imageUrl)}" alt="" />` : '<span class="admin-simple-item__thumb is-empty"></span>'}
+      <div class="admin-simple-item__fields">
+        ${homeField(`items.${index}.title`, '名称', entry.title)}
+        ${homeField(`items.${index}.summary`, '简介', entry.summary, { type: 'textarea', rows: 2, wide: true })}
+        ${homeField(`items.${index}.imageUrl`, '图片', entry.imageUrl, { image: true, wide: true })}
+      </div>
+    </div>`
+}
+
 function renderSimpleEditor(key, content) {
   const item = ADMIN_SITEMAP.find((entry) => entry.key === key)
   document.querySelector('[data-simple-title]').textContent = item?.label || key
   document.querySelector('[data-simple-path]').textContent = item?.path || `/${key}/`
   const preview = document.querySelector('[data-simple-preview]')
   if (preview && item) preview.href = item.path === '全站共用' ? '/' : item.path
-  const listTitle = { hardware: '产品列表', solutions: '方案列表', agents: '智能体列表' }[key]
   const items = Array.isArray(content.items) ? content.items : []
+  const outline = simpleOutline(key, items)
+  if (!outline.some((entry) => entry.id === state.simpleSection)) state.simpleSection = 'hero'
+  const sectionLegend = {
+    space: '空间智能',
+    retail: '新零售与电子纸',
+    consumer: '3C 数码',
+  }
+  const listSections = outline.filter((entry) => entry.id !== 'hero').map((entry) => {
+    const rows = items
+      .map((row, index) => ({ row, index }))
+      .filter(({ row }) => (row.group || row.id) === entry.id)
+    return `
+      <fieldset data-simple-section="${entry.id}">
+        <legend>${escapeHtml(sectionLegend[entry.id] || entry.title)}</legend>
+        <p class="admin-form-section__hint">只改这一类前台内容，保存并发布后官网同步。</p>
+        <div class="admin-home-list">${rows.map(({ row, index }) => renderSimpleItemFields(row, index)).join('') || '<p class="admin-form-section__hint">此类暂无条目。</p>'}</div>
+      </fieldset>`
+  }).join('')
   document.querySelector('[data-simple-editor]').innerHTML = `
-    <fieldset>
-      <legend>首屏信息</legend>
-      <div class="admin-form-grid">
-        ${homeField('title', '主标题', content.title, { wide: true })}
-        ${homeField('subtitle', '说明', content.subtitle, { type: 'textarea', wide: true })}
-        ${homeField('bannerUrl', 'Banner 图', content.bannerUrl, { image: true, wide: true })}
-        ${homeField('ctaLabel', '主按钮文案', content.ctaLabel)}
-      </div>
-    </fieldset>
-    ${listTitle ? `
-    <fieldset>
-      <legend>${listTitle}</legend>
-      <p class="admin-form-section__hint">这里列出当前前台正在展示的条目，可改名称、简介和图片，保存并发布后前台同步更新。</p>
-      <div class="admin-home-list">${items.map((entry, index) => `
-        <div class="admin-item-row admin-simple-item" data-simple-item="${index}">
-          <input type="hidden" data-home-field="items.${index}.id" value="${escapeHtml(entry.id || '')}" />
-          ${entry.imageUrl ? `<img class="admin-simple-item__thumb" src="${escapeHtml(entry.imageUrl)}" alt="" />` : '<span class="admin-simple-item__thumb is-empty"></span>'}
-          <div class="admin-simple-item__fields">
-            ${homeField(`items.${index}.title`, '名称', entry.title)}
-            ${homeField(`items.${index}.summary`, '简介', entry.summary, { type: 'textarea', rows: 2, wide: true })}
-            ${homeField(`items.${index}.imageUrl`, '图片', entry.imageUrl, { image: true, wide: true })}
-          </div>
-        </div>`).join('') || '<p class="admin-form-section__hint">暂无条目。</p>'}</div>
-    </fieldset>` : ''}
+    <aside class="admin-home-outline">
+      <p>按前台从上到下排列，点一项只打开这一块</p>
+      ${outline.map((entry) => `
+        <button type="button" class="admin-home-outline__item${entry.id === state.simpleSection ? ' is-active' : ''}" data-simple-goto="${entry.id}">
+          <em>${entry.no}</em>
+          <span><b>${escapeHtml(entry.title)}</b><small>${escapeHtml(entry.desc)}</small></span>
+        </button>`).join('')}
+    </aside>
+    <div class="admin-home-stage">
+      <fieldset data-simple-section="hero">
+        <legend>首屏信息</legend>
+        <p class="admin-form-section__hint">只影响该页最上方大标题、说明和 Banner。</p>
+        <div class="admin-form-grid">
+          ${homeField('title', '主标题', content.title, { wide: true })}
+          ${homeField('subtitle', '说明', content.subtitle, { type: 'textarea', wide: true })}
+          ${homeField('bannerUrl', 'Banner 图', content.bannerUrl, { image: true, wide: true })}
+          ${homeField('ctaLabel', '主按钮文案', content.ctaLabel)}
+        </div>
+      </fieldset>
+      ${listSections}
+    </div>
   `
+  showSimpleSection(state.simpleSection)
 }
 
 function collectSimpleContent() {
@@ -1021,6 +1085,7 @@ function collectSimpleContent() {
 
 async function loadSimplePage(key) {
   state.simpleKey = key
+  state.simpleSection = 'hero'
   const item = ADMIN_SITEMAP.find((entry) => entry.key === key)
   try {
     const { page } = await api(`/pages/simple/${encodeURIComponent(key)}`)
@@ -1944,6 +2009,12 @@ document.querySelector('[data-site-editor]').addEventListener('change', async (e
 })
 
 document.querySelector('[data-simple-form]').addEventListener('submit', (event) => event.preventDefault())
+document.querySelector('[data-simple-editor]').addEventListener('click', (event) => {
+  const jump = event.target.closest('[data-simple-goto]')
+  if (!jump) return
+  event.preventDefault()
+  showSimpleSection(jump.dataset.simpleGoto)
+})
 document.querySelector('[data-simple-save]').addEventListener('click', async (event) => {
   const button = event.currentTarget
   button.disabled = true

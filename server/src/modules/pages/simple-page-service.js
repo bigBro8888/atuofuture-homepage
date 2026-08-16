@@ -13,6 +13,7 @@ export function catalogItemsFor(key) {
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .map((item) => ({
         id: item.slug || item.id,
+        group: item.productLine || 'space',
         title: item.name,
         summary: item.shortDescription || '',
         imageUrl: item.coverImage || '',
@@ -21,6 +22,7 @@ export function catalogItemsFor(key) {
   if (key === 'solutions') {
     return SOLUTIONS.map((item) => ({
       id: item.id,
+      group: item.id,
       title: item.name,
       summary: item.summary || item.value || '',
       imageUrl: item.image || '',
@@ -29,6 +31,7 @@ export function catalogItemsFor(key) {
   if (key === 'agents') {
     return AGENTS_OVERVIEW.map((item) => ({
       id: item.id,
+      group: item.id,
       title: item.name,
       summary: item.blurb || '',
       imageUrl: item.sceneImage || '',
@@ -92,6 +95,7 @@ function cleanItems(value, catalog) {
     const extra = byId.get(item.id) || {}
     return {
       id: cleanText(extra.id || item.id, item.id, 40),
+      group: cleanText(extra.group || item.group, item.group || '', 40),
       title: cleanText(extra.title, item.title || '未命名', 80),
       summary: cleanText(extra.summary, item.summary || '', 240),
       imageUrl: cleanUrl(extra.imageUrl || item.imageUrl || '', item.imageUrl || ''),
