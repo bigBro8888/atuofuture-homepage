@@ -87,6 +87,14 @@ function cleanUrl(value, fallback = '') {
   return parsed.toString().slice(0, 1000)
 }
 
+function cleanHref(value, fallback = '') {
+  const text = String(value ?? '').trim()
+  if (!text) return fallback
+  if (text.startsWith('/') && !text.startsWith('//')) return text.slice(0, 1000)
+  if (/^https?:\/\//i.test(text)) return cleanUrl(text, fallback)
+  return `/${text.replace(/^\/+/, '')}`.slice(0, 1000)
+}
+
 function cleanItems(value, catalog) {
   const saved = Array.isArray(value) ? value : []
   const byId = new Map(saved.map((item) => [String(item.id || '').trim(), item]))
@@ -111,6 +119,8 @@ function defaultNavGroups() {
     products: group.products.map((item) => ({
       id: item.id,
       label: item.label || '',
+      imageUrl: '',
+      href: `/hardware/product/?id=${item.id}`,
     })),
   }))
 }
@@ -127,9 +137,12 @@ function cleanNavGroups(value) {
       icon: cleanText(extra.icon, base.icon, 40),
       products: base.products.map((item, productIndex) => {
         const extraProduct = extraProducts.find((row) => row.id === item.id) || extraProducts[productIndex] || {}
+        const defaultHref = `/hardware/product/?id=${item.id}`
         return {
           id: item.id,
-          label: cleanText(extraProduct.label, item.label || '', 20),
+          label: cleanText(extraProduct.label, item.label || '', 40),
+          imageUrl: cleanUrl(extraProduct.imageUrl, ''),
+          href: cleanHref(extraProduct.href, defaultHref),
         }
       }),
     }

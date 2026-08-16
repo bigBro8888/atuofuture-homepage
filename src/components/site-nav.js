@@ -88,7 +88,7 @@ function renderHardwareMega(root) {
               ${group.products
                 .map(
                   (p) => `
-                <a class="site-mega-prod" href="${root}hardware/product/?id=${encodeURIComponent(p.slug)}">
+                <a class="site-mega-prod" href="${p.href || `${root}hardware/product/?id=${encodeURIComponent(p.slug)}`}">
                   <span class="site-mega-prod__thumb" style="background-image:url('${p.coverImage}')" aria-hidden="true"></span>
                   <span class="site-mega-prod__name">${p.name}</span>
                 </a>`
@@ -111,7 +111,7 @@ function renderHardwareMobile(root) {
             ${group.products
               .map(
                 (p) => `
-            <a class="site-mobile-nav-link site-mobile-nav-link--child" href="${root}hardware/product/?id=${encodeURIComponent(p.slug)}">
+            <a class="site-mobile-nav-link site-mobile-nav-link--child" href="${p.href || `${root}hardware/product/?id=${encodeURIComponent(p.slug)}`}">
               <strong>${p.name}</strong>
             </a>`
               )

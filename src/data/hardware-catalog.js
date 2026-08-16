@@ -388,7 +388,12 @@ function megaSourceGroups() {
     const products = (savedProducts.length ? savedProducts : base.products).map((entry) => {
       const id = entry.id
       const fallback = base.products.find((item) => item.id === id)
-      return { id, label: entry.label || fallback?.label || '' }
+      return {
+        id,
+        label: entry.label || fallback?.label || '',
+        imageUrl: entry.imageUrl || '',
+        href: entry.href || '',
+      }
     }).filter((entry) => entry.id)
     return {
       id: base.id,
@@ -410,8 +415,8 @@ export function resolveHardwareMegaGroups() {
           id: product.id,
           slug: product.slug,
           name: entry.label || product.name,
-          coverImage: product.coverImage,
-          href: getProductDetailHref(product),
+          coverImage: entry.imageUrl || product.coverImage,
+          href: entry.href || getProductDetailHref(product),
         }
       })
       .filter(Boolean),
