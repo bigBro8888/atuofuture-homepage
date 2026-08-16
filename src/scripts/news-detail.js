@@ -103,7 +103,7 @@ function renderDetail(n) {
       </nav>
 
       <header class="sx-news-article__header">
-        <a class="sx-news-article__badge" href="../news/">${esc(n.category)}</a>
+        <a class="sx-news-article__badge" href="../news/">${esc({ 公司动态: '公司', 产品更新: '产品', 方案实践: '方案' }[n.category] || n.category)}</a>
         <h1>${esc(n.title)}</h1>
         <div class="sx-news-article__meta">
           <span>作者 ${esc(author)}</span>

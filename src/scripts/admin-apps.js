@@ -1061,7 +1061,6 @@ function renderNewsEditor(content) {
       <button type="button" class="admin-news-toolbar__link" data-news-meta-toggle>列表页标题</button>
       <div class="admin-news-toolbar__actions">
         <button type="button" class="admin-add-slide" data-news-add>+ 新建新闻</button>
-        <button type="button" class="admin-add-slide" data-news-apply-sort>按序号排序</button>
       </div>
     </div>
     <div class="admin-news-meta" data-news-meta-panel hidden>
@@ -1076,11 +1075,11 @@ function renderNewsEditor(content) {
       <div class="admin-item-row" data-news-index="${index}">
         <label class="admin-item-row__sort">
           <span>序号</span>
-          <input type="number" min="1" step="1" value="${index + 1}" data-news-sort="${index}" />
+          <input type="number" min="1" max="${items.length}" step="1" value="${index + 1}" data-news-sort="${index}" title="改成第几位，其余会自动顺延" />
         </label>
         <div>
           <strong>${escapeHtml(item.title || '未填写标题')}</strong>
-          <small>${item.type === 'video' ? '视频' : '图文'} · ${escapeHtml(item.category || '')} · ${escapeHtml(item.date || '')}${item.pinHome ? ' · 已上首页' : ''}</small>
+          <small>${item.type === 'video' ? '视频' : '图文'} · ${escapeHtml({ 公司动态: '公司', 产品更新: '产品', 方案实践: '方案' }[item.category] || item.category || '')} · ${escapeHtml(item.date || '')}${item.pinHome ? ' · 已上首页' : ''}</small>
         </div>
         <span class="admin-slide-tools">
           <button type="button" data-news-edit="${index}">编辑</button>
@@ -1101,14 +1100,20 @@ function collectNewsItemsBySort() {
     .map((row) => row.item)
 }
 
-async function applyNewsSort() {
-  const items = collectNewsItemsBySort()
-  const same = items.every((item, index) => item === (state.newsPage?.draftContent?.items || [])[index])
-  if (same) {
-    toast('顺序没有变化')
+async function moveNewsToRank(fromIndex, rawRank) {
+  const items = [...(state.newsPage?.draftContent?.items || [])]
+  if (!items[fromIndex]) return
+  let rank = Math.round(Number(rawRank))
+  if (!Number.isFinite(rank)) rank = fromIndex + 1
+  rank = Math.min(Math.max(rank, 1), items.length)
+  if (rank === fromIndex + 1) {
+    const input = document.querySelector(`[data-news-sort="${fromIndex}"]`)
+    if (input) input.value = String(fromIndex + 1)
     return
   }
-  await persistNewsFeed({ ...collectNewsPageMeta(), items }, '新闻顺序已更新并发布')
+  const next = items.filter((_, index) => index !== fromIndex)
+  next.splice(rank - 1, 0, items[fromIndex])
+  await persistNewsFeed({ ...collectNewsPageMeta(), items: next }, `已排到第 ${rank} 位，其余已自动顺延`)
 }
 
 function collectNewsPageMeta() {
@@ -1163,7 +1168,7 @@ function newsArticleFields(item = {}) {
     <div class="admin-news-compose__main">
       ${newsField('title', '标题', item.title || '', { wide: true, placeholder: '请输入新闻标题' })}
       <div class="admin-news-compose__meta">
-        ${newsField('category', '分类', item.category || '公司动态', { type: 'select', options: [['公司动态', '公司动态'], ['产品更新', '产品更新'], ['方案实践', '方案实践']] })}
+        ${newsField('category', '分类', item.category || '公司动态', { type: 'select', options: [['公司动态', '公司'], ['产品更新', '产品'], ['方案实践', '方案']] })}
         ${newsField('date', '日期', item.date || today, { type: 'date' })}
         ${newsField('author', '发布人', item.author || '安托未来')}
       </div>
@@ -1779,19 +1784,6 @@ document.querySelector('[data-news-editor]').addEventListener('click', async (ev
     openNewsCompose(-1)
     return
   }
-  if (event.target.closest('[data-news-apply-sort]')) {
-    event.preventDefault()
-    const button = event.target.closest('[data-news-apply-sort]')
-    button.disabled = true
-    try {
-      await applyNewsSort()
-    } catch (error) {
-      toast(error.message, true)
-    } finally {
-      button.disabled = false
-    }
-    return
-  }
   const edit = event.target.closest('[data-news-edit]')
   if (edit) {
     event.preventDefault()
@@ -1811,6 +1803,18 @@ document.querySelector('[data-news-editor]').addEventListener('click', async (ev
     } catch (error) {
       toast(error.message, true)
     }
+  }
+})
+document.querySelector('[data-news-editor]').addEventListener('change', async (event) => {
+  const input = event.target.closest('[data-news-sort]')
+  if (!input) return
+  input.disabled = true
+  try {
+    await moveNewsToRank(Number(input.dataset.newsSort), input.value)
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    input.disabled = false
   }
 })
 document.querySelector('[data-news-compose-view]').addEventListener('click', async (event) => {

@@ -17,6 +17,10 @@ const FILTERS = [
   { id: '方案实践', label: '方案' },
 ]
 
+function catLabel(category) {
+  return FILTERS.find((f) => f.id === category)?.label || category
+}
+
 function catKey(category) {
   if (category === '公司动态') return 'company'
   if (category === '产品更新') return 'product'
@@ -47,7 +51,7 @@ function renderLead(n) {
           ${coverBlock(n, 'nx-lead__photo')}
           <div class="nx-lead__overlay">
             <div class="nx-lead__meta">
-              <span class="nx-chip nx-chip--${catKey(n.category)}">${n.type === 'video' ? '视频' : esc(n.category)}</span>
+              <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(catLabel(n.category))}${n.type === 'video' ? ' · 视频' : ''}</span>
               <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
             </div>
             <h1>${esc(n.title)}</h1>
@@ -64,7 +68,7 @@ function renderItem(n, index) {
       ${coverBlock(n, 'nx-item__cover')}
       <div class="nx-item__body">
         <div class="nx-item__meta">
-          <span class="nx-chip nx-chip--${catKey(n.category)}">${n.type === 'video' ? '视频' : esc(n.category)}</span>
+          <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(catLabel(n.category))}${n.type === 'video' ? ' · 视频' : ''}</span>
           <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
         </div>
         <h3>${esc(n.title)}</h3>

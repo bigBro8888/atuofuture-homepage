@@ -5,6 +5,14 @@ import { htmlFromPlainBody, plainTextFromHtml, sanitizeNewsHtml } from '../../..
 
 export const NEWS_FEED_PAGE_KEY = 'news-feed'
 export const NEWS_CATEGORIES = ['公司动态', '产品更新', '方案实践']
+const CATEGORY_ALIASES = {
+  公司: '公司动态',
+  产品: '产品更新',
+  方案: '方案实践',
+  公司动态: '公司动态',
+  产品更新: '产品更新',
+  方案实践: '方案实践',
+}
 
 const defaultItems = [
   {
@@ -182,7 +190,8 @@ function validateItem(value = {}, fallback = {}) {
     ? ''
     : sanitizeNewsHtml(value.bodyHtml || fallback.bodyHtml || htmlFromPlainBody(value.body || fallback.body || ''))
   const body = newsType === 'video' ? '' : cleanText(value.body || plainTextFromHtml(bodyHtml), fallback.body || '', 20000)
-  const category = NEWS_CATEGORIES.includes(value.category) ? value.category : (fallback.category || '公司动态')
+  const mapped = CATEGORY_ALIASES[String(value.category || '').trim()]
+  const category = NEWS_CATEGORIES.includes(mapped) ? mapped : (fallback.category || '公司动态')
   const videoUrl = newsType === 'video' ? cleanUrl(value.videoUrl, fallback.videoUrl || '') : ''
   if (newsType === 'video' && !videoUrl) throw new Error(`「${title}」请先上传视频或填写可播放的视频链接`)
   return {
