@@ -35,8 +35,21 @@ export function resolveNewsVideo(raw) {
   }
 
   if (/\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(path) || url.startsWith('/api/public/uploads/videos/')) {
-    return { kind: 'file', src: parsed.toString() }
+    return { kind: 'file', src: url.startsWith('/') ? url : parsed.toString() }
   }
 
   return { kind: 'file', src: parsed.toString() }
+}
+
+function escapeAttr(value) {
+  return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+}
+
+export function newsVideoMarkup(raw) {
+  const video = resolveNewsVideo(raw)
+  if (!video) return ''
+  const inner = video.kind === 'embed'
+    ? `<iframe src="${escapeAttr(video.src)}" title="视频" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>`
+    : `<video src="${escapeAttr(video.src)}" controls playsinline preload="metadata"></video>`
+  return `<figure class="sx-news-video" data-news-video="1" contenteditable="false">${inner}</figure><p><br></p>`
 }

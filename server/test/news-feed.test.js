@@ -23,6 +23,13 @@ test('strips pasted bold and keeps only editor text color', () => {
   assert.doesNotMatch(pasted, /style=/)
 })
 
+test('keeps in-article video embeds and file players', () => {
+  const html = sanitizeNewsHtml('<p>看</p><figure class="sx-news-video"><iframe src="https://www.youtube.com/watch?v=dQw4w9wgxcQ"></iframe></figure>')
+  assert.match(html, /youtube.com\/embed\/dQw4w9wgxcQ/)
+  const file = sanitizeNewsHtml('<video src="/api/public/uploads/videos/demo.mp4" controls></video>')
+  assert.match(file, /\/api\/public\/uploads\/videos\/demo.mp4/)
+})
+
 test('keeps tables and images but strips scripts from news html', () => {
   const html = sanitizeNewsHtml('<p>正文</p><table><tr><td>08</td></tr></table><img src="https://example.com/a.jpg" onerror="alert(1)"><script>alert(1)</script>')
   assert.match(html, /<table>/)

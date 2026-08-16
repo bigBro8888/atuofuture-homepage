@@ -1,9 +1,11 @@
+import { resolveNewsVideo } from './news-video.js'
+
 const ALLOWED_TAGS = new Set([
   'p', 'br', 'div', 'span', 'h2', 'h3', 'h4',
   'blockquote',
   'ul', 'ol', 'li',
   'table', 'thead', 'tbody', 'tr', 'td', 'th', 'caption',
-  'img', 'a', 'figure', 'figcaption', 'hr',
+  'img', 'a', 'figure', 'figcaption', 'hr', 'video', 'iframe',
 ])
 
 const VOID_TAGS = new Set(['br', 'img', 'hr'])
@@ -15,6 +17,9 @@ const ALLOWED_ATTR = {
   th: new Set(['colspan', 'rowspan']),
   table: new Set(['border']),
   span: new Set(['style']),
+  figure: new Set(['class', 'contenteditable']),
+  video: new Set(['src', 'controls', 'playsinline', 'preload', 'poster']),
+  iframe: new Set(['src', 'title', 'allow', 'allowfullscreen', 'loading']),
 }
 
 function safeColor(value) {
@@ -63,8 +68,44 @@ function parseAttributes(raw, tag, keepColor = true) {
     if (name === 'href' || name === 'src') {
       const cleaned = safeUrl(value, tag === 'img' ? 'img' : 'a')
       if (!cleaned) continue
+      if (tag === 'iframe') {
+        const resolved = resolveNewsVideo(cleaned)
+        if (!resolved || resolved.kind !== 'embed') continue
+        out.push(`src="${resolved.src.replace(/"/g, '&quot;')}"`)
+        continue
+      }
+      if (tag === 'video') {
+        const resolved = resolveNewsVideo(cleaned)
+        if (!resolved || resolved.kind === 'embed') continue
+        out.push(`src="${resolved.src.replace(/"/g, '&quot;')}"`)
+        continue
+      }
       out.push(`${name}="${cleaned.replace(/"/g, '&quot;')}"`)
       if (name === 'href') out.push('rel="noopener noreferrer"')
+      continue
+    }
+    if (name === 'class' && tag === 'figure') {
+      if (/\bsx-news-video\b/.test(value)) out.push('class="sx-news-video" data-news-video="1"')
+      continue
+    }
+    if (name === 'contenteditable' && tag === 'figure') {
+      out.push('contenteditable="false"')
+      continue
+    }
+    if (['controls', 'playsinline', 'allowfullscreen'].includes(name)) {
+      out.push(name)
+      continue
+    }
+    if (name === 'allow' && tag === 'iframe') {
+      out.push('allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"')
+      continue
+    }
+    if (name === 'loading' && tag === 'iframe') {
+      out.push('loading="lazy"')
+      continue
+    }
+    if (name === 'preload' && tag === 'video') {
+      out.push('preload="metadata"')
       continue
     }
     if ((name === 'colspan' || name === 'rowspan' || name === 'width' || name === 'height' || name === 'border') && !/^\d{1,4}$/.test(value)) continue

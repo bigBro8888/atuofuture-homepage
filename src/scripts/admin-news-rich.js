@@ -1,4 +1,5 @@
 import { htmlFromPlainBody, sanitizeNewsHtml } from '../lib/sanitize-news-html.js'
+import { newsVideoMarkup } from '../lib/news-video.js'
 
 function isLocalMedia(src) {
   return src.startsWith('/api/public/uploads/') || src.startsWith('/images/') || src.startsWith('/assets/')
@@ -24,12 +25,14 @@ export function newsRichEditorMarkup(item = {}) {
           <button type="button" tabindex="-1" data-rich-cmd="link">链接</button>
           <button type="button" tabindex="-1" data-rich-cmd="table">表格</button>
           <button type="button" tabindex="-1" data-rich-cmd="image">插图</button>
+          <button type="button" tabindex="-1" data-rich-cmd="video">视频</button>
           <label class="admin-rich__color">颜色<input type="color" value="#333333" data-rich-color /></label>
           <button type="button" tabindex="-1" data-rich-cmd="removeFormat">清除格式</button>
         </div>
         <div class="admin-rich__editor" contenteditable="true" data-news-html-editor role="textbox" aria-multiline="true" aria-label="新闻正文">${html}</div>
         <input type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,image/*" data-news-rich-file />
-        <small>粘贴会去掉原网站的加粗、颜色和字号，按本站正文样式显示。需要强调时再用颜色工具。</small>
+        <input type="file" hidden accept="video/mp4,video/webm,video/quicktime,video/*" data-news-rich-video />
+        <small>粘贴会去掉原网站的加粗、颜色和字号。插图、视频可上传或粘贴链接。</small>
       </div>
     </div>`
 }
@@ -82,6 +85,19 @@ function insertNodesAtMarker(editor, nodes) {
   const marker = takeCaretMarker(editor)
   if (marker) marker.replaceWith(...nodes)
   else nodes.forEach((node) => editor.appendChild(node))
+}
+
+function createVideoNodes(url) {
+  const temp = document.createElement('div')
+  temp.innerHTML = newsVideoMarkup(url)
+  return [...temp.childNodes]
+}
+
+async function uploadVideoFile(file, api) {
+  const formData = new FormData()
+  formData.append('video', file)
+  const { url } = await api('/pages/media/video', { method: 'POST', body: formData })
+  return url
 }
 
 function createImageBlock(url) {
@@ -180,6 +196,7 @@ async function ingestEditorImages(editor, api, toast) {
 export function bindNewsRichEditor(modal, { api, toast }) {
   const editor = modal.querySelector('[data-news-html-editor]')
   const fileInput = modal.querySelector('[data-news-rich-file]')
+  const videoInput = modal.querySelector('[data-news-rich-video]')
   if (!editor) return
   let savedRange = null
   const rememberRange = () => {
@@ -214,6 +231,27 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     } else if (command === 'image') {
       dropCaretMarker(editor)
       fileInput?.click()
+    } else if (command === 'video') {
+      dropCaretMarker(editor)
+      const url = window.prompt('粘贴视频链接（B站 / YouTube / MP4 直链）。留空则上传本地视频', 'https://')
+      if (url === null) {
+        takeCaretMarker(editor)?.remove()
+        return
+      }
+      const trimmed = url.trim()
+      if (trimmed && trimmed !== 'https://') {
+        const nodes = createVideoNodes(trimmed)
+        if (!nodes.length) {
+          takeCaretMarker(editor)?.remove()
+          toast('无法识别该视频链接', true)
+          return
+        }
+        insertNodesAtMarker(editor, nodes)
+        editor.focus()
+        toast('视频已插入')
+        return
+      }
+      videoInput?.click()
     } else if (command === 'removeFormat') {
       document.execCommand('removeFormat', false, null)
       editor.innerHTML = sanitizeNewsHtml(editor.innerHTML, { keepColor: false })
@@ -243,6 +281,25 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     } catch (error) {
       takeCaretMarker(editor)?.remove()
       toast(error.message || '图片上传失败', true)
+    }
+  })
+
+  videoInput?.addEventListener('change', async () => {
+    const file = videoInput.files?.[0]
+    videoInput.value = ''
+    if (!file) {
+      takeCaretMarker(editor)?.remove()
+      return
+    }
+    try {
+      toast('正在上传视频…')
+      const url = await uploadVideoFile(file, api)
+      insertNodesAtMarker(editor, createVideoNodes(url))
+      editor.focus()
+      toast('视频已插入')
+    } catch (error) {
+      takeCaretMarker(editor)?.remove()
+      toast(error.message || '视频上传失败', true)
     }
   })
 
