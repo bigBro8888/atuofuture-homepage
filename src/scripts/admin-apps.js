@@ -970,7 +970,7 @@ function simpleOutline(key, items = []) {
   if (key === 'hardware') {
     return [
       hero,
-      { id: 'nav', no: '02', title: '导航分类设置', desc: '顶栏下拉三类入口与产品名' },
+      { id: 'nav', no: '02', title: '导航分类设置', desc: '顶栏下拉三列，和官网一致' },
       { id: 'space', no: '03', title: '空间智能', desc: '中控屏、桌牌、工位屏等' },
       { id: 'retail', no: '04', title: '新零售与电子纸', desc: '价签、冷链与资产盘点' },
       { id: 'consumer', no: '05', title: '3C 数码', desc: '手机壳与艺术相框' },
@@ -999,6 +999,39 @@ function showSimpleSection(id) {
   document.querySelectorAll('[data-simple-section]').forEach((section) => {
     section.hidden = section.dataset.simpleSection !== id
   })
+}
+
+function renderHardwareNavEditor(navGroups, items = []) {
+  return `
+      <fieldset data-simple-section="nav">
+        <legend>导航分类设置</legend>
+        <p class="admin-form-section__hint">对应官网顶栏「智能硬件」下拉的三列。改分类名、图标和导航显示名，保存并发布后全站同步。产品图来自下方各类产品，这里只改导航文案。</p>
+        <div class="admin-nav-groups">${navGroups.map((group, groupIndex) => `
+          <article class="admin-nav-col">
+            <header class="admin-nav-col__head">
+              <span class="admin-nav-col__icon" aria-hidden="true"><span class="material-symbols-outlined">${escapeHtml(group.icon || 'category')}</span></span>
+              <div class="admin-nav-col__meta">
+                <input type="hidden" data-home-field="navGroups.${groupIndex}.id" value="${escapeHtml(group.id || '')}" />
+                ${homeField(`navGroups.${groupIndex}.title`, '分类名称', group.title)}
+                ${homeField(`navGroups.${groupIndex}.icon`, '图标', group.icon)}
+              </div>
+            </header>
+            <div class="admin-nav-col__list">
+              ${(group.products || []).map((product, productIndex) => {
+                const item = items.find((row) => row.id === product.id) || {}
+                const name = item.title || product.id
+                const image = item.imageUrl || ''
+                return `
+                <div class="admin-nav-prod">
+                  ${image ? `<img src="${escapeHtml(image)}" alt="" />` : '<span class="admin-nav-prod__ph"></span>'}
+                  <input type="hidden" data-home-field="navGroups.${groupIndex}.products.${productIndex}.id" value="${escapeHtml(product.id || '')}" />
+                  ${homeField(`navGroups.${groupIndex}.products.${productIndex}.label`, name, product.label || name)}
+                </div>`
+              }).join('')}
+            </div>
+          </article>`).join('')}
+        </div>
+      </fieldset>`
 }
 
 function renderSimpleItemFields(entry, index) {
@@ -1030,25 +1063,7 @@ function renderSimpleEditor(key, content) {
     consumer: '3C 数码',
   }
   const navGroups = Array.isArray(content.navGroups) ? content.navGroups : []
-  const navSection = key === 'hardware' ? `
-      <fieldset data-simple-section="nav">
-        <legend>导航分类设置</legend>
-        <p class="admin-form-section__hint">对应官网顶栏「智能硬件」下拉的三列：分类名称、图标，以及该列每个产品的导航显示名（可与产品页名称不同，例如「照明与空调」）。保存并发布后全站导航同步。</p>
-        <div class="admin-home-list">${navGroups.map((group, groupIndex) => `
-          <div class="admin-item-row admin-simple-item">
-            <div class="admin-simple-item__fields">
-              <input type="hidden" data-home-field="navGroups.${groupIndex}.id" value="${escapeHtml(group.id || '')}" />
-              ${homeField(`navGroups.${groupIndex}.title`, '分类名称', group.title, { wide: true })}
-              ${homeField(`navGroups.${groupIndex}.icon`, '图标', group.icon, { help: 'Material Symbols 名称，如 domain / shopping_bag / smartphone' })}
-              ${(group.products || []).map((product, productIndex) => {
-                const name = items.find((row) => row.id === product.id)?.title || product.id
-                return `
-                <input type="hidden" data-home-field="navGroups.${groupIndex}.products.${productIndex}.id" value="${escapeHtml(product.id || '')}" />
-                ${homeField(`navGroups.${groupIndex}.products.${productIndex}.label`, `导航显示名（${name}）`, product.label || name)}`
-              }).join('')}
-            </div>
-          </div>`).join('')}</div>
-      </fieldset>` : ''
+  const navSection = key === 'hardware' ? renderHardwareNavEditor(navGroups, items) : ''
   const listSections = outline.filter((entry) => entry.id !== 'hero' && entry.id !== 'nav').map((entry) => {
     const rows = items
       .map((row, index) => ({ row, index }))

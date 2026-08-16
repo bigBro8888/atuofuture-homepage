@@ -175,6 +175,76 @@ textarea { resize: vertical; }
   border-radius: 11px;
   background: #fbfcfe;
 }
+.admin-nav-groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, .9fr);
+  gap: 12px;
+  margin-top: 14px;
+  align-items: stretch;
+}
+.admin-nav-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  border: 1px solid #e4eaf2;
+  border-radius: 12px;
+  background: #fff;
+}
+.admin-nav-col__head {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eef2f6;
+}
+.admin-nav-col__icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 10px;
+  color: #0f9f90;
+  background: #e7f8f5;
+}
+.admin-nav-col__icon .material-symbols-outlined {
+  width: auto;
+  height: auto;
+  overflow: visible;
+  font-size: 22px;
+}
+.admin-nav-col:nth-child(2) .admin-nav-col__icon { color: #1769ff; background: #edf4ff; }
+.admin-nav-col:nth-child(3) .admin-nav-col__icon { color: #d97706; background: #fff6e8; }
+.admin-nav-col__meta { display: grid; gap: 8px; min-width: 0; }
+.admin-nav-col__meta label { margin: 0; min-width: 0; }
+.admin-nav-col__meta input { padding: 8px 10px; }
+.admin-nav-col__list { display: grid; gap: 8px; }
+.admin-nav-prod {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #eef2f6;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+.admin-nav-prod img,
+.admin-nav-prod__ph {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #e8edf4;
+}
+.admin-nav-prod label { margin: 0; min-width: 0; }
+.admin-nav-prod label > span { margin-bottom: 4px; color: #8b97a8; font-size: 9px; font-weight: 600; }
+.admin-nav-prod input { padding: 8px 10px; }
+@media (max-width: 1280px) {
+  .admin-nav-groups { grid-template-columns: 1fr; }
+}
 .admin-simple-item { align-items: flex-start; display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 14px; }
 .admin-simple-item__thumb { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; background: #eef2f7; }
 .admin-simple-item__thumb.is-empty { display: block; }
