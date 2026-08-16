@@ -263,7 +263,7 @@ publicPagesRouter.get('/news-feed', (request, response) => {
   response.set('Cache-Control', 'no-cache')
   response.json({
     pageKey: page.pageKey,
-    content: page.publishedContent,
+    content: validateNewsFeedContent(page.publishedContent),
     publishedAt: page.publishedAt,
   })
 })

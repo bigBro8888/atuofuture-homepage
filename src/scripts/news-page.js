@@ -124,7 +124,15 @@ export async function initNewsPage() {
   if (!root) return
   const [feed, simple] = await Promise.all([loadNewsFeedContent(), loadSimplePageContent('news')])
   if (feed?.items?.length) {
-    newsItems = feed.items.map((item) => hydrateNewsItem(item)).filter(Boolean)
+    newsItems = feed.items
+      .map((item, index) => {
+        const next = hydrateNewsItem(item)
+        if (!next) return null
+        const order = Number(next.sortOrder)
+        return { ...next, sortOrder: Number.isFinite(order) && order > 0 ? order : index + 1 }
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
     cmsHero = { title: feed.title || simple?.title, subtitle: feed.subtitle || simple?.subtitle }
   } else {
     newsItems = NEWS_ITEMS

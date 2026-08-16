@@ -1063,6 +1063,7 @@ function renderNewsEditor(content) {
         <button type="button" class="admin-add-slide" data-news-add>+ 新建新闻</button>
       </div>
     </div>
+    <p class="admin-form-section__hint">列表从上到下就是前台顺序，第 1 条会作为头条大图。</p>
     <div class="admin-news-meta" data-news-meta-panel hidden>
       <p>这两项只影响新闻列表页顶部文案，和单篇新闻无关。</p>
       <div class="admin-news-meta__fields">
@@ -1275,8 +1276,9 @@ function slimNewsHtml(html) {
 }
 
 async function persistNewsFeed(content, message) {
-  content.items = limitPinnedNews(content.items || []).map((item) => ({
+  content.items = limitPinnedNews(content.items || []).map((item, index) => ({
     ...item,
+    sortOrder: index + 1,
     cover: String(item.cover || '').startsWith('blob:') || String(item.cover || '').startsWith('data:') ? '' : item.cover,
     videoUrl: String(item.videoUrl || '').startsWith('blob:') || String(item.videoUrl || '').startsWith('data:') ? '' : item.videoUrl,
     bodyHtml: slimNewsHtml(item.bodyHtml),
