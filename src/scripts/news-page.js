@@ -42,6 +42,11 @@ function coverBlock(n, className) {
   return `<div class="${className}" style="background-image:url('${esc(n.cover)}')" role="img" aria-hidden="true">${play}</div>`
 }
 
+function rankLabel(n, index) {
+  const rank = Number(n.sortOrder) > 0 ? Number(n.sortOrder) : index + 1
+  return String(rank).padStart(2, '0')
+}
+
 function renderLead(n) {
   if (!n) return ''
   return `
@@ -51,6 +56,7 @@ function renderLead(n) {
           ${coverBlock(n, 'nx-lead__photo')}
           <div class="nx-lead__overlay">
             <div class="nx-lead__meta">
+              <span class="nx-rank">序号 ${rankLabel(n, 0)}</span>
               <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(catLabel(n.category))}${n.type === 'video' ? ' · 视频' : ''}</span>
               <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
             </div>
@@ -68,6 +74,7 @@ function renderItem(n, index) {
       ${coverBlock(n, 'nx-item__cover')}
       <div class="nx-item__body">
         <div class="nx-item__meta">
+          <span class="nx-rank">序号 ${rankLabel(n, index + 1)}</span>
           <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(catLabel(n.category))}${n.type === 'video' ? ' · 视频' : ''}</span>
           <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
         </div>

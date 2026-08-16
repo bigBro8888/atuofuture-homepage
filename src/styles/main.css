@@ -10729,6 +10729,21 @@ body.demo-modal-open {
   font-weight: 500;
   color: rgba(255,255,255,.78);
 }
+.nx-rank {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .16);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+.nx-item__meta .nx-rank {
+  background: #edf4ff;
+  color: #1769ff;
+}
 .nx-lead__overlay h1 {
   margin: 0 0 8px;
   font-family: Geist, 'PingFang SC', 'Microsoft YaHei', sans-serif;
