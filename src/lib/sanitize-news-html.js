@@ -1,6 +1,6 @@
 const ALLOWED_TAGS = new Set([
   'p', 'br', 'div', 'span', 'h2', 'h3', 'h4',
-  'strong', 'b', 'em', 'i', 'u', 'blockquote',
+  'blockquote',
   'ul', 'ol', 'li',
   'table', 'thead', 'tbody', 'tr', 'td', 'th', 'caption',
   'img', 'a', 'figure', 'figcaption', 'hr',
@@ -14,6 +14,21 @@ const ALLOWED_ATTR = {
   td: new Set(['colspan', 'rowspan']),
   th: new Set(['colspan', 'rowspan']),
   table: new Set(['border']),
+  span: new Set(['style']),
+}
+
+function safeColor(value) {
+  const text = String(value || '').trim()
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(text)) return text.toLowerCase()
+  const rgb = text.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i)
+  if (rgb && [...rgb.slice(1)].every((part) => Number(part) <= 255)) return `rgb(${rgb[1]}, ${rgb[2]}, ${rgb[3]})`
+  return ''
+}
+
+function colorStyleFrom(value) {
+  const match = String(value || '').match(/(?:^|;)\s*color\s*:\s*([^;]+)/i)
+  const color = safeColor(match?.[1] || '')
+  return color ? `style="color:${color}"` : ''
 }
 
 function safeUrl(value, kind) {
@@ -34,7 +49,7 @@ function safeUrl(value, kind) {
   }
 }
 
-function parseAttributes(raw, tag) {
+function parseAttributes(raw, tag, keepColor = true) {
   const allowed = ALLOWED_ATTR[tag]
   if (!allowed) return ''
   const out = []
@@ -53,17 +68,32 @@ function parseAttributes(raw, tag) {
       continue
     }
     if ((name === 'colspan' || name === 'rowspan' || name === 'width' || name === 'height' || name === 'border') && !/^\d{1,4}$/.test(value)) continue
+    if (name === 'style') {
+      if (!keepColor) continue
+      const style = colorStyleFrom(value)
+      if (style) out.push(style)
+      continue
+    }
     out.push(`${name}="${String(value).replace(/[<>"']/g, '')}"`)
   }
   return out.length ? ` ${out.join(' ')}` : ''
 }
 
-/** 去掉脚本和事件，只保留新闻正文需要的标签。浏览器和 Node 都能用。 */
-export function sanitizeNewsHtml(dirty) {
+/** 去掉脚本、加粗斜体和字号，只保留结构；编辑器里设过的颜色可选择保留。 */
+export function sanitizeNewsHtml(dirty, options = {}) {
+  const keepColor = options.keepColor !== false
   const source = String(dirty || '')
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<\s*h1\b/gi, '<h3')
+    .replace(/<\/\s*h1>/gi, '</h3>')
+    .replace(/<\s*font\b([^>]*)>/gi, keepColor ? (_, attrs) => {
+      const color = /color\s*=\s*("([^"]+)"|'([^']+)'|([^\s>]+))/i.exec(attrs)
+      const value = safeColor((color?.[2] || color?.[3] || color?.[4] || '').replace(/&quot;/g, ''))
+      return value ? `<span style="color:${value}">` : '<span>'
+    } : '<span>')
+    .replace(/<\/\s*font>/gi, '</span>')
     .slice(0, 300000)
 
   const parts = source.split(/(<[^>]+>)/g)
@@ -92,7 +122,7 @@ export function sanitizeNewsHtml(dirty) {
     if (!open) continue
     const tag = open[1].toLowerCase()
     if (!ALLOWED_TAGS.has(tag)) continue
-    const attrs = parseAttributes(open[2] || '', tag)
+    const attrs = parseAttributes(open[2] || '', tag, keepColor)
     const selfClosing = VOID_TAGS.has(tag) || Boolean(open[3])
     html += `<${tag}${attrs}>`
     if (!selfClosing) stack.push(tag)

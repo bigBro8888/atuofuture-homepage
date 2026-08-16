@@ -19,18 +19,17 @@ export function newsRichEditorMarkup(item = {}) {
         <div class="admin-rich__bar" data-news-rich-bar>
           <button type="button" tabindex="-1" data-rich-cmd="h3">标题</button>
           <button type="button" tabindex="-1" data-rich-cmd="p">正文</button>
-          <button type="button" tabindex="-1" data-rich-cmd="bold">加粗</button>
-          <button type="button" tabindex="-1" data-rich-cmd="italic">斜体</button>
           <button type="button" tabindex="-1" data-rich-cmd="insertUnorderedList">项目</button>
           <button type="button" tabindex="-1" data-rich-cmd="insertOrderedList">编号</button>
           <button type="button" tabindex="-1" data-rich-cmd="link">链接</button>
           <button type="button" tabindex="-1" data-rich-cmd="table">表格</button>
           <button type="button" tabindex="-1" data-rich-cmd="image">插图</button>
+          <label class="admin-rich__color">颜色<input type="color" value="#333333" data-rich-color /></label>
           <button type="button" tabindex="-1" data-rich-cmd="removeFormat">清除格式</button>
         </div>
         <div class="admin-rich__editor" contenteditable="true" data-news-html-editor role="textbox" aria-multiline="true" aria-label="新闻正文">${html}</div>
         <input type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,image/*" data-news-rich-file />
-        <small>可从其它网页整篇复制粘贴。表格、图片会保留；外站图片会转存到本站。插图失败时请改用本地上传。</small>
+        <small>粘贴会去掉原网站的加粗、颜色和字号，按本站正文样式显示。需要强调时再用颜色工具。</small>
       </div>
     </div>`
 }
@@ -191,6 +190,13 @@ export function bindNewsRichEditor(modal, { api, toast }) {
   editor.addEventListener('keyup', rememberRange)
   editor.addEventListener('focus', rememberRange)
 
+  modal.querySelector('[data-rich-color]')?.addEventListener('mousedown', rememberRange)
+  modal.querySelector('[data-rich-color]')?.addEventListener('input', (event) => {
+    restoreEditorRange(editor, savedRange)
+    document.execCommand('foreColor', false, event.currentTarget.value)
+    rememberRange()
+  })
+
   modal.querySelector('[data-news-rich-bar]')?.addEventListener('mousedown', (event) => {
     const button = event.target.closest('[data-rich-cmd]')
     if (!button) return
@@ -205,9 +211,12 @@ export function bindNewsRichEditor(modal, { api, toast }) {
       if (href) document.execCommand('createLink', false, href)
     } else if (command === 'table') {
       insertHtmlAtCaret(editor, '<table><thead><tr><th>列 1</th><th>列 2</th><th>列 3</th></tr></thead><tbody><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr></tbody></table><p></p>', savedRange)
-    }     else if (command === 'image') {
+    } else if (command === 'image') {
       dropCaretMarker(editor)
       fileInput?.click()
+    } else if (command === 'removeFormat') {
+      document.execCommand('removeFormat', false, null)
+      editor.innerHTML = sanitizeNewsHtml(editor.innerHTML, { keepColor: false })
     } else {
       document.execCommand(command, false, null)
     }
@@ -257,7 +266,7 @@ export function bindNewsRichEditor(modal, { api, toast }) {
       }
       return
     }
-    if (html) insertHtmlAtCaret(editor, sanitizeNewsHtml(html), savedRange)
+    if (html) insertHtmlAtCaret(editor, sanitizeNewsHtml(html, { keepColor: false }), savedRange)
     else if (text) document.execCommand('insertText', false, text)
     const remoteCount = [...editor.querySelectorAll('img')].filter((image) => {
       const src = normalizeImgSrc(image.getAttribute('src') || '')

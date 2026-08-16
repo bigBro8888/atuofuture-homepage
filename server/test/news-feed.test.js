@@ -14,6 +14,15 @@ test('formats pasted news body into headings and paragraphs', () => {
   assert.equal(sections[1].heading, '短标题')
 })
 
+test('strips pasted bold and keeps only editor text color', () => {
+  const html = sanitizeNewsHtml('<p><strong>粗体</strong><span style="color:#ff0000;font-size:48px">红字</span></p>')
+  assert.doesNotMatch(html, /strong|b>/i)
+  assert.match(html, /style="color:#ff0000"/)
+  assert.doesNotMatch(html, /font-size/)
+  const pasted = sanitizeNewsHtml('<p><b>粗</b><span style="color:#ff0000">红</span></p>', { keepColor: false })
+  assert.doesNotMatch(pasted, /style=/)
+})
+
 test('keeps tables and images but strips scripts from news html', () => {
   const html = sanitizeNewsHtml('<p>正文</p><table><tr><td>08</td></tr></table><img src="https://example.com/a.jpg" onerror="alert(1)"><script>alert(1)</script>')
   assert.match(html, /<table>/)

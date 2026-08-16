@@ -11249,6 +11249,7 @@ body.demo-modal-open {
 .sx-news-article__content {
   font-size: 16px;
   line-height: 1.8;
+  font-weight: 400;
   color: #333;
   word-break: break-word;
 }
@@ -11256,8 +11257,10 @@ body.demo-modal-open {
   font-size: inherit;
   line-height: inherit;
   font-family: inherit;
-  color: inherit;
+  font-weight: inherit;
+  font-style: normal;
 }
+.sx-news-article__content a { color: #0052d1; }
 .sx-news-article__content h3 {
   margin: 1.6em 0 0.7em;
   font-size: 18px;
