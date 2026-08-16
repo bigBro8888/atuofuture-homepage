@@ -9,9 +9,16 @@ import {
   SOLUTIONS_BASE_NODES,
   SOLUTIONS_HERO,
 } from '../data/solutions.js'
+import {
+  HARDWARE_LINES,
+  HARDWARE_PRODUCTS,
+  HARDWARE_SPACE_FLOW,
+  getProductDetailHref,
+} from '../data/hardware-catalog.js'
 
 let agentsRuntime = null
 let solutionsRuntime = null
+let hardwareRuntime = null
 
 export function setAgentsRuntime(content) {
   agentsRuntime = content
@@ -19,6 +26,70 @@ export function setAgentsRuntime(content) {
 
 export function setSolutionsRuntime(content) {
   solutionsRuntime = content
+}
+
+export function setHardwareRuntime(content) {
+  hardwareRuntime = content
+}
+
+export function hardwareHero() {
+  return hardwareRuntime?.hero || null
+}
+
+export function hardwareLines() {
+  return hardwareRuntime?.lines?.length ? hardwareRuntime.lines : HARDWARE_LINES
+}
+
+export function hardwareProducts() {
+  const list = hardwareRuntime?.products?.length ? hardwareRuntime.products : HARDWARE_PRODUCTS
+  return list.filter((item) => item.published !== false)
+}
+
+export function hardwareFlow() {
+  return hardwareRuntime?.flow?.length ? hardwareRuntime.flow : HARDWARE_SPACE_FLOW
+}
+
+export function hardwareSpace() {
+  return hardwareRuntime?.space || null
+}
+
+export function hardwareRetail() {
+  return hardwareRuntime?.retail || null
+}
+
+export function hardwareConsumer() {
+  return hardwareRuntime?.consumer || null
+}
+
+export function hardwareCta() {
+  return hardwareRuntime?.cta || null
+}
+
+export function findHardwareProduct(slug) {
+  if (!slug) return null
+  return hardwareProducts().find((item) => item.slug === slug || item.id === slug) || null
+}
+
+export function findHardwareLine(idOrSlug) {
+  return hardwareLines().find((item) => item.id === idOrSlug || item.slug === idOrSlug) || null
+}
+
+export function resolveHardwareMegaGroupsCms() {
+  if (!hardwareRuntime?.products?.length) return null
+  return hardwareLines().map((line) => ({
+    id: line.id,
+    title: line.name,
+    icon: line.icon,
+    products: hardwareProducts()
+      .filter((item) => item.productLine === line.id && item.showInOverview !== false)
+      .map((product) => ({
+        id: product.id,
+        slug: product.slug,
+        name: product.overviewLabel || product.name,
+        coverImage: product.thumb || product.coverImage,
+        href: getProductDetailHref(product),
+      })),
+  }))
 }
 
 export function agentsList() {

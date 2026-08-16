@@ -5,7 +5,7 @@ export const ADMIN_SITEMAP = [
   { key: 'about', group: '网站内容', label: '关于我们', path: '/about/', hash: 'about', kind: 'about' },
   { key: 'solutions', group: '网站内容', label: '行业解决方案', path: '/solutions/', hash: 'page-solutions', kind: 'catalog' },
   { key: 'agents', group: '网站内容', label: '空间智能体', path: '/agents/', hash: 'page-agents', kind: 'catalog' },
-  { key: 'hardware', group: '网站内容', label: '智能硬件', path: '/hardware/', hash: 'page-hardware', kind: 'simple' },
+  { key: 'hardware', group: '网站内容', label: '智能硬件', path: '/hardware/', hash: 'page-hardware', kind: 'catalog' },
   { key: 'news', group: '网站内容', label: '新闻中心', path: '/news/', hash: 'page-news', kind: 'news' },
   { key: 'ai-token', group: '网站内容', label: 'AI Token', path: '/ai-token/', hash: 'page-ai-token', kind: 'simple' },
   { key: 'config', group: '网站内容', label: 'App 下载页', path: '/app-download/', hash: 'config', kind: 'app' },

@@ -92,6 +92,84 @@ export function renderAgentsCatalog(content) {
     </div>`
 }
 
+export function renderHardwareCatalog(content) {
+  const products = content.products || []
+  const byLine = (lineId) => products.filter((item) => item.productLine === lineId)
+  return `
+    <aside class="admin-home-outline">
+      <p>对照 /hardware/ 从上到下：三大产品线图标、每个产品面板、空间/零售/3C 区块都可以改。</p>
+    </aside>
+    <div class="admin-home-stage">
+      <fieldset>
+        <legend>01 首屏</legend>
+        <div class="admin-form-grid">
+          ${catalogField('hero.title', '主标题', content.hero.title, { wide: true })}
+          ${catalogField('hero.subtitle', '副标题', content.hero.subtitle, { type: 'textarea', wide: true })}
+          ${catalogField('hero.bannerUrl', 'Banner 图', content.hero.bannerUrl, { image: true, wide: true })}
+          ${catalogField('hero.browseLabel', '浏览按钮', content.hero.browseLabel)}
+          ${catalogField('hero.ctaLabel', '咨询按钮', content.hero.ctaLabel)}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>02 三大产品线</legend>
+        <p class="admin-form-section__hint">这里对应页面中部三列：空间智能 / 新零售电子纸 / 3C 数码。点编辑改名称和图标。</p>
+        <div class="admin-home-list">${(content.lines || []).map((item, index) => row(item.name, item.description, `<button type="button" data-catalog-edit="hwLine" data-item-index="${index}">编辑</button>`)).join('')}</div>
+      </fieldset>
+      <fieldset>
+        <legend>03 产品图标与面板</legend>
+        <p class="admin-form-section__hint">每个产品都能改名称、简介、宫格图标、封面图、能力与场景。勾选「显示在产品线宫格」后会出现在对应分类图标区。</p>
+        <button type="button" class="admin-add-slide" data-catalog-add="hwProduct">+ 新增产品</button>
+        ${(content.lines || []).map((line) => `
+          <h4 style="margin:16px 0 8px">${line.name}</h4>
+          <div class="admin-home-list">${byLine(line.id).map((item) => {
+            const index = products.indexOf(item)
+            return row(item.overviewLabel || item.name, item.shortDescription, `<button type="button" data-catalog-edit="hwProduct" data-item-index="${index}">编辑</button>`)
+          }).join('') || '<p class="admin-form-section__hint">这一类还没有产品。</p>'}</div>`).join('')}
+      </fieldset>
+      <fieldset>
+        <legend>04 空间智能区块</legend>
+        <div class="admin-form-grid">
+          ${catalogField('space.kicker', '小标题', content.space.kicker)}
+          ${catalogField('space.title', '区块标题', content.space.title, { wide: true })}
+          ${catalogField('space.subtitle', '说明', content.space.subtitle, { type: 'textarea', wide: true })}
+          ${catalogField('space.flagshipId', '旗舰产品 ID', content.space.flagshipId, { help: '例如 control-screen' })}
+          ${catalogField('space.flagshipTag', '旗舰标签', content.space.flagshipTag)}
+          ${catalogField('space.matrixTitle', '配套硬件标题', content.space.matrixTitle, { wide: true })}
+          ${catalogField('space.matrixSubtitle', '配套硬件说明', content.space.matrixSubtitle, { type: 'textarea', wide: true })}
+          ${catalogField('space.flowTitle', '协同流程标题', content.space.flowTitle, { wide: true })}
+          ${catalogField('space.flowSubtitle', '协同流程说明', content.space.flowSubtitle, { type: 'textarea', wide: true })}
+          ${catalogField('space.flowLinkLabel', '方案链接文字', content.space.flowLinkLabel, { wide: true })}
+        </div>
+        <div class="admin-home-list">${(content.flow || []).map((item, index) => row(item.title, item.desc, `<button type="button" data-catalog-edit="hwFlow" data-item-index="${index}">编辑</button>`)).join('')}</div>
+      </fieldset>
+      <fieldset>
+        <legend>05 新零售区块</legend>
+        <div class="admin-form-grid">
+          ${catalogField('retail.kicker', '小标题', content.retail.kicker)}
+          ${catalogField('retail.title', '区块标题', content.retail.title, { wide: true })}
+          ${catalogField('retail.subtitle', '说明', content.retail.subtitle, { type: 'textarea', wide: true })}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>06 3C 数码区块</legend>
+        <div class="admin-form-grid">
+          ${catalogField('consumer.kicker', '小标题', content.consumer.kicker)}
+          ${catalogField('consumer.title', '区块标题', content.consumer.title, { wide: true })}
+          ${catalogField('consumer.subtitle', '说明', content.consumer.subtitle, { type: 'textarea', wide: true })}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>07 底部行动</legend>
+        <div class="admin-form-grid">
+          ${catalogField('cta.title', '标题', content.cta.title, { wide: true })}
+          ${catalogField('cta.body', '说明', content.cta.body, { type: 'textarea', wide: true })}
+          ${catalogField('cta.primary', '主按钮', content.cta.primary)}
+          ${catalogField('cta.secondary', '次按钮', content.cta.secondary)}
+        </div>
+      </fieldset>
+    </div>`
+}
+
 export function renderSolutionsCatalog(content) {
   return `
     <aside class="admin-home-outline">
@@ -187,6 +265,34 @@ export function catalogItemFields(kind, item, index) {
       ${catalogField(`base.nodes.${index}.desc`, '说明', item.desc, { type: 'textarea', wide: true })}
       ${catalogField(`base.nodes.${index}.icon`, '图标', item.icon)}`
   }
+  if (kind === 'hwLine') {
+    return `
+      ${catalogField(`lines.${index}.name`, '产品线名称', item.name, { wide: true })}
+      ${catalogField(`lines.${index}.description`, '说明', item.description, { type: 'textarea', wide: true })}
+      ${catalogField(`lines.${index}.icon`, '图标名', item.icon, { help: 'Material Symbols 名称，如 apartment、shopping_bag' })}`
+  }
+  if (kind === 'hwProduct') {
+    return `
+      ${catalogField(`products.${index}.name`, '产品名称', item.name, { wide: true })}
+      ${catalogField(`products.${index}.overviewLabel`, '宫格短名称', item.overviewLabel || item.name, { help: '出现在三列图标区的文字，可短于正式名称' })}
+      ${catalogField(`products.${index}.productLine`, '所属产品线', item.productLine, { type: 'select', options: [['space', '空间智能'], ['retail', '新零售与行业电子纸'], ['consumer', '3C 数码']] })}
+      ${catalogField(`products.${index}.showInOverview`, '显示在产品线宫格', String(item.showInOverview !== false), { type: 'select', options: [['true', '显示'], ['false', '不显示']] })}
+      ${catalogField(`products.${index}.shortDescription`, '一句话介绍', item.shortDescription, { type: 'textarea', wide: true })}
+      ${catalogField(`products.${index}.fullDescription`, '详细介绍', item.fullDescription || '', { type: 'textarea', wide: true, rows: 4 })}
+      ${catalogField(`products.${index}.useBlurb`, '面板说明', item.useBlurb || '', { type: 'textarea', wide: true, help: '零售/3C 产品卡上的用途说明' })}
+      ${catalogField(`products.${index}.thumb`, '宫格图标/缩略图', item.thumb || '', { image: true, wide: true })}
+      ${catalogField(`products.${index}.coverImage`, '封面图', item.coverImage, { image: true, wide: true })}
+      ${catalogField(`products.${index}.sceneImage`, '场景大图', item.sceneImage || '', { image: true, wide: true, help: '3C 场景卡使用，可空' })}
+      ${catalogField(`products.${index}.icon`, '图标名', item.icon || '')}
+      ${catalogField(`products.${index}.capabilities`, '核心特性', (item.capabilities || []).join('、'), { wide: true, help: '顿号分隔' })}
+      ${catalogField(`products.${index}.scenarios`, '适用场景', (item.scenarios || []).join('、'), { wide: true, help: '顿号分隔' })}`
+  }
+  if (kind === 'hwFlow') {
+    return `
+      ${catalogField(`flow.${index}.title`, '步骤名称', item.title)}
+      ${catalogField(`flow.${index}.desc`, '说明', item.desc, { type: 'textarea', wide: true })}
+      ${catalogField(`flow.${index}.icon`, '图标名', item.icon)}`
+  }
   return ''
 }
 
@@ -206,6 +312,9 @@ export function applyCatalogFields(content, root = document) {
     let value = field.value
     if (/(^|\.)(items|workflow|chain|capabilities|pains|journey|hardware|scenarios|canDo|highlightAgents|agents)$/.test(path) && !path.includes('coreValues')) {
       value = value.split(/\n|、|,|，/).map((item) => item.trim()).filter(Boolean)
+    }
+    if (path.endsWith('showInOverview') || path.endsWith('.published')) {
+      value = value === true || value === 'true'
     }
     cursor[last] = value
   })

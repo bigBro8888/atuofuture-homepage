@@ -13,6 +13,7 @@ import { SIMPLE_PAGE_KEYS, getSimplePageConfig, validateSimplePage } from './sim
 import { getNewsFeedConfig, syncHomeNewsFromFeed, validateNewsFeedContent } from './news-feed-service.js'
 import { getAgentsPageConfig, validateAgentsContent } from './agents-landing-service.js'
 import { getSolutionsPageConfig, validateSolutionsContent } from './solutions-landing-service.js'
+import { getHardwarePageConfig, validateHardwareContent } from './hardware-landing-service.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -282,6 +283,7 @@ function registerLandingPage(key, getPage, validate) {
 
 registerLandingPage('agents', getAgentsPageConfig, validateAgentsContent)
 registerLandingPage('solutions', getSolutionsPageConfig, validateSolutionsContent)
+registerLandingPage('hardware', getHardwarePageConfig, validateHardwareContent)
 
 publicPagesRouter.get('/simple/:key', (request, response) => {
   const page = getSimplePageConfig(request.params.key)

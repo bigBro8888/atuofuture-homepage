@@ -1,6 +1,6 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 import { bindNewsRichEditor, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
-import { applyCatalogFields, catalogItemFields, renderAgentsCatalog, renderSolutionsCatalog } from './admin-catalog.js'
+import { applyCatalogFields, catalogItemFields, renderAgentsCatalog, renderHardwareCatalog, renderSolutionsCatalog } from './admin-catalog.js'
 
 const API = '/api/admin'
 const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', newsPage: null, catalogPage: null, catalogKey: '', homeSection: 'hero' }
@@ -19,7 +19,7 @@ const titles = {
   about: ['关于我们', '路径 /about/ · 编辑草稿并发布'],
   'page-solutions': ['行业解决方案', '路径 /solutions/ · 按前台区块逐项配置'],
   'page-agents': ['空间智能体', '路径 /agents/ · 按前台区块逐项配置'],
-  'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏标题与 Banner'],
+  'page-hardware': ['智能硬件', '路径 /hardware/ · 按前台区块逐项配置产品图标与面板'],
   'page-news': ['新闻中心', '路径 /news/ · 列表管理，点编辑即可改稿并发布'],
   'page-ai-token': ['AI Token', '路径 /ai-token/ · 首屏标题'],
   config: ['App 下载页', '路径 /app-download/ · 文案、Banner、商店链接'],
@@ -144,7 +144,7 @@ async function loadOverview() {
 
 function openTab(name, options = {}) {
   if (!titles[name]) name = 'overview'
-  const panelName = name === 'page-news' ? 'news' : (name === 'page-agents' || name === 'page-solutions') ? 'catalog' : name.startsWith('page-') ? 'simple' : name
+  const panelName = name === 'page-news' ? 'news' : (name === 'page-agents' || name === 'page-solutions' || name === 'page-hardware') ? 'catalog' : name.startsWith('page-') ? 'simple' : name
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === name))
   document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === panelName))
   const [title, subtitle] = titles[name]
@@ -164,6 +164,7 @@ function openTab(name, options = {}) {
   if (name === 'page-news') loadNewsFeed()
   else if (name === 'page-agents') loadCatalogPage('agents')
   else if (name === 'page-solutions') loadCatalogPage('solutions')
+  else if (name === 'page-hardware') loadCatalogPage('hardware')
   else if (name.startsWith('page-')) loadSimplePage(name.slice('page-'.length))
   if (name === 'home') loadHomePage()
   if (name === 'about') loadAboutPage()
@@ -1004,6 +1005,10 @@ function renderCatalogEditor(content) {
     title.textContent = '空间智能体'
     preview.href = '/agents/'
     editor.innerHTML = renderAgentsCatalog(content)
+  } else if (state.catalogKey === 'hardware') {
+    title.textContent = '智能硬件'
+    preview.href = '/hardware/'
+    editor.innerHTML = renderHardwareCatalog(content)
   } else {
     title.textContent = '行业解决方案'
     preview.href = '/solutions/'
@@ -1606,6 +1611,35 @@ document.querySelector('[data-about-publish]').addEventListener('click', async (
 
 document.querySelector('[data-catalog-form]').addEventListener('submit', (event) => event.preventDefault())
 document.querySelector('[data-catalog-editor]').addEventListener('click', (event) => {
+  const add = event.target.closest('[data-catalog-add]')
+  if (add) {
+    event.preventDefault()
+    if (add.dataset.catalogAdd !== 'hwProduct') return
+    const content = collectCatalogContent()
+    content.products = content.products || []
+    content.products.push({
+      id: `hw-${Date.now().toString(36)}`,
+      slug: `hw-${Date.now().toString(36)}`,
+      productLine: 'space',
+      name: '新产品',
+      overviewLabel: '新产品',
+      shortDescription: '',
+      fullDescription: '',
+      coverImage: '/images/hardware/control-screen.jpg',
+      thumb: '',
+      showInOverview: true,
+      useBlurb: '',
+      sceneImage: '',
+      capabilities: [],
+      scenarios: [],
+      icon: 'memory',
+      published: true,
+    })
+    state.catalogPage.draftContent = content
+    renderCatalogEditor(content)
+    toast('已新增产品，请编辑后保存草稿并发布')
+    return
+  }
   const edit = event.target.closest('[data-catalog-edit]')
   if (!edit) return
   event.preventDefault()
@@ -1619,10 +1653,13 @@ document.querySelector('[data-catalog-editor]').addEventListener('click', (event
     industry: content.industries?.[index],
     solution: content.items?.[index],
     baseNode: content.base?.nodes?.[index],
+    hwLine: content.lines?.[index],
+    hwProduct: content.products?.[index],
+    hwFlow: content.flow?.[index],
   }
   const item = map[kind]
   if (!item) return
-  const titles = { chain: '编辑能力链', agent: '编辑智能体', industry: '编辑行业组合', solution: '编辑行业方案', baseNode: '编辑底座节点' }
+  const titles = { chain: '编辑能力链', agent: '编辑智能体', industry: '编辑行业组合', solution: '编辑行业方案', baseNode: '编辑底座节点', hwLine: '编辑产品线', hwProduct: '编辑产品面板', hwFlow: '编辑协同步骤' }
   openItemModal({ scope: 'catalog', kind, index, title: titles[kind] || '编辑', html: catalogItemFields(kind, item, index) })
 })
 document.querySelector('[data-catalog-editor]').addEventListener('input', (event) => {

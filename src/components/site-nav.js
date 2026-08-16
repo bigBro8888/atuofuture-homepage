@@ -1,6 +1,7 @@
 import { SITE_NAV_ITEMS } from '../data/site-nav.js'
 import { SHOW_APP_DOWNLOAD, SITE_CTA, APP_DOWNLOAD_PATH } from '../data/site-links.js'
 import { resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
+import { resolveHardwareMegaGroupsCms } from '../lib/cms-pages.js'
 import { SOLUTIONS } from '../data/solutions.js'
 import { AGENTS_OVERVIEW } from '../data/agents-overview.js'
 
@@ -70,8 +71,12 @@ function renderVisualMega(item, root) {
   `
 }
 
+function hardwareMegaGroups() {
+  return resolveHardwareMegaGroupsCms() || resolveHardwareMegaGroups()
+}
+
 function renderHardwareMega(root) {
-  const groups = resolveHardwareMegaGroups()
+  const groups = hardwareMegaGroups()
   return `
     <div class="site-mega site-mega--hardware" role="region">
       <div class="site-mega__hardware">
@@ -163,7 +168,7 @@ function renderMobileNav(activeId, root) {
           <a class="site-mobile-nav-link site-mobile-nav-link--all" href="${href}">查看全部</a>
           ${
             item.mega === 'hardware'
-              ? resolveHardwareMegaGroups()
+              ? hardwareMegaGroups()
                   .map(
                     (group) => `
             <p class="site-mobile-nav-group">${group.title}</p>

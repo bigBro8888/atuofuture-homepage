@@ -1,5 +1,6 @@
-import { getLine, getProductBySlug } from '../data/hardware-catalog.js'
+import { getPublishedPage } from '../services/site-settings-api.js'
 import { buildProductStory } from '../data/hardware-product-details.js'
+import { findHardwareLine, findHardwareProduct, setHardwareRuntime } from '../lib/cms-pages.js'
 
 function esc(str = '') {
   return String(str)
@@ -189,7 +190,7 @@ function renderClosing(story) {
 }
 
 function renderStory(product) {
-  const line = getLine(product.productLine)
+  const line = findHardwareLine(product.productLine)
   const story = buildProductStory(product)
   return `
     <article class="hpi">
@@ -202,11 +203,13 @@ function renderStory(product) {
     </article>`
 }
 
-export function initHardwareProductPage() {
+export async function initHardwareProductPage() {
   const root = document.getElementById('hardware-product-root')
   if (!root) return
+  const cms = await getPublishedPage('/api/public/pages/hardware')
+  if (cms) setHardwareRuntime(cms)
   const slug = resolveSlug()
-  const product = getProductBySlug(slug)
+  const product = findHardwareProduct(slug)
   if (!product) {
     document.title = '产品未找到 | 安托未来'
     root.innerHTML = renderNotFound(slug)

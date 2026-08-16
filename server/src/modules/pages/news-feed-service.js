@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { db } from '../../lib/store.js'
+import { getHomePageConfig } from './home-service.js'
 import { formatNewsBody } from '../../../../src/lib/format-news-body.js'
 import { htmlFromPlainBody, plainTextFromHtml, sanitizeNewsHtml } from '../../../../src/lib/sanitize-news-html.js'
 
@@ -185,6 +186,7 @@ function validateItem(value = {}, fallback = {}) {
     cover: cleanUrl(value.cover, fallback.cover || ''),
     author: cleanText(value.author, fallback.author || '安托未来', 40),
     tags: cleanTags(value.tags ?? fallback.tags),
+    showOnHome: Boolean(value.showOnHome),
     body,
     bodyHtml,
     sections: formatNewsBody(body),
@@ -196,6 +198,13 @@ export function validateNewsFeedContent(value = {}) {
   const source = Array.isArray(value.items) ? value.items : fallback.items
   const items = source.slice(0, 80).map((item, index) => validateItem(item, fallback.items[index] || {}))
   items.sort((a, b) => String(b.date).localeCompare(String(a.date)))
+  const pinned = items.filter((item) => item.showOnHome)
+  if (pinned.length > 3) {
+    const keep = new Set(pinned.slice(0, 3).map((item) => item.id))
+    for (const item of items) {
+      if (item.showOnHome && !keep.has(item.id)) item.showOnHome = false
+    }
+  }
   return {
     title: cleanText(value.title, fallback.title, 80),
     subtitle: cleanText(value.subtitle, fallback.subtitle, 240),
@@ -221,4 +230,31 @@ export function getNewsFeedConfig() {
     db().pageConfigs.push(page)
   }
   return page
+}
+
+export function syncHomeNewsFromFeed(items = []) {
+  const selected = items.filter((item) => item.showOnHome).slice(0, 3)
+  if (!selected.length) return 0
+  const home = getHomePageConfig()
+  const mapped = selected.map((item) => ({
+    category: item.category,
+    title: item.title,
+    description: item.summary,
+    imageUrl: item.cover,
+    linkUrl: `/news-detail/?id=${encodeURIComponent(item.id)}`,
+  }))
+  home.draftContent = home.draftContent || {}
+  home.draftContent.news = {
+    ...(home.draftContent.news || {}),
+    items: mapped,
+  }
+  home.publishedContent = home.publishedContent || structuredClone(home.draftContent)
+  home.publishedContent.news = {
+    ...(home.publishedContent.news || {}),
+    items: structuredClone(mapped),
+  }
+  home.status = 'published'
+  home.publishedAt = new Date().toISOString()
+  home.updatedAt = home.publishedAt
+  return mapped.length
 }
