@@ -1,9 +1,8 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 import { bindNewsRichEditor, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
-import { applyCatalogFields, catalogItemFields, renderAgentsCatalog, renderHardwareCatalog, renderSolutionsCatalog } from './admin-catalog.js'
 
 const API = '/api/admin'
-const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', newsPage: null, catalogPage: null, catalogKey: '', homeSection: 'hero' }
+const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', newsPage: null, homeSection: 'hero' }
 const HOME_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏轮播', desc: '多屏大图，可新增和逐屏编辑' },
   { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
@@ -17,9 +16,9 @@ const titles = {
   site: ['全站设置', 'Logo、品牌名、顶栏按钮与联系方式'],
   home: ['官网首页', '路径 / · 按前台区块逐项编辑，点左侧大纲跳转'],
   about: ['关于我们', '路径 /about/ · 编辑草稿并发布'],
-  'page-solutions': ['行业解决方案', '路径 /solutions/ · 按前台区块逐项配置'],
-  'page-agents': ['空间智能体', '路径 /agents/ · 按前台区块逐项配置'],
-  'page-hardware': ['智能硬件', '路径 /hardware/ · 按前台区块逐项配置产品图标与面板'],
+  'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏标题与 Banner'],
+  'page-agents': ['空间智能体', '路径 /agents/ · 首屏标题与 Banner'],
+  'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏标题与 Banner'],
   'page-news': ['新闻中心', '路径 /news/ · 列表管理，点编辑即可改稿并发布'],
   'page-ai-token': ['AI Token', '路径 /ai-token/ · 首屏标题'],
   config: ['App 下载页', '路径 /app-download/ · 文案、Banner、商店链接'],
@@ -144,7 +143,7 @@ async function loadOverview() {
 
 function openTab(name, options = {}) {
   if (!titles[name]) name = 'overview'
-  const panelName = name === 'page-news' ? 'news' : (name === 'page-agents' || name === 'page-solutions' || name === 'page-hardware') ? 'catalog' : name.startsWith('page-') ? 'simple' : name
+  const panelName = name === 'page-news' ? 'news' : name.startsWith('page-') ? 'simple' : name
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === name))
   document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === panelName))
   const [title, subtitle] = titles[name]
@@ -162,9 +161,6 @@ function openTab(name, options = {}) {
     updateAnchorState()
   }
   if (name === 'page-news') loadNewsFeed()
-  else if (name === 'page-agents') loadCatalogPage('agents')
-  else if (name === 'page-solutions') loadCatalogPage('solutions')
-  else if (name === 'page-hardware') loadCatalogPage('hardware')
   else if (name.startsWith('page-')) loadSimplePage(name.slice('page-'.length))
   if (name === 'home') loadHomePage()
   if (name === 'about') loadAboutPage()
@@ -368,7 +364,7 @@ function renderHomeEditor(content) {
       </fieldset>
       <fieldset data-home-section="news">
         <legend>新闻动态</legend>
-        <p class="admin-form-section__hint">新闻一行一条，点「编辑」弹窗修改。</p>
+        <p class="admin-form-section__hint">这三张卡也可在「新闻中心」里勾选「推送到首页」。封面比例与新闻列表封面一致。</p>
         <div class="admin-form-grid">
           ${homeField('news.kicker', '眉题', news.kicker)}
           ${homeField('news.title', '区块标题', news.title)}
@@ -625,14 +621,6 @@ function applyItemModal() {
   }
   if (modal.dataset.scope === 'news') {
     void publishNewsFromModal()
-    return
-  }
-  if (modal.dataset.scope === 'catalog') {
-    let content = applyCatalogFields(state.catalogPage.draftContent, document.querySelector('[data-catalog-editor]'))
-    content = applyCatalogFields(content, modal)
-    state.catalogPage.draftContent = content
-    closeItemModal()
-    renderCatalogEditor(content)
   }
 }
 
@@ -997,55 +985,6 @@ async function saveSimpleDraft({ quiet = false } = {}) {
   return page
 }
 
-function renderCatalogEditor(content) {
-  const editor = document.querySelector('[data-catalog-editor]')
-  const preview = document.querySelector('[data-catalog-preview]')
-  const title = document.querySelector('[data-catalog-title]')
-  if (state.catalogKey === 'agents') {
-    title.textContent = '空间智能体'
-    preview.href = '/agents/'
-    editor.innerHTML = renderAgentsCatalog(content)
-  } else if (state.catalogKey === 'hardware') {
-    title.textContent = '智能硬件'
-    preview.href = '/hardware/'
-    editor.innerHTML = renderHardwareCatalog(content)
-  } else {
-    title.textContent = '行业解决方案'
-    preview.href = '/solutions/'
-    editor.innerHTML = renderSolutionsCatalog(content)
-  }
-}
-
-function updateCatalogStatus(page) {
-  document.querySelector('[data-catalog-draft-time]').textContent = `草稿 ${dateTime(page.updatedAt)}`
-  document.querySelector('[data-catalog-publish-status]').textContent = page.publishedAt ? `已发布 ${dateTime(page.publishedAt)}` : '尚未发布'
-}
-
-function collectCatalogContent() {
-  return applyCatalogFields(state.catalogPage.draftContent, document.querySelector('[data-catalog-editor]'))
-}
-
-async function loadCatalogPage(key) {
-  state.catalogKey = key
-  try {
-    const { page } = await api(`/pages/${key}`)
-    state.catalogPage = page
-    renderCatalogEditor(page.draftContent)
-    updateCatalogStatus(page)
-  } catch (error) {
-    toast(error.message, true)
-  }
-}
-
-async function saveCatalogDraft({ quiet = false } = {}) {
-  const content = collectCatalogContent()
-  const { page } = await api(`/pages/${state.catalogKey}/draft`, { method: 'PUT', body: JSON.stringify({ content }) })
-  state.catalogPage = page
-  updateCatalogStatus(page)
-  if (!quiet) toast('草稿已保存，线上内容尚未改变')
-  return page
-}
-
 function newsField(path, label, value, options = {}) {
   const type = options.type || 'text'
   let field
@@ -1090,7 +1029,7 @@ function renderNewsEditor(content) {
         <div class="admin-item-row">
           <div>
             <strong>${escapeHtml(item.title || '未填写标题')}</strong>
-            <small>${escapeHtml(item.category || '')} · ${escapeHtml(item.date || '')} · ${escapeHtml(item.author || '')}</small>
+            <small>${escapeHtml(item.category || '')} · ${escapeHtml(item.date || '')} · ${escapeHtml(item.author || '')}${item.pinHome ? ' · 已上首页' : ''}</small>
           </div>
           <span class="admin-slide-tools">
             <button type="button" data-news-edit="${index}">编辑</button>
@@ -1121,6 +1060,8 @@ function collectNewsArticleFromModal() {
     category: get('category'),
     cover: get('cover'),
     tags: get('tags'),
+    pinHome: Boolean(document.querySelector('[data-item-modal] [data-news-field="pinHome"]')?.checked),
+    pinnedAt: Boolean(document.querySelector('[data-item-modal] [data-news-field="pinHome"]')?.checked) ? new Date().toISOString() : '',
     body: rich.body,
     bodyHtml: rich.bodyHtml,
   }
@@ -1136,6 +1077,10 @@ function newsArticleFields(item = {}) {
     ${newsField('author', '发布人', item.author || '安托未来')}
     ${newsField('category', '分类', item.category || '公司动态', { type: 'select', options: [['公司动态', '公司动态'], ['产品更新', '产品更新'], ['方案实践', '方案实践']] })}
     ${newsField('cover', '封面图', item.cover || '', { image: true, wide: true })}
+    <label class="admin-form-wide"><span>推送到首页</span>
+      <input data-news-field="pinHome" type="checkbox"${item.pinHome ? ' checked' : ''} />
+      <small>首页「新闻动态」固定 3 篇。勾选后这篇会占一格，新勾选的排在最前；封面比例与新闻列表一致。</small>
+    </label>
     ${newsField('tags', '标签', Array.isArray(item.tags) ? item.tags.join('，') : (item.tags || ''), { wide: true, help: '可选，用逗号分隔' })}
     ${newsRichEditorMarkup(item)}`
 }
@@ -1156,10 +1101,58 @@ function openNewsModal(index) {
   bindNewsRichEditor(document.querySelector('[data-item-modal]'), { api, toast })
 }
 
+function limitPinnedNews(items) {
+  const pinned = items
+    .filter((item) => item.pinHome)
+    .sort((a, b) => String(b.pinnedAt || '').localeCompare(String(a.pinnedAt || '')))
+  const keep = new Set(pinned.slice(0, 3).map((item) => item.id).filter(Boolean))
+  return items.map((item) => (
+    item.pinHome && keep.has(item.id)
+      ? item
+      : { ...item, pinHome: false, pinnedAt: '' }
+  ))
+}
+
+function toHomeNewsCard(article) {
+  return {
+    category: article.category,
+    title: article.title,
+    description: article.summary,
+    imageUrl: article.cover,
+    linkUrl: `/news-detail/?id=${encodeURIComponent(article.id)}`,
+  }
+}
+
+async function syncPinnedNewsToHome(items) {
+  const pinned = items
+    .filter((item) => item.pinHome && item.id)
+    .sort((a, b) => String(b.pinnedAt || '').localeCompare(String(a.pinnedAt || '')))
+    .slice(0, 3)
+    .map(toHomeNewsCard)
+  const { page } = await api('/pages/home')
+  const content = page.draftContent
+  const existing = content.news?.items || []
+  const cards = [...pinned]
+  const used = new Set(cards.map((item) => item.linkUrl))
+  for (const item of existing) {
+    if (cards.length >= 3) break
+    if (!used.has(item.linkUrl)) {
+      cards.push(item)
+      used.add(item.linkUrl)
+    }
+  }
+  content.news = content.news || {}
+  content.news.items = cards.slice(0, 3)
+  await api('/pages/home/draft', { method: 'PUT', body: JSON.stringify({ content }) })
+  await api('/pages/home/publish', { method: 'POST' })
+}
+
 async function persistNewsFeed(content, message) {
+  content.items = limitPinnedNews(content.items || [])
   const { page: draftPage } = await api('/pages/news-feed/draft', { method: 'PUT', body: JSON.stringify({ content }) })
   const { page } = await api('/pages/news-feed/publish', { method: 'POST' })
   state.newsPage = page.publishedContent ? page : draftPage
+  await syncPinnedNewsToHome(state.newsPage.draftContent.items || [])
   renderNewsEditor(state.newsPage.draftContent)
   updateNewsStatus(state.newsPage)
   toast(message)
@@ -1180,7 +1173,7 @@ async function publishNewsFromModal() {
   const meta = collectNewsPageMeta()
   const items = [...(state.newsPage?.draftContent?.items || [])]
   if (index >= 0 && items[index]) items[index] = { ...items[index], ...article }
-  else items.unshift(article)
+  else items.unshift({ ...article, id: article.id || `n-${crypto.randomUUID().slice(0, 8)}` })
   try {
     await persistNewsFeed({ ...meta, items }, '新闻已发布到前台')
     closeItemModal()
@@ -1609,113 +1602,6 @@ document.querySelector('[data-about-publish]').addEventListener('click', async (
   }
 })
 
-document.querySelector('[data-catalog-form]').addEventListener('submit', (event) => event.preventDefault())
-document.querySelector('[data-catalog-editor]').addEventListener('click', (event) => {
-  const add = event.target.closest('[data-catalog-add]')
-  if (add) {
-    event.preventDefault()
-    if (add.dataset.catalogAdd !== 'hwProduct') return
-    const content = collectCatalogContent()
-    content.products = content.products || []
-    content.products.push({
-      id: `hw-${Date.now().toString(36)}`,
-      slug: `hw-${Date.now().toString(36)}`,
-      productLine: 'space',
-      name: '新产品',
-      overviewLabel: '新产品',
-      shortDescription: '',
-      fullDescription: '',
-      coverImage: '/images/hardware/control-screen.jpg',
-      thumb: '',
-      showInOverview: true,
-      useBlurb: '',
-      sceneImage: '',
-      capabilities: [],
-      scenarios: [],
-      icon: 'memory',
-      published: true,
-    })
-    state.catalogPage.draftContent = content
-    renderCatalogEditor(content)
-    toast('已新增产品，请编辑后保存草稿并发布')
-    return
-  }
-  const edit = event.target.closest('[data-catalog-edit]')
-  if (!edit) return
-  event.preventDefault()
-  const kind = edit.dataset.catalogEdit
-  const index = Number(edit.dataset.itemIndex)
-  const content = collectCatalogContent()
-  state.catalogPage.draftContent = content
-  const map = {
-    chain: content.chain?.[index],
-    agent: content.agents?.[index],
-    industry: content.industries?.[index],
-    solution: content.items?.[index],
-    baseNode: content.base?.nodes?.[index],
-    hwLine: content.lines?.[index],
-    hwProduct: content.products?.[index],
-    hwFlow: content.flow?.[index],
-  }
-  const item = map[kind]
-  if (!item) return
-  const titles = { chain: '编辑能力链', agent: '编辑智能体', industry: '编辑行业组合', solution: '编辑行业方案', baseNode: '编辑底座节点', hwLine: '编辑产品线', hwProduct: '编辑产品面板', hwFlow: '编辑协同步骤' }
-  openItemModal({ scope: 'catalog', kind, index, title: titles[kind] || '编辑', html: catalogItemFields(kind, item, index) })
-})
-document.querySelector('[data-catalog-editor]').addEventListener('input', (event) => {
-  const field = event.target.closest('[data-catalog-field]')
-  if (!field) return
-  const preview = document.querySelector(`[data-catalog-preview-for="${field.dataset.catalogField}"]`)
-  if (preview) {
-    preview.src = field.value.trim()
-    preview.hidden = !field.value.trim()
-  }
-})
-document.querySelector('[data-catalog-editor]').addEventListener('change', async (event) => {
-  const upload = event.target.closest('[data-catalog-upload-for]')
-  const file = upload?.files?.[0]
-  if (!upload || !file) return
-  const path = upload.dataset.catalogUploadFor
-  upload.disabled = true
-  try {
-    const formData = new FormData()
-    formData.append('image', file)
-    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
-    const field = document.querySelector(`[data-catalog-field="${path}"]`)
-    if (field) {
-      field.value = url
-      field.dispatchEvent(new Event('input', { bubbles: true }))
-    }
-    toast('图片上传成功，请保存草稿后发布')
-  } catch (error) {
-    toast(error.message, true)
-  } finally {
-    upload.disabled = false
-    upload.value = ''
-  }
-})
-document.querySelector('[data-catalog-save]').addEventListener('click', async (event) => {
-  const button = event.currentTarget
-  button.disabled = true
-  try { await saveCatalogDraft() } catch (error) { toast(error.message, true) } finally { button.disabled = false }
-})
-document.querySelector('[data-catalog-publish]').addEventListener('click', async (event) => {
-  if (!window.confirm('确认发布到前台？访客将立即看到新内容。')) return
-  const button = event.currentTarget
-  button.disabled = true
-  try {
-    await saveCatalogDraft({ quiet: true })
-    const { page } = await api(`/pages/${state.catalogKey}/publish`, { method: 'POST' })
-    state.catalogPage = page
-    updateCatalogStatus(page)
-    toast('页面已发布到前台')
-  } catch (error) {
-    toast(error.message, true)
-  } finally {
-    button.disabled = false
-  }
-})
-
 document.querySelector('[data-news-form]').addEventListener('submit', (event) => event.preventDefault())
 document.querySelector('[data-news-editor]').addEventListener('click', async (event) => {
   if (event.target.closest('[data-news-add]')) {
@@ -1932,30 +1818,21 @@ document.querySelector('[data-item-modal]').addEventListener('input', (event) =>
       preview.hidden = !newsEl.value.trim()
     }
   }
-  const catalogEl = event.target.closest('[data-catalog-field]')
-  if (catalogEl) {
-    const preview = document.querySelector(`[data-catalog-preview-for="${catalogEl.dataset.catalogField}"]`)
-    if (preview) {
-      preview.src = catalogEl.value.trim()
-      preview.hidden = !catalogEl.value.trim()
-    }
-  }
 })
 document.querySelector('[data-item-modal]').addEventListener('change', async (event) => {
   const homeUpload = event.target.closest('[data-home-upload-for]')
   const aboutUpload = event.target.closest('[data-about-upload-for]')
   const newsUpload = event.target.closest('[data-news-upload-for]')
-  const catalogUpload = event.target.closest('[data-catalog-upload-for]')
-  const upload = homeUpload || aboutUpload || newsUpload || catalogUpload
+  const upload = homeUpload || aboutUpload || newsUpload
   const file = upload?.files?.[0]
   if (!upload || !file) return
-  const path = homeUpload ? upload.dataset.homeUploadFor : aboutUpload ? upload.dataset.aboutUploadFor : newsUpload ? upload.dataset.newsUploadFor : upload.dataset.catalogUploadFor
+  const path = homeUpload ? upload.dataset.homeUploadFor : aboutUpload ? upload.dataset.aboutUploadFor : upload.dataset.newsUploadFor
   upload.disabled = true
   try {
     const formData = new FormData()
     formData.append('image', file)
     const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
-    const selector = homeUpload ? `[data-home-field="${path}"]` : aboutUpload ? `[data-about-field="${path}"]` : newsUpload ? `[data-news-field="${path}"]` : `[data-catalog-field="${path}"]`
+    const selector = homeUpload ? `[data-home-field="${path}"]` : aboutUpload ? `[data-about-field="${path}"]` : `[data-news-field="${path}"]`
     const field = document.querySelector(selector)
     if (field) {
       field.value = url

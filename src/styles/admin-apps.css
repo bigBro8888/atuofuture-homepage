@@ -272,7 +272,7 @@ body.admin-modal-open { overflow: hidden; }
 .admin-home-metrics b { display: block; margin-bottom: 10px; font-size: 10px; }
 .admin-home-metrics label + label { display: block; margin-top: 9px; }
 .admin-home-media { display: flex; align-items: center; gap: 10px; margin-top: 9px; }
-.admin-home-media img { width: 88px; height: 58px; border: 1px solid #e1e7ef; border-radius: 9px; object-fit: cover; background: #f4f7fb; }
+.admin-home-media img { width: 160px; height: auto; aspect-ratio: 16 / 9; border: 1px solid #e1e7ef; border-radius: 9px; object-fit: cover; background: #f4f7fb; }
 .admin-home-media .admin-home-upload { display: inline-flex; padding: 8px 11px; border: 1px solid #cdd8e7; border-radius: 9px; color: #1769ff; cursor: pointer; background: #fff; font-size: 9px; font-weight: 700; }
 .admin-home-upload input { display: none; }
 .admin-home-actions { position: sticky; z-index: 4; bottom: 12px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 20px; padding: 12px; border: 1px solid #dfe6ef; border-radius: 13px; background: rgba(255,255,255,.94); box-shadow: 0 12px 30px rgba(26,45,78,.1); backdrop-filter: blur(12px); }
