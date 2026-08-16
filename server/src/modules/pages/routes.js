@@ -19,6 +19,10 @@ const imageUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024, files: 1 },
 })
+const videoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 200 * 1024 * 1024, files: 1 },
+})
 const imageExtensions = new Map([
   ['image/jpeg', '.jpg'],
   ['image/png', '.png'],
@@ -55,6 +59,37 @@ async function saveImageBuffer(buffer, mimeType, admin, extra = {}) {
     size: buffer.length,
     mimeType: type,
     ...extra,
+  })
+  return url
+}
+
+function sniffVideoMime(buffer, mimeType) {
+  const type = String(mimeType || '').split(';')[0].trim().toLowerCase()
+  if (['video/mp4', 'video/webm', 'video/quicktime'].includes(type)) return type
+  if (!buffer?.length || buffer.length < 12) return ''
+  const head = buffer.subarray(0, 12)
+  if (head.subarray(4, 8).toString('ascii') === 'ftyp') return 'video/mp4'
+  if (head[0] === 0x1a && head[1] === 0x45 && head[2] === 0xdf && head[3] === 0xa3) return 'video/webm'
+  return ''
+}
+
+async function saveVideoBuffer(buffer, mimeType, admin) {
+  const type = sniffVideoMime(buffer, mimeType)
+  const extension = type === 'video/webm' ? '.webm' : type === 'video/quicktime' ? '.mov' : type === 'video/mp4' ? '.mp4' : ''
+  if (!buffer?.length || !extension) {
+    const error = new Error('仅支持 MP4、WebM 或 MOV 视频')
+    error.status = 400
+    throw error
+  }
+  const videoDirectory = path.join(config.uploadDir, 'videos')
+  const filename = `news-${Date.now()}-${randomUUID()}${extension}`
+  await mkdir(videoDirectory, { recursive: true })
+  await writeFile(path.join(videoDirectory, filename), buffer)
+  const url = `/api/public/uploads/videos/${filename}`
+  await addAudit(admin, 'news.media.video', 'news-feed', {
+    filename,
+    size: buffer.length,
+    mimeType: type,
   })
   return url
 }
@@ -311,6 +346,15 @@ adminPagesRouter.post('/media/image', requireAuth('config:write'), imageUpload.s
     response.status(201).json({ url })
   } catch (error) {
     response.status(error.status || 400).json({ error: 'invalid_image', message: error.message })
+  }
+})
+
+adminPagesRouter.post('/media/video', requireAuth('config:write'), videoUpload.single('video'), async (request, response) => {
+  try {
+    const url = await saveVideoBuffer(request.file?.buffer, request.file?.mimetype, request.admin)
+    response.status(201).json({ url })
+  } catch (error) {
+    response.status(error.status || 400).json({ error: 'invalid_video', message: error.message })
   }
 })
 

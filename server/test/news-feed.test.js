@@ -63,6 +63,13 @@ test('publishes news feed articles to the public API', async (context) => {
     tags: ['测试'],
     body: '一、导语\n\n这是正文第一段。',
   })
+  draftContent.items.unshift({
+    type: 'video',
+    title: '测试视频新闻',
+    category: '公司动态',
+    cover: '/assets/hero/capability-ai.jpg',
+    videoUrl: '/api/public/uploads/videos/demo.mp4',
+  })
 
   const draftResponse = await fetch(`${baseUrl}/api/admin/pages/news-feed/draft`, {
     method: 'PUT',
@@ -73,7 +80,7 @@ test('publishes news feed articles to the public API', async (context) => {
 
   const beforePublish = await fetch(`${baseUrl}/api/public/pages/news-feed`)
   const before = await beforePublish.json()
-  assert.equal(before.content.items[0].title !== '测试新闻标题', true)
+  assert.equal(before.content.items[0].title !== '测试视频新闻', true)
 
   const publishResponse = await fetch(`${baseUrl}/api/admin/pages/news-feed/publish`, {
     method: 'POST',
@@ -83,6 +90,9 @@ test('publishes news feed articles to the public API', async (context) => {
 
   const afterPublish = await fetch(`${baseUrl}/api/public/pages/news-feed`)
   const after = await afterPublish.json()
-  assert.equal(after.content.items[0].title, '测试新闻标题')
-  assert.equal(after.content.items[0].sections[0].heading, '一、导语')
+  assert.equal(after.content.items[0].type, 'video')
+  assert.equal(after.content.items[0].title, '测试视频新闻')
+  assert.equal(after.content.items[0].videoUrl, '/api/public/uploads/videos/demo.mp4')
+  assert.equal(after.content.items[1].title, '测试新闻标题')
+  assert.equal(after.content.items[1].sections[0].heading, '一、导语')
 })

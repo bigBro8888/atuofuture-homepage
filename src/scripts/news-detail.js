@@ -73,6 +73,13 @@ function renderRelated(currentId, allItems) {
 }
 
 function renderBody(n) {
+  if (n.type === 'video' && n.videoUrl) {
+    return `
+      <div class="sx-news-article__player">
+        <video src="${esc(n.videoUrl)}" poster="${esc(n.cover || '')}" controls playsinline preload="metadata"></video>
+      </div>
+      ${n.summary ? `<p>${esc(n.summary)}</p>` : ''}`
+  }
   if (n.bodyHtml) return n.bodyHtml
   return renderSections(n)
 }
@@ -95,7 +102,7 @@ function renderDetail(n) {
           <span>作者 ${esc(author)}</span>
           <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
         </div>
-        <p class="sx-news-article__lead">${esc(n.summary)}</p>
+        ${n.summary ? `<p class="sx-news-article__lead">${esc(n.summary)}</p>` : ''}
       </header>
 
       <div class="sx-news-article__content">

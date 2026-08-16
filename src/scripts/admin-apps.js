@@ -1002,6 +1002,8 @@ function newsField(path, label, value, options = {}) {
   } else if (type === 'select') {
     const opts = (options.options || []).map(([key, text]) => `<option value="${escapeHtml(key)}"${String(value) === String(key) ? ' selected' : ''}>${escapeHtml(text)}</option>`).join('')
     field = `<select data-news-field="${path}">${opts}</select>`
+  } else if (options.hidden) {
+    field = `<input data-news-field="${path}" type="hidden" value="${escapeHtml(value ?? '')}" />`
   } else {
     field = `<input data-news-field="${path}" type="${type}" value="${escapeHtml(value ?? '')}" />`
   }
@@ -1010,7 +1012,12 @@ function newsField(path, label, value, options = {}) {
         <img data-news-preview-for="${path}" src="${escapeHtml(value ?? '')}" alt="" ${value ? '' : 'hidden'} />
         <label class="admin-home-upload">上传封面<input type="file" accept="image/jpeg,image/png,image/webp" data-news-upload-for="${path}" /></label>
       </div>`
-    : ''
+    : options.video
+      ? `<div class="admin-news-video">
+          <video data-news-preview-for="${path}" src="${escapeHtml(value ?? '')}" controls playsinline ${value ? '' : 'hidden'}></video>
+          <label class="admin-home-upload">上传视频<input type="file" accept="video/mp4,video/webm,video/quicktime,video/*" data-news-upload-for="${path}" /></label>
+        </div>`
+      : ''
   return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${field}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
 }
 
@@ -1045,7 +1052,7 @@ function renderNewsEditor(content) {
           </label>
           <div>
             <strong>${escapeHtml(item.title || '未填写标题')}</strong>
-            <small>${escapeHtml(item.category || '')} · ${escapeHtml(item.date || '')} · ${escapeHtml(item.author || '')}${item.pinHome ? ' · 已上首页' : ''}</small>
+            <small>${item.type === 'video' ? '视频' : '图文'} · ${escapeHtml(item.category || '')} · ${escapeHtml(item.date || '')}${item.pinHome ? ' · 已上首页' : ''}</small>
           </div>
           <span class="admin-slide-tools">
             <button type="button" data-news-edit="${index}">编辑</button>
@@ -1088,15 +1095,18 @@ function collectNewsPageMeta() {
 
 function collectNewsArticleFromModal() {
   const get = (path) => document.querySelector(`[data-item-modal] [data-news-field="${path}"]`)?.value ?? ''
-  const rich = readNewsRichContent(document.querySelector('[data-item-modal]'))
+  const type = get('type') === 'video' ? 'video' : 'article'
+  const rich = type === 'article' ? readNewsRichContent(document.querySelector('[data-item-modal]')) : { body: '', bodyHtml: '' }
   return {
     id: get('id'),
+    type,
     title: get('title'),
     summary: get('summary'),
-    date: get('date'),
-    author: get('author'),
+    date: get('date') || new Date().toISOString().slice(0, 10),
+    author: get('author') || '安托未来',
     category: get('category'),
     cover: get('cover'),
+    videoUrl: get('videoUrl'),
     tags: get('tags'),
     pinHome: Boolean(document.querySelector('[data-item-modal] [data-news-field="pinHome"]')?.checked),
     pinnedAt: Boolean(document.querySelector('[data-item-modal] [data-news-field="pinHome"]')?.checked) ? new Date().toISOString() : '',
@@ -1105,18 +1115,17 @@ function collectNewsArticleFromModal() {
   }
 }
 
-function newsArticleFields(item = {}) {
-  const today = new Date().toISOString().slice(0, 10)
+function newsTypeToggle(type) {
   return `
-    <input type="hidden" data-news-field="id" value="${escapeHtml(item.id || '')}" />
-    ${newsField('title', '新闻标题', item.title || '', { wide: true })}
-    ${newsField('summary', '新闻简介', item.summary || '', { type: 'textarea', wide: true, rows: 3 })}
-    ${newsField('date', '发布日期', item.date || today, { type: 'date' })}
-    ${newsField('author', '发布人', item.author || '安托未来')}
-    ${newsField('category', '分类', item.category || '公司动态', { type: 'select', options: [['公司动态', '公司动态'], ['产品更新', '产品更新'], ['方案实践', '方案实践']] })}
-    ${newsField('cover', '封面图', item.cover || '', { image: true, wide: true })}
-    ${newsField('tags', '标签', Array.isArray(item.tags) ? item.tags.join('，') : (item.tags || ''), { wide: true, help: '可选，用逗号分隔' })}
-    ${newsRichEditorMarkup(item)}
+    <div class="admin-news-type" role="tablist" aria-label="发布类型">
+      <button type="button" data-news-type-btn="article" class="${type !== 'video' ? 'is-active' : ''}">图文</button>
+      <button type="button" data-news-type-btn="video" class="${type === 'video' ? 'is-active' : ''}">视频</button>
+      <input type="hidden" data-news-field="type" value="${type === 'video' ? 'video' : 'article'}" />
+    </div>`
+}
+
+function newsPinHomeField(item = {}) {
+  return `
     <label class="admin-news-pin admin-form-wide">
       <input data-news-field="pinHome" type="checkbox"${item.pinHome ? ' checked' : ''} />
       <span>
@@ -1126,17 +1135,54 @@ function newsArticleFields(item = {}) {
     </label>`
 }
 
+function newsArticleFields(item = {}) {
+  const today = new Date().toISOString().slice(0, 10)
+  const type = item.type === 'video' ? 'video' : 'article'
+  return `
+    <input type="hidden" data-news-field="id" value="${escapeHtml(item.id || '')}" />
+    ${newsTypeToggle(type)}
+    ${newsField('title', '新闻标题', item.title || '', { wide: true })}
+    ${newsField('category', '内容分类', item.category || '公司动态', { type: 'select', options: [['公司动态', '公司动态'], ['产品更新', '产品更新'], ['方案实践', '方案实践']] })}
+    ${newsField('cover', '封面图', item.cover || '', { image: true, wide: true })}
+    <div data-news-panel="article"${type === 'video' ? ' hidden' : ''}>
+      ${newsField('summary', '新闻简介', item.summary || '', { type: 'textarea', wide: true, rows: 3 })}
+      ${newsField('date', '发布日期', item.date || today, { type: 'date' })}
+      ${newsField('author', '发布人', item.author || '安托未来')}
+      ${newsField('tags', '标签', Array.isArray(item.tags) ? item.tags.join('，') : (item.tags || ''), { wide: true, help: '可选，用逗号分隔' })}
+      ${newsRichEditorMarkup(item)}
+    </div>
+    <div data-news-panel="video"${type === 'video' ? '' : ' hidden'}>
+      ${newsField('videoUrl', '视频', item.videoUrl || '', { video: true, hidden: true, wide: true, help: '支持 MP4 / WebM，建议不超过 200MB。' })}
+    </div>
+    ${newsPinHomeField(item)}`
+}
+
+function setNewsModalType(type) {
+  const modal = document.querySelector('[data-item-modal]')
+  const next = type === 'video' ? 'video' : 'article'
+  const field = modal.querySelector('[data-news-field="type"]')
+  if (field) field.value = next
+  modal.querySelectorAll('[data-news-type-btn]').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.newsTypeBtn === next)
+  })
+  modal.querySelectorAll('[data-news-panel]').forEach((panel) => {
+    panel.hidden = panel.dataset.newsPanel !== next
+  })
+  document.querySelector('[data-item-modal-title]').textContent = next === 'video' ? '发布视频' : (modal.dataset.kind === 'create' ? '新建新闻' : '编辑新闻')
+}
+
 function openNewsModal(index) {
   const items = state.newsPage?.draftContent?.items || []
   const isNew = index < 0 || !items[index]
   const item = isNew
-    ? { id: '', title: '', summary: '', date: new Date().toISOString().slice(0, 10), author: '安托未来', category: '公司动态', cover: '', tags: [], body: '', bodyHtml: '' }
+    ? { id: '', type: 'article', title: '', summary: '', date: new Date().toISOString().slice(0, 10), author: '安托未来', category: '公司动态', cover: '', videoUrl: '', tags: [], body: '', bodyHtml: '' }
     : items[index]
+  const type = item.type === 'video' ? 'video' : 'article'
   openItemModal({
     scope: 'news',
     kind: isNew ? 'create' : 'edit',
     index: isNew ? -1 : index,
-    title: isNew ? '新建新闻' : '编辑新闻',
+    title: isNew ? (type === 'video' ? '发布视频' : '新建新闻') : (type === 'video' ? '编辑视频' : '编辑新闻'),
     html: newsArticleFields(item),
   })
   bindNewsRichEditor(document.querySelector('[data-item-modal]'), { api, toast })
@@ -1207,7 +1253,12 @@ async function publishNewsFromModal() {
     toast('请填写新闻标题', true)
     return
   }
-  if (!article.body.trim() && !article.bodyHtml.trim()) {
+  if (article.type === 'video') {
+    if (!article.videoUrl.trim()) {
+      toast('请上传视频', true)
+      return
+    }
+  } else if (!article.body.trim() && !article.bodyHtml.trim()) {
     toast('请粘贴或填写正文', true)
     return
   }
@@ -1839,6 +1890,12 @@ document.querySelector('[data-item-modal]').addEventListener('click', (event) =>
     closeItemModal()
     return
   }
+  const typeBtn = event.target.closest('[data-news-type-btn]')
+  if (typeBtn) {
+    event.preventDefault()
+    setNewsModalType(typeBtn.dataset.newsTypeBtn)
+    return
+  }
   if (event.target.closest('[data-item-modal-apply]')) {
     event.preventDefault()
     applyItemModal()
@@ -1881,18 +1938,19 @@ document.querySelector('[data-item-modal]').addEventListener('change', async (ev
   const file = upload?.files?.[0]
   if (!upload || !file) return
   const path = homeUpload ? upload.dataset.homeUploadFor : aboutUpload ? upload.dataset.aboutUploadFor : upload.dataset.newsUploadFor
+  const isVideo = Boolean(newsUpload && path === 'videoUrl')
   upload.disabled = true
   try {
     const formData = new FormData()
-    formData.append('image', file)
-    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+    formData.append(isVideo ? 'video' : 'image', file)
+    const { url } = await api(isVideo ? '/pages/media/video' : '/pages/media/image', { method: 'POST', body: formData })
     const selector = homeUpload ? `[data-home-field="${path}"]` : aboutUpload ? `[data-about-field="${path}"]` : `[data-news-field="${path}"]`
     const field = document.querySelector(selector)
     if (field) {
       field.value = url
       field.dispatchEvent(new Event('input', { bubbles: true }))
     }
-    toast(newsUpload ? '封面已上传，点发布上线即可' : '图片上传成功，请点完成后再保存草稿')
+    toast(isVideo ? '视频已上传，点发布上线即可' : newsUpload ? '封面已上传，点发布上线即可' : '图片上传成功，请点完成后再保存草稿')
   } catch (error) {
     toast(error.message, true)
   } finally {

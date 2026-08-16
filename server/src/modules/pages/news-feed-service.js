@@ -172,17 +172,24 @@ function cleanDate(value, fallback) {
 }
 
 function validateItem(value = {}, fallback = {}) {
+  const newsType = value.type === 'video' ? 'video' : 'article'
   const title = cleanText(value.title, fallback.title || '未命名新闻', 160)
-  const bodyHtml = sanitizeNewsHtml(value.bodyHtml || fallback.bodyHtml || htmlFromPlainBody(value.body || fallback.body || ''))
-  const body = cleanText(value.body || plainTextFromHtml(bodyHtml), fallback.body || '', 20000)
+  const bodyHtml = newsType === 'video'
+    ? ''
+    : sanitizeNewsHtml(value.bodyHtml || fallback.bodyHtml || htmlFromPlainBody(value.body || fallback.body || ''))
+  const body = newsType === 'video' ? '' : cleanText(value.body || plainTextFromHtml(bodyHtml), fallback.body || '', 20000)
   const category = NEWS_CATEGORIES.includes(value.category) ? value.category : (fallback.category || '公司动态')
+  const videoUrl = newsType === 'video' ? cleanUrl(value.videoUrl, fallback.videoUrl || '') : ''
+  if (newsType === 'video' && !videoUrl) throw new Error('请上传视频')
   return {
     id: cleanText(value.id, fallback.id || `n-${randomUUID().slice(0, 8)}`, 40) || `n-${randomUUID().slice(0, 8)}`,
+    type: newsType,
     category,
     date: cleanDate(value.date, fallback.date),
     title,
     summary: cleanText(value.summary, fallback.summary || '', 400),
     cover: cleanUrl(value.cover, fallback.cover || ''),
+    videoUrl,
     author: cleanText(value.author, fallback.author || '安托未来', 40),
     tags: cleanTags(value.tags ?? fallback.tags),
     pinHome: Boolean(value.pinHome),

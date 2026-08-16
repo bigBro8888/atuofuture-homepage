@@ -10701,6 +10701,7 @@ body.demo-modal-open {
   isolation: isolate;
 }
 .nx-lead__photo {
+  position: relative;
   width: 100%;
   aspect-ratio: 21 / 9;
   min-height: 320px;
@@ -10801,11 +10802,32 @@ body.demo-modal-open {
   box-shadow: 0 18px 40px rgba(15, 40, 80, .1);
 }
 .nx-item__cover {
+  position: relative;
   height: auto;
   aspect-ratio: 16 / 9;
   border-radius: 16px;
   background: #d8e4f4 center / cover no-repeat;
   transition: transform .45s ease;
+}
+.nx-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .55);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .25);
+}
+.nx-play::after {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 15px;
+  border-style: solid;
+  border-width: 9px 0 9px 14px;
+  border-color: transparent transparent transparent #fff;
 }
 .nx-item:hover .nx-item__cover {
   transform: scale(1.02);
@@ -11210,6 +11232,18 @@ body.demo-modal-open {
   line-height: 1.75;
   font-style: normal;
 }
+.sx-news-article__player {
+  margin: 0 0 24px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000;
+  aspect-ratio: 16 / 9;
+}
+.sx-news-article__player video {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 .sx-news-article__content {
   font-size: 16px;
   line-height: 1.8;
@@ -11408,9 +11442,11 @@ body.demo-modal-open {
   .sx-news-item__body { padding: 18px 18px 8px; }
   .sx-news-item__arrow { margin: 0 18px 18px auto; }
   .sx-news-article { width: min(896px, calc(100% - 32px)); padding-top: 28px; }
-  .sx-news-article__lead { font-size: 16px; }
-  .sx-news-article__content { font-size: 16px; }
-  .sx-news-article__content h3 { font-size: 19px; }
+  .sx-news-article__header h1 { font-size: 20px; }
+  .sx-news-article__lead { font-size: 14px; }
+  .sx-news-article__content { font-size: 15px; }
+  .sx-news-article__content h2,
+  .sx-news-article__content h3 { font-size: 17px; }
   .sx-news-article__related-grid { grid-template-columns: 1fr; }
   .sx-guide-card { padding: 22px 20px; }
 }

@@ -31,16 +31,23 @@ function filterItems(active) {
   return active === '全部' ? newsItems : newsItems.filter((n) => n.category === active)
 }
 
+function coverBlock(n, className) {
+  const play = n.type === 'video'
+    ? '<span class="nx-play" aria-hidden="true"></span>'
+    : ''
+  return `<div class="${className}" style="background-image:url('${esc(n.cover)}')" role="img" aria-hidden="true">${play}</div>`
+}
+
 function renderLead(n) {
   if (!n) return ''
   return `
     <section class="nx-lead">
       <div class="nx-shell">
         <a class="nx-lead__main" href="../news-detail/?id=${encodeURIComponent(n.id)}">
-          <div class="nx-lead__photo" style="background-image:url('${esc(n.cover)}')" role="img" aria-hidden="true"></div>
+          ${coverBlock(n, 'nx-lead__photo')}
           <div class="nx-lead__overlay">
             <div class="nx-lead__meta">
-              <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(n.category)}</span>
+              <span class="nx-chip nx-chip--${catKey(n.category)}">${n.type === 'video' ? '视频' : esc(n.category)}</span>
               <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
             </div>
             <h1>${esc(n.title)}</h1>
@@ -54,10 +61,10 @@ function renderLead(n) {
 function renderItem(n, index) {
   return `
     <a class="nx-item" href="../news-detail/?id=${encodeURIComponent(n.id)}" style="--nx-i:${index}">
-      <div class="nx-item__cover" style="background-image:url('${esc(n.cover)}')" role="img" aria-hidden="true"></div>
+      ${coverBlock(n, 'nx-item__cover')}
       <div class="nx-item__body">
         <div class="nx-item__meta">
-          <span class="nx-chip nx-chip--${catKey(n.category)}">${esc(n.category)}</span>
+          <span class="nx-chip nx-chip--${catKey(n.category)}">${n.type === 'video' ? '视频' : esc(n.category)}</span>
           <time datetime="${esc(n.date)}">${esc(formatNewsDate(n.date))}</time>
         </div>
         <h3>${esc(n.title)}</h3>
