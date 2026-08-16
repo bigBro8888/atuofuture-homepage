@@ -197,7 +197,6 @@ export function validateNewsFeedContent(value = {}) {
   const fallback = defaultNewsFeedContent
   const source = Array.isArray(value.items) ? value.items : fallback.items
   const items = source.slice(0, 80).map((item, index) => validateItem(item, fallback.items[index] || {}))
-  items.sort((a, b) => String(b.date).localeCompare(String(a.date)))
   return {
     title: cleanText(value.title, fallback.title, 80),
     subtitle: cleanText(value.subtitle, fallback.subtitle, 240),

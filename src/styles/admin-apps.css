@@ -175,6 +175,16 @@ textarea { resize: vertical; }
   border-radius: 11px;
   background: #fbfcfe;
 }
+.admin-item-row[draggable="true"] { cursor: grab; }
+.admin-item-row.is-dragging { opacity: .45; }
+.admin-item-row.is-drop-target { border-color: #1769ff; background: #f3f8ff; }
+.admin-item-row__handle {
+  flex: none;
+  color: #b4becc;
+  font-size: 12px;
+  letter-spacing: -2px;
+  user-select: none;
+}
 .admin-item-row strong { display: block; color: #172033; font-size: 12px; }
 .admin-item-row small { display: block; margin-top: 3px; color: #8b97a8; font-size: 10px; }
 .admin-slide-tools { display: inline-flex; flex-wrap: wrap; gap: 6px; }
