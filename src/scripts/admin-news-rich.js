@@ -58,26 +58,69 @@ function restoreEditorRange(editor, range) {
   if (range) selection.addRange(range)
 }
 
+function dropCaretMarker(editor) {
+  editor.querySelectorAll('[data-caret-marker]').forEach((node) => node.remove())
+  const marker = document.createElement('span')
+  marker.setAttribute('data-caret-marker', '1')
+  try {
+    const range = saveEditorRange(editor)
+    if (range) {
+      range.collapse(true)
+      range.insertNode(marker)
+      return
+    }
+  } catch {
+    /* 选区失效时插到末尾 */
+  }
+  editor.appendChild(marker)
+}
+
+function takeCaretMarker(editor) {
+  return editor.querySelector('[data-caret-marker]')
+}
+
+function insertNodesAtMarker(editor, nodes) {
+  const marker = takeCaretMarker(editor)
+  if (marker) marker.replaceWith(...nodes)
+  else nodes.forEach((node) => editor.appendChild(node))
+}
+
+function createImageBlock(url) {
+  const figure = document.createElement('figure')
+  figure.setAttribute('contenteditable', 'false')
+  const image = document.createElement('img')
+  image.src = url
+  image.alt = ''
+  figure.appendChild(image)
+  const spacer = document.createElement('p')
+  spacer.appendChild(document.createElement('br'))
+  return [figure, spacer]
+}
+
 function insertHtmlAtCaret(editor, html, range) {
-  restoreEditorRange(editor, range || saveEditorRange(editor))
-  const selection = window.getSelection()
-  const current = selection?.rangeCount ? selection.getRangeAt(0) : null
-  const usable = current && editor.contains(current.commonAncestorContainer) ? current : null
   const temp = document.createElement('div')
   temp.innerHTML = html
-  const fragment = document.createDocumentFragment()
-  while (temp.firstChild) fragment.appendChild(temp.firstChild)
-  const last = fragment.lastChild
-  if (usable) {
-    usable.deleteContents()
-    usable.insertNode(fragment)
-    usable.setStartAfter(last || editor)
-    usable.collapse(true)
-    selection.removeAllRanges()
-    selection.addRange(usable)
-    return
+  const nodes = [...temp.childNodes]
+  if (!nodes.length) return
+  try {
+    editor.focus()
+    const selection = window.getSelection()
+    if (range && selection) {
+      selection.removeAllRanges()
+      selection.addRange(range)
+    }
+    const current = selection?.rangeCount ? selection.getRangeAt(0) : null
+    if (current && editor.contains(current.commonAncestorContainer)) {
+      current.deleteContents()
+      const fragment = document.createDocumentFragment()
+      nodes.forEach((node) => fragment.appendChild(node))
+      current.insertNode(fragment)
+      return
+    }
+  } catch {
+    /* 落到编辑器末尾 */
   }
-  editor.appendChild(fragment)
+  nodes.forEach((node) => editor.appendChild(node))
 }
 
 async function uploadImageFile(file, api) {
@@ -162,7 +205,8 @@ export function bindNewsRichEditor(modal, { api, toast }) {
       if (href) document.execCommand('createLink', false, href)
     } else if (command === 'table') {
       insertHtmlAtCaret(editor, '<table><thead><tr><th>列 1</th><th>列 2</th><th>列 3</th></tr></thead><tbody><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr></tbody></table><p></p>', savedRange)
-    } else if (command === 'image') {
+    }     else if (command === 'image') {
+      dropCaretMarker(editor)
       fileInput?.click()
     } else {
       document.execCommand(command, false, null)
@@ -177,13 +221,18 @@ export function bindNewsRichEditor(modal, { api, toast }) {
   fileInput?.addEventListener('change', async () => {
     const file = fileInput.files?.[0]
     fileInput.value = ''
-    if (!file) return
+    if (!file) {
+      takeCaretMarker(editor)?.remove()
+      return
+    }
     try {
       toast('正在上传图片…')
       const url = await uploadImageFile(file, api)
-      insertHtmlAtCaret(editor, `<p><img src="${url}" alt=""></p>`, savedRange)
+      insertNodesAtMarker(editor, createImageBlock(url))
+      editor.focus()
       toast('图片已插入')
     } catch (error) {
+      takeCaretMarker(editor)?.remove()
       toast(error.message || '图片上传失败', true)
     }
   })
@@ -200,7 +249,8 @@ export function bindNewsRichEditor(modal, { api, toast }) {
       try {
         toast('正在上传图片…')
         const url = await uploadImageFile(file, api)
-        insertHtmlAtCaret(editor, `<p><img src="${url}" alt=""></p>`, savedRange)
+        dropCaretMarker(editor)
+        insertNodesAtMarker(editor, createImageBlock(url))
         toast('图片已插入')
       } catch (error) {
         toast(error.message || '图片上传失败', true)

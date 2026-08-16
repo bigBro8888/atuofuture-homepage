@@ -13,7 +13,7 @@ export const app = express()
 app.set('trust proxy', 1)
 app.disable('x-powered-by')
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'same-site' },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: false,
 }))
 app.use(express.json({ limit: '1mb' }))
