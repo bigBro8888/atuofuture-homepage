@@ -314,6 +314,7 @@ textarea { resize: vertical; }
   background: #0b1c3a;
   border-radius: 10px;
 }
+.admin-news-pin {
   display: flex;
   align-items: flex-start;
   gap: 10px;
