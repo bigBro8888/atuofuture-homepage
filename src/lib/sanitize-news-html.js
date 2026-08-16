@@ -144,6 +144,7 @@ export function sanitizeNewsHtml(dirty, options = {}) {
   for (const part of parts) {
     if (!part) continue
     if (part[0] !== '<') {
+      if (part.length > 8000 && /^[A-Za-z0-9+/=\s]+$/.test(part.slice(0, 120))) continue
       html += part.replace(/</g, '&lt;')
       continue
     }

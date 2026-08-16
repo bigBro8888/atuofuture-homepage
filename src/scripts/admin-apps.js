@@ -1,5 +1,5 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
-import { bindNewsRichEditor, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
+import { bindNewsRichEditor, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
 
 const API = '/api/admin'
 const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', newsPage: null, homeSection: 'hero' }
@@ -81,7 +81,7 @@ function toast(message, isError = false) {
   element.textContent = message
   element.className = `admin-toast is-visible${isError ? ' is-error' : ''}`
   clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => { element.className = 'admin-toast' }, 3500)
+  toastTimer = setTimeout(() => { element.className = 'admin-toast' }, isError ? 8000 : 3500)
 }
 
 function dateTime(value) {
@@ -1049,37 +1049,38 @@ function updateNewsStatus(page) {
 function renderNewsEditor(content) {
   const items = [...(content.items || [])]
   const editor = document.querySelector('[data-news-editor]')
+  editor.classList.add('admin-news-editor')
   editor.innerHTML = `
-    <fieldset>
-      <legend>列表页标题</legend>
-      <div class="admin-form-grid">
-        ${newsField('pageTitle', '主标题', content.title)}
-        ${newsField('pageSubtitle', '副标题', content.subtitle, { type: 'textarea', wide: true, rows: 2 })}
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>新闻列表</legend>
-      <p class="admin-form-section__hint">在每条新闻前填写序号（数字越小越靠前），改完点「按序号排序」即可发布到前台。</p>
-      <div class="admin-news-list-actions">
+    <div class="admin-news-toolbar">
+      <button type="button" class="admin-news-toolbar__link" data-news-meta-toggle>列表页标题</button>
+      <div class="admin-news-toolbar__actions">
         <button type="button" class="admin-add-slide" data-news-add>+ 新建新闻</button>
         <button type="button" class="admin-add-slide" data-news-apply-sort>按序号排序</button>
       </div>
-      <div class="admin-home-list" data-news-list style="margin-top:12px">${items.map((item, index) => `
-        <div class="admin-item-row" data-news-index="${index}">
-          <label class="admin-item-row__sort">
-            <span>序号</span>
-            <input type="number" min="1" step="1" value="${index + 1}" data-news-sort="${index}" />
-          </label>
-          <div>
-            <strong>${escapeHtml(item.title || '未填写标题')}</strong>
-            <small>${item.type === 'video' ? '视频' : '图文'} · ${escapeHtml(item.category || '')} · ${escapeHtml(item.date || '')}${item.pinHome ? ' · 已上首页' : ''}</small>
-          </div>
-          <span class="admin-slide-tools">
-            <button type="button" data-news-edit="${index}">编辑</button>
-            <button type="button" data-news-remove="${index}">删除</button>
-          </span>
-        </div>`).join('') || '<p class="admin-form-section__hint">还没有新闻，先点上面的新建。</p>'}</div>
-    </fieldset>`
+    </div>
+    <div class="admin-news-meta" data-news-meta-panel hidden>
+      <p>这两项只影响新闻列表页顶部文案，和单篇新闻无关。</p>
+      <div class="admin-news-meta__fields">
+        ${newsField('pageTitle', '主标题', content.title)}
+        ${newsField('pageSubtitle', '副标题', content.subtitle, { type: 'textarea', wide: true, rows: 2 })}
+      </div>
+      <button type="button" data-news-publish>保存标题</button>
+    </div>
+    <div class="admin-home-list" data-news-list>${items.map((item, index) => `
+      <div class="admin-item-row" data-news-index="${index}">
+        <label class="admin-item-row__sort">
+          <span>序号</span>
+          <input type="number" min="1" step="1" value="${index + 1}" data-news-sort="${index}" />
+        </label>
+        <div>
+          <strong>${escapeHtml(item.title || '未填写标题')}</strong>
+          <small>${item.type === 'video' ? '视频' : '图文'} · ${escapeHtml(item.category || '')} · ${escapeHtml(item.date || '')}${item.pinHome ? ' · 已上首页' : ''}</small>
+        </div>
+        <span class="admin-slide-tools">
+          <button type="button" data-news-edit="${index}">编辑</button>
+          <button type="button" data-news-remove="${index}">删除</button>
+        </span>
+      </div>`).join('') || '<p class="admin-form-section__hint">还没有新闻，先点上面的新建。</p>'}</div>`
 }
 
 function collectNewsItemsBySort() {
@@ -1256,17 +1257,25 @@ async function syncPinnedNewsToHome(items) {
   await api('/pages/home/publish', { method: 'POST' })
 }
 
-function stripInlineDataImages(html) {
-  return String(html || '').replace(/\ssrc=(["'])data:image\/[\s\S]*?\1/gi, ' src=""')
+function slimNewsHtml(html) {
+  return String(html || '')
+    .replace(/\ssrc=(["'])data:(?:image|video)\/[\s\S]*?\1/gi, ' src=""')
+    .replace(/\ssrc=(["'])blob:[^"']*\1/gi, ' src=""')
 }
 
 async function persistNewsFeed(content, message) {
   content.items = limitPinnedNews(content.items || []).map((item) => ({
     ...item,
-    bodyHtml: stripInlineDataImages(item.bodyHtml),
+    cover: String(item.cover || '').startsWith('blob:') || String(item.cover || '').startsWith('data:') ? '' : item.cover,
+    videoUrl: String(item.videoUrl || '').startsWith('blob:') || String(item.videoUrl || '').startsWith('data:') ? '' : item.videoUrl,
+    bodyHtml: slimNewsHtml(item.bodyHtml),
   }))
-  const { page: draftPage } = await api('/pages/news-feed/draft', { method: 'PUT', body: JSON.stringify({ content }) })
-  const { page } = await api('/pages/news-feed/publish', { method: 'POST' })
+  const body = JSON.stringify({ content })
+  if (body.length > 6.5 * 1024 * 1024) {
+    throw new Error('稿件体积过大。请把正文里的视频用工具栏「视频」上传后再发布，不要从网页直接粘贴视频文件')
+  }
+  const { page: draftPage } = await api('/pages/news-feed/draft', { method: 'PUT', body, timeoutMs: 90000 })
+  const { page } = await api('/pages/news-feed/publish', { method: 'POST', timeoutMs: 90000 })
   state.newsPage = page.publishedContent ? page : draftPage
   renderNewsEditor(state.newsPage.draftContent)
   updateNewsStatus(state.newsPage)
@@ -1296,15 +1305,22 @@ async function publishNewsFromCompose() {
   }
   button.disabled = true
   toast('正在发布…')
-  const meta = collectNewsPageMeta()
-  const items = [...(state.newsPage?.draftContent?.items || [])]
-  if (index >= 0 && items[index]) items[index] = { ...items[index], ...article }
-  else items.unshift({ ...article, id: article.id || `n-${crypto.randomUUID().slice(0, 8)}` })
   try {
+    if (article.type === 'article') {
+      await ingestEditorVideos(compose, { api, toast })
+      Object.assign(article, collectNewsArticleFromCompose())
+    }
+    if (article.type === 'video' && /^(blob:|data:)/i.test(article.videoUrl)) {
+      throw new Error('视频还没有上传完成，请等上传成功后再发布')
+    }
+    const meta = collectNewsPageMeta()
+    const items = [...(state.newsPage?.draftContent?.items || [])]
+    if (index >= 0 && items[index]) items[index] = { ...items[index], ...article }
+    else items.unshift({ ...article, id: article.id || `n-${crypto.randomUUID().slice(0, 8)}` })
     await persistNewsFeed({ ...meta, items }, '新闻已发布到前台')
     closeNewsCompose()
   } catch (error) {
-    toast(error.message, true)
+    toast(error.message || '发布失败', true)
   } finally {
     button.disabled = false
   }
@@ -1732,6 +1748,26 @@ document.querySelector('[data-about-publish]').addEventListener('click', async (
 
 document.querySelector('[data-news-form]').addEventListener('submit', (event) => event.preventDefault())
 document.querySelector('[data-news-editor]').addEventListener('click', async (event) => {
+  if (event.target.closest('[data-news-meta-toggle]')) {
+    event.preventDefault()
+    const panel = document.querySelector('[data-news-meta-panel]')
+    if (panel) panel.hidden = !panel.hidden
+    return
+  }
+  if (event.target.closest('[data-news-publish]')) {
+    event.preventDefault()
+    const button = event.target.closest('[data-news-publish]')
+    button.disabled = true
+    try {
+      const meta = collectNewsPageMeta()
+      await persistNewsFeed({ ...meta, items: collectNewsItemsBySort() }, '列表页标题已发布')
+    } catch (error) {
+      toast(error.message, true)
+    } finally {
+      button.disabled = false
+    }
+    return
+  }
   if (event.target.closest('[data-news-add]')) {
     event.preventDefault()
     openNewsCompose(-1)
@@ -1771,19 +1807,6 @@ document.querySelector('[data-news-editor]').addEventListener('click', async (ev
     }
   }
 })
-document.querySelector('[data-news-publish]').addEventListener('click', async (event) => {
-  const button = event.currentTarget
-  button.disabled = true
-  try {
-    const meta = collectNewsPageMeta()
-    await persistNewsFeed({ ...meta, items: collectNewsItemsBySort() }, '新闻中心已更新')
-  } catch (error) {
-    toast(error.message, true)
-  } finally {
-    button.disabled = false
-  }
-})
-
 document.querySelector('[data-news-compose-view]').addEventListener('click', async (event) => {
   if (event.target.closest('[data-news-compose-back]')) {
     event.preventDefault()

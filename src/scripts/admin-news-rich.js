@@ -193,6 +193,25 @@ async function ingestEditorImages(editor, api, toast) {
   if (failed) toast?.(`有 ${failed} 张外站图片未能转存，请用「插图」从本地上传`, true)
 }
 
+export async function ingestEditorVideos(modal, { api, toast }) {
+  const editor = modal.querySelector('[data-news-html-editor]')
+  if (!editor) return
+  const media = [...editor.querySelectorAll('video, source')]
+  for (const node of media) {
+    const src = String(node.getAttribute('src') || '').trim()
+    if (!src || isLocalMedia(src) || src.startsWith('http://') || src.startsWith('https://')) continue
+    if (!src.startsWith('blob:') && !src.startsWith('data:video')) continue
+    toast?.('正在上传正文中的视频…')
+    const response = await fetch(src)
+    const blob = await response.blob()
+    if (blob.size > 200 * 1024 * 1024) throw new Error('正文视频超过 200MB，请压缩后再上传')
+    const file = new File([blob], 'inline.mp4', { type: blob.type || 'video/mp4' })
+    const url = await uploadVideoFile(file, api)
+    node.setAttribute('src', url)
+    if (node.tagName === 'VIDEO') node.src = url
+  }
+}
+
 export function bindNewsRichEditor(modal, { api, toast }) {
   const editor = modal.querySelector('[data-news-html-editor]')
   const fileInput = modal.querySelector('[data-news-rich-file]')
