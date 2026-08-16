@@ -160,7 +160,10 @@ function openTab(name, options = {}) {
     window.scrollTo({ top: 0 })
     updateAnchorState()
   }
-  if (name === 'page-news') loadNewsFeed()
+  if (name === 'page-news') {
+    closeNewsCompose()
+    loadNewsFeed()
+  }
   else if (name.startsWith('page-')) loadSimplePage(name.slice('page-'.length))
   if (name === 'home') loadHomePage()
   if (name === 'about') loadAboutPage()
@@ -620,7 +623,7 @@ function applyItemModal() {
     return
   }
   if (modal.dataset.scope === 'news') {
-    void publishNewsFromModal()
+    return
   }
 }
 
@@ -998,7 +1001,7 @@ function newsField(path, label, value, options = {}) {
   const type = options.type || 'text'
   let field
   if (type === 'textarea') {
-    field = `<textarea data-news-field="${path}" rows="${options.rows || 3}">${escapeHtml(value ?? '')}</textarea>`
+    field = `<textarea data-news-field="${path}" rows="${options.rows || 3}"${options.placeholder ? ` placeholder="${escapeHtml(options.placeholder)}"` : ''}>${escapeHtml(value ?? '')}</textarea>`
   } else if (type === 'select') {
     const opts = (options.options || []).map(([key, text]) => `<option value="${escapeHtml(key)}"${String(value) === String(key) ? ' selected' : ''}>${escapeHtml(text)}</option>`).join('')
     field = `<select data-news-field="${path}">${opts}</select>`
@@ -1018,7 +1021,7 @@ function newsField(path, label, value, options = {}) {
           <label class="admin-home-upload">上传视频<input type="file" accept="video/mp4,video/webm,video/quicktime,video/*" data-news-upload-for="${path}" /></label>
         </div>`
       : ''
-  return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${field}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
+  return `<label class="admin-news-field${options.wide ? ' is-wide' : ''}"><span>${label}</span>${field}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
 }
 
 function updateNewsStatus(page) {
@@ -1093,10 +1096,11 @@ function collectNewsPageMeta() {
   }
 }
 
-function collectNewsArticleFromModal() {
-  const get = (path) => document.querySelector(`[data-item-modal] [data-news-field="${path}"]`)?.value ?? ''
+function collectNewsArticleFromCompose() {
+  const root = document.querySelector('[data-news-compose-view]')
+  const get = (path) => root.querySelector(`[data-news-field="${path}"]`)?.value ?? ''
   const type = get('type') === 'video' ? 'video' : 'article'
-  const rich = type === 'article' ? readNewsRichContent(document.querySelector('[data-item-modal]')) : { body: '', bodyHtml: '' }
+  const rich = type === 'article' ? readNewsRichContent(root) : { body: '', bodyHtml: '' }
   return {
     id: get('id'),
     type,
@@ -1108,25 +1112,16 @@ function collectNewsArticleFromModal() {
     cover: get('cover'),
     videoUrl: get('videoUrl'),
     tags: get('tags'),
-    pinHome: Boolean(document.querySelector('[data-item-modal] [data-news-field="pinHome"]')?.checked),
-    pinnedAt: Boolean(document.querySelector('[data-item-modal] [data-news-field="pinHome"]')?.checked) ? new Date().toISOString() : '',
+    pinHome: Boolean(root.querySelector('[data-news-field="pinHome"]')?.checked),
+    pinnedAt: Boolean(root.querySelector('[data-news-field="pinHome"]')?.checked) ? new Date().toISOString() : '',
     body: rich.body,
     bodyHtml: rich.bodyHtml,
   }
 }
 
-function newsTypeToggle(type) {
-  return `
-    <div class="admin-news-type" role="tablist" aria-label="发布类型">
-      <button type="button" data-news-type-btn="article" class="${type !== 'video' ? 'is-active' : ''}">图文</button>
-      <button type="button" data-news-type-btn="video" class="${type === 'video' ? 'is-active' : ''}">视频</button>
-      <input type="hidden" data-news-field="type" value="${type === 'video' ? 'video' : 'article'}" />
-    </div>`
-}
-
 function newsPinHomeField(item = {}) {
   return `
-    <label class="admin-news-pin admin-form-wide">
+    <label class="admin-news-pin">
       <input data-news-field="pinHome" type="checkbox"${item.pinHome ? ' checked' : ''} />
       <span>
         <b>展示在首页</b>
@@ -1140,52 +1135,62 @@ function newsArticleFields(item = {}) {
   const type = item.type === 'video' ? 'video' : 'article'
   return `
     <input type="hidden" data-news-field="id" value="${escapeHtml(item.id || '')}" />
-    ${newsTypeToggle(type)}
-    ${newsField('title', '新闻标题', item.title || '', { wide: true })}
-    ${newsField('category', '内容分类', item.category || '公司动态', { type: 'select', options: [['公司动态', '公司动态'], ['产品更新', '产品更新'], ['方案实践', '方案实践']] })}
-    ${newsField('cover', '封面图', item.cover || '', { image: true, wide: true })}
-    <div data-news-panel="article"${type === 'video' ? ' hidden' : ''}>
-      ${newsField('summary', '新闻简介', item.summary || '', { type: 'textarea', wide: true, rows: 3 })}
-      ${newsField('date', '发布日期', item.date || today, { type: 'date' })}
-      ${newsField('author', '发布人', item.author || '安托未来')}
-      ${newsField('tags', '标签', Array.isArray(item.tags) ? item.tags.join('，') : (item.tags || ''), { wide: true, help: '可选，用逗号分隔' })}
-      ${newsRichEditorMarkup(item)}
-    </div>
-    <div data-news-panel="video"${type === 'video' ? '' : ' hidden'}>
-      ${newsField('videoUrl', '视频链接', item.videoUrl || '', { video: true, wide: true, placeholder: 'https:// 粘贴视频链接，或下方上传文件', help: '可粘贴 MP4 直链、B站、YouTube 等地址，也可直接上传本地文件，建议不超过 200MB。' })}
-    </div>
-    ${newsPinHomeField(item)}`
+    <input type="hidden" data-news-field="type" value="${type}" />
+    <div class="admin-news-compose__main">
+      ${newsField('title', '标题', item.title || '', { wide: true, placeholder: '请输入新闻标题' })}
+      <div class="admin-news-compose__meta">
+        ${newsField('category', '分类', item.category || '公司动态', { type: 'select', options: [['公司动态', '公司动态'], ['产品更新', '产品更新'], ['方案实践', '方案实践']] })}
+        ${newsField('date', '日期', item.date || today, { type: 'date' })}
+        ${newsField('author', '发布人', item.author || '安托未来')}
+      </div>
+      ${newsField('cover', '封面', item.cover || '', { image: true, wide: true })}
+      <div data-news-panel="article"${type === 'video' ? ' hidden' : ''}>
+        ${newsField('summary', '简介', item.summary || '', { type: 'textarea', wide: true, rows: 2, placeholder: '列表页展示的一两句摘要' })}
+        ${newsField('tags', '标签', Array.isArray(item.tags) ? item.tags.join('，') : (item.tags || ''), { wide: true, placeholder: '可选，逗号分隔' })}
+        ${newsRichEditorMarkup(item)}
+      </div>
+      <div data-news-panel="video"${type === 'video' ? '' : ' hidden'}>
+        ${newsField('videoUrl', '视频', item.videoUrl || '', { video: true, wide: true, placeholder: '粘贴视频链接，或上传本地文件', help: '支持 MP4 直链、B站、YouTube，或上传不超过 200MB 的文件。' })}
+      </div>
+      ${newsPinHomeField(item)}
+    </div>`
 }
 
-function setNewsModalType(type) {
-  const modal = document.querySelector('[data-item-modal]')
+function setNewsComposeType(type) {
+  const root = document.querySelector('[data-news-compose-view]')
   const next = type === 'video' ? 'video' : 'article'
-  const field = modal.querySelector('[data-news-field="type"]')
+  const field = root.querySelector('[data-news-field="type"]')
   if (field) field.value = next
-  modal.querySelectorAll('[data-news-type-btn]').forEach((button) => {
+  root.querySelectorAll('[data-news-type-btn]').forEach((button) => {
     button.classList.toggle('is-active', button.dataset.newsTypeBtn === next)
   })
-  modal.querySelectorAll('[data-news-panel]').forEach((panel) => {
+  root.querySelectorAll('[data-news-panel]').forEach((panel) => {
     panel.hidden = panel.dataset.newsPanel !== next
   })
-  document.querySelector('[data-item-modal-title]').textContent = next === 'video' ? '发布视频' : (modal.dataset.kind === 'create' ? '新建新闻' : '编辑新闻')
 }
 
-function openNewsModal(index) {
+function closeNewsCompose() {
+  document.querySelector('[data-news-list-view]').hidden = false
+  const compose = document.querySelector('[data-news-compose-view]')
+  compose.hidden = true
+  compose.querySelector('[data-news-compose-body]').innerHTML = ''
+}
+
+function openNewsCompose(index) {
   const items = state.newsPage?.draftContent?.items || []
   const isNew = index < 0 || !items[index]
   const item = isNew
     ? { id: '', type: 'article', title: '', summary: '', date: new Date().toISOString().slice(0, 10), author: '安托未来', category: '公司动态', cover: '', videoUrl: '', tags: [], body: '', bodyHtml: '' }
     : items[index]
   const type = item.type === 'video' ? 'video' : 'article'
-  openItemModal({
-    scope: 'news',
-    kind: isNew ? 'create' : 'edit',
-    index: isNew ? -1 : index,
-    title: isNew ? (type === 'video' ? '发布视频' : '新建新闻') : (type === 'video' ? '编辑视频' : '编辑新闻'),
-    html: newsArticleFields(item),
-  })
-  bindNewsRichEditor(document.querySelector('[data-item-modal]'), { api, toast })
+  const compose = document.querySelector('[data-news-compose-view]')
+  compose.dataset.index = String(isNew ? -1 : index)
+  compose.querySelector('[data-news-compose-body]').innerHTML = newsArticleFields(item)
+  document.querySelector('[data-news-list-view]').hidden = true
+  compose.hidden = false
+  setNewsComposeType(type)
+  bindNewsRichEditor(compose, { api, toast })
+  window.scrollTo({ top: 0 })
 }
 
 function limitPinnedNews(items) {
@@ -1245,10 +1250,11 @@ async function persistNewsFeed(content, message) {
   toast(message)
 }
 
-async function publishNewsFromModal() {
-  const modal = document.querySelector('[data-item-modal]')
-  const index = Number(modal.dataset.index)
-  const article = collectNewsArticleFromModal()
+async function publishNewsFromCompose() {
+  const compose = document.querySelector('[data-news-compose-view]')
+  const button = compose.querySelector('[data-news-compose-publish]')
+  const index = Number(compose.dataset.index)
+  const article = collectNewsArticleFromCompose()
   if (!article.title.trim()) {
     toast('请填写新闻标题', true)
     return
@@ -1259,18 +1265,22 @@ async function publishNewsFromModal() {
       return
     }
   } else if (!article.body.trim() && !article.bodyHtml.trim()) {
-    toast('请粘贴或填写正文', true)
+    toast('请填写正文', true)
     return
   }
+  button.disabled = true
+  toast('正在发布…')
   const meta = collectNewsPageMeta()
   const items = [...(state.newsPage?.draftContent?.items || [])]
   if (index >= 0 && items[index]) items[index] = { ...items[index], ...article }
   else items.unshift({ ...article, id: article.id || `n-${crypto.randomUUID().slice(0, 8)}` })
   try {
     await persistNewsFeed({ ...meta, items }, '新闻已发布到前台')
-    closeItemModal()
+    closeNewsCompose()
   } catch (error) {
     toast(error.message, true)
+  } finally {
+    button.disabled = false
   }
 }
 
@@ -1698,7 +1708,7 @@ document.querySelector('[data-news-form]').addEventListener('submit', (event) =>
 document.querySelector('[data-news-editor]').addEventListener('click', async (event) => {
   if (event.target.closest('[data-news-add]')) {
     event.preventDefault()
-    openNewsModal(-1)
+    openNewsCompose(-1)
     return
   }
   if (event.target.closest('[data-news-apply-sort]')) {
@@ -1717,7 +1727,7 @@ document.querySelector('[data-news-editor]').addEventListener('click', async (ev
   const edit = event.target.closest('[data-news-edit]')
   if (edit) {
     event.preventDefault()
-    openNewsModal(Number(edit.dataset.newsEdit))
+    openNewsCompose(Number(edit.dataset.newsEdit))
     return
   }
   const remove = event.target.closest('[data-news-remove]')
@@ -1745,6 +1755,57 @@ document.querySelector('[data-news-publish]').addEventListener('click', async (e
     toast(error.message, true)
   } finally {
     button.disabled = false
+  }
+})
+
+document.querySelector('[data-news-compose-view]').addEventListener('click', async (event) => {
+  if (event.target.closest('[data-news-compose-back]')) {
+    event.preventDefault()
+    closeNewsCompose()
+    return
+  }
+  const typeBtn = event.target.closest('[data-news-type-btn]')
+  if (typeBtn) {
+    event.preventDefault()
+    setNewsComposeType(typeBtn.dataset.newsTypeBtn)
+    return
+  }
+  if (event.target.closest('[data-news-compose-publish]')) {
+    event.preventDefault()
+    await publishNewsFromCompose()
+  }
+})
+document.querySelector('[data-news-compose-view]').addEventListener('input', (event) => {
+  const newsEl = event.target.closest('[data-news-field]')
+  if (!newsEl) return
+  const preview = document.querySelector(`[data-news-compose-view] [data-news-preview-for="${newsEl.dataset.newsField}"]`)
+  if (preview) {
+    preview.src = newsEl.value.trim()
+    preview.hidden = !newsEl.value.trim()
+  }
+})
+document.querySelector('[data-news-compose-view]').addEventListener('change', async (event) => {
+  const upload = event.target.closest('[data-news-upload-for]')
+  const file = upload?.files?.[0]
+  if (!upload || !file) return
+  const path = upload.dataset.newsUploadFor
+  const isVideo = path === 'videoUrl'
+  upload.disabled = true
+  try {
+    const formData = new FormData()
+    formData.append(isVideo ? 'video' : 'image', file)
+    const { url } = await api(isVideo ? '/pages/media/video' : '/pages/media/image', { method: 'POST', body: formData })
+    const field = document.querySelector(`[data-news-compose-view] [data-news-field="${path}"]`)
+    if (field) {
+      field.value = url
+      field.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+    toast(isVideo ? '视频已上传' : '封面已上传')
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    upload.disabled = false
+    upload.value = ''
   }
 })
 
@@ -1893,7 +1954,7 @@ document.querySelector('[data-item-modal]').addEventListener('click', (event) =>
   const typeBtn = event.target.closest('[data-news-type-btn]')
   if (typeBtn) {
     event.preventDefault()
-    setNewsModalType(typeBtn.dataset.newsTypeBtn)
+    setNewsComposeType(typeBtn.dataset.newsTypeBtn)
     return
   }
   if (event.target.closest('[data-item-modal-apply]')) {
