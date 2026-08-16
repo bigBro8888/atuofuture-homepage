@@ -1077,12 +1077,15 @@ function newsArticleFields(item = {}) {
     ${newsField('author', '发布人', item.author || '安托未来')}
     ${newsField('category', '分类', item.category || '公司动态', { type: 'select', options: [['公司动态', '公司动态'], ['产品更新', '产品更新'], ['方案实践', '方案实践']] })}
     ${newsField('cover', '封面图', item.cover || '', { image: true, wide: true })}
-    <label class="admin-form-wide"><span>推送到首页</span>
-      <input data-news-field="pinHome" type="checkbox"${item.pinHome ? ' checked' : ''} />
-      <small>首页「新闻动态」固定 3 篇。勾选后这篇会占一格，新勾选的排在最前；封面比例与新闻列表一致。</small>
-    </label>
     ${newsField('tags', '标签', Array.isArray(item.tags) ? item.tags.join('，') : (item.tags || ''), { wide: true, help: '可选，用逗号分隔' })}
-    ${newsRichEditorMarkup(item)}`
+    ${newsRichEditorMarkup(item)}
+    <label class="admin-news-pin admin-form-wide">
+      <input data-news-field="pinHome" type="checkbox"${item.pinHome ? ' checked' : ''} />
+      <span>
+        <b>展示在首页</b>
+        <small>勾选后出现在首页「新闻动态」三卡中，新勾选的排在最前；最多 3 篇。</small>
+      </span>
+    </label>`
 }
 
 function openNewsModal(index) {

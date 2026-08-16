@@ -7,26 +7,26 @@ function isLocalMedia(src) {
 export function newsRichEditorMarkup(item = {}) {
   const html = sanitizeNewsHtml(item.bodyHtml || htmlFromPlainBody(item.body || ''))
   return `
-    <label class="admin-form-wide">
-      <span>主题正文</span>
+    <div class="admin-form-wide">
+      <span class="admin-rich__label">主题正文</span>
       <div class="admin-rich" data-news-rich>
         <div class="admin-rich__bar" data-news-rich-bar>
-          <button type="button" data-rich-cmd="h3">标题</button>
-          <button type="button" data-rich-cmd="p">正文</button>
-          <button type="button" data-rich-cmd="bold">加粗</button>
-          <button type="button" data-rich-cmd="italic">斜体</button>
-          <button type="button" data-rich-cmd="insertUnorderedList">项目</button>
-          <button type="button" data-rich-cmd="insertOrderedList">编号</button>
-          <button type="button" data-rich-cmd="link">链接</button>
-          <button type="button" data-rich-cmd="table">表格</button>
-          <button type="button" data-rich-cmd="image">插图</button>
-          <button type="button" data-rich-cmd="removeFormat">清除格式</button>
+          <button type="button" tabindex="-1" data-rich-cmd="h3">标题</button>
+          <button type="button" tabindex="-1" data-rich-cmd="p">正文</button>
+          <button type="button" tabindex="-1" data-rich-cmd="bold">加粗</button>
+          <button type="button" tabindex="-1" data-rich-cmd="italic">斜体</button>
+          <button type="button" tabindex="-1" data-rich-cmd="insertUnorderedList">项目</button>
+          <button type="button" tabindex="-1" data-rich-cmd="insertOrderedList">编号</button>
+          <button type="button" tabindex="-1" data-rich-cmd="link">链接</button>
+          <button type="button" tabindex="-1" data-rich-cmd="table">表格</button>
+          <button type="button" tabindex="-1" data-rich-cmd="image">插图</button>
+          <button type="button" tabindex="-1" data-rich-cmd="removeFormat">清除格式</button>
         </div>
-        <div class="admin-rich__editor" contenteditable="true" data-news-html-editor role="textbox" aria-label="新闻正文">${html}</div>
+        <div class="admin-rich__editor" contenteditable="true" data-news-html-editor role="textbox" aria-multiline="true" aria-label="新闻正文">${html}</div>
         <input type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif" data-news-rich-file />
         <small>可从其它网页整篇复制粘贴。表格、图片会保留；外站图片会尽量转存到本站。</small>
       </div>
-    </label>`
+    </div>`
 }
 
 export function readNewsRichContent(modal = document) {
@@ -100,6 +100,11 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     } else {
       document.execCommand(command, false, null)
     }
+  })
+
+  editor.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return
+    event.stopPropagation()
   })
 
   fileInput?.addEventListener('change', async () => {
