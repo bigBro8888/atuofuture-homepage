@@ -9,7 +9,7 @@ import { requireAuth } from '../admin/auth.js'
 import { getHomePageConfig, validateHomeContent } from './home-service.js'
 import { getAboutPageConfig, validateAboutContent } from './about-service.js'
 import { getSiteSettingsPage, validateSiteSettings } from './site-settings-service.js'
-import { SIMPLE_PAGE_KEYS, getSimplePageConfig, validateSimplePage } from './simple-page-service.js'
+import { SIMPLE_PAGE_KEYS, getSimplePageConfig, presentSimplePage, validateSimplePage } from './simple-page-service.js'
 import { getNewsFeedConfig, validateNewsFeedContent } from './news-feed-service.js'
 
 export const publicPagesRouter = Router()
@@ -304,14 +304,14 @@ publicPagesRouter.get('/simple/:key', (request, response) => {
   response.set('Cache-Control', 'no-cache')
   response.json({
     pageKey: page.pageKey,
-    content: page.publishedContent,
+    content: presentSimplePage(request.params.key, page).publishedContent,
     publishedAt: page.publishedAt,
   })
 })
 
 adminPagesRouter.get('/simple/:key', requireAuth(), (request, response) => {
   if (!SIMPLE_PAGE_KEYS.includes(request.params.key)) return response.status(404).json({ error: 'unknown_page' })
-  response.json({ page: getSimplePageConfig(request.params.key) })
+  response.json({ page: presentSimplePage(request.params.key, getSimplePageConfig(request.params.key)) })
 })
 
 adminPagesRouter.put('/simple/:key/draft', requireAuth('config:write'), async (request, response) => {

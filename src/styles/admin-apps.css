@@ -175,6 +175,10 @@ textarea { resize: vertical; }
   border-radius: 11px;
   background: #fbfcfe;
 }
+.admin-simple-item { align-items: flex-start; display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 14px; }
+.admin-simple-item__thumb { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; background: #eef2f7; }
+.admin-simple-item__thumb.is-empty { display: block; }
+.admin-simple-item__fields { display: grid; gap: 10px; min-width: 0; }
 .admin-news-list-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .admin-news-list-actions .admin-add-slide { margin-top: 0; }
 .admin-home-editor.admin-news-editor { grid-template-columns: 1fr; }

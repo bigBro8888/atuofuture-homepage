@@ -1,17 +1,12 @@
-import { getPublishedPage } from '../services/site-settings-api.js'
-import { ASPACE_SOLUTION_HREF } from '../data/hardware-catalog.js'
+import { loadSimplePageContent } from '../services/site-settings-api.js'
 import {
-  findHardwareProduct,
-  hardwareConsumer,
-  hardwareCta,
-  hardwareFlow,
-  hardwareHero,
-  hardwareLines,
-  hardwareProducts,
-  hardwareRetail,
-  hardwareSpace,
-  setHardwareRuntime,
-} from '../lib/cms-pages.js'
+  HARDWARE_LINES,
+  HARDWARE_PRODUCTS,
+  HARDWARE_SPACE_FLOW,
+  ASPACE_SOLUTION_HREF,
+  getProductBySlug,
+  getProductsByLine,
+} from '../data/hardware-catalog.js'
 
 function esc(str = '') {
   return String(str)
@@ -22,20 +17,49 @@ function esc(str = '') {
 }
 
 function productHref(product) {
-  return `/hardware/product/?id=${encodeURIComponent(product.slug || product.id)}`
+  return `/hardware/product/?id=${encodeURIComponent(product.slug)}`
 }
 
-function overviewItems(lineId) {
-  return hardwareProducts().filter((item) => item.productLine === lineId && item.showInOverview !== false)
+function linePreviewItems(lineId) {
+  const map = {
+    space: [
+      { id: 'control-screen', label: '中控屏' },
+      { id: 'e-table-sign', label: '电子桌牌' },
+      { id: 'desk-screen', label: '工位屏' },
+      { id: 'smart-lighting', label: '照明与空调' },
+      { id: 'sensor', label: '传感器' },
+      { id: 'gateway', label: '网关' },
+    ],
+    retail: [
+      { id: 'eink-price-tag', label: '墨水屏电子价签' },
+      { id: 'lcd-price-tag', label: 'LCD电子价签' },
+      { id: 'cold-tag', label: '低温标签' },
+      { id: 'aap', label: 'AAP资产盘点' },
+    ],
+    consumer: [
+      { id: 'eink-phone-case', label: 'AI墨水屏手机壳' },
+      { id: 'eink-frame', label: 'AI电子纸艺术相框' },
+    ],
+  }
+  return (map[lineId] || [])
+    .map((item) => {
+      const p = getProductBySlug(item.id)
+      return p
+        ? {
+            ...item,
+            product: p,
+            thumb: `/images/hardware/thumb-${item.id}.png`,
+          }
+        : null
+    })
+    .filter(Boolean)
 }
 
 function renderHero() {
-  const hero = hardwareHero() || {}
-  const title = hero.title || '连接空间、商品与真实业务'
-  const subtitle = hero.subtitle || '安托未来以空间智能、电子纸与边缘连接能力，构建覆盖企业空间、新零售与智能终端的硬件产品体系。'
-  const banner = hero.bannerUrl || '/images/hardware/hero-bg-3840.png'
-  const cta = hero.ctaLabel || '获取咨询建议'
-  const browse = hero.browseLabel || '浏览全部产品'
+  const title = cmsHero?.title || '连接空间、商品与真实业务'
+  const subtitle = cmsHero?.subtitle || '安托未来以空间智能、电子纸与边缘连接能力，构建覆盖企业空间、新零售与智能终端的硬件产品体系。'
+  const banner = cmsHero?.bannerUrl || '/images/hardware/hero-bg-3840.png'
+  const cta = cmsHero?.ctaLabel || '获取选型建议'
   return `
     <section class="hwc-hero">
       <div class="hwc-hero__bg" aria-hidden="true">
@@ -46,7 +70,7 @@ function renderHero() {
           <h1>${esc(title)}</h1>
           <p>${esc(subtitle)}</p>
           <div class="hwc-hero__actions">
-            <a class="hwc-btn hwc-btn--cyan hwc-btn--hero" href="#hwc-space">${esc(browse)}</a>
+            <a class="hwc-btn hwc-btn--cyan hwc-btn--hero" href="#hwc-space">浏览全部产品</a>
             <button type="button" class="hwc-btn hwc-btn--outline-dark" data-demo-modal-open>${esc(cta)}</button>
           </div>
         </div>
@@ -55,27 +79,33 @@ function renderHero() {
 }
 
 function renderLineOverview() {
+  const lineMeta = {
+    space: { icon: 'apartment', href: '#hwc-space' },
+    retail: { icon: 'shopping_bag', href: '#hwc-retail' },
+    consumer: { icon: 'smartphone', href: '#hwc-consumer' },
+  }
   return `
     <section class="hwc-lines" id="hwc-lines">
       <div class="hwc-shell hwc-lines__shell">
         <div class="hwc-lines__grid">
-          ${hardwareLines().map((line) => {
-            const items = overviewItems(line.id)
+          ${HARDWARE_LINES.map((line) => {
+            const items = linePreviewItems(line.id)
+            const meta = lineMeta[line.id] || { icon: line.icon, href: `#hwc-${line.id}` }
             return `
             <article class="hwc-lines__card hwc-lines__card--${esc(line.id)}">
-              <a class="hwc-lines__head" href="#hwc-${esc(line.id)}">
-                <span class="material-symbols-outlined hwc-lines__icon" aria-hidden="true">${esc(line.icon || 'memory')}</span>
+              <a class="hwc-lines__head" href="${esc(meta.href)}">
+                <span class="material-symbols-outlined hwc-lines__icon" aria-hidden="true">${esc(meta.icon)}</span>
                 <strong>${esc(line.name)}</strong>
               </a>
               <div class="hwc-lines__items">
                 ${items
                   .map(
                     (item) => `
-                  <a class="hwc-lines__item" href="${productHref(item)}">
+                  <a class="hwc-lines__item" href="${productHref(item.product)}">
                     <span class="hwc-lines__thumb">
-                      <img src="${esc(item.thumb || item.coverImage)}" alt="" width="72" height="72" loading="lazy" />
+                      <img src="${esc(item.thumb)}" alt="" width="72" height="72" loading="lazy" />
                     </span>
-                    <span class="hwc-lines__label">${esc(item.overviewLabel || item.name)}</span>
+                    <span class="hwc-lines__label">${esc(item.label)}</span>
                   </a>`
                   )
                   .join('')}
@@ -88,19 +118,28 @@ function renderLineOverview() {
 }
 
 function renderSpaceSection() {
-  const copy = hardwareSpace() || {}
-  const flagship = findHardwareProduct(copy.flagshipId || 'control-screen')
-  const matrix = hardwareProducts().filter(
-    (item) => item.productLine === 'space' && item.id !== flagship?.id && item.showInOverview !== false
-  )
+  const flagship = getProductBySlug('control-screen')
+  const matrixIds = [
+    { id: 'e-table-sign', label: '电子桌牌' },
+    { id: 'desk-screen', label: '工位屏' },
+    { id: 'smart-lighting', label: '照明与空调' },
+    { id: 'sensor', label: '传感器' },
+    { id: 'gateway', label: '网关' },
+  ]
+  const matrix = matrixIds
+    .map((item) => {
+      const p = getProductBySlug(item.id)
+      return p ? { ...p, displayName: item.label } : null
+    })
+    .filter(Boolean)
 
   return `
     <section class="hwx-space" id="hwc-space">
       <div class="hwc-shell">
         <header class="hwx-head">
-          <p class="hwx-kicker">${esc(copy.kicker || '空间智能')}</p>
-          <h2>${esc(copy.title || '空间智能硬件')}</h2>
-          <p>${esc(copy.subtitle || '')}</p>
+          <p class="hwx-kicker">空间智能</p>
+          <h2>空间智能硬件</h2>
+          <p>以中控屏为交互入口，连接感知、边缘、控制与信息终端，形成可部署的空间智能闭环。</p>
         </header>
 
         ${
@@ -111,12 +150,14 @@ function renderSpaceSection() {
             <img src="${esc(flagship.coverImage)}" alt="${esc(flagship.name)}" width="1200" height="900" loading="lazy" />
           </div>
           <div class="hwx-flagship__copy">
-            <p class="hwx-flagship__tag">${esc(copy.flagshipTag || '旗舰产品')}</p>
+            <p class="hwx-flagship__tag">旗舰产品</p>
             <h3>${esc(flagship.name)}</h3>
             <p class="hwx-flagship__lead">${esc(flagship.shortDescription)}</p>
             <p>${esc(flagship.fullDescription || '')}</p>
             <ul class="hwx-flagship__points">
-              ${(flagship.capabilities || []).map((c) => `<li>${esc(c)}</li>`).join('')}
+              ${(flagship.capabilities || [])
+                .map((c) => `<li>${esc(c)}</li>`)
+                .join('')}
             </ul>
             <div class="hwx-flagship__actions">
               <a class="hwc-btn hwc-btn--orange" href="${productHref(flagship)}">查看产品详情</a>
@@ -129,8 +170,8 @@ function renderSpaceSection() {
 
         <div class="hwx-matrix">
           <div class="hwx-matrix__head">
-            <h3>${esc(copy.matrixTitle || '空间智能配套硬件')}</h3>
-            <p>${esc(copy.matrixSubtitle || '')}</p>
+            <h3>空间智能配套硬件</h3>
+            <p>围绕交互、环境、感知与边缘接入，覆盖会议室、办公与楼宇场景。</p>
           </div>
           <div class="hwx-matrix__grid">
             ${matrix
@@ -138,10 +179,10 @@ function renderSpaceSection() {
                 (p) => `
               <a class="hwx-matrix__card" href="${productHref(p)}">
                 <span class="hwx-matrix__media">
-                  <img src="${esc(p.coverImage)}" alt="${esc(p.overviewLabel || p.name)}" width="640" height="480" loading="lazy" />
+                  <img src="${esc(p.coverImage)}" alt="${esc(p.displayName)}" width="640" height="480" loading="lazy" />
                 </span>
                 <span class="hwx-matrix__body">
-                  <strong>${esc(p.overviewLabel || p.name)}</strong>
+                  <strong>${esc(p.displayName)}</strong>
                   <small>${esc(p.shortDescription)}</small>
                   <span class="hwx-matrix__link">查看详情</span>
                 </span>
@@ -154,23 +195,21 @@ function renderSpaceSection() {
         <section class="hwx-arch" aria-labelledby="hwx-arch-title">
           <div class="hwx-arch__head">
             <div>
-              <h3 id="hwx-arch-title">${esc(copy.flowTitle || '空间智能硬件如何协同')}</h3>
-              <p>${esc(copy.flowSubtitle || '')}</p>
+              <h3 id="hwx-arch-title">空间智能硬件如何协同</h3>
+              <p>从数据采集到终端交互的横向能力链路。</p>
             </div>
-            <a class="hwc-text-link" href="${ASPACE_SOLUTION_HREF}">${esc(copy.flowLinkLabel || '了解 ASpace 总体解决方案 →')}</a>
+            <a class="hwc-text-link" href="${ASPACE_SOLUTION_HREF}">了解 ASpace 总体解决方案 →</a>
           </div>
           <ol class="hwx-arch__flow">
-            ${hardwareFlow()
-              .map(
-                (step, index) => `
+            ${HARDWARE_SPACE_FLOW.map(
+              (step, index) => `
               <li class="hwx-arch__step">
                 <span class="hwx-arch__index">${String(index + 1).padStart(2, '0')}</span>
                 <span class="material-symbols-outlined hwx-arch__icon" aria-hidden="true">${esc(step.icon)}</span>
                 <strong>${esc(step.title)}</strong>
                 <small>${esc(step.desc)}</small>
               </li>`
-              )
-              .join('')}
+            ).join('')}
           </ol>
         </section>
       </div>
@@ -178,15 +217,37 @@ function renderSpaceSection() {
 }
 
 function renderRetailSection() {
-  const copy = hardwareRetail() || {}
-  const cards = hardwareProducts().filter((item) => item.productLine === 'retail')
+  const cards = [
+    {
+      id: 'eink-price-tag',
+      use: '低功耗电子纸价签，服务门店货架信息的远程更新与统一管理。',
+    },
+    {
+      id: 'lcd-price-tag',
+      use: '彩色 LCD 价签，适合高对比、促销与品牌专柜展示场景。',
+    },
+    {
+      id: 'cold-tag',
+      use: '面向冷链与低温货架的标签方案，适配生鲜与仓储环境。',
+    },
+    {
+      id: 'aap',
+      use: '资产盘点与标签管理硬件能力，支撑盘点、巡检与台账闭环。',
+    },
+  ]
+    .map((item) => {
+      const p = getProductBySlug(item.id)
+      return p ? { ...p, use: item.use } : null
+    })
+    .filter(Boolean)
+
   return `
     <section class="hwx-retail" id="hwc-retail">
       <div class="hwc-shell">
         <header class="hwx-head hwx-head--light">
-          <p class="hwx-kicker">${esc(copy.kicker || '新零售与行业电子纸')}</p>
-          <h2>${esc(copy.title || '以电子纸连接商品、资产与行业数据')}</h2>
-          <p>${esc(copy.subtitle || '')}</p>
+          <p class="hwx-kicker">新零售与行业电子纸</p>
+          <h2>以电子纸连接商品、资产与行业数据</h2>
+          <p>覆盖门店价签、冷链标签与资产盘点，帮助业务侧更快完成信息同步与现场执行。</p>
         </header>
         <div class="hwx-retail__grid">
           ${cards
@@ -198,7 +259,7 @@ function renderRetailSection() {
               </div>
               <div class="hwx-retail__body">
                 <h3>${esc(p.name)}</h3>
-                <p class="hwx-retail__use">${esc(p.useBlurb || p.shortDescription)}</p>
+                <p class="hwx-retail__use">${esc(p.use)}</p>
                 <div class="hwx-retail__meta">
                   <div>
                     <span>核心特性</span>
@@ -220,26 +281,42 @@ function renderRetailSection() {
 }
 
 function renderConsumerSection() {
-  const copy = hardwareConsumer() || {}
-  const cards = hardwareProducts().filter((item) => item.productLine === 'consumer')
+  const cards = [
+    {
+      id: 'eink-phone-case',
+      scene: '/images/hardware/scene-eink-phone-case.jpg',
+      use: '把可刷新的电子纸带入个人设备，让通知、图文与个性表达常显可见。',
+    },
+    {
+      id: 'eink-frame',
+      scene: '/images/hardware/scene-eink-frame.jpg',
+      use: '以低功耗电子纸呈现画作与影像，进入家居与办公的数字陈列场景。',
+    },
+  ]
+    .map((item) => {
+      const p = getProductBySlug(item.id)
+      return p ? { ...p, scene: item.scene, use: item.use } : null
+    })
+    .filter(Boolean)
+
   return `
     <section class="hwx-consumer" id="hwc-consumer">
       <div class="hwc-shell">
         <header class="hwx-head">
-          <p class="hwx-kicker">${esc(copy.kicker || '3C 数码')}</p>
-          <h2>${esc(copy.title || '电子纸进入个人设备与数字生活')}</h2>
-          <p>${esc(copy.subtitle || '')}</p>
+          <p class="hwx-kicker">3C 数码</p>
+          <h2>电子纸进入个人设备与数字生活</h2>
+          <p>面向消费与陈列场景，以大幅场景卡呈现产品形态与使用氛围。</p>
         </header>
         <div class="hwx-consumer__grid">
           ${cards
             .map(
               (p) => `
             <a class="hwx-scene" href="${productHref(p)}">
-              <img src="${esc(p.sceneImage || p.coverImage)}" alt="${esc(p.name)}" width="1536" height="1024" loading="lazy" />
+              <img src="${esc(p.scene)}" alt="${esc(p.name)}" width="1536" height="1024" loading="lazy" />
               <span class="hwx-scene__shade" aria-hidden="true"></span>
               <span class="hwx-scene__copy">
                 <strong>${esc(p.name)}</strong>
-                <small>${esc(p.useBlurb || p.shortDescription)}</small>
+                <small>${esc(p.use)}</small>
                 <em>查看详情</em>
               </span>
             </a>`
@@ -251,27 +328,34 @@ function renderConsumerSection() {
 }
 
 function renderCta() {
-  const cta = hardwareCta() || {}
   return `
     <section class="hwc-cta">
       <div class="hwc-shell hwc-cta__inner">
         <div>
-          <h2>${esc(cta.title || '获取适合项目的硬件选型建议')}</h2>
-          <p>${esc(cta.body || '')}</p>
+          <h2>获取适合项目的硬件选型建议</h2>
+          <p>告诉我们空间类型、部署规模与接入需求，安托未来将协助完成硬件选型与联调方案。</p>
         </div>
         <div class="hwc-cta__actions">
-          <button type="button" class="hwc-btn hwc-btn--cyan" data-demo-modal-open>${esc(cta.primary || '获取选型建议')}</button>
-          <button type="button" class="hwc-text-link hwc-cta__link" data-demo-modal-open>${esc(cta.secondary || '预约方案演示')}</button>
+          <button type="button" class="hwc-btn hwc-btn--cyan" data-demo-modal-open>获取选型建议</button>
+          <button type="button" class="hwc-text-link hwc-cta__link" data-demo-modal-open>预约方案演示</button>
         </div>
       </div>
     </section>`
 }
 
+let cmsHero = null
+
 export async function initHardwareStore() {
   const root = document.getElementById('hardware-root')
   if (!root) return
-  const cms = await getPublishedPage('/api/public/pages/hardware')
-  if (cms) setHardwareRuntime(cms)
+  cmsHero = await loadSimplePageContent('hardware')
+  for (const product of HARDWARE_PRODUCTS) {
+    const hit = (cmsHero?.items || []).find((item) => item.id === product.slug || item.id === product.id)
+    if (!hit) continue
+    if (hit.title) product.name = hit.title
+    if (hit.summary) product.shortDescription = hit.summary
+    if (hit.imageUrl) product.coverImage = hit.imageUrl
+  }
 
   root.innerHTML = `
     <div class="hwc-first">
@@ -298,4 +382,6 @@ export async function initHardwareStore() {
       document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 80)
   }
+
+  void getProductsByLine
 }

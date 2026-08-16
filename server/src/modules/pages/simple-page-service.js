@@ -1,7 +1,41 @@
 import { randomUUID } from 'node:crypto'
 import { db } from '../../lib/store.js'
+import { HARDWARE_PRODUCTS } from '../../../../src/data/hardware-catalog.js'
+import { SOLUTIONS } from '../../../../src/data/solutions.js'
+import { AGENTS_OVERVIEW } from '../../../../src/data/agents-overview.js'
 
 export const SIMPLE_PAGE_KEYS = ['solutions', 'agents', 'hardware', 'news', 'ai-token']
+
+export function catalogItemsFor(key) {
+  if (key === 'hardware') {
+    return HARDWARE_PRODUCTS
+      .filter((item) => item.published !== false)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .map((item) => ({
+        id: item.slug || item.id,
+        title: item.name,
+        summary: item.shortDescription || '',
+        imageUrl: item.coverImage || '',
+      }))
+  }
+  if (key === 'solutions') {
+    return SOLUTIONS.map((item) => ({
+      id: item.id,
+      title: item.name,
+      summary: item.summary || item.value || '',
+      imageUrl: item.image || '',
+    }))
+  }
+  if (key === 'agents') {
+    return AGENTS_OVERVIEW.map((item) => ({
+      id: item.id,
+      title: item.name,
+      summary: item.blurb || '',
+      imageUrl: item.sceneImage || '',
+    }))
+  }
+  return []
+}
 
 export const defaultSimplePages = {
   solutions: {
@@ -50,14 +84,40 @@ function cleanUrl(value, fallback = '') {
   return parsed.toString().slice(0, 1000)
 }
 
+function cleanItems(value, catalog) {
+  const saved = Array.isArray(value) ? value : []
+  const byId = new Map(saved.map((item) => [String(item.id || '').trim(), item]))
+  const source = catalog.length ? catalog : saved
+  return source.slice(0, 40).map((item) => {
+    const extra = byId.get(item.id) || {}
+    return {
+      id: cleanText(extra.id || item.id, item.id, 40),
+      title: cleanText(extra.title, item.title || '未命名', 80),
+      summary: cleanText(extra.summary, item.summary || '', 240),
+      imageUrl: cleanUrl(extra.imageUrl || item.imageUrl || '', item.imageUrl || ''),
+    }
+  }).filter((item) => item.id)
+}
+
 export function validateSimplePage(key, value = {}) {
   const fallback = defaultSimplePages[key]
   if (!fallback) throw new Error('未知页面')
+  const catalog = catalogItemsFor(key)
   return {
     title: cleanText(value.title, fallback.title, 120),
     subtitle: cleanText(value.subtitle, fallback.subtitle, 400),
     bannerUrl: cleanUrl(value.bannerUrl, fallback.bannerUrl),
     ctaLabel: cleanText(value.ctaLabel, fallback.ctaLabel, 20),
+    items: cleanItems(value.items, catalog),
+  }
+}
+
+export function presentSimplePage(key, page) {
+  if (!page) return page
+  return {
+    ...page,
+    draftContent: validateSimplePage(key, page.draftContent || {}),
+    publishedContent: validateSimplePage(key, page.publishedContent || page.draftContent || {}),
   }
 }
 

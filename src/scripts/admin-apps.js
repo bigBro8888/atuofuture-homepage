@@ -16,9 +16,9 @@ const titles = {
   site: ['全站设置', 'Logo、品牌名、顶栏按钮与联系方式'],
   home: ['官网首页', '路径 / · 按前台区块逐项编辑，点左侧大纲跳转'],
   about: ['关于我们', '路径 /about/ · 编辑草稿并发布'],
-  'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏标题与 Banner'],
-  'page-agents': ['空间智能体', '路径 /agents/ · 首屏标题与 Banner'],
-  'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏标题与 Banner'],
+  'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏与方案列表'],
+  'page-agents': ['空间智能体', '路径 /agents/ · 首屏与智能体列表'],
+  'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏与产品列表'],
   'page-news': ['新闻中心', '路径 /news/ · 列表管理，点编辑即可改稿并发布'],
   'page-ai-token': ['AI Token', '路径 /ai-token/ · 首屏标题'],
   config: ['App 下载页', '路径 /app-download/ · 文案、Banner、商店链接'],
@@ -971,6 +971,8 @@ function renderSimpleEditor(key, content) {
   document.querySelector('[data-simple-path]').textContent = item?.path || `/${key}/`
   const preview = document.querySelector('[data-simple-preview]')
   if (preview && item) preview.href = item.path === '全站共用' ? '/' : item.path
+  const listTitle = { hardware: '产品列表', solutions: '方案列表', agents: '智能体列表' }[key]
+  const items = Array.isArray(content.items) ? content.items : []
   document.querySelector('[data-simple-editor]').innerHTML = `
     <fieldset>
       <legend>首屏信息</legend>
@@ -981,14 +983,39 @@ function renderSimpleEditor(key, content) {
         ${homeField('ctaLabel', '主按钮文案', content.ctaLabel)}
       </div>
     </fieldset>
+    ${listTitle ? `
+    <fieldset>
+      <legend>${listTitle}</legend>
+      <p class="admin-form-section__hint">这里列出当前前台正在展示的条目，可改名称、简介和图片，保存并发布后前台同步更新。</p>
+      <div class="admin-home-list">${items.map((entry, index) => `
+        <div class="admin-item-row admin-simple-item" data-simple-item="${index}">
+          <input type="hidden" data-home-field="items.${index}.id" value="${escapeHtml(entry.id || '')}" />
+          ${entry.imageUrl ? `<img class="admin-simple-item__thumb" src="${escapeHtml(entry.imageUrl)}" alt="" />` : '<span class="admin-simple-item__thumb is-empty"></span>'}
+          <div class="admin-simple-item__fields">
+            ${homeField(`items.${index}.title`, '名称', entry.title)}
+            ${homeField(`items.${index}.summary`, '简介', entry.summary, { type: 'textarea', rows: 2, wide: true })}
+            ${homeField(`items.${index}.imageUrl`, '图片', entry.imageUrl, { image: true, wide: true })}
+          </div>
+        </div>`).join('') || '<p class="admin-form-section__hint">暂无条目。</p>'}</div>
+    </fieldset>` : ''}
   `
 }
 
 function collectSimpleContent() {
-  const content = {}
+  const content = { items: [] }
   document.querySelectorAll('[data-simple-editor] [data-home-field]').forEach((field) => {
-    content[field.dataset.homeField] = field.value
+    const path = field.dataset.homeField
+    const value = field.value
+    const match = /^items\.(\d+)\.(\w+)$/.exec(path)
+    if (match) {
+      const index = Number(match[1])
+      content.items[index] = content.items[index] || {}
+      content.items[index][match[2]] = value
+      return
+    }
+    content[path] = value
   })
+  content.items = content.items.filter(Boolean)
   return content
 }
 
@@ -1923,7 +1950,7 @@ document.querySelector('[data-simple-save]').addEventListener('click', async (ev
   try { await saveSimpleDraft() } catch (error) { toast(error.message, true) } finally { button.disabled = false }
 })
 document.querySelector('[data-simple-publish]').addEventListener('click', async (event) => {
-  if (!window.confirm('确认发布该页首屏内容？')) return
+  if (!window.confirm('确认发布该页内容到前台？')) return
   const button = event.currentTarget
   button.disabled = true
   try {
@@ -1931,7 +1958,7 @@ document.querySelector('[data-simple-publish]').addEventListener('click', async 
     const { page } = await api(`/pages/simple/${encodeURIComponent(state.simpleKey)}/publish`, { method: 'POST' })
     state.simplePage = page
     updateSimpleStatus(page)
-    toast('页面首屏已发布')
+    toast('页面内容已发布')
   } catch (error) { toast(error.message, true) } finally { button.disabled = false }
 })
 document.querySelector('[data-simple-editor]').addEventListener('input', (event) => {
