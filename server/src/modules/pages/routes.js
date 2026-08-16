@@ -10,10 +10,7 @@ import { getHomePageConfig, validateHomeContent } from './home-service.js'
 import { getAboutPageConfig, validateAboutContent } from './about-service.js'
 import { getSiteSettingsPage, validateSiteSettings } from './site-settings-service.js'
 import { SIMPLE_PAGE_KEYS, getSimplePageConfig, validateSimplePage } from './simple-page-service.js'
-import { getNewsFeedConfig, syncHomeNewsFromFeed, validateNewsFeedContent } from './news-feed-service.js'
-import { getAgentsPageConfig, validateAgentsContent } from './agents-landing-service.js'
-import { getSolutionsPageConfig, validateSolutionsContent } from './solutions-landing-service.js'
-import { getHardwarePageConfig, validateHardwareContent } from './hardware-landing-service.js'
+import { getNewsFeedConfig, validateNewsFeedContent } from './news-feed-service.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -63,7 +60,9 @@ async function saveImageBuffer(buffer, mimeType, admin, extra = {}) {
 }
 
 function assertPublicImageUrl(raw) {
-  const parsed = new URL(String(raw || ''))
+  let text = String(raw || '').trim().replace(/&amp;/g, '&')
+  if (text.startsWith('//')) text = `https:${text}`
+  const parsed = new URL(text)
   if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('只支持 http(s) 图片地址')
   const host = parsed.hostname.toLowerCase()
   if (host === 'localhost' || host.endsWith('.localhost') || host === '0.0.0.0' || host === '::1') {
@@ -73,6 +72,28 @@ function assertPublicImageUrl(raw) {
     throw new Error('不允许抓取内网图片')
   }
   return parsed.toString()
+}
+
+async function fetchRemoteImage(remoteUrl) {
+  const origin = new URL(remoteUrl).origin
+  const remote = await fetch(remoteUrl, {
+    redirect: 'follow',
+    signal: AbortSignal.timeout(20000),
+    headers: {
+      Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      Referer: `${origin}/`,
+    },
+  })
+  if (!remote.ok) throw new Error(`远程图片无法下载（${remote.status}）`)
+  const mimeType = remote.headers.get('content-type') || ''
+  const buffer = Buffer.from(await remote.arrayBuffer())
+  if (buffer.length > 20 * 1024 * 1024) throw new Error('图片超过 20MB')
+  if (buffer.length < 32) throw new Error('远程文件不是有效图片')
+  if (!sniffImageMime(buffer, mimeType) && buffer.subarray(0, 15).toString('utf8').includes('<')) {
+    throw new Error('远程地址返回的不是图片，可能被防盗链拦截')
+  }
+  return { buffer, mimeType }
 }
 
 publicPagesRouter.get('/home', (request, response) => {
@@ -235,55 +256,10 @@ adminPagesRouter.post('/news-feed/publish', requireAuth('config:write'), async (
   page.status = 'published'
   page.publishedAt = new Date().toISOString()
   page.updatedAt = page.publishedAt
-  const homeCount = syncHomeNewsFromFeed(page.publishedContent.items || [])
   await save()
-  await addAudit(request.admin, 'news.feed.publish', 'news-feed', { publishedAt: page.publishedAt, homeCount })
-  response.json({ page, homeCount })
+  await addAudit(request.admin, 'news.feed.publish', 'news-feed', { publishedAt: page.publishedAt })
+  response.json({ page })
 })
-
-function registerLandingPage(key, getPage, validate) {
-  publicPagesRouter.get(`/${key}`, (request, response) => {
-    const page = getPage()
-    if (page.status !== 'published' || !page.publishedContent) {
-      return response.status(404).json({ error: 'page_not_published' })
-    }
-    response.set('Cache-Control', 'no-cache')
-    response.json({
-      pageKey: page.pageKey,
-      content: page.publishedContent,
-      publishedAt: page.publishedAt,
-    })
-  })
-  adminPagesRouter.get(`/${key}`, requireAuth(), (request, response) => {
-    response.json({ page: getPage() })
-  })
-  adminPagesRouter.put(`/${key}/draft`, requireAuth('config:write'), async (request, response) => {
-    try {
-      const page = getPage()
-      page.draftContent = validate(request.body?.content)
-      page.updatedAt = new Date().toISOString()
-      await save()
-      await addAudit(request.admin, `${key}.content.update`, key, {})
-      response.json({ page })
-    } catch (error) {
-      response.status(400).json({ error: `invalid_${key}_content`, message: error.message })
-    }
-  })
-  adminPagesRouter.post(`/${key}/publish`, requireAuth('config:write'), async (request, response) => {
-    const page = getPage()
-    page.publishedContent = structuredClone(page.draftContent)
-    page.status = 'published'
-    page.publishedAt = new Date().toISOString()
-    page.updatedAt = page.publishedAt
-    await save()
-    await addAudit(request.admin, `${key}.content.publish`, key, { publishedAt: page.publishedAt })
-    response.json({ page })
-  })
-}
-
-registerLandingPage('agents', getAgentsPageConfig, validateAgentsContent)
-registerLandingPage('solutions', getSolutionsPageConfig, validateSolutionsContent)
-registerLandingPage('hardware', getHardwarePageConfig, validateHardwareContent)
 
 publicPagesRouter.get('/simple/:key', (request, response) => {
   const page = getSimplePageConfig(request.params.key)
@@ -341,15 +317,7 @@ adminPagesRouter.post('/media/image', requireAuth('config:write'), imageUpload.s
 adminPagesRouter.post('/media/image-from-url', requireAuth('config:write'), async (request, response) => {
   try {
     const remoteUrl = assertPublicImageUrl(request.body?.url)
-    const remote = await fetch(remoteUrl, {
-      redirect: 'follow',
-      signal: AbortSignal.timeout(12000),
-      headers: { Accept: 'image/*,*/*;q=0.8', 'User-Agent': 'AtuoFutureCMS/1.0' },
-    })
-    if (!remote.ok) throw new Error('远程图片无法下载')
-    const mimeType = remote.headers.get('content-type') || ''
-    const buffer = Buffer.from(await remote.arrayBuffer())
-    if (buffer.length > 20 * 1024 * 1024) throw new Error('图片超过 20MB')
+    const { buffer, mimeType } = await fetchRemoteImage(remoteUrl)
     const url = await saveImageBuffer(buffer, mimeType, request.admin, { source: remoteUrl })
     response.status(201).json({ url })
   } catch (error) {

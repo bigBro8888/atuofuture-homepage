@@ -17,17 +17,18 @@ const ALLOWED_ATTR = {
 }
 
 function safeUrl(value, kind) {
-  const url = String(value || '').trim()
+  let url = String(value || '').trim().replace(/&amp;/g, '&').replace(/&quot;/g, '')
   if (!url) return ''
-  if (url.startsWith('/') && !url.startsWith('//')) return url.slice(0, 1500)
+  if (url.startsWith('//')) url = `https:${url}`
+  if (url.startsWith('/') && !url.startsWith('//')) return url.slice(0, 4000)
   const lower = url.toLowerCase()
   if (lower.startsWith('javascript:') || lower.startsWith('data:text') || lower.startsWith('vbscript:')) return ''
   if (kind === 'img' && lower.startsWith('data:image/')) return url.slice(0, 200000)
   try {
     const parsed = new URL(url)
-    if (kind === 'a' && parsed.protocol === 'mailto:') return parsed.toString().slice(0, 1500)
+    if (kind === 'a' && parsed.protocol === 'mailto:') return parsed.toString().slice(0, 4000)
     if (!['http:', 'https:'].includes(parsed.protocol)) return ''
-    return parsed.toString().slice(0, 1500)
+    return parsed.toString().slice(0, 4000)
   } catch {
     return ''
   }
