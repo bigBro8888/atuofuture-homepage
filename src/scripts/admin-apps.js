@@ -69,6 +69,12 @@ async function api(path, options = {}) {
   }
 }
 
+function newNewsId() {
+  const uuid = globalThis.crypto?.randomUUID?.()
+  if (uuid) return `n-${uuid.slice(0, 8)}`
+  return `n-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+}
+
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
@@ -1316,7 +1322,7 @@ async function publishNewsFromCompose() {
     const meta = collectNewsPageMeta()
     const items = [...(state.newsPage?.draftContent?.items || [])]
     if (index >= 0 && items[index]) items[index] = { ...items[index], ...article }
-    else items.unshift({ ...article, id: article.id || `n-${crypto.randomUUID().slice(0, 8)}` })
+    else items.unshift({ ...article, id: article.id || newNewsId() })
     await persistNewsFeed({ ...meta, items }, '新闻已发布到前台')
     closeNewsCompose()
   } catch (error) {
