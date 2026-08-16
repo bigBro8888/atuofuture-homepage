@@ -364,8 +364,43 @@ export const HARDWARE_MEGA_GROUPS = [
   },
 ]
 
+let navGroupOverride = null
+
+export function applyHardwareSimpleCms(content) {
+  if (!content) return
+  if (Array.isArray(content.navGroups) && content.navGroups.length) {
+    navGroupOverride = content.navGroups
+  }
+  for (const product of HARDWARE_PRODUCTS) {
+    const hit = (content.items || []).find((item) => item.id === product.slug || item.id === product.id)
+    if (!hit) continue
+    if (hit.title) product.name = hit.title
+    if (hit.summary) product.shortDescription = hit.summary
+    if (hit.imageUrl) product.coverImage = hit.imageUrl
+  }
+}
+
+function megaSourceGroups() {
+  if (!Array.isArray(navGroupOverride) || !navGroupOverride.length) return HARDWARE_MEGA_GROUPS
+  return HARDWARE_MEGA_GROUPS.map((base) => {
+    const extra = navGroupOverride.find((group) => group.id === base.id) || {}
+    const savedProducts = Array.isArray(extra.products) ? extra.products : []
+    const products = (savedProducts.length ? savedProducts : base.products).map((entry) => {
+      const id = entry.id
+      const fallback = base.products.find((item) => item.id === id)
+      return { id, label: entry.label || fallback?.label || '' }
+    }).filter((entry) => entry.id)
+    return {
+      id: base.id,
+      title: extra.title || base.title,
+      icon: extra.icon || base.icon,
+      products: products.length ? products : base.products,
+    }
+  })
+}
+
 export function resolveHardwareMegaGroups() {
-  return HARDWARE_MEGA_GROUPS.map((group) => ({
+  return megaSourceGroups().map((group) => ({
     ...group,
     products: group.products
       .map((entry) => {

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { db } from '../../lib/store.js'
-import { HARDWARE_PRODUCTS } from '../../../../src/data/hardware-catalog.js'
+import { HARDWARE_MEGA_GROUPS, HARDWARE_PRODUCTS } from '../../../../src/data/hardware-catalog.js'
 import { SOLUTIONS } from '../../../../src/data/solutions.js'
 import { AGENTS_OVERVIEW } from '../../../../src/data/agents-overview.js'
 
@@ -103,17 +103,52 @@ function cleanItems(value, catalog) {
   }).filter((item) => item.id)
 }
 
+function defaultNavGroups() {
+  return HARDWARE_MEGA_GROUPS.map((group) => ({
+    id: group.id,
+    title: group.title,
+    icon: group.icon,
+    products: group.products.map((item) => ({
+      id: item.id,
+      label: item.label || '',
+    })),
+  }))
+}
+
+function cleanNavGroups(value) {
+  const fallback = defaultNavGroups()
+  const saved = Array.isArray(value) ? value : []
+  return fallback.map((base, index) => {
+    const extra = saved.find((item) => item.id === base.id) || saved[index] || {}
+    const extraProducts = Array.isArray(extra.products) ? extra.products : []
+    return {
+      id: base.id,
+      title: cleanText(extra.title, base.title, 40),
+      icon: cleanText(extra.icon, base.icon, 40),
+      products: base.products.map((item, productIndex) => {
+        const extraProduct = extraProducts.find((row) => row.id === item.id) || extraProducts[productIndex] || {}
+        return {
+          id: item.id,
+          label: cleanText(extraProduct.label, item.label || '', 20),
+        }
+      }),
+    }
+  })
+}
+
 export function validateSimplePage(key, value = {}) {
   const fallback = defaultSimplePages[key]
   if (!fallback) throw new Error('未知页面')
   const catalog = catalogItemsFor(key)
-  return {
+  const page = {
     title: cleanText(value.title, fallback.title, 120),
     subtitle: cleanText(value.subtitle, fallback.subtitle, 400),
     bannerUrl: cleanUrl(value.bannerUrl, fallback.bannerUrl),
     ctaLabel: cleanText(value.ctaLabel, fallback.ctaLabel, 20),
     items: cleanItems(value.items, catalog),
   }
+  if (key === 'hardware') page.navGroups = cleanNavGroups(value.navGroups)
+  return page
 }
 
 export function presentSimplePage(key, page) {

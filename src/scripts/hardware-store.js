@@ -4,6 +4,7 @@ import {
   HARDWARE_PRODUCTS,
   HARDWARE_SPACE_FLOW,
   ASPACE_SOLUTION_HREF,
+  applyHardwareSimpleCms,
   getProductBySlug,
   getProductsByLine,
 } from '../data/hardware-catalog.js'
@@ -349,13 +350,7 @@ export async function initHardwareStore() {
   const root = document.getElementById('hardware-root')
   if (!root) return
   cmsHero = await loadSimplePageContent('hardware')
-  for (const product of HARDWARE_PRODUCTS) {
-    const hit = (cmsHero?.items || []).find((item) => item.id === product.slug || item.id === product.id)
-    if (!hit) continue
-    if (hit.title) product.name = hit.title
-    if (hit.summary) product.shortDescription = hit.summary
-    if (hit.imageUrl) product.coverImage = hit.imageUrl
-  }
+  applyHardwareSimpleCms(cmsHero)
 
   root.innerHTML = `
     <div class="hwc-first">

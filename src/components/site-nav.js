@@ -1,7 +1,7 @@
 import { SITE_NAV_ITEMS } from '../data/site-nav.js'
 import { SHOW_APP_DOWNLOAD, SITE_CTA, APP_DOWNLOAD_PATH } from '../data/site-links.js'
-import { resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
-import { resolveHardwareMegaGroupsCms } from '../lib/cms-pages.js'
+import { applyHardwareSimpleCms, resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
+import { loadSimplePageContent } from '../services/site-settings-api.js'
 import { SOLUTIONS } from '../data/solutions.js'
 import { AGENTS_OVERVIEW } from '../data/agents-overview.js'
 
@@ -71,14 +71,10 @@ function renderVisualMega(item, root) {
   `
 }
 
-function hardwareMegaGroups() {
-  return resolveHardwareMegaGroupsCms() || resolveHardwareMegaGroups()
-}
-
 function renderHardwareMega(root) {
-  const groups = hardwareMegaGroups()
+  const groups = resolveHardwareMegaGroups()
   return `
-    <div class="site-mega site-mega--hardware" role="region">
+    <div class="site-mega site-mega--hardware" data-hardware-mega role="region">
       <div class="site-mega__hardware">
         ${groups
           .map(
@@ -105,6 +101,23 @@ function renderHardwareMega(root) {
       </div>
     </div>
   `
+}
+
+function renderHardwareMobile(root) {
+  return resolveHardwareMegaGroups()
+    .map(
+      (group) => `
+            <p class="site-mobile-nav-group">${group.title}</p>
+            ${group.products
+              .map(
+                (p) => `
+            <a class="site-mobile-nav-link site-mobile-nav-link--child" href="${root}hardware/product/?id=${encodeURIComponent(p.slug)}">
+              <strong>${p.name}</strong>
+            </a>`
+              )
+              .join('')}`
+    )
+    .join('')
 }
 
 function renderMegaChildren(item, root) {
@@ -168,20 +181,7 @@ function renderMobileNav(activeId, root) {
           <a class="site-mobile-nav-link site-mobile-nav-link--all" href="${href}">查看全部</a>
           ${
             item.mega === 'hardware'
-              ? hardwareMegaGroups()
-                  .map(
-                    (group) => `
-            <p class="site-mobile-nav-group">${group.title}</p>
-            ${group.products
-              .map(
-                (p) => `
-            <a class="site-mobile-nav-link site-mobile-nav-link--child" href="${root}hardware/product/?id=${encodeURIComponent(p.slug)}">
-              <strong>${p.name}</strong>
-            </a>`
-              )
-              .join('')}`
-                  )
-                  .join('')
+              ? `<div data-hardware-mobile>${renderHardwareMobile(root)}</div>`
               : resolveVisualItems(item)
                   .map(
                     (child) => `
@@ -308,16 +308,33 @@ export function initSiteNav() {
   const mount = document.getElementById('site-header')
   if (!mount) return
 
-  const activeId = document.body.dataset.page || 'home'
-  const html = renderSiteNav(activeId)
-  if (mount.tagName === 'HEADER' || mount.id === 'site-header') {
-    mount.outerHTML = html
-  } else {
-    mount.outerHTML = html
+  const paint = () => {
+    const activeId = document.body.dataset.page || 'home'
+    const html = renderSiteNav(activeId)
+    const current = document.getElementById('site-header')
+    if (!current) return
+    current.outerHTML = html
+    const header = document.getElementById('site-header')
+    if (!header) return
+    initMegaMenu(header)
+    initMobileAccordion(header)
   }
 
-  const header = document.getElementById('site-header')
-  if (!header) return
-  initMegaMenu(header)
-  initMobileAccordion(header)
+  paint()
+  void loadSimplePageContent('hardware')
+    .then((content) => {
+      applyHardwareSimpleCms(content)
+      const header = document.getElementById('site-header')
+      if (!header) return
+      const root = getRootPrefix()
+      const mega = header.querySelector('[data-hardware-mega]')
+      if (mega) {
+        const wrap = document.createElement('div')
+        wrap.innerHTML = renderHardwareMega(root).trim()
+        mega.replaceWith(wrap.firstElementChild)
+      }
+      const mobile = header.querySelector('[data-hardware-mobile]')
+      if (mobile) mobile.innerHTML = renderHardwareMobile(root)
+    })
+    .catch(() => {})
 }

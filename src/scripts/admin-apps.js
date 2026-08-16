@@ -970,9 +970,10 @@ function simpleOutline(key, items = []) {
   if (key === 'hardware') {
     return [
       hero,
-      { id: 'space', no: '02', title: '空间智能', desc: '中控屏、桌牌、工位屏等' },
-      { id: 'retail', no: '03', title: '新零售与电子纸', desc: '价签、冷链与资产盘点' },
-      { id: 'consumer', no: '04', title: '3C 数码', desc: '手机壳与艺术相框' },
+      { id: 'nav', no: '02', title: '导航分类设置', desc: '顶栏下拉三类入口与产品名' },
+      { id: 'space', no: '03', title: '空间智能', desc: '中控屏、桌牌、工位屏等' },
+      { id: 'retail', no: '04', title: '新零售与电子纸', desc: '价签、冷链与资产盘点' },
+      { id: 'consumer', no: '05', title: '3C 数码', desc: '手机壳与艺术相框' },
     ]
   }
   if (key === 'solutions' || key === 'agents') {
@@ -1028,7 +1029,27 @@ function renderSimpleEditor(key, content) {
     retail: '新零售与电子纸',
     consumer: '3C 数码',
   }
-  const listSections = outline.filter((entry) => entry.id !== 'hero').map((entry) => {
+  const navGroups = Array.isArray(content.navGroups) ? content.navGroups : []
+  const navSection = key === 'hardware' ? `
+      <fieldset data-simple-section="nav">
+        <legend>导航分类设置</legend>
+        <p class="admin-form-section__hint">对应官网顶栏「智能硬件」下拉的三列：分类名称、图标，以及该列每个产品的导航显示名（可与产品页名称不同，例如「照明与空调」）。保存并发布后全站导航同步。</p>
+        <div class="admin-home-list">${navGroups.map((group, groupIndex) => `
+          <div class="admin-item-row admin-simple-item">
+            <div class="admin-simple-item__fields">
+              <input type="hidden" data-home-field="navGroups.${groupIndex}.id" value="${escapeHtml(group.id || '')}" />
+              ${homeField(`navGroups.${groupIndex}.title`, '分类名称', group.title, { wide: true })}
+              ${homeField(`navGroups.${groupIndex}.icon`, '图标', group.icon, { help: 'Material Symbols 名称，如 domain / shopping_bag / smartphone' })}
+              ${(group.products || []).map((product, productIndex) => {
+                const name = items.find((row) => row.id === product.id)?.title || product.id
+                return `
+                <input type="hidden" data-home-field="navGroups.${groupIndex}.products.${productIndex}.id" value="${escapeHtml(product.id || '')}" />
+                ${homeField(`navGroups.${groupIndex}.products.${productIndex}.label`, `导航显示名（${name}）`, product.label || name)}`
+              }).join('')}
+            </div>
+          </div>`).join('')}</div>
+      </fieldset>` : ''
+  const listSections = outline.filter((entry) => entry.id !== 'hero' && entry.id !== 'nav').map((entry) => {
     const rows = items
       .map((row, index) => ({ row, index }))
       .filter(({ row }) => (row.group || row.id) === entry.id)
@@ -1059,6 +1080,7 @@ function renderSimpleEditor(key, content) {
           ${homeField('ctaLabel', '主按钮文案', content.ctaLabel)}
         </div>
       </fieldset>
+      ${navSection}
       ${listSections}
     </div>
   `
@@ -1066,7 +1088,7 @@ function renderSimpleEditor(key, content) {
 }
 
 function collectSimpleContent() {
-  const content = { items: [] }
+  const content = { items: [], navGroups: [] }
   document.querySelectorAll('[data-simple-editor] [data-home-field]').forEach((field) => {
     const path = field.dataset.homeField
     const value = field.value
@@ -1077,9 +1099,29 @@ function collectSimpleContent() {
       content.items[index][match[2]] = value
       return
     }
+    const navGroup = /^navGroups\.(\d+)\.(id|title|icon)$/.exec(path)
+    if (navGroup) {
+      const index = Number(navGroup[1])
+      content.navGroups[index] = content.navGroups[index] || { products: [] }
+      content.navGroups[index][navGroup[2]] = value
+      return
+    }
+    const navProduct = /^navGroups\.(\d+)\.products\.(\d+)\.(id|label)$/.exec(path)
+    if (navProduct) {
+      const groupIndex = Number(navProduct[1])
+      const productIndex = Number(navProduct[2])
+      content.navGroups[groupIndex] = content.navGroups[groupIndex] || { products: [] }
+      content.navGroups[groupIndex].products[productIndex] = content.navGroups[groupIndex].products[productIndex] || {}
+      content.navGroups[groupIndex].products[productIndex][navProduct[3]] = value
+      return
+    }
     content[path] = value
   })
   content.items = content.items.filter(Boolean)
+  content.navGroups = content.navGroups.filter(Boolean).map((group) => ({
+    ...group,
+    products: Array.isArray(group.products) ? group.products.filter(Boolean) : [],
+  }))
   return content
 }
 
