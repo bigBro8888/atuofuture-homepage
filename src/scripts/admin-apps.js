@@ -40,16 +40,33 @@ const API_ERROR_TEXT = {
 }
 
 async function api(path, options = {}) {
-  const headers = { Accept: 'application/json', ...options.headers }
-  if (options.body && !(options.body instanceof FormData)) headers['Content-Type'] = 'application/json'
-  const response = await fetch(`${API}${path}`, { credentials: 'same-origin', ...options, headers })
-  if (response.status === 204) return null
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    if (response.status === 401 && path !== '/login' && path !== '/me') showLogin()
-    throw new Error(API_ERROR_TEXT[data.error] || data.message || data.error || `请求失败（${response.status}）`)
+  const { timeoutMs, headers: extraHeaders, ...fetchOptions } = options
+  const headers = { Accept: 'application/json', ...extraHeaders }
+  const isForm = fetchOptions.body instanceof FormData
+  if (fetchOptions.body && !isForm) headers['Content-Type'] = 'application/json'
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs ?? (isForm ? 180000 : 45000))
+  try {
+    const response = await fetch(`${API}${path}`, {
+      credentials: 'same-origin',
+      ...fetchOptions,
+      headers,
+      signal: fetchOptions.signal || controller.signal,
+    })
+    if (response.status === 204) return null
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      if (response.status === 401 && path !== '/login' && path !== '/me') showLogin()
+      if (response.status === 413) throw new Error('正文过大，请把插图改成上传图片后再发布')
+      throw new Error(API_ERROR_TEXT[data.error] || data.message || data.error || `请求失败（${response.status}）`)
+    }
+    return data
+  } catch (error) {
+    if (error?.name === 'AbortError') throw new Error('请求超时，请检查网络或正文图片后重试')
+    throw error
+  } finally {
+    clearTimeout(timer)
   }
-  return data
 }
 
 function escapeHtml(value) {
@@ -1239,15 +1256,24 @@ async function syncPinnedNewsToHome(items) {
   await api('/pages/home/publish', { method: 'POST' })
 }
 
+function stripInlineDataImages(html) {
+  return String(html || '').replace(/\ssrc=(["'])data:image\/[\s\S]*?\1/gi, ' src=""')
+}
+
 async function persistNewsFeed(content, message) {
-  content.items = limitPinnedNews(content.items || [])
+  content.items = limitPinnedNews(content.items || []).map((item) => ({
+    ...item,
+    bodyHtml: stripInlineDataImages(item.bodyHtml),
+  }))
   const { page: draftPage } = await api('/pages/news-feed/draft', { method: 'PUT', body: JSON.stringify({ content }) })
   const { page } = await api('/pages/news-feed/publish', { method: 'POST' })
   state.newsPage = page.publishedContent ? page : draftPage
-  await syncPinnedNewsToHome(state.newsPage.draftContent.items || [])
   renderNewsEditor(state.newsPage.draftContent)
   updateNewsStatus(state.newsPage)
   toast(message)
+  void syncPinnedNewsToHome(state.newsPage.draftContent.items || []).catch((error) => {
+    toast(`新闻已发布，首页同步失败：${error.message}`, true)
+  })
 }
 
 async function publishNewsFromCompose() {

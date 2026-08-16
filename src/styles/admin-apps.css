@@ -462,7 +462,7 @@ body.admin-modal-open { overflow: hidden; }
   font-weight: 700;
   cursor: pointer;
 }
-.admin-news-compose__publish:disabled { opacity: .55; cursor: wait; }
+.admin-news-compose__publish:disabled { opacity: .55; cursor: default; }
 .admin-news-compose__body { padding: 20px 22px 32px; }
 .admin-news-compose__main { display: grid; gap: 16px; }
 .admin-news-compose__meta {
