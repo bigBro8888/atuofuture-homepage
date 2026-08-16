@@ -13,3 +13,9 @@ alwaysApply: true
 4. 推送遇代理/证书问题时，用单次 `-c http.proxy=` / `-c https.proxy=` + `http.sslCAInfo` + `gh auth token` 推送
 5. 不要提交 `.env`、密钥、以及未要求纳入的设计稿目录（如 `app download/`）
 6. 推送完成后简短告知 commit 与仓库链接
+7. **同时部署阿里云线上站，无需用户再说「推送线上」**：
+   - 机器 `root@47.103.102.65`，代码 `/var/www/mydoc/atuofuture`，对外 http://47.103.102.65:18180/
+   - 服务器工作区常有未提交改动，`git pull` 容易失败；默认 `scp` 本次改动的源文件到 `/tmp/`，再 `install -o atuoapp -g atuoapp` 覆盖对应路径
+   - 然后 `cd /var/www/mydoc/atuofuture && sudo -u atuoapp npm run build`
+   - 改了 `server/` 或 API 时再 `systemctl restart atuofuture-home`；只改静态一般不用动 nginx
+   - 告知用户普通 F5 即可（不要 Ctrl+F5）
