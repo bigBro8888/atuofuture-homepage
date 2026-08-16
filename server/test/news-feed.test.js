@@ -4,6 +4,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { formatNewsBody } from '../../src/lib/format-news-body.js'
+import { sanitizeNewsHtml } from '../../src/lib/sanitize-news-html.js'
 
 test('formats pasted news body into headings and paragraphs', () => {
   const sections = formatNewsBody('一、标题\n\n第一段内容。\n\n短标题\n\n第二段。')
@@ -11,6 +12,14 @@ test('formats pasted news body into headings and paragraphs', () => {
   assert.equal(sections[0].paragraphs[0], '第一段内容。')
   assert.equal(sections[0].showCover, true)
   assert.equal(sections[1].heading, '短标题')
+})
+
+test('keeps tables and images but strips scripts from news html', () => {
+  const html = sanitizeNewsHtml('<p>正文</p><table><tr><td>08</td></tr></table><img src="https://example.com/a.jpg" onerror="alert(1)"><script>alert(1)</script>')
+  assert.match(html, /<table>/)
+  assert.match(html, /<img src="https:\/\/example.com\/a.jpg">/)
+  assert.doesNotMatch(html, /script/i)
+  assert.doesNotMatch(html, /onerror/)
 })
 
 test('publishes news feed articles to the public API', async (context) => {

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { db } from '../../lib/store.js'
 import { formatNewsBody } from '../../../../src/lib/format-news-body.js'
+import { htmlFromPlainBody, plainTextFromHtml, sanitizeNewsHtml } from '../../../../src/lib/sanitize-news-html.js'
 
 export const NEWS_FEED_PAGE_KEY = 'news-feed'
 export const NEWS_CATEGORIES = ['公司动态', '产品更新', '方案实践']
@@ -172,7 +173,8 @@ function cleanDate(value, fallback) {
 
 function validateItem(value = {}, fallback = {}) {
   const title = cleanText(value.title, fallback.title || '未命名新闻', 160)
-  const body = cleanText(value.body, fallback.body || '', 20000)
+  const bodyHtml = sanitizeNewsHtml(value.bodyHtml || fallback.bodyHtml || htmlFromPlainBody(value.body || fallback.body || ''))
+  const body = cleanText(value.body || plainTextFromHtml(bodyHtml), fallback.body || '', 20000)
   const category = NEWS_CATEGORIES.includes(value.category) ? value.category : (fallback.category || '公司动态')
   return {
     id: cleanText(value.id, fallback.id || `n-${randomUUID().slice(0, 8)}`, 40) || `n-${randomUUID().slice(0, 8)}`,
@@ -184,6 +186,7 @@ function validateItem(value = {}, fallback = {}) {
     author: cleanText(value.author, fallback.author || '安托未来', 40),
     tags: cleanTags(value.tags ?? fallback.tags),
     body,
+    bodyHtml,
     sections: formatNewsBody(body),
   }
 }

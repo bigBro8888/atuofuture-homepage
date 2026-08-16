@@ -23,7 +23,54 @@ const imageExtensions = new Map([
   ['image/jpeg', '.jpg'],
   ['image/png', '.png'],
   ['image/webp', '.webp'],
+  ['image/gif', '.gif'],
 ])
+
+function sniffImageMime(buffer, mimeType) {
+  const type = String(mimeType || '').split(';')[0].trim().toLowerCase()
+  if (imageExtensions.has(type)) return type
+  if (!buffer?.length) return ''
+  if (buffer[0] === 0xff && buffer[1] === 0xd8) return 'image/jpeg'
+  if (buffer[0] === 0x89 && buffer[1] === 0x50) return 'image/png'
+  if (buffer[0] === 0x47 && buffer[1] === 0x49) return 'image/gif'
+  if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[8] === 0x57) return 'image/webp'
+  return ''
+}
+
+async function saveImageBuffer(buffer, mimeType, admin, extra = {}) {
+  const type = sniffImageMime(buffer, mimeType)
+  const extension = imageExtensions.get(type)
+  if (!buffer?.length || !extension) {
+    const error = new Error('仅支持 JPG、PNG、WebP 或 GIF 图片')
+    error.status = 400
+    throw error
+  }
+  const imageDirectory = path.join(config.uploadDir, 'images')
+  const filename = `home-${Date.now()}-${randomUUID()}${extension}`
+  await mkdir(imageDirectory, { recursive: true })
+  await writeFile(path.join(imageDirectory, filename), buffer)
+  const url = `/api/public/uploads/images/${filename}`
+  await addAudit(admin, 'home.media.upload', 'home', {
+    filename,
+    size: buffer.length,
+    mimeType: type,
+    ...extra,
+  })
+  return url
+}
+
+function assertPublicImageUrl(raw) {
+  const parsed = new URL(String(raw || ''))
+  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('只支持 http(s) 图片地址')
+  const host = parsed.hostname.toLowerCase()
+  if (host === 'localhost' || host.endsWith('.localhost') || host === '0.0.0.0' || host === '::1') {
+    throw new Error('不允许抓取内网图片')
+  }
+  if (/^(127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(host)) {
+    throw new Error('不允许抓取内网图片')
+  }
+  return parsed.toString()
+}
 
 publicPagesRouter.get('/home', (request, response) => {
   const page = getHomePageConfig()
@@ -235,20 +282,29 @@ adminPagesRouter.post('/simple/:key/publish', requireAuth('config:write'), async
 })
 
 adminPagesRouter.post('/media/image', requireAuth('config:write'), imageUpload.single('image'), async (request, response) => {
-  const extension = imageExtensions.get(request.file?.mimetype)
-  if (!request.file || !extension) {
-    return response.status(400).json({ error: 'invalid_image', message: '仅支持 JPG、PNG 或 WebP 图片' })
+  try {
+    const url = await saveImageBuffer(request.file?.buffer, request.file?.mimetype, request.admin)
+    response.status(201).json({ url })
+  } catch (error) {
+    response.status(error.status || 400).json({ error: 'invalid_image', message: error.message })
   }
+})
 
-  const imageDirectory = path.join(config.uploadDir, 'images')
-  const filename = `home-${Date.now()}-${randomUUID()}${extension}`
-  await mkdir(imageDirectory, { recursive: true })
-  await writeFile(path.join(imageDirectory, filename), request.file.buffer)
-  const url = `/api/public/uploads/images/${filename}`
-  await addAudit(request.admin, 'home.media.upload', 'home', {
-    filename,
-    size: request.file.size,
-    mimeType: request.file.mimetype,
-  })
-  response.status(201).json({ url })
+adminPagesRouter.post('/media/image-from-url', requireAuth('config:write'), async (request, response) => {
+  try {
+    const remoteUrl = assertPublicImageUrl(request.body?.url)
+    const remote = await fetch(remoteUrl, {
+      redirect: 'follow',
+      signal: AbortSignal.timeout(12000),
+      headers: { Accept: 'image/*,*/*;q=0.8', 'User-Agent': 'AtuoFutureCMS/1.0' },
+    })
+    if (!remote.ok) throw new Error('远程图片无法下载')
+    const mimeType = remote.headers.get('content-type') || ''
+    const buffer = Buffer.from(await remote.arrayBuffer())
+    if (buffer.length > 20 * 1024 * 1024) throw new Error('图片超过 20MB')
+    const url = await saveImageBuffer(buffer, mimeType, request.admin, { source: remoteUrl })
+    response.status(201).json({ url })
+  } catch (error) {
+    response.status(400).json({ error: 'invalid_remote_image', message: error.message || '远程图片导入失败' })
+  }
 })

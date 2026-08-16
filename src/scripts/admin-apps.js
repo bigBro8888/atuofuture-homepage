@@ -1,4 +1,5 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
+import { bindNewsRichEditor, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
 
 const API = '/api/admin'
 const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', newsPage: null, homeSection: 'hero' }
@@ -1022,7 +1023,7 @@ function renderNewsEditor(content) {
     </fieldset>
     <fieldset>
       <legend>新闻列表</legend>
-      <p class="admin-form-section__hint">每条新闻一行。点「编辑」填标题、简介、日期、发布人、分类和正文，粘贴即可自动分段排版，点「发布上线」立刻出现在前台。</p>
+      <p class="admin-form-section__hint">每条新闻一行。点「编辑」后可直接从其它网站复制粘贴（含表格和图片），改完点「发布上线」。</p>
       <button type="button" class="admin-add-slide" data-news-add>+ 新建新闻</button>
       <div class="admin-home-list" style="margin-top:12px">${items.map((item, index) => `
         <div class="admin-item-row">
@@ -1049,6 +1050,7 @@ function collectNewsPageMeta() {
 
 function collectNewsArticleFromModal() {
   const get = (path) => document.querySelector(`[data-item-modal] [data-news-field="${path}"]`)?.value ?? ''
+  const rich = readNewsRichContent(document.querySelector('[data-item-modal]'))
   return {
     id: get('id'),
     title: get('title'),
@@ -1058,7 +1060,8 @@ function collectNewsArticleFromModal() {
     category: get('category'),
     cover: get('cover'),
     tags: get('tags'),
-    body: get('body'),
+    body: rich.body,
+    bodyHtml: rich.bodyHtml,
   }
 }
 
@@ -1073,14 +1076,14 @@ function newsArticleFields(item = {}) {
     ${newsField('category', '分类', item.category || '公司动态', { type: 'select', options: [['公司动态', '公司动态'], ['产品更新', '产品更新'], ['方案实践', '方案实践']] })}
     ${newsField('cover', '封面图', item.cover || '', { image: true, wide: true })}
     ${newsField('tags', '标签', Array.isArray(item.tags) ? item.tags.join('，') : (item.tags || ''), { wide: true, help: '可选，用逗号分隔' })}
-    ${newsField('body', '主题正文', item.body || '', { type: 'textarea', wide: true, rows: 12, help: '直接粘贴即可。空行分段；单独一行短句会当成小标题。' })}`
+    ${newsRichEditorMarkup(item)}`
 }
 
 function openNewsModal(index) {
   const items = state.newsPage?.draftContent?.items || []
   const isNew = index < 0 || !items[index]
   const item = isNew
-    ? { id: '', title: '', summary: '', date: new Date().toISOString().slice(0, 10), author: '安托未来', category: '公司动态', cover: '', tags: [], body: '' }
+    ? { id: '', title: '', summary: '', date: new Date().toISOString().slice(0, 10), author: '安托未来', category: '公司动态', cover: '', tags: [], body: '', bodyHtml: '' }
     : items[index]
   openItemModal({
     scope: 'news',
@@ -1089,6 +1092,7 @@ function openNewsModal(index) {
     title: isNew ? '新建新闻' : '编辑新闻',
     html: newsArticleFields(item),
   })
+  bindNewsRichEditor(document.querySelector('[data-item-modal]'), { api, toast })
 }
 
 async function persistNewsFeed(content, message) {
@@ -1108,7 +1112,7 @@ async function publishNewsFromModal() {
     toast('请填写新闻标题', true)
     return
   }
-  if (!article.body.trim()) {
+  if (!article.body.trim() && !article.bodyHtml.trim()) {
     toast('请粘贴或填写正文', true)
     return
   }

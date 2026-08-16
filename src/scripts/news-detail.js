@@ -72,6 +72,11 @@ function renderRelated(currentId, allItems) {
     </aside>`
 }
 
+function renderBody(n) {
+  if (n.bodyHtml) return n.bodyHtml
+  return renderSections(n)
+}
+
 function renderDetail(n) {
   document.title = `${n.title} | 安托未来`
   const author = n.author || '安托未来'
@@ -94,7 +99,7 @@ function renderDetail(n) {
       </header>
 
       <div class="sx-news-article__content">
-        ${renderSections(n)}
+        ${renderBody(n)}
       </div>
 
       ${renderTags(n.tags)}

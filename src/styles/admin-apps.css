@@ -231,7 +231,41 @@ textarea { resize: vertical; }
   cursor: pointer;
 }
 .admin-item-modal__ok { border-color: #1769ff !important; color: #fff !important; background: #1769ff !important; }
-.admin-item-modal textarea[data-news-field="body"] { min-height: 220px; font-family: inherit; line-height: 1.6; }
+.admin-item-modal[data-scope="news"] .admin-item-modal__dialog { width: min(920px, 100%); }
+.admin-rich { border: 1px solid #dce4ef; border-radius: 12px; overflow: hidden; background: #fff; }
+.admin-rich__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #eef2f7;
+  background: #f7f9fc;
+}
+.admin-rich__bar button {
+  padding: 5px 9px;
+  border: 1px solid #d5deea;
+  border-radius: 7px;
+  background: #fff;
+  color: #31415a;
+  font-size: 11px;
+  cursor: pointer;
+}
+.admin-rich__editor {
+  min-height: 280px;
+  max-height: 48vh;
+  overflow: auto;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #1d2a3d;
+}
+.admin-rich__editor:focus { outline: none; }
+.admin-rich__editor h3 { margin: 0 0 10px; font-size: 16px; }
+.admin-rich__editor p { margin: 0 0 10px; }
+.admin-rich__editor img { max-width: 100%; height: auto; }
+.admin-rich__editor table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+.admin-rich__editor th, .admin-rich__editor td { border: 1px solid #d5deea; padding: 6px 8px; }
+.admin-rich small { display: block; padding: 8px 12px 10px; color: #98a2b3; font-size: 9px; }
 body.admin-modal-open { overflow: hidden; }
 .admin-home-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 16px; }
 .admin-home-metrics > div { padding: 13px; border: 1px solid #e7ecf3; border-radius: 11px; background: #fbfcfe; }
