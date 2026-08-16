@@ -1,4 +1,4 @@
-import { AGENTS_OVERVIEW } from '../../data/agents-overview.js'
+import { agentsList, agentsStoryHead } from '../../lib/cms-pages.js'
 
 function esc(str = '') {
   return String(str)
@@ -31,17 +31,19 @@ function sceneNodesMarkup(nodes, activeStep = 0) {
  * @param {{ selectedId: string }} props
  */
 export function renderAgentTaskStory({ selectedId }) {
-  const selected = AGENTS_OVERVIEW.find((a) => a.id === selectedId) || AGENTS_OVERVIEW[0]
+  const list = agentsList()
+  const selected = list.find((a) => a.id === selectedId) || list[0]
+  const head = agentsStoryHead()
   return `
     <section class="ag-story" id="agent-story">
       <div class="ag-shell ag-shell--1280">
         <header class="ag-section-head">
-          <h2>看一次智能体如何完成真实任务</h2>
-          <p>从现场变化开始，到系统与设备执行，再到结果回读，让智能体真正进入业务现场。</p>
+          <h2>${esc(head.title)}</h2>
+          <p>${esc(head.subtitle)}</p>
         </header>
 
         <div class="ag-story__nav" role="tablist" aria-label="智能体切换">
-          ${AGENTS_OVERVIEW.map((a) => {
+          ${list.map((a) => {
             const on = a.id === selected.id
             return `
             <button
@@ -120,7 +122,8 @@ export function renderAgentTaskStory({ selectedId }) {
 }
 
 export function syncAgentTaskStory(root, selectedId) {
-  const selected = AGENTS_OVERVIEW.find((a) => a.id === selectedId) || AGENTS_OVERVIEW[0]
+  const list = agentsList()
+  const selected = list.find((a) => a.id === selectedId) || list[0]
   const stage = root.querySelector('[data-ag-story-stage]')
   const aside = root.querySelector('[data-ag-aside]')
   const scene = root.querySelector('[data-ag-scene]')

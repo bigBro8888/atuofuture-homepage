@@ -10,7 +10,9 @@ import { getHomePageConfig, validateHomeContent } from './home-service.js'
 import { getAboutPageConfig, validateAboutContent } from './about-service.js'
 import { getSiteSettingsPage, validateSiteSettings } from './site-settings-service.js'
 import { SIMPLE_PAGE_KEYS, getSimplePageConfig, validateSimplePage } from './simple-page-service.js'
-import { getNewsFeedConfig, validateNewsFeedContent } from './news-feed-service.js'
+import { getNewsFeedConfig, syncHomeNewsFromFeed, validateNewsFeedContent } from './news-feed-service.js'
+import { getAgentsPageConfig, validateAgentsContent } from './agents-landing-service.js'
+import { getSolutionsPageConfig, validateSolutionsContent } from './solutions-landing-service.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -232,10 +234,54 @@ adminPagesRouter.post('/news-feed/publish', requireAuth('config:write'), async (
   page.status = 'published'
   page.publishedAt = new Date().toISOString()
   page.updatedAt = page.publishedAt
+  const homeCount = syncHomeNewsFromFeed(page.publishedContent.items || [])
   await save()
-  await addAudit(request.admin, 'news.feed.publish', 'news-feed', { publishedAt: page.publishedAt })
-  response.json({ page })
+  await addAudit(request.admin, 'news.feed.publish', 'news-feed', { publishedAt: page.publishedAt, homeCount })
+  response.json({ page, homeCount })
 })
+
+function registerLandingPage(key, getPage, validate) {
+  publicPagesRouter.get(`/${key}`, (request, response) => {
+    const page = getPage()
+    if (page.status !== 'published' || !page.publishedContent) {
+      return response.status(404).json({ error: 'page_not_published' })
+    }
+    response.set('Cache-Control', 'no-cache')
+    response.json({
+      pageKey: page.pageKey,
+      content: page.publishedContent,
+      publishedAt: page.publishedAt,
+    })
+  })
+  adminPagesRouter.get(`/${key}`, requireAuth(), (request, response) => {
+    response.json({ page: getPage() })
+  })
+  adminPagesRouter.put(`/${key}/draft`, requireAuth('config:write'), async (request, response) => {
+    try {
+      const page = getPage()
+      page.draftContent = validate(request.body?.content)
+      page.updatedAt = new Date().toISOString()
+      await save()
+      await addAudit(request.admin, `${key}.content.update`, key, {})
+      response.json({ page })
+    } catch (error) {
+      response.status(400).json({ error: `invalid_${key}_content`, message: error.message })
+    }
+  })
+  adminPagesRouter.post(`/${key}/publish`, requireAuth('config:write'), async (request, response) => {
+    const page = getPage()
+    page.publishedContent = structuredClone(page.draftContent)
+    page.status = 'published'
+    page.publishedAt = new Date().toISOString()
+    page.updatedAt = page.publishedAt
+    await save()
+    await addAudit(request.admin, `${key}.content.publish`, key, { publishedAt: page.publishedAt })
+    response.json({ page })
+  })
+}
+
+registerLandingPage('agents', getAgentsPageConfig, validateAgentsContent)
+registerLandingPage('solutions', getSolutionsPageConfig, validateSolutionsContent)
 
 publicPagesRouter.get('/simple/:key', (request, response) => {
   const page = getSimplePageConfig(request.params.key)

@@ -232,6 +232,24 @@
         </form>
       </section>
 
+      <section class="admin-panel" data-panel="catalog">
+        <form class="admin-card admin-home-form" data-catalog-form>
+          <div class="admin-card__head">
+            <div>
+              <h2 data-catalog-title>页面内容</h2>
+              <p>按前台区块逐项配置，点编辑在弹窗里改，避免整页拉开</p>
+            </div>
+            <div class="admin-home-status"><span data-catalog-draft-time>尚未加载</span><b data-catalog-publish-status>--</b></div>
+          </div>
+          <div class="admin-home-editor" data-catalog-editor></div>
+          <div class="admin-home-actions">
+            <a href="/" target="_blank" data-catalog-preview>预览该页</a>
+            <button type="button" data-catalog-save>保存草稿</button>
+            <button type="button" data-catalog-publish>发布到前台</button>
+          </div>
+        </form>
+      </section>
+
       <section class="admin-panel" data-panel="news">
         <form class="admin-card admin-home-form" data-news-form>
           <div class="admin-card__head">

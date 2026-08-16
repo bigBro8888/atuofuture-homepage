@@ -1,9 +1,13 @@
-import { loadSimplePageContent } from '../services/site-settings-api.js'
+import { getPublishedPage } from '../services/site-settings-api.js'
+import { resolveAgentOverviewId } from '../data/agents-overview.js'
 import {
-  AGENTS_CAPABILITY_CHAIN,
-  AGENTS_OVERVIEW,
-  resolveAgentOverviewId,
-} from '../data/agents-overview.js'
+  agentsChain,
+  agentsCta,
+  agentsHero,
+  agentsList,
+  findAgent,
+  setAgentsRuntime,
+} from '../lib/cms-pages.js'
 import {
   renderAgentEcosystemMap,
   syncAgentEcosystemMap,
@@ -29,10 +33,12 @@ function esc(str = '') {
 }
 
 function renderHero() {
-  const title = cmsHero?.title || '让空间智能体感知现场、调用设备、完成任务'
-  const subtitle = cmsHero?.subtitle || '不只是回答问题，而是连接软件系统、智能硬件与业务流程，让空间能够自主感知、判断、执行并持续反馈。'
-  const banner = cmsHero?.bannerUrl || '/images/agents/hero-bleed.jpg'
-  const cta = cmsHero?.ctaLabel || '预约方案演示'
+  const cms = agentsHero() || {}
+  const title = cms.title || '让空间智能体感知现场、调用设备、完成任务'
+  const subtitle = cms.subtitle || '不只是回答问题，而是连接软件系统、智能硬件与业务流程，让空间能够自主感知、判断、执行并持续反馈。'
+  const banner = cms.bannerUrl || '/images/agents/hero-bleed.jpg'
+  const cta = cms.ctaLabel || '预约方案演示'
+  const explore = cms.exploreLabel || '探索八大智能体'
   return `
     <section class="ag-hero">
       <div class="ag-hero__bg" aria-hidden="true">
@@ -43,19 +49,19 @@ function renderHero() {
           <h1>${esc(title)}</h1>
           <p>${esc(subtitle)}</p>
           <div class="ag-hero__actions">
-            <a class="ag-btn ag-btn--primary" href="#agent-ecosystem">探索八大智能体</a>
+            <a class="ag-btn ag-btn--primary" href="#agent-ecosystem">${esc(explore)}</a>
             <button type="button" class="ag-btn ag-btn--ghost" data-demo-modal-open>${esc(cta)}</button>
           </div>
         </div>
         <ol class="ag-chain" aria-label="能力链">
-          ${AGENTS_CAPABILITY_CHAIN.map(
+          ${agentsChain().map(
             (step, i) => `
             <li>
               <span class="ag-chain__dot" aria-hidden="true">
                 <span class="material-symbols-outlined">${esc(step.icon)}</span>
               </span>
               <strong>${esc(step.title)}</strong>
-              ${i < AGENTS_CAPABILITY_CHAIN.length - 1 ? '<i class="ag-chain__line" aria-hidden="true"></i>' : ''}
+              ${i < agentsChain().length - 1 ? '<i class="ag-chain__line" aria-hidden="true"></i>' : ''}
             </li>`
           ).join('')}
         </ol>
@@ -64,16 +70,17 @@ function renderHero() {
 }
 
 function renderCta() {
+  const cta = agentsCta() || {}
   return `
     <section class="ag-cta">
       <div class="ag-shell ag-cta__inner">
         <div>
-          <h2>让空间智能体进入您的业务现场</h2>
-          <p>从一个场景开始，连接现有系统和设备，逐步构建可感知、可执行、可持续运营的空间智能体系。</p>
+          <h2>${esc(cta.title || '让空间智能体进入您的业务现场')}</h2>
+          <p>${esc(cta.body || '从一个场景开始，连接现有系统和设备，逐步构建可感知、可执行、可持续运营的空间智能体系。')}</p>
         </div>
         <div class="ag-cta__actions">
-          <button type="button" class="ag-btn ag-btn--primary" data-demo-modal-open>预约方案演示</button>
-          <a class="ag-btn ag-btn--ghost" href="../solutions/">查看行业解决方案</a>
+          <button type="button" class="ag-btn ag-btn--primary" data-demo-modal-open>${esc(cta.primary || '预约方案演示')}</button>
+          <a class="ag-btn ag-btn--ghost" href="${esc(cta.secondaryHref || '../solutions/')}">${esc(cta.secondaryLabel || '查看行业解决方案')}</a>
         </div>
       </div>
     </section>`
@@ -91,7 +98,7 @@ function renderNotFound(rawId) {
 }
 
 function setSelectedAgent(root, state, id, { scrollStory = false } = {}) {
-  if (!resolveAgentOverviewId(id)) return
+  if (!findAgent(id) && !resolveAgentOverviewId(id)) return
   state.selectedAgent = id
   syncAgentEcosystemMap(root, id)
   syncAgentTaskStory(root, id)
@@ -155,14 +162,19 @@ let cmsHero = null
 export async function initAgentsPage() {
   const root = document.getElementById('agents-root')
   if (!root) return
-  cmsHero = await loadSimplePageContent('agents')
+  const cms = await getPublishedPage('/api/public/pages/agents')
+  if (cms) setAgentsRuntime(cms)
+  cmsHero = cms?.hero || null
+  const overview = agentsList()
 
   const raw =
     new URLSearchParams(window.location.search).get('id') ||
     new URLSearchParams(window.location.search).get('agent') ||
     window.location.hash.replace(/^#/, '')
   const requested = raw ? (raw.startsWith('agent-') ? raw.slice(6) : raw) : null
-  const resolved = requested ? resolveAgentOverviewId(requested) : AGENTS_OVERVIEW[0].id
+  const resolved = requested
+    ? (overview.find((a) => a.id === requested || (a.aliases || []).includes(requested))?.id || resolveAgentOverviewId(requested))
+    : overview[0]?.id
 
   if (requested && !resolved) {
     root.innerHTML = renderNotFound(requested)
@@ -170,7 +182,7 @@ export async function initAgentsPage() {
   }
 
   const state = {
-    selectedAgent: resolved || AGENTS_OVERVIEW[0].id,
+    selectedAgent: resolved || overview[0].id,
     selectedIndustry: 'building',
   }
 

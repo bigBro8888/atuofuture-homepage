@@ -1,12 +1,15 @@
-import { loadSimplePageContent } from '../services/site-settings-api.js'
-import {
-  SOLUTIONS,
-  SOLUTIONS_HERO,
-  SOLUTIONS_BASE_NODES,
-  resolveSolutionId,
-  getSolution,
-} from '../data/solutions.js'
+import { getPublishedPage } from '../services/site-settings-api.js'
+import { resolveSolutionId } from '../data/solutions.js'
 import { getProductAgent } from '../data/product-agents.js'
+import {
+  findSolution,
+  setSolutionsRuntime,
+  solutionsBase,
+  solutionsCta,
+  solutionsHero,
+  solutionsList,
+  solutionsSceneTitle,
+} from '../lib/cms-pages.js'
 
 function esc(str = '') {
   return String(str)
@@ -23,11 +26,11 @@ function agentLabel(id) {
 }
 
 function renderHero() {
-  const h = SOLUTIONS_HERO
-  const title = cmsHero?.title || h.title
-  const desc = cmsHero?.subtitle || h.desc
-  const image = cmsHero?.bannerUrl || h.image
-  const cta = cmsHero?.ctaLabel || '预约方案演示'
+  const h = solutionsHero()
+  const title = h.title
+  const desc = h.subtitle || h.desc
+  const image = h.bannerUrl || h.image
+  const cta = h.ctaLabel || '预约方案演示'
   return `
     <section class="sol-home-hero" style="--sol-hero-image:url('${esc(image)}')">
       <div class="sol-home-hero__media" aria-hidden="true"></div>
@@ -60,7 +63,7 @@ function renderScene(s) {
 function renderNav(activeId) {
   return `
     <div class="sol-scene__nav" role="tablist" aria-label="行业场景">
-      ${SOLUTIONS.map((s) => {
+      ${solutionsList().map((s) => {
         const active = s.id === activeId
         return `
         <button
@@ -107,15 +110,16 @@ function renderValues(s) {
 }
 
 function renderBase(s) {
+  const base = solutionsBase()
   return `
     <section class="sol-base" id="sol-base">
       <div class="sol-home-shell">
         <header class="sol-base__head">
-          <h2>统一空间智能底座，组合不同的行业能力</h2>
-          <p>不同空间面对的问题不同，但底层都需要完成感知、决策、执行与反馈。安托未来通过统一中枢，按行业组合智能体、硬件和开放接口。</p>
+          <h2>${esc(base.title)}</h2>
+          <p>${esc(base.subtitle)}</p>
         </header>
         <div class="sol-base__flow" data-sol-base-flow>
-          ${SOLUTIONS_BASE_NODES.map(
+          ${(base.nodes || []).map(
             (node, index) => `
             <div class="sol-base__node${node.id === 'agents' ? ' is-agents' : ''}" data-sol-node="${esc(node.id)}">
               <div class="sol-base__card">
@@ -133,7 +137,7 @@ function renderBase(s) {
                     : ''
                 }
               </div>
-              ${index < SOLUTIONS_BASE_NODES.length - 1 ? '<div class="sol-base__arrow" aria-hidden="true"><span></span></div>' : ''}
+              ${index < (base.nodes || []).length - 1 ? '<div class="sol-base__arrow" aria-hidden="true"><span></span></div>' : ''}
             </div>`
           ).join('')}
         </div>
@@ -142,31 +146,32 @@ function renderBase(s) {
 }
 
 function renderCta() {
+  const cta = solutionsCta()
   return `
     <section class="sol-cta">
       <div class="sol-home-shell sol-cta__inner">
         <div class="sol-cta__copy">
-          <h2>找到适合您的空间智能方案</h2>
-          <p>告诉我们您的行业、空间规模和核心问题，安托未来将为您组合合适的智能体、硬件与系统能力。</p>
+          <h2>${esc(cta.title)}</h2>
+          <p>${esc(cta.body)}</p>
           <div class="sol-cta__actions">
-            <button type="button" class="sol-btn sol-btn--primary" data-demo-modal-open>预约方案演示</button>
-            <a class="sol-btn sol-btn--ghost" href="../about/#contact">联系方案顾问</a>
+            <button type="button" class="sol-btn sol-btn--primary" data-demo-modal-open>${esc(cta.primary)}</button>
+            <a class="sol-btn sol-btn--ghost" href="${esc(cta.secondaryHref)}">${esc(cta.secondaryLabel)}</a>
           </div>
         </div>
-        <div class="sol-cta__visual" aria-hidden="true" style="--sol-cta-image:url('/images/solutions/cta.jpg')"></div>
+        <div class="sol-cta__visual" aria-hidden="true" style="--sol-cta-image:url('${esc(cta.imageUrl)}')"></div>
       </div>
     </section>`
 }
 
 function renderList() {
   document.title = '行业解决方案 | 安托未来'
-  const active = SOLUTIONS[0]
+  const active = solutionsList()[0]
   return `
     ${renderHero()}
     <section class="sol-scene" id="sol-scene">
       <div class="sol-home-shell">
         <header class="sol-scene__head">
-          <h2>选择您的行业场景</h2>
+          <h2>${esc(solutionsSceneTitle())}</h2>
         </header>
         <div class="sol-scene__layout">
           ${renderNav(active.id)}
@@ -247,10 +252,10 @@ function renderDetailFaqs(s) {
 }
 
 function renderDetail(id) {
-  const s = getSolution(id)
+  const s = findSolution(id)
   if (!s) return renderList()
   document.title = `${s.name} | 安托未来`
-  const related = SOLUTIONS.filter((item) => item.id !== s.id)
+  const related = solutionsList().filter((item) => item.id !== s.id)
   const stats = buildDetailStats(s)
   const tabs = buildDetailTabs(s)
   const highlightAgents = (s.highlightAgents || s.agents || []).slice(0, 4)
@@ -544,7 +549,7 @@ function initDetailTabs(root) {
 }
 
 function applySolution(root, id) {
-  const s = getSolution(id) || SOLUTIONS[0]
+  const s = findSolution(id)
   const scene = root.querySelector('[data-sol-scene]')
   if (scene) {
     scene.style.setProperty('--sol-scene-image', `url('${s.image}')`)
@@ -593,7 +598,7 @@ function applySolution(root, id) {
 }
 
 function initHomeInteractions(root) {
-  let activeId = SOLUTIONS[0].id
+  let activeId = solutionsList()[0].id
   root.querySelectorAll('[data-sol-tab]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.solTab
@@ -604,14 +609,13 @@ function initHomeInteractions(root) {
   })
 }
 
-let cmsHero = null
-
 export async function initSolutionsPage() {
   const root = document.getElementById('solutions-root')
   if (!root) return
-  cmsHero = await loadSimplePageContent('solutions')
+  const cms = await getPublishedPage('/api/public/pages/solutions')
+  if (cms) setSolutionsRuntime(cms)
   const raw = new URLSearchParams(window.location.search).get('id')
-  const id = resolveSolutionId(raw)
+  const id = resolveSolutionId(raw) || (raw && solutionsList().some((item) => item.id === raw) ? raw : null)
   root.innerHTML = id ? renderDetail(id) : renderList()
   if (!id) initHomeInteractions(root)
   else initDetailTabs(root)

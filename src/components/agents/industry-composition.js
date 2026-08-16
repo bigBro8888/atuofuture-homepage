@@ -1,4 +1,4 @@
-import { AGENTS_INDUSTRY, getIndustryComposition } from '../../data/agents-overview.js'
+import { agentsIndustry, findIndustry } from '../../lib/cms-pages.js'
 
 function esc(str = '') {
   return String(str)
@@ -77,7 +77,7 @@ function panelMarkup(item) {
  * @param {{ selectedIndustryId: string }} props
  */
 export function renderIndustryAgentComposition({ selectedIndustryId }) {
-  const selected = getIndustryComposition(selectedIndustryId)
+  const selected = findIndustry(selectedIndustryId)
   return `
     <section class="ag-ind" id="agent-industry">
       <div class="ag-shell ag-shell--1280">
@@ -87,7 +87,7 @@ export function renderIndustryAgentComposition({ selectedIndustryId }) {
         </header>
         <div class="ag-ind__layout">
           <nav class="ag-ind__nav" aria-label="行业协同方案">
-            ${AGENTS_INDUSTRY.map((item) => {
+            ${agentsIndustry().map((item) => {
               const on = item.id === selected.id
               return `
               <button
@@ -111,7 +111,7 @@ export function renderIndustryAgentComposition({ selectedIndustryId }) {
 }
 
 export function syncIndustryAgentComposition(root, selectedIndustryId) {
-  const selected = getIndustryComposition(selectedIndustryId)
+  const selected = findIndustry(selectedIndustryId)
   const panel = root.querySelector('[data-ag-ind-panel]')
   if (panel) {
     panel.classList.remove('is-animating')

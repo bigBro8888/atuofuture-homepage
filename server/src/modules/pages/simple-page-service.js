@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { db } from '../../lib/store.js'
 
-export const SIMPLE_PAGE_KEYS = ['solutions', 'agents', 'hardware', 'news', 'ai-token']
+export const SIMPLE_PAGE_KEYS = ['hardware', 'news', 'ai-token']
 
 export const defaultSimplePages = {
   solutions: {

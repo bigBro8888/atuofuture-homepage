@@ -1,8 +1,9 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 import { bindNewsRichEditor, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
+import { applyCatalogFields, catalogItemFields, renderAgentsCatalog, renderSolutionsCatalog } from './admin-catalog.js'
 
 const API = '/api/admin'
-const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', newsPage: null, homeSection: 'hero' }
+const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', newsPage: null, catalogPage: null, catalogKey: '', homeSection: 'hero' }
 const HOME_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏轮播', desc: '多屏大图，可新增和逐屏编辑' },
   { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
@@ -16,8 +17,8 @@ const titles = {
   site: ['全站设置', 'Logo、品牌名、顶栏按钮与联系方式'],
   home: ['官网首页', '路径 / · 按前台区块逐项编辑，点左侧大纲跳转'],
   about: ['关于我们', '路径 /about/ · 编辑草稿并发布'],
-  'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏标题与 Banner'],
-  'page-agents': ['空间智能体', '路径 /agents/ · 首屏标题与 Banner'],
+  'page-solutions': ['行业解决方案', '路径 /solutions/ · 按前台区块逐项配置'],
+  'page-agents': ['空间智能体', '路径 /agents/ · 按前台区块逐项配置'],
   'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏标题与 Banner'],
   'page-news': ['新闻中心', '路径 /news/ · 列表管理，点编辑即可改稿并发布'],
   'page-ai-token': ['AI Token', '路径 /ai-token/ · 首屏标题'],
@@ -143,7 +144,7 @@ async function loadOverview() {
 
 function openTab(name, options = {}) {
   if (!titles[name]) name = 'overview'
-  const panelName = name === 'page-news' ? 'news' : name.startsWith('page-') ? 'simple' : name
+  const panelName = name === 'page-news' ? 'news' : (name === 'page-agents' || name === 'page-solutions') ? 'catalog' : name.startsWith('page-') ? 'simple' : name
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === name))
   document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === panelName))
   const [title, subtitle] = titles[name]
@@ -161,6 +162,8 @@ function openTab(name, options = {}) {
     updateAnchorState()
   }
   if (name === 'page-news') loadNewsFeed()
+  else if (name === 'page-agents') loadCatalogPage('agents')
+  else if (name === 'page-solutions') loadCatalogPage('solutions')
   else if (name.startsWith('page-')) loadSimplePage(name.slice('page-'.length))
   if (name === 'home') loadHomePage()
   if (name === 'about') loadAboutPage()
@@ -621,6 +624,14 @@ function applyItemModal() {
   }
   if (modal.dataset.scope === 'news') {
     void publishNewsFromModal()
+    return
+  }
+  if (modal.dataset.scope === 'catalog') {
+    let content = applyCatalogFields(state.catalogPage.draftContent, document.querySelector('[data-catalog-editor]'))
+    content = applyCatalogFields(content, modal)
+    state.catalogPage.draftContent = content
+    closeItemModal()
+    renderCatalogEditor(content)
   }
 }
 
@@ -982,6 +993,51 @@ async function saveSimpleDraft({ quiet = false } = {}) {
   state.simplePage = page
   updateSimpleStatus(page)
   if (!quiet) toast('页面草稿已保存，线上内容尚未改变')
+  return page
+}
+
+function renderCatalogEditor(content) {
+  const editor = document.querySelector('[data-catalog-editor]')
+  const preview = document.querySelector('[data-catalog-preview]')
+  const title = document.querySelector('[data-catalog-title]')
+  if (state.catalogKey === 'agents') {
+    title.textContent = '空间智能体'
+    preview.href = '/agents/'
+    editor.innerHTML = renderAgentsCatalog(content)
+  } else {
+    title.textContent = '行业解决方案'
+    preview.href = '/solutions/'
+    editor.innerHTML = renderSolutionsCatalog(content)
+  }
+}
+
+function updateCatalogStatus(page) {
+  document.querySelector('[data-catalog-draft-time]').textContent = `草稿 ${dateTime(page.updatedAt)}`
+  document.querySelector('[data-catalog-publish-status]').textContent = page.publishedAt ? `已发布 ${dateTime(page.publishedAt)}` : '尚未发布'
+}
+
+function collectCatalogContent() {
+  return applyCatalogFields(state.catalogPage.draftContent, document.querySelector('[data-catalog-editor]'))
+}
+
+async function loadCatalogPage(key) {
+  state.catalogKey = key
+  try {
+    const { page } = await api(`/pages/${key}`)
+    state.catalogPage = page
+    renderCatalogEditor(page.draftContent)
+    updateCatalogStatus(page)
+  } catch (error) {
+    toast(error.message, true)
+  }
+}
+
+async function saveCatalogDraft({ quiet = false } = {}) {
+  const content = collectCatalogContent()
+  const { page } = await api(`/pages/${state.catalogKey}/draft`, { method: 'PUT', body: JSON.stringify({ content }) })
+  state.catalogPage = page
+  updateCatalogStatus(page)
+  if (!quiet) toast('草稿已保存，线上内容尚未改变')
   return page
 }
 
@@ -1548,6 +1604,81 @@ document.querySelector('[data-about-publish]').addEventListener('click', async (
   }
 })
 
+document.querySelector('[data-catalog-form]').addEventListener('submit', (event) => event.preventDefault())
+document.querySelector('[data-catalog-editor]').addEventListener('click', (event) => {
+  const edit = event.target.closest('[data-catalog-edit]')
+  if (!edit) return
+  event.preventDefault()
+  const kind = edit.dataset.catalogEdit
+  const index = Number(edit.dataset.itemIndex)
+  const content = collectCatalogContent()
+  state.catalogPage.draftContent = content
+  const map = {
+    chain: content.chain?.[index],
+    agent: content.agents?.[index],
+    industry: content.industries?.[index],
+    solution: content.items?.[index],
+    baseNode: content.base?.nodes?.[index],
+  }
+  const item = map[kind]
+  if (!item) return
+  const titles = { chain: '编辑能力链', agent: '编辑智能体', industry: '编辑行业组合', solution: '编辑行业方案', baseNode: '编辑底座节点' }
+  openItemModal({ scope: 'catalog', kind, index, title: titles[kind] || '编辑', html: catalogItemFields(kind, item, index) })
+})
+document.querySelector('[data-catalog-editor]').addEventListener('input', (event) => {
+  const field = event.target.closest('[data-catalog-field]')
+  if (!field) return
+  const preview = document.querySelector(`[data-catalog-preview-for="${field.dataset.catalogField}"]`)
+  if (preview) {
+    preview.src = field.value.trim()
+    preview.hidden = !field.value.trim()
+  }
+})
+document.querySelector('[data-catalog-editor]').addEventListener('change', async (event) => {
+  const upload = event.target.closest('[data-catalog-upload-for]')
+  const file = upload?.files?.[0]
+  if (!upload || !file) return
+  const path = upload.dataset.catalogUploadFor
+  upload.disabled = true
+  try {
+    const formData = new FormData()
+    formData.append('image', file)
+    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+    const field = document.querySelector(`[data-catalog-field="${path}"]`)
+    if (field) {
+      field.value = url
+      field.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+    toast('图片上传成功，请保存草稿后发布')
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    upload.disabled = false
+    upload.value = ''
+  }
+})
+document.querySelector('[data-catalog-save]').addEventListener('click', async (event) => {
+  const button = event.currentTarget
+  button.disabled = true
+  try { await saveCatalogDraft() } catch (error) { toast(error.message, true) } finally { button.disabled = false }
+})
+document.querySelector('[data-catalog-publish]').addEventListener('click', async (event) => {
+  if (!window.confirm('确认发布到前台？访客将立即看到新内容。')) return
+  const button = event.currentTarget
+  button.disabled = true
+  try {
+    await saveCatalogDraft({ quiet: true })
+    const { page } = await api(`/pages/${state.catalogKey}/publish`, { method: 'POST' })
+    state.catalogPage = page
+    updateCatalogStatus(page)
+    toast('页面已发布到前台')
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    button.disabled = false
+  }
+})
+
 document.querySelector('[data-news-form]').addEventListener('submit', (event) => event.preventDefault())
 document.querySelector('[data-news-editor]').addEventListener('click', async (event) => {
   if (event.target.closest('[data-news-add]')) {
@@ -1764,21 +1895,30 @@ document.querySelector('[data-item-modal]').addEventListener('input', (event) =>
       preview.hidden = !newsEl.value.trim()
     }
   }
+  const catalogEl = event.target.closest('[data-catalog-field]')
+  if (catalogEl) {
+    const preview = document.querySelector(`[data-catalog-preview-for="${catalogEl.dataset.catalogField}"]`)
+    if (preview) {
+      preview.src = catalogEl.value.trim()
+      preview.hidden = !catalogEl.value.trim()
+    }
+  }
 })
 document.querySelector('[data-item-modal]').addEventListener('change', async (event) => {
   const homeUpload = event.target.closest('[data-home-upload-for]')
   const aboutUpload = event.target.closest('[data-about-upload-for]')
   const newsUpload = event.target.closest('[data-news-upload-for]')
-  const upload = homeUpload || aboutUpload || newsUpload
+  const catalogUpload = event.target.closest('[data-catalog-upload-for]')
+  const upload = homeUpload || aboutUpload || newsUpload || catalogUpload
   const file = upload?.files?.[0]
   if (!upload || !file) return
-  const path = homeUpload ? upload.dataset.homeUploadFor : aboutUpload ? upload.dataset.aboutUploadFor : upload.dataset.newsUploadFor
+  const path = homeUpload ? upload.dataset.homeUploadFor : aboutUpload ? upload.dataset.aboutUploadFor : newsUpload ? upload.dataset.newsUploadFor : upload.dataset.catalogUploadFor
   upload.disabled = true
   try {
     const formData = new FormData()
     formData.append('image', file)
     const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
-    const selector = homeUpload ? `[data-home-field="${path}"]` : aboutUpload ? `[data-about-field="${path}"]` : `[data-news-field="${path}"]`
+    const selector = homeUpload ? `[data-home-field="${path}"]` : aboutUpload ? `[data-about-field="${path}"]` : newsUpload ? `[data-news-field="${path}"]` : `[data-catalog-field="${path}"]`
     const field = document.querySelector(selector)
     if (field) {
       field.value = url
