@@ -1032,69 +1032,49 @@ function renderNewsEditor(content) {
     </fieldset>
     <fieldset>
       <legend>新闻列表</legend>
-      <p class="admin-form-section__hint">列表顺序即前台顺序。可拖动一行，或点「上移 / 下移」，保存后立即生效。</p>
-      <button type="button" class="admin-add-slide" data-news-add>+ 新建新闻</button>
+      <p class="admin-form-section__hint">在每条新闻前填写序号（数字越小越靠前），改完点「按序号排序」即可发布到前台。</p>
+      <div class="admin-news-list-actions">
+        <button type="button" class="admin-add-slide" data-news-add>+ 新建新闻</button>
+        <button type="button" class="admin-add-slide" data-news-apply-sort>按序号排序</button>
+      </div>
       <div class="admin-home-list" data-news-list style="margin-top:12px">${items.map((item, index) => `
-        <div class="admin-item-row" draggable="true" data-news-index="${index}">
-          <span class="admin-item-row__handle" title="拖动排序" aria-hidden="true">⋮⋮</span>
+        <div class="admin-item-row" data-news-index="${index}">
+          <label class="admin-item-row__sort">
+            <span>序号</span>
+            <input type="number" min="1" step="1" value="${index + 1}" data-news-sort="${index}" />
+          </label>
           <div>
             <strong>${escapeHtml(item.title || '未填写标题')}</strong>
             <small>${escapeHtml(item.category || '')} · ${escapeHtml(item.date || '')} · ${escapeHtml(item.author || '')}${item.pinHome ? ' · 已上首页' : ''}</small>
           </div>
           <span class="admin-slide-tools">
-            <button type="button" data-news-move="${index}" data-dir="-1"${index === 0 ? ' disabled' : ''}>上移</button>
-            <button type="button" data-news-move="${index}" data-dir="1"${index === items.length - 1 ? ' disabled' : ''}>下移</button>
             <button type="button" data-news-edit="${index}">编辑</button>
             <button type="button" data-news-remove="${index}">删除</button>
           </span>
         </div>`).join('') || '<p class="admin-form-section__hint">还没有新闻，先点上面的新建。</p>'}</div>
     </fieldset>`
-  bindNewsListDrag()
 }
 
-async function reorderNewsItems(from, to) {
+function collectNewsItemsBySort() {
   const items = [...(state.newsPage?.draftContent?.items || [])]
-  if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) return
-  const [row] = items.splice(from, 1)
-  items.splice(to, 0, row)
-  const meta = collectNewsPageMeta()
-  await persistNewsFeed({ ...meta, items }, '新闻顺序已更新并发布')
+  return items
+    .map((item, index) => {
+      const raw = Number(document.querySelector(`[data-news-sort="${index}"]`)?.value)
+      const sort = Number.isFinite(raw) && raw > 0 ? raw : index + 1
+      return { item, index, sort }
+    })
+    .sort((a, b) => a.sort - b.sort || a.index - b.index)
+    .map((row) => row.item)
 }
 
-function bindNewsListDrag() {
-  const list = document.querySelector('[data-news-list]')
-  if (!list) return
-  let fromIndex = -1
-  list.querySelectorAll('[data-news-index]').forEach((row) => {
-    row.addEventListener('dragstart', (event) => {
-      if (event.target.closest('button')) {
-        event.preventDefault()
-        return
-      }
-      fromIndex = Number(row.dataset.newsIndex)
-      row.classList.add('is-dragging')
-      event.dataTransfer.effectAllowed = 'move'
-    })
-    row.addEventListener('dragend', () => {
-      row.classList.remove('is-dragging')
-      list.querySelectorAll('.is-drop-target').forEach((item) => item.classList.remove('is-drop-target'))
-    })
-    row.addEventListener('dragover', (event) => {
-      event.preventDefault()
-      row.classList.add('is-drop-target')
-    })
-    row.addEventListener('dragleave', () => row.classList.remove('is-drop-target'))
-    row.addEventListener('drop', async (event) => {
-      event.preventDefault()
-      row.classList.remove('is-drop-target')
-      const toIndex = Number(row.dataset.newsIndex)
-      try {
-        await reorderNewsItems(fromIndex, toIndex)
-      } catch (error) {
-        toast(error.message, true)
-      }
-    })
-  })
+async function applyNewsSort() {
+  const items = collectNewsItemsBySort()
+  const same = items.every((item, index) => item === (state.newsPage?.draftContent?.items || [])[index])
+  if (same) {
+    toast('顺序没有变化')
+    return
+  }
+  await persistNewsFeed({ ...collectNewsPageMeta(), items }, '新闻顺序已更新并发布')
 }
 
 function collectNewsPageMeta() {
@@ -1670,15 +1650,16 @@ document.querySelector('[data-news-editor]').addEventListener('click', async (ev
     openNewsModal(-1)
     return
   }
-  const move = event.target.closest('[data-news-move]')
-  if (move) {
+  if (event.target.closest('[data-news-apply-sort]')) {
     event.preventDefault()
-    const from = Number(move.dataset.newsMove)
-    const to = from + Number(move.dataset.dir)
+    const button = event.target.closest('[data-news-apply-sort]')
+    button.disabled = true
     try {
-      await reorderNewsItems(from, to)
+      await applyNewsSort()
     } catch (error) {
       toast(error.message, true)
+    } finally {
+      button.disabled = false
     }
     return
   }
@@ -1708,7 +1689,7 @@ document.querySelector('[data-news-publish]').addEventListener('click', async (e
   button.disabled = true
   try {
     const meta = collectNewsPageMeta()
-    await persistNewsFeed({ ...meta, items: state.newsPage?.draftContent?.items || [] }, '新闻中心已更新')
+    await persistNewsFeed({ ...meta, items: collectNewsItemsBySort() }, '新闻中心已更新')
   } catch (error) {
     toast(error.message, true)
   } finally {
