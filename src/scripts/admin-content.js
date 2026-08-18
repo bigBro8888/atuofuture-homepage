@@ -170,18 +170,33 @@ function renderSolutionCompose(item) {
       ${field('solutions', 'image', '封面图', item.image, { image: true, wide: true, size: '1600×900' })}
       ${field('solutions', 'summary', '简介', item.summary, { type: 'textarea', wide: true, rows: 2 })}
       ${field('solutions', 'value', '一句话价值', item.value, { type: 'textarea', wide: true, rows: 2 })}
-      <div class="admin-product-card admin-form-wide">
+      <div class="admin-sol-deck admin-form-wide">
         <h4>方案介绍 PPT（16:9）</h4>
-        <p class="admin-form-section__hint">详情页红框位置改成轮播。按讲解顺序上传图片，建议 1920×1080。访客可左右翻页，也可全屏浏览。</p>
-        ${slides.map((slide, index) => `
-          <div class="admin-product-card" data-solutions-slide="${index}">
-            <div class="admin-slide-tools" style="justify-content:space-between;margin-bottom:8px">
-              <h4 style="margin:0">第 ${index + 1} 页</h4>
+        <p class="admin-form-section__hint">按讲解顺序排页，建议 1920×1080。点预览上传，也可粘贴图片地址。</p>
+        <div class="admin-sol-deck__grid">
+          ${slides.map((slide, index) => {
+            const url = slide.imageUrl || ''
+            const path = `slides.${index}.imageUrl`
+            return `
+          <article class="admin-sol-tile" data-solutions-slide="${index}">
+            <div class="admin-sol-tile__head">
+              <strong>第 ${index + 1} 页</strong>
               <button type="button" data-solutions-slide-remove="${index}" ${slides.length <= 1 ? 'disabled' : ''}>删除</button>
             </div>
-            ${field('solutions', `slides.${index}.imageUrl`, '图片', slide.imageUrl || '', { image: true, wide: true, size: '1920×1080' })}
-          </div>`).join('')}
-        <button type="button" class="admin-add-slide" data-solutions-slide-add>+ 添加一页</button>
+            <div class="admin-sol-tile__frame">
+              <img data-solutions-preview-for="${path}" src="${esc(url)}" alt="" ${url ? '' : 'hidden'} />
+              <label class="admin-sol-tile__upload">
+                <span>${url ? '更换' : '上传图片'}</span>
+                <input type="file" accept="image/jpeg,image/png,image/webp" data-solutions-upload-for="${path}" />
+              </label>
+            </div>
+            <input class="admin-sol-tile__url" data-solutions-field="${path}" type="text" value="${esc(url)}" placeholder="或粘贴图片地址" />
+          </article>`
+          }).join('')}
+          <button type="button" class="admin-sol-tile admin-sol-tile--add" data-solutions-slide-add>
+            <span>+ 添加一页</span>
+          </button>
+        </div>
       </div>
       ${field('solutions', 'approach', '方案做法', item.approach, { type: 'textarea', wide: true, rows: 3 })}
       ${field('solutions', 'capabilities', '核心能力', lines(item.capabilities), { type: 'textarea', rows: 3, help: '每行一条' })}
