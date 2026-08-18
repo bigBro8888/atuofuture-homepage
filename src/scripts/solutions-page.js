@@ -1,12 +1,15 @@
-import { loadSimplePageContent } from '../services/site-settings-api.js'
+import { applyProductAgentsCms, getProductAgent } from '../data/product-agents.js'
+import { applyAgentsLibraryCms } from '../data/agents-detail.js'
+import { loadAgentsLibraryContent, loadSimplePageContent, loadSolutionsLibraryContent } from '../services/site-settings-api.js'
 import {
   SOLUTIONS,
   SOLUTIONS_HERO,
   SOLUTIONS_BASE_NODES,
   resolveSolutionId,
   getSolution,
+  getPublishedSolutions,
+  applySolutionsLibraryCms,
 } from '../data/solutions.js'
-import { getProductAgent } from '../data/product-agents.js'
 
 function esc(str = '') {
   return String(str)
@@ -60,7 +63,7 @@ function renderScene(s) {
 function renderNav(activeId) {
   return `
     <div class="sol-scene__nav" role="tablist" aria-label="行业场景">
-      ${SOLUTIONS.map((s) => {
+      ${getPublishedSolutions().map((s) => {
         const active = s.id === activeId
         return `
         <button
@@ -160,7 +163,8 @@ function renderCta() {
 
 function renderList() {
   document.title = '行业解决方案 | 安托未来'
-  const active = SOLUTIONS[0]
+  const published = getPublishedSolutions()
+  const active = published[0] || SOLUTIONS[0]
   return `
     ${renderHero()}
     <section class="sol-scene" id="sol-scene">
@@ -250,7 +254,7 @@ function renderDetail(id) {
   const s = getSolution(id)
   if (!s) return renderList()
   document.title = `${s.name} | 安托未来`
-  const related = SOLUTIONS.filter((item) => item.id !== s.id)
+  const related = getPublishedSolutions().filter((item) => item.id !== s.id)
   const stats = buildDetailStats(s)
   const tabs = buildDetailTabs(s)
   const highlightAgents = (s.highlightAgents || s.agents || []).slice(0, 4)
@@ -544,7 +548,7 @@ function initDetailTabs(root) {
 }
 
 function applySolution(root, id) {
-  const s = getSolution(id) || SOLUTIONS[0]
+  const s = getSolution(id) || getPublishedSolutions()[0] || SOLUTIONS[0]
   const scene = root.querySelector('[data-sol-scene]')
   if (scene) {
     scene.style.setProperty('--sol-scene-image', `url('${s.image}')`)
@@ -593,7 +597,7 @@ function applySolution(root, id) {
 }
 
 function initHomeInteractions(root) {
-  let activeId = SOLUTIONS[0].id
+  let activeId = (getPublishedSolutions()[0] || SOLUTIONS[0]).id
   root.querySelectorAll('[data-sol-tab]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.solTab
@@ -620,6 +624,10 @@ export async function initSolutionsPage() {
     }
     if (hit.imageUrl) solution.image = hit.imageUrl
   }
+  const [solutionsLibrary, agentsLibrary] = await Promise.all([loadSolutionsLibraryContent(), loadAgentsLibraryContent()])
+  applySolutionsLibraryCms(solutionsLibrary)
+  applyAgentsLibraryCms(agentsLibrary)
+  applyProductAgentsCms(agentsLibrary)
   const raw = new URLSearchParams(window.location.search).get('id')
   const id = resolveSolutionId(raw)
   root.innerHTML = id ? renderDetail(id) : renderList()

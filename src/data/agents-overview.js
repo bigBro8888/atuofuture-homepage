@@ -307,6 +307,27 @@ export function getAgentOverview(id) {
   return resolved ? AGENTS_OVERVIEW.find((a) => a.id === resolved) : null
 }
 
+export function applyAgentsOverviewCms(content) {
+  const items = Array.isArray(content?.items) ? content.items.filter((item) => item && item.published !== false) : []
+  if (!items.length) return
+  for (const item of items) {
+    const existing = AGENTS_OVERVIEW.find((row) => row.id === item.id)
+    if (!existing) continue
+    if (item.name) existing.name = item.name
+    if (item.shortName) existing.shortName = item.shortName
+    if (item.blurb) existing.blurb = item.blurb
+    if (item.value) existing.value = item.value
+    if (item.trigger) existing.trigger = item.trigger
+    if (item.action) existing.action = item.action
+    if (item.result) existing.result = item.result
+    if (item.sceneImage) existing.sceneImage = item.sceneImage
+    if (item.icon) existing.icon = item.icon
+    if (Array.isArray(item.workflow) && item.workflow.length) {
+      existing.workflow = item.workflow.map((step) => step.title || step).filter(Boolean)
+    }
+  }
+}
+
 export function getIndustryComposition(id) {
   return AGENTS_INDUSTRY.find((item) => item.id === id) || AGENTS_INDUSTRY[0]
 }

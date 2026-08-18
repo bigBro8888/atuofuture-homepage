@@ -279,10 +279,50 @@ export const SOLUTIONS_BASE_NODES = [
 export function resolveSolutionId(id) {
   if (!id) return null
   const mapped = SOLUTION_ALIASES[id] || id
-  return SOLUTIONS.some((s) => s.id === mapped) ? mapped : null
+  const hit = SOLUTIONS.find((s) => s.id === mapped)
+  return hit && hit.published !== false ? mapped : null
+}
+
+export function getPublishedSolutions() {
+  return SOLUTIONS.filter((item) => item.published !== false)
 }
 
 export function getSolution(id) {
   const resolved = resolveSolutionId(id)
-  return resolved ? SOLUTIONS.find((s) => s.id === resolved) : null
+  const item = resolved ? SOLUTIONS.find((s) => s.id === resolved) : null
+  return item && item.published !== false ? item : null
+}
+
+export function applySolutionsLibraryCms(content) {
+  const items = Array.isArray(content?.items) ? content.items.filter((item) => item && item.published !== false) : []
+  if (!items.length) return
+  const seen = new Set()
+  for (const item of items) {
+    const existing = SOLUTIONS.find((row) => row.id === item.id || row.id === item.slug)
+    const mapped = {
+      id: item.id,
+      name: item.name,
+      icon: item.icon || 'domain',
+      image: item.image || '',
+      summary: item.summary || '',
+      value: item.value || '',
+      capabilities: item.capabilities || [],
+      coreValues: item.coreValues || [],
+      highlightAgents: item.highlightAgents || [],
+      scenarios: item.scenarios || [],
+      pains: item.pains || [],
+      approach: item.approach || '',
+      journey: item.journey || [],
+      agents: item.agents || [],
+      hardware: item.hardware || [],
+      canDo: item.canDo || [],
+      published: true,
+    }
+    if (existing) Object.assign(existing, mapped)
+    else SOLUTIONS.push(mapped)
+    seen.add(item.id)
+  }
+  for (const row of SOLUTIONS) {
+    if (!seen.has(row.id)) row.published = false
+  }
 }

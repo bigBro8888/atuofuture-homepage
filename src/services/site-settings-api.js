@@ -71,3 +71,19 @@ export async function loadProductLibraryContent() {
     return null
   }
 }
+
+export async function loadSolutionsLibraryContent() {
+  try {
+    return await getPublishedPage('/api/public/pages/solutions-library')
+  } catch {
+    return null
+  }
+}
+
+export async function loadAgentsLibraryContent() {
+  try {
+    return await getPublishedPage('/api/public/pages/agents-library')
+  } catch {
+    return null
+  }
+}

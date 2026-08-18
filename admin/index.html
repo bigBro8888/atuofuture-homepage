@@ -32,11 +32,10 @@
           <small>网站内容</small>
           <button type="button" data-tab="home"><span class="material-symbols-outlined">web</span>官网首页</button>
           <button type="button" data-tab="about"><span class="material-symbols-outlined">apartment</span>关于我们</button>
+          <button type="button" data-tab="content"><span class="material-symbols-outlined">library_books</span>内容中心</button>
           <button type="button" data-tab="page-solutions"><span class="material-symbols-outlined">domain</span>行业解决方案</button>
           <button type="button" data-tab="page-agents"><span class="material-symbols-outlined">smart_toy</span>空间智能体</button>
           <button type="button" data-tab="page-hardware"><span class="material-symbols-outlined">memory</span>智能硬件</button>
-          <button type="button" data-tab="page-products"><span class="material-symbols-outlined">inventory_2</span>产品库</button>
-          <button type="button" data-tab="page-news"><span class="material-symbols-outlined">newspaper</span>新闻中心</button>
           <button type="button" data-tab="page-ai-token"><span class="material-symbols-outlined">token</span>AI Token</button>
           <button type="button" data-tab="config"><span class="material-symbols-outlined">install_mobile</span>App 下载页</button>
         </div>
@@ -203,27 +202,111 @@
         </form>
       </section>
 
-      <section class="admin-panel" data-panel="products">
-        <form class="admin-card admin-home-form" data-products-form data-products-list-view>
-          <div class="admin-card__head">
-            <div>
-              <h2>产品库</h2>
-              <p>专门编辑产品详情页（名称、图片、详情）。编好后可关联智能硬件库产品；智能硬件页也可反过来选择关联哪条详情。</p>
+      <section class="admin-panel" data-panel="content">
+        <nav class="admin-content-switch" data-content-switch aria-label="内容分类">
+          <button type="button" class="is-active" data-content-kind="news">新闻</button>
+          <button type="button" data-content-kind="solutions">行业解决方案</button>
+          <button type="button" data-content-kind="agents">空间智能体</button>
+          <button type="button" data-content-kind="products">商品详情</button>
+        </nav>
+
+        <div data-content-pane="news">
+          <form class="admin-card admin-home-form" data-news-form data-news-list-view>
+            <div class="admin-card__head">
+              <div>
+                <h2>新闻</h2>
+                <p>路径 <code>/news/</code> · 点「新建新闻」进入编辑页，发布后前台立即更新</p>
+              </div>
+              <div class="admin-home-status"><span data-news-draft-time>尚未加载</span><b data-news-publish-status>--</b></div>
             </div>
-            <div class="admin-home-status"><span data-products-draft-time>尚未加载</span><b data-products-publish-status>--</b></div>
+            <div class="admin-home-editor" data-news-editor></div>
+            <div class="admin-home-actions">
+              <a href="/news/" target="_blank">预览新闻中心</a>
+            </div>
+          </form>
+          <div class="admin-news-compose" data-news-compose-view hidden>
+            <header class="admin-news-compose__bar">
+              <button type="button" class="admin-news-compose__back" data-news-compose-back>← 返回列表</button>
+              <div class="admin-news-type" role="tablist" aria-label="发布类型">
+                <button type="button" data-news-type-btn="article">图文</button>
+                <button type="button" data-news-type-btn="video">视频</button>
+              </div>
+              <button type="button" class="admin-news-compose__publish" data-news-compose-publish>发布上线</button>
+            </header>
+            <div class="admin-news-compose__body" data-news-compose-body></div>
           </div>
-          <div class="admin-home-editor" data-products-editor></div>
-          <div class="admin-home-actions">
-            <a href="/hardware/" target="_blank">预览智能硬件</a>
+        </div>
+
+        <div data-content-pane="solutions" hidden>
+          <form class="admin-card admin-home-form" data-solutions-form data-solutions-list-view>
+            <div class="admin-card__head">
+              <div>
+                <h2>行业解决方案详情</h2>
+                <p>编辑 <code>/solutions/?id=campus</code> 这类详情页。频道首屏仍在左侧「行业解决方案」。</p>
+              </div>
+              <div class="admin-home-status"><span data-solutions-draft-time>尚未加载</span><b data-solutions-publish-status>--</b></div>
+            </div>
+            <div class="admin-home-editor" data-solutions-editor></div>
+            <div class="admin-home-actions">
+              <a href="/solutions/" target="_blank">预览方案列表</a>
+            </div>
+          </form>
+          <div class="admin-news-compose" data-solutions-compose-view hidden>
+            <header class="admin-news-compose__bar">
+              <button type="button" class="admin-news-compose__back" data-solutions-compose-back>← 返回列表</button>
+              <strong>编辑方案详情</strong>
+              <button type="button" class="admin-news-compose__publish" data-solutions-compose-publish>发布上线</button>
+            </header>
+            <div class="admin-news-compose__body" data-solutions-compose-body></div>
           </div>
-        </form>
-        <div class="admin-news-compose" data-products-compose-view hidden>
-          <header class="admin-news-compose__bar">
-            <button type="button" class="admin-news-compose__back" data-products-compose-back>← 返回列表</button>
-            <strong>编辑产品详情</strong>
-            <button type="button" class="admin-news-compose__publish" data-products-compose-publish>发布上线</button>
-          </header>
-          <div class="admin-news-compose__body" data-products-compose-body></div>
+        </div>
+
+        <div data-content-pane="agents" hidden>
+          <form class="admin-card admin-home-form" data-agents-form data-agents-list-view>
+            <div class="admin-card__head">
+              <div>
+                <h2>空间智能体详情</h2>
+                <p>编辑 <code>/agent-detail/?id=space</code> 这类详情页。矩阵页首屏仍在左侧「空间智能体」。</p>
+              </div>
+              <div class="admin-home-status"><span data-agents-draft-time>尚未加载</span><b data-agents-publish-status>--</b></div>
+            </div>
+            <div class="admin-home-editor" data-agents-editor></div>
+            <div class="admin-home-actions">
+              <a href="/agents/" target="_blank">预览智能体矩阵</a>
+            </div>
+          </form>
+          <div class="admin-news-compose" data-agents-compose-view hidden>
+            <header class="admin-news-compose__bar">
+              <button type="button" class="admin-news-compose__back" data-agents-compose-back>← 返回列表</button>
+              <strong>编辑智能体详情</strong>
+              <button type="button" class="admin-news-compose__publish" data-agents-compose-publish>发布上线</button>
+            </header>
+            <div class="admin-news-compose__body" data-agents-compose-body></div>
+          </div>
+        </div>
+
+        <div data-content-pane="products" hidden>
+          <form class="admin-card admin-home-form" data-products-form data-products-list-view>
+            <div class="admin-card__head">
+              <div>
+                <h2>商品详情</h2>
+                <p>编辑硬件商品详情页。智能硬件频道里选择关联哪一条即可。</p>
+              </div>
+              <div class="admin-home-status"><span data-products-draft-time>尚未加载</span><b data-products-publish-status>--</b></div>
+            </div>
+            <div class="admin-home-editor" data-products-editor></div>
+            <div class="admin-home-actions">
+              <a href="/hardware/" target="_blank">预览智能硬件</a>
+            </div>
+          </form>
+          <div class="admin-news-compose" data-products-compose-view hidden>
+            <header class="admin-news-compose__bar">
+              <button type="button" class="admin-news-compose__back" data-products-compose-back>← 返回列表</button>
+              <strong>编辑商品详情</strong>
+              <button type="button" class="admin-news-compose__publish" data-products-compose-publish>发布上线</button>
+            </header>
+            <div class="admin-news-compose__body" data-products-compose-body></div>
+          </div>
         </div>
       </section>
 
@@ -255,33 +338,6 @@
             <button type="button" data-about-publish>发布到关于我们</button>
           </div>
         </form>
-      </section>
-
-      <section class="admin-panel" data-panel="news">
-        <form class="admin-card admin-home-form" data-news-form data-news-list-view>
-          <div class="admin-card__head">
-            <div>
-              <h2>新闻中心</h2>
-              <p>路径 <code>/news/</code> · 点「新建新闻」进入编辑页，发布后前台立即更新</p>
-            </div>
-            <div class="admin-home-status"><span data-news-draft-time>尚未加载</span><b data-news-publish-status>--</b></div>
-          </div>
-          <div class="admin-home-editor" data-news-editor></div>
-          <div class="admin-home-actions">
-            <a href="/news/" target="_blank">预览新闻中心</a>
-          </div>
-        </form>
-        <div class="admin-news-compose" data-news-compose-view hidden>
-          <header class="admin-news-compose__bar">
-            <button type="button" class="admin-news-compose__back" data-news-compose-back>← 返回列表</button>
-            <div class="admin-news-type" role="tablist" aria-label="发布类型">
-              <button type="button" data-news-type-btn="article">图文</button>
-              <button type="button" data-news-type-btn="video">视频</button>
-            </div>
-            <button type="button" class="admin-news-compose__publish" data-news-compose-publish>发布上线</button>
-          </header>
-          <div class="admin-news-compose__body" data-news-compose-body></div>
-        </div>
       </section>
 
       <section class="admin-panel" data-panel="releases">

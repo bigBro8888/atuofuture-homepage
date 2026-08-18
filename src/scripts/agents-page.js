@@ -1,9 +1,12 @@
-import { loadSimplePageContent } from '../services/site-settings-api.js'
+import { loadAgentsLibraryContent, loadSimplePageContent } from '../services/site-settings-api.js'
 import {
   AGENTS_CAPABILITY_CHAIN,
   AGENTS_OVERVIEW,
+  applyAgentsOverviewCms,
   resolveAgentOverviewId,
 } from '../data/agents-overview.js'
+import { applyAgentsLibraryCms } from '../data/agents-detail.js'
+import { applyProductAgentsCms } from '../data/product-agents.js'
 import {
   renderAgentEcosystemMap,
   syncAgentEcosystemMap,
@@ -156,6 +159,10 @@ export async function initAgentsPage() {
   const root = document.getElementById('agents-root')
   if (!root) return
   cmsHero = await loadSimplePageContent('agents')
+  const library = await loadAgentsLibraryContent()
+  applyAgentsLibraryCms(library)
+  applyAgentsOverviewCms(library)
+  applyProductAgentsCms(library)
   for (const agent of AGENTS_OVERVIEW) {
     const hit = (cmsHero?.items || []).find((item) => item.id === agent.id)
     if (!hit) continue

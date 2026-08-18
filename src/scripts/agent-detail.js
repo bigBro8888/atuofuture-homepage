@@ -1,4 +1,7 @@
-import { AGENT_DETAILS, AGENT_ORDER, resolveAgentId } from '../data/agents-detail.js'
+import { AGENT_DETAILS, AGENT_ORDER, applyAgentsLibraryCms, resolveAgentId } from '../data/agents-detail.js'
+import { applyAgentsOverviewCms } from '../data/agents-overview.js'
+import { applyProductAgentsCms } from '../data/product-agents.js'
+import { loadAgentsLibraryContent } from '../services/site-settings-api.js'
 
 function esc(str = '') {
   return String(str)
@@ -273,9 +276,13 @@ function renderReceptionDetail(a) {
   `
 }
 
-export function initAgentDetail() {
+export async function initAgentDetail() {
   const mount = document.getElementById('agent-detail')
   if (!mount) return
+  const library = await loadAgentsLibraryContent()
+  applyAgentsLibraryCms(library)
+  applyAgentsOverviewCms(library)
+  applyProductAgentsCms(library)
 
   const rawId = new URLSearchParams(window.location.search).get('id')
   const id = getAgentId()

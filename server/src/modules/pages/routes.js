@@ -12,6 +12,8 @@ import { getSiteSettingsPage, validateSiteSettings } from './site-settings-servi
 import { SIMPLE_PAGE_KEYS, getSimplePageConfig, presentSimplePage, validateSimplePage } from './simple-page-service.js'
 import { getNewsFeedConfig, validateNewsFeedContent } from './news-feed-service.js'
 import { getProductLibraryConfig, presentProductLibrary, publicProductLibraryContent, validateProductLibraryContent } from './product-library-service.js'
+import { getSolutionsLibraryConfig, presentSolutionsLibrary, publicSolutionsLibraryContent, validateSolutionsLibraryContent } from './solutions-library-service.js'
+import { getAgentsLibraryConfig, presentAgentsLibrary, publicAgentsLibraryContent, validateAgentsLibraryContent } from './agents-library-service.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -379,6 +381,74 @@ adminPagesRouter.post('/product-library/publish', requireAuth('config:write'), a
   await save()
   await addAudit(request.admin, 'product.library.publish', 'product-library', { publishedAt: page.publishedAt })
   response.json({ page: presentProductLibrary(page) })
+})
+
+function mountLibraryRoutes({
+  publicPath,
+  adminPath,
+  getConfig,
+  present,
+  publicContent,
+  validate,
+  auditKey,
+}) {
+  publicPagesRouter.get(publicPath, (request, response) => {
+    const page = getConfig()
+    if (page.status !== 'published' || !page.publishedContent) {
+      return response.status(404).json({ error: 'page_not_published' })
+    }
+    response.set('Cache-Control', 'no-cache')
+    response.json({
+      pageKey: page.pageKey,
+      content: publicContent(page),
+      publishedAt: page.publishedAt,
+    })
+  })
+  adminPagesRouter.get(adminPath, requireAuth(), (request, response) => {
+    response.json({ page: present(getConfig()) })
+  })
+  adminPagesRouter.put(`${adminPath}/draft`, requireAuth('config:write'), async (request, response) => {
+    try {
+      const page = getConfig()
+      page.draftContent = validate(request.body?.content)
+      page.updatedAt = new Date().toISOString()
+      await save()
+      await addAudit(request.admin, `${auditKey}.update`, auditKey, { count: page.draftContent.items.length })
+      response.json({ page: present(page) })
+    } catch (error) {
+      response.status(400).json({ error: `invalid_${auditKey}`, message: error.message })
+    }
+  })
+  adminPagesRouter.post(`${adminPath}/publish`, requireAuth('config:write'), async (request, response) => {
+    const page = getConfig()
+    page.publishedContent = structuredClone(page.draftContent)
+    page.status = 'published'
+    page.publishedAt = new Date().toISOString()
+    page.updatedAt = page.publishedAt
+    await save()
+    await addAudit(request.admin, `${auditKey}.publish`, auditKey, { publishedAt: page.publishedAt })
+    response.json({ page: present(page) })
+  })
+}
+
+mountLibraryRoutes({
+  publicPath: '/solutions-library',
+  adminPath: '/solutions-library',
+  getConfig: getSolutionsLibraryConfig,
+  present: presentSolutionsLibrary,
+  publicContent: publicSolutionsLibraryContent,
+  validate: validateSolutionsLibraryContent,
+  auditKey: 'solutions.library',
+})
+
+mountLibraryRoutes({
+  publicPath: '/agents-library',
+  adminPath: '/agents-library',
+  getConfig: getAgentsLibraryConfig,
+  present: presentAgentsLibrary,
+  publicContent: publicAgentsLibraryContent,
+  validate: validateAgentsLibraryContent,
+  auditKey: 'agents.library',
 })
 
 publicPagesRouter.get('/simple/:key', (request, response) => {

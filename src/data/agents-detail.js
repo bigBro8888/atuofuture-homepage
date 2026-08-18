@@ -236,5 +236,30 @@ export const AGENT_ID_ALIASES = {
 export function resolveAgentId(rawId) {
   if (!rawId) return null
   const mapped = AGENT_ID_ALIASES[rawId] || rawId
-  return AGENT_DETAILS[mapped] ? mapped : null
+  const item = AGENT_DETAILS[mapped]
+  return item && item.published !== false ? mapped : null
+}
+
+export function applyAgentsLibraryCms(content) {
+  const items = Array.isArray(content?.items) ? content.items.filter((item) => item && item.published !== false) : []
+  if (!items.length) return
+  for (const item of items) {
+    const current = AGENT_DETAILS[item.id] || {}
+    AGENT_DETAILS[item.id] = {
+      ...current,
+      name: item.name || current.name,
+      icon: item.icon || current.icon,
+      accent: item.accent || current.accent,
+      eyebrow: item.eyebrow || current.eyebrow,
+      tagline: item.tagline || current.tagline,
+      overview: item.overview || current.overview,
+      capabilities: item.capabilities?.length ? item.capabilities : current.capabilities,
+      workflow: item.workflow?.length ? item.workflow : current.workflow,
+      metrics: item.metrics?.length ? item.metrics : current.metrics,
+      scenarios: item.scenarios?.length ? item.scenarios : current.scenarios,
+      published: true,
+    }
+    if (!AGENT_ORDER.includes(item.id)) AGENT_ORDER.push(item.id)
+    AGENT_ID_ALIASES[item.id] = item.id
+  }
 }

@@ -1,0 +1,450 @@
+const CONTENT_KINDS = [
+  { id: 'news', label: '新闻', desc: '新闻稿件' },
+  { id: 'solutions', label: '行业解决方案', desc: '方案详情页' },
+  { id: 'agents', label: '空间智能体', desc: '智能体详情页' },
+  { id: 'products', label: '商品详情', desc: '硬件商品详情页' },
+]
+
+const KIND_HASH = {
+  news: 'content-news',
+  solutions: 'content-solutions',
+  agents: 'content-agents',
+  products: 'content-products',
+}
+
+let ctx = {
+  api: null,
+  toast: () => {},
+  escapeHtml: (value) => String(value ?? ''),
+  dateTime: () => '--',
+  state: null,
+  loadNewsFeed: async () => {},
+  closeNewsCompose: () => {},
+  loadProductLibrary: async () => {},
+  closeProductCompose: () => {},
+}
+
+function esc(value) {
+  return ctx.escapeHtml(value)
+}
+
+function fieldHint(options = {}) {
+  const parts = []
+  if (options.size) parts.push(`建议尺寸 ${options.size}`)
+  if (options.help) parts.push(options.help)
+  return parts.length ? `<small>${parts.join(' · ')}</small>` : ''
+}
+
+function field(kind, path, label, value, options = {}) {
+  const type = options.type || 'text'
+  const attr = `${kind}-field`
+  let input
+  if (type === 'textarea') {
+    input = `<textarea data-${attr}="${path}" rows="${options.rows || 3}"${options.placeholder ? ` placeholder="${esc(options.placeholder)}"` : ''}>${esc(value ?? '')}</textarea>`
+  } else if (type === 'checkbox') {
+    input = `<input data-${attr}="${path}" type="checkbox"${value ? ' checked' : ''} />`
+  } else {
+    input = `<input data-${attr}="${path}" type="text" value="${esc(value ?? '')}"${options.placeholder ? ` placeholder="${esc(options.placeholder)}"` : ''} />`
+  }
+  const media = options.image
+    ? `<div class="admin-home-media">
+        <img data-${kind}-preview-for="${path}" src="${esc(value ?? '')}" alt="" ${value ? '' : 'hidden'} />
+        <label class="admin-home-upload">上传图片<input type="file" accept="image/jpeg,image/png,image/webp" data-${kind}-upload-for="${path}" /></label>
+      </div>`
+    : ''
+  return `<label class="admin-news-field${options.wide ? ' is-wide' : ''}"><span>${label}</span>${input}${media}${fieldHint(options)}</label>`
+}
+
+function lines(value) {
+  return Array.isArray(value) ? value.join('\n') : String(value || '')
+}
+
+function setNested(target, path, value) {
+  const keys = path.split('.')
+  let cursor = target
+  keys.forEach((key, index) => {
+    if (index === keys.length - 1) {
+      cursor[key] = value
+      return
+    }
+    const nextKey = keys[index + 1]
+    if (!cursor[key]) cursor[key] = /^\d+$/.test(nextKey) ? [] : {}
+    cursor = cursor[key]
+  })
+}
+
+function collectFields(root, kind) {
+  const item = {}
+  root.querySelectorAll(`[data-${kind}-field]`).forEach((el) => {
+    const path = el.getAttribute(`data-${kind}-field`)
+    setNested(item, path, el.type === 'checkbox' ? el.checked : el.value)
+  })
+  return item
+}
+
+function emptySolution() {
+  return {
+    id: '',
+    name: '',
+    icon: 'domain',
+    image: '',
+    summary: '',
+    value: '',
+    capabilities: [],
+    coreValues: [{}, {}, {}],
+    highlightAgents: [],
+    scenarios: [],
+    pains: [],
+    approach: '',
+    journey: [],
+    agents: [],
+    hardware: [],
+    canDo: [],
+    published: true,
+  }
+}
+
+function emptyAgent() {
+  return {
+    id: '',
+    name: '',
+    shortName: '',
+    icon: 'smart_toy',
+    accent: '0, 82, 209',
+    eyebrow: '',
+    tagline: '',
+    overview: '',
+    blurb: '',
+    value: '',
+    trigger: '',
+    action: '',
+    result: '',
+    sceneImage: '',
+    capabilities: [{}, {}, {}, {}],
+    workflow: [{}, {}, {}, {}],
+    metrics: [{}, {}, {}],
+    scenarios: [],
+    published: true,
+  }
+}
+
+function renderKindList(kind, items, previewBase) {
+  const editor = document.querySelector(`[data-${kind}-editor]`)
+  if (!editor) return
+  editor.classList.add('admin-news-editor')
+  const addLabel = kind === 'solutions' ? '新建方案' : '新建智能体'
+  editor.innerHTML = `
+    <div class="admin-news-toolbar">
+      <p class="admin-form-section__hint" style="margin:0">这里编辑详情页内容。对应频道页只负责首屏和列表关联。</p>
+      <div class="admin-news-toolbar__actions">
+        <button type="button" class="admin-add-slide" data-${kind}-add>+ ${addLabel}</button>
+      </div>
+    </div>
+    <div class="admin-home-list">${(items || []).map((item, index) => `
+      <div class="admin-item-row">
+        ${item.image || item.sceneImage ? `<img class="admin-simple-item__thumb" src="${esc(item.image || item.sceneImage)}" alt="" />` : '<span class="admin-simple-item__thumb is-empty"></span>'}
+        <div>
+          <strong>${esc(item.name || '未命名')}</strong>
+          <small>${esc(item.id || '')}${item.published === false ? ' · 未发布' : ''}</small>
+        </div>
+        <span class="admin-slide-tools">
+          <a href="${previewBase}${encodeURIComponent(item.id)}" target="_blank">预览</a>
+          <button type="button" data-${kind}-edit="${index}">编辑</button>
+          <button type="button" data-${kind}-remove="${index}">删除</button>
+        </span>
+      </div>`).join('') || `<p class="admin-form-section__hint">还没有内容，先点上面的新建。</p>`}</div>`
+}
+
+function renderSolutionCompose(item) {
+  const body = document.querySelector('[data-solutions-compose-body]')
+  const values = [...(item.coreValues || []), {}, {}, {}].slice(0, 3)
+  body.innerHTML = `
+    <div class="admin-form-grid">
+      <input type="hidden" data-solutions-field="id" value="${esc(item.id || '')}" />
+      ${field('solutions', 'name', '方案名称', item.name, { wide: true, placeholder: '例如 智慧园区' })}
+      ${field('solutions', 'id', '详情页标识', item.id, { help: '出现在 /solutions/?id= 后面' })}
+      ${field('solutions', 'icon', '图标', item.icon)}
+      ${field('solutions', 'image', '封面图', item.image, { image: true, wide: true, size: '1600×900' })}
+      ${field('solutions', 'summary', '简介', item.summary, { type: 'textarea', wide: true, rows: 2 })}
+      ${field('solutions', 'value', '一句话价值', item.value, { type: 'textarea', wide: true, rows: 2 })}
+      ${field('solutions', 'approach', '方案做法', item.approach, { type: 'textarea', wide: true, rows: 3 })}
+      ${field('solutions', 'capabilities', '核心能力', lines(item.capabilities), { type: 'textarea', rows: 3, help: '每行一条' })}
+      ${field('solutions', 'pains', '痛点', lines(item.pains), { type: 'textarea', rows: 3, help: '每行一条' })}
+      ${field('solutions', 'scenarios', '场景', lines(item.scenarios), { type: 'textarea', rows: 3, help: '每行一条' })}
+      ${field('solutions', 'journey', '业务旅程', lines(item.journey), { type: 'textarea', rows: 3, help: '每行一条' })}
+      ${field('solutions', 'agents', '关联智能体 ID', lines(item.agents), { type: 'textarea', rows: 2, help: '如 space、visitor，每行一个' })}
+      ${field('solutions', 'highlightAgents', '重点智能体 ID', lines(item.highlightAgents), { type: 'textarea', rows: 2 })}
+      ${field('solutions', 'hardware', '关联硬件', lines(item.hardware), { type: 'textarea', rows: 2, help: '每行一条' })}
+      ${values.map((row, index) => `
+        <div class="admin-product-card admin-form-wide">
+          <h4>核心价值 ${index + 1}</h4>
+          <div class="admin-form-grid">
+            ${field('solutions', `coreValues.${index}.title`, '标题', row.title || '')}
+            ${field('solutions', `coreValues.${index}.icon`, '图标', row.icon || '')}
+            ${field('solutions', `coreValues.${index}.desc`, '说明', row.desc || '', { type: 'textarea', rows: 2, wide: true })}
+          </div>
+        </div>`).join('')}
+      <label class="admin-news-pin admin-form-wide">
+        <input data-solutions-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
+        <span><b>发布后前台可见</b><small>取消勾选则详情页不对外展示。</small></span>
+      </label>
+    </div>`
+}
+
+function renderAgentCompose(item) {
+  const body = document.querySelector('[data-agents-compose-body]')
+  const caps = [...(item.capabilities || []), {}, {}, {}, {}].slice(0, 4)
+  const steps = [...(item.workflow || []), {}, {}, {}, {}].slice(0, 4)
+  const metrics = [...(item.metrics || []), {}, {}, {}].slice(0, 3)
+  body.innerHTML = `
+    <div class="admin-form-grid">
+      <input type="hidden" data-agents-field="id" value="${esc(item.id || '')}" />
+      ${field('agents', 'name', '智能体名称', item.name, { wide: true, placeholder: '例如 空间服务智能体' })}
+      ${field('agents', 'id', '详情页标识', item.id, { help: '出现在 /agent-detail/?id= 后面' })}
+      ${field('agents', 'shortName', '短名', item.shortName)}
+      ${field('agents', 'icon', '图标', item.icon)}
+      ${field('agents', 'eyebrow', '英文眉题', item.eyebrow)}
+      ${field('agents', 'accent', '强调色 RGB', item.accent, { help: '如 0, 82, 209' })}
+      ${field('agents', 'blurb', '列表简介', item.blurb, { type: 'textarea', rows: 2, wide: true })}
+      ${field('agents', 'tagline', '详情副标题', item.tagline, { type: 'textarea', rows: 2, wide: true })}
+      ${field('agents', 'overview', '详情概述', item.overview, { type: 'textarea', rows: 4, wide: true })}
+      ${field('agents', 'value', '价值', item.value, { type: 'textarea', rows: 2, wide: true })}
+      ${field('agents', 'trigger', '触发', item.trigger, { type: 'textarea', rows: 2 })}
+      ${field('agents', 'action', '动作', item.action, { type: 'textarea', rows: 2 })}
+      ${field('agents', 'result', '结果', item.result, { type: 'textarea', rows: 2 })}
+      ${field('agents', 'sceneImage', '场景图', item.sceneImage, { image: true, wide: true, size: '1200×800' })}
+      ${field('agents', 'scenarios', '适用场景', lines(item.scenarios), { type: 'textarea', rows: 3, wide: true, help: '每行一条' })}
+      ${caps.map((row, index) => `
+        <div class="admin-product-card admin-form-wide">
+          <h4>能力 ${index + 1}</h4>
+          <div class="admin-form-grid">
+            ${field('agents', `capabilities.${index}.title`, '标题', row.title || '')}
+            ${field('agents', `capabilities.${index}.icon`, '图标', row.icon || '')}
+            ${field('agents', `capabilities.${index}.desc`, '说明', row.desc || '', { type: 'textarea', rows: 2, wide: true })}
+          </div>
+        </div>`).join('')}
+      ${steps.map((row, index) => `
+        <div class="admin-product-card admin-form-wide">
+          <h4>运行机制 ${index + 1}</h4>
+          <div class="admin-form-grid">
+            ${field('agents', `workflow.${index}.title`, '步骤', row.title || '')}
+            ${field('agents', `workflow.${index}.desc`, '说明', row.desc || '', { type: 'textarea', rows: 2, wide: true })}
+          </div>
+        </div>`).join('')}
+      ${metrics.map((row, index) => `
+        <div class="admin-product-card">
+          <h4>指标 ${index + 1}</h4>
+          ${field('agents', `metrics.${index}.value`, '数值/标签', row.value || '')}
+          ${field('agents', `metrics.${index}.label`, '说明', row.label || '')}
+        </div>`).join('')}
+      <label class="admin-news-pin admin-form-wide">
+        <input data-agents-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
+        <span><b>发布后前台可见</b></span>
+      </label>
+    </div>`
+}
+
+function updateStatus(kind, page) {
+  const draft = document.querySelector(`[data-${kind}-draft-time]`)
+  const status = document.querySelector(`[data-${kind}-publish-status]`)
+  if (draft) draft.textContent = `草稿 ${ctx.dateTime(page.updatedAt)}`
+  if (status) status.textContent = page.publishedAt ? `已发布 ${ctx.dateTime(page.publishedAt)}` : '尚未发布'
+}
+
+async function persistKind(kind, items, message) {
+  const path = kind === 'solutions' ? '/pages/solutions-library' : '/pages/agents-library'
+  const { page } = await ctx.api(`${path}/draft`, { method: 'PUT', body: JSON.stringify({ content: { items } }) })
+  const published = await ctx.api(`${path}/publish`, { method: 'POST' })
+  const next = published.page || page
+  if (kind === 'solutions') ctx.state.solutionsLibrary = next
+  else ctx.state.agentsLibrary = next
+  renderKindList(kind, next.draftContent.items, kind === 'solutions' ? '/solutions/?id=' : '/agent-detail/?id=')
+  updateStatus(kind, next)
+  if (message) ctx.toast(message)
+  return next
+}
+
+function openCompose(kind, index) {
+  const page = kind === 'solutions' ? ctx.state.solutionsLibrary : ctx.state.agentsLibrary
+  const items = page?.draftContent?.items || []
+  const item = index >= 0 ? items[index] : (kind === 'solutions' ? emptySolution() : emptyAgent())
+  ctx.state[`${kind}ComposeIndex`] = index
+  document.querySelector(`[data-${kind}-list-view]`).hidden = true
+  const compose = document.querySelector(`[data-${kind}-compose-view]`)
+  compose.hidden = false
+  if (kind === 'solutions') renderSolutionCompose(item)
+  else renderAgentCompose(item)
+  window.scrollTo({ top: 0 })
+}
+
+function closeCompose(kind) {
+  const list = document.querySelector(`[data-${kind}-list-view]`)
+  const compose = document.querySelector(`[data-${kind}-compose-view]`)
+  if (list) list.hidden = false
+  if (compose) compose.hidden = true
+  ctx.state[`${kind}ComposeIndex`] = -1
+}
+
+export function closeSolutionsCompose() { closeCompose('solutions') }
+export function closeAgentsCompose() { closeCompose('agents') }
+
+export async function loadSolutionsLibrary() {
+  const { page } = await ctx.api('/pages/solutions-library')
+  ctx.state.solutionsLibrary = page
+  renderKindList('solutions', page.draftContent.items, '/solutions/?id=')
+  updateStatus('solutions', page)
+}
+
+export async function loadAgentsLibrary() {
+  const { page } = await ctx.api('/pages/agents-library')
+  ctx.state.agentsLibrary = page
+  renderKindList('agents', page.draftContent.items, '/agent-detail/?id=')
+  updateStatus('agents', page)
+}
+
+export function showContentKind(kind) {
+  const next = CONTENT_KINDS.some((item) => item.id === kind) ? kind : 'news'
+  ctx.state.contentKind = next
+  document.querySelectorAll('[data-content-kind]').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.contentKind === next)
+  })
+  document.querySelectorAll('[data-content-pane]').forEach((pane) => {
+    pane.hidden = pane.dataset.contentPane !== next
+  })
+  ctx.closeNewsCompose()
+  ctx.closeProductCompose()
+  closeCompose('solutions')
+  closeCompose('agents')
+  const hash = KIND_HASH[next]
+  if (location.hash !== `#${hash}`) history.replaceState(null, '', `#${hash}`)
+  if (next === 'news') ctx.loadNewsFeed()
+  if (next === 'products') ctx.loadProductLibrary()
+  if (next === 'solutions') loadSolutionsLibrary().catch((error) => ctx.toast(error.message, true))
+  if (next === 'agents') loadAgentsLibrary().catch((error) => ctx.toast(error.message, true))
+}
+
+function bindKind(kind) {
+  const list = document.querySelector(`[data-${kind}-editor]`)
+  const compose = document.querySelector(`[data-${kind}-compose-view]`)
+  if (!list || !compose) return
+  list.addEventListener('click', async (event) => {
+    if (event.target.closest(`[data-${kind}-add]`)) {
+      event.preventDefault()
+      openCompose(kind, -1)
+      return
+    }
+    const edit = event.target.closest(`[data-${kind}-edit]`)
+    if (edit) {
+      event.preventDefault()
+      openCompose(kind, Number(edit.getAttribute(`data-${kind}-edit`)))
+      return
+    }
+    const remove = event.target.closest(`[data-${kind}-remove]`)
+    if (remove) {
+      event.preventDefault()
+      if (!window.confirm('删除后前台将不再展示，确定吗？')) return
+      const index = Number(remove.getAttribute(`data-${kind}-remove`))
+      const page = kind === 'solutions' ? ctx.state.solutionsLibrary : ctx.state.agentsLibrary
+      const items = [...(page?.draftContent?.items || [])]
+      items.splice(index, 1)
+      try { await persistKind(kind, items, '已删除并发布') } catch (error) { ctx.toast(error.message, true) }
+    }
+  })
+  compose.addEventListener('click', async (event) => {
+    if (event.target.closest(`[data-${kind}-compose-back]`)) {
+      event.preventDefault()
+      closeCompose(kind)
+      return
+    }
+    if (event.target.closest(`[data-${kind}-compose-publish]`)) {
+      event.preventDefault()
+      const button = event.target.closest(`[data-${kind}-compose-publish]`)
+      const article = collectFields(compose, kind)
+      if (!article.name?.trim()) {
+        ctx.toast('请填写名称', true)
+        return
+      }
+      button.disabled = true
+      try {
+        const page = kind === 'solutions' ? ctx.state.solutionsLibrary : ctx.state.agentsLibrary
+        const items = [...(page?.draftContent?.items || [])]
+        const index = ctx.state[`${kind}ComposeIndex`]
+        if (index >= 0 && items[index]) items[index] = { ...items[index], ...article }
+        else items.unshift(article)
+        await persistKind(kind, items, '详情已发布')
+        closeCompose(kind)
+      } catch (error) {
+        ctx.toast(error.message, true)
+      } finally {
+        button.disabled = false
+      }
+    }
+  })
+  compose.addEventListener('input', (event) => {
+    const el = event.target.closest(`[data-${kind}-field]`)
+    if (!el) return
+    const path = el.getAttribute(`data-${kind}-field`)
+    const preview = compose.querySelector(`[data-${kind}-preview-for="${path}"]`)
+    if (preview) {
+      preview.src = el.value.trim()
+      preview.hidden = !el.value.trim()
+    }
+  })
+  compose.addEventListener('change', async (event) => {
+    const upload = event.target.closest(`[data-${kind}-upload-for]`)
+    const file = upload?.files?.[0]
+    if (!upload || !file) return
+    upload.disabled = true
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const { url } = await ctx.api('/pages/media/image', { method: 'POST', body: formData })
+      const path = upload.getAttribute(`data-${kind}-upload-for`)
+      const input = compose.querySelector(`[data-${kind}-field="${path}"]`)
+      if (input) {
+        input.value = url
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+      }
+      ctx.toast('图片已上传')
+    } catch (error) {
+      ctx.toast(error.message, true)
+    } finally {
+      upload.disabled = false
+      upload.value = ''
+    }
+  })
+}
+
+export function bindContentCenter(helpers) {
+  ctx = { ...ctx, ...helpers }
+  document.querySelector('[data-content-switch]')?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-content-kind]')
+    if (!button) return
+    event.preventDefault()
+    showContentKind(button.dataset.contentKind)
+    const title = document.querySelector('[data-page-title]')
+    const subtitle = document.querySelector('[data-page-subtitle]')
+    const map = {
+      news: ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
+      solutions: ['内容中心 · 行业解决方案', '路径 /solutions/?id= · 编辑方案详情'],
+      agents: ['内容中心 · 空间智能体', '路径 /agent-detail/?id= · 编辑智能体详情'],
+      products: ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
+    }
+    const pair = map[button.dataset.contentKind]
+    if (title && pair) title.textContent = pair[0]
+    if (subtitle && pair) subtitle.textContent = pair[1]
+    document.querySelectorAll('[data-tab]').forEach((tab) => tab.classList.toggle('is-active', tab.dataset.tab === 'content'))
+  })
+  document.querySelector('[data-solutions-form]')?.addEventListener('submit', (event) => event.preventDefault())
+  document.querySelector('[data-agents-form]')?.addEventListener('submit', (event) => event.preventDefault())
+  bindKind('solutions')
+  bindKind('agents')
+}
+
+export function contentKindFromHash(name) {
+  if (name === 'page-news' || name === 'content' || name === 'content-news') return 'news'
+  if (name === 'page-products' || name === 'content-products') return 'products'
+  if (name === 'content-solutions') return 'solutions'
+  if (name === 'content-agents') return 'agents'
+  return null
+}

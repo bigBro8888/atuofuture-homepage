@@ -761,9 +761,25 @@ body.admin-modal-open { overflow: hidden; }
   border-radius: 8px;
   font-size: 14px;
 }
-.admin-news-compose .admin-rich__editor {
-  min-height: 420px;
-  max-height: none;
+.admin-content-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.admin-content-switch button {
+  padding: 8px 14px;
+  border: 1px solid #dbe4ef;
+  border-radius: 999px;
+  background: #fff;
+  color: #526173;
+  font-size: 13px;
+}
+.admin-content-switch button.is-active {
+  border-color: #1769ff;
+  color: #1769ff;
+  background: #edf4ff;
+  font-weight: 600;
 }
 .admin-product-editor { align-items: start; }
 .admin-product-links {

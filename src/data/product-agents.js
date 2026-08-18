@@ -95,3 +95,15 @@ export const PRODUCT_AGENT_ORDER = PRODUCT_AGENTS.map((a) => a.id)
 export function getProductAgent(id) {
   return PRODUCT_AGENTS.find((a) => a.id === id) ?? null
 }
+
+export function applyProductAgentsCms(content) {
+  const items = Array.isArray(content?.items) ? content.items.filter((item) => item && item.published !== false) : []
+  if (!items.length) return
+  for (const item of items) {
+    const existing = PRODUCT_AGENTS.find((row) => row.id === item.id)
+    if (!existing) continue
+    if (item.name) existing.name = item.name
+    if (item.icon) existing.icon = item.icon
+    if (item.tagline) existing.summary = item.tagline
+  }
+}

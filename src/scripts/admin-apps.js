@@ -1,6 +1,7 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 import { bindNewsRichEditor, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
 import { bindProductLibraryAdmin, closeProductCompose, loadProductLibrary, productLibraryOptions } from './admin-products.js'
+import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 
 const API = '/api/admin'
 const state = { user: null, app: null, homePage: null, aboutPage: null, aboutSection: 'hero', sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, productLibrary: null, homeSection: 'hero' }
@@ -25,11 +26,16 @@ const titles = {
   site: ['全站设置', 'Logo、品牌名、顶栏按钮与联系方式'],
   home: ['官网首页', '路径 / · 按前台区块逐项编辑，点左侧大纲跳转'],
   about: ['关于我们', '路径 /about/ · 与线上六个区块一一对应'],
-  'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏与方案列表'],
-  'page-agents': ['空间智能体', '路径 /agents/ · 首屏与智能体列表'],
-  'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏、产品列表，以及关联产品库详情'],
-  'page-products': ['产品库', '路径 /hardware/product/ · 编辑产品详情页，再与智能硬件关联'],
-  'page-news': ['新闻中心', '路径 /news/ · 列表管理，点编辑即可改稿并发布'],
+  'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏与列表；详情请到内容中心编辑'],
+  'page-agents': ['空间智能体', '路径 /agents/ · 首屏与矩阵；详情请到内容中心编辑'],
+  'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏、列表，以及关联内容中心的商品详情'],
+  content: ['内容中心', '新闻、行业解决方案、空间智能体、商品详情集中管理'],
+  'content-news': ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
+  'content-solutions': ['内容中心 · 行业解决方案', '路径 /solutions/?id= · 编辑方案详情'],
+  'content-agents': ['内容中心 · 空间智能体', '路径 /agent-detail/?id= · 编辑智能体详情'],
+  'content-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
+  'page-news': ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
+  'page-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
   'page-ai-token': ['AI Token', '路径 /ai-token/ · 首屏标题'],
   config: ['App 下载页', '路径 /app-download/ · 文案、Banner、商店链接'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
@@ -176,8 +182,10 @@ async function loadOverview() {
 
 function openTab(name, options = {}) {
   if (!titles[name]) name = 'overview'
-  const panelName = name === 'page-news' ? 'news' : name === 'page-products' ? 'products' : name.startsWith('page-') ? 'simple' : name
-  document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === name))
+  const contentKind = contentKindFromHash(name)
+  const panelName = contentKind ? 'content' : name.startsWith('page-') ? 'simple' : name
+  const sidebarTab = contentKind ? 'content' : name
+  document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === sidebarTab))
   document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === panelName))
   const [title, subtitle] = titles[name]
   document.querySelector('[data-page-title]').textContent = title
@@ -193,13 +201,7 @@ function openTab(name, options = {}) {
     window.scrollTo({ top: 0 })
     updateAnchorState()
   }
-  if (name === 'page-news') {
-    closeNewsCompose()
-    loadNewsFeed()
-  } else if (name === 'page-products') {
-    closeProductCompose()
-    loadProductLibrary()
-  }
+  if (contentKind) showContentKind(contentKind)
   else if (name.startsWith('page-')) loadSimplePage(name.slice('page-'.length))
   if (name === 'home') loadHomePage()
   if (name === 'about') loadAboutPage()
@@ -1231,17 +1233,11 @@ function renderHardwareNavEditor(navGroups, items = []) {
 function renderSimpleItemFields(entry, index, key) {
   const extra = key === 'hardware'
     ? `
-        ${homeField(`items.${index}.detailId`, '关联产品详情', entry.detailId || '', {
+        ${homeField(`items.${index}.detailId`, '关联商品详情', entry.detailId || '', {
           type: 'select',
           options: productLibraryOptions(),
-          help: '选产品库里的详情页，「查看产品详情」会跳到该页',
-        })}
-        ${homeField(`items.${index}.tag`, '列表标签', entry.tag || '', { help: '例如：旗舰产品' })}
-        ${homeField(`items.${index}.fullDescription`, '详细介绍', entry.fullDescription || '', { type: 'textarea', rows: 2, wide: true })}
-        ${homeField(`items.${index}.capabilities`, '能力卖点', Array.isArray(entry.capabilities) ? entry.capabilities.join('\n') : (entry.capabilities || ''), { type: 'textarea', rows: 3, wide: true, help: '每行一条' })}
-        ${homeField(`items.${index}.detailCtaLabel`, '详情按钮文案', entry.detailCtaLabel || '', { help: '默认用产品库里的文案' })}
-        ${homeField(`items.${index}.solutionLabel`, '方案链接文案', entry.solutionLabel || '')}
-        ${homeField(`items.${index}.solutionHref`, '方案链接地址', entry.solutionHref || '', { wide: true, placeholder: '/solutions/' })}`
+          help: '到「内容中心 → 商品详情」编辑详情页，这里只选择关联哪一条',
+        })}`
     : ''
   return `
     <div class="admin-item-row admin-simple-item" data-simple-item="${index}">
@@ -1280,7 +1276,7 @@ function renderSimpleEditor(key, content) {
     return `
       <fieldset data-simple-section="${entry.id}">
         <legend>${escapeHtml(sectionLegend[entry.id] || entry.title)}</legend>
-        <p class="admin-form-section__hint">只改这一类前台列表内容。产品详情页请到「产品库」编辑，然后在下面选择关联哪一条。</p>
+        <p class="admin-form-section__hint">${key === 'hardware' ? '列表展示可改名称和图片。详情页请到「内容中心 → 商品详情」编辑，然后在下面关联。' : '频道列表可改名称、简介和图片。完整详情请到「内容中心」编辑。'}</p>
         <div class="admin-home-list">${rows.map(({ row, index }) => renderSimpleItemFields(row, index, key)).join('') || '<p class="admin-form-section__hint">此类暂无条目。</p>'}</div>
       </fieldset>`
   }).join('')
@@ -2574,3 +2570,14 @@ document.querySelector('[data-item-modal]').addEventListener('change', async (ev
 
 api('/me').then(({ user }) => showAdmin(user)).catch(showLogin)
 bindProductLibraryAdmin({ api, toast, escapeHtml, dateTime, state })
+bindContentCenter({
+  api,
+  toast,
+  escapeHtml,
+  dateTime,
+  state,
+  loadNewsFeed,
+  closeNewsCompose,
+  loadProductLibrary,
+  closeProductCompose,
+})
