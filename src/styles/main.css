@@ -4153,8 +4153,10 @@ body.demo-modal-open {
 
 .ab-footprint {
   padding: 88px 0 0;
-  background: #f4f6f8;
   overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 80% at 50% 78%, #fff 0%, rgba(255, 255, 255, 0) 68%),
+    #f5f6f8;
 }
 .ab-footprint h2 {
   margin: 0 0 12px;
@@ -4170,32 +4172,27 @@ body.demo-modal-open {
 }
 .ab-partners {
   --ab-col: min(1440px, 100%);
-  --ab-side: max(0px, calc((100% - var(--ab-col)) / 2));
+  --ab-side: max(24px, calc((100% - var(--ab-col)) / 2));
   position: relative;
-  margin-top: 40px;
-  padding: 28px 0 40px;
+  margin-top: 36px;
+  padding: 8px 0 64px;
   overflow: hidden;
-  background: #12122a;
   -webkit-mask-image: linear-gradient(
     90deg,
     transparent 0,
-    rgba(0, 0, 0, 0.1) max(24px, var(--ab-side)),
-    rgba(0, 0, 0, 0.32) calc(var(--ab-side) + 40px),
-    #000 calc(var(--ab-side) + 80px),
-    #000 calc(100% - var(--ab-side) - 80px),
-    rgba(0, 0, 0, 0.32) calc(100% - var(--ab-side) - 40px),
-    rgba(0, 0, 0, 0.1) calc(100% - max(24px, var(--ab-side))),
+    rgba(0, 0, 0, 0.18) var(--ab-side),
+    #000 calc(var(--ab-side) + 72px),
+    #000 calc(100% - var(--ab-side) - 72px),
+    rgba(0, 0, 0, 0.18) calc(100% - var(--ab-side)),
     transparent 100%
   );
   mask-image: linear-gradient(
     90deg,
     transparent 0,
-    rgba(0, 0, 0, 0.1) max(24px, var(--ab-side)),
-    rgba(0, 0, 0, 0.32) calc(var(--ab-side) + 40px),
-    #000 calc(var(--ab-side) + 80px),
-    #000 calc(100% - var(--ab-side) - 80px),
-    rgba(0, 0, 0, 0.32) calc(100% - var(--ab-side) - 40px),
-    rgba(0, 0, 0, 0.1) calc(100% - max(24px, var(--ab-side))),
+    rgba(0, 0, 0, 0.18) var(--ab-side),
+    #000 calc(var(--ab-side) + 72px),
+    #000 calc(100% - var(--ab-side) - 72px),
+    rgba(0, 0, 0, 0.18) calc(100% - var(--ab-side)),
     transparent 100%
   );
 }
@@ -4206,39 +4203,46 @@ body.demo-modal-open {
 .ab-partners__track {
   display: flex;
   width: max-content;
-  animation: ab-partners-scroll 36s linear infinite;
+  animation: ab-partners-scroll 42s linear infinite;
 }
 .ab-partners:hover .ab-partners__track { animation-play-state: paused; }
 .ab-partners__group {
   display: flex;
-  gap: 16px;
-  padding-right: 16px;
+  align-items: center;
+  gap: 56px;
+  padding-right: 56px;
   flex-shrink: 0;
 }
 .ab-partners__logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   margin: 0;
-  width: 228px;
-  height: 92px;
-  padding: 18px 22px;
-  background: #fff;
+  width: 168px;
+  height: 56px;
+  padding: 0;
+  background: transparent;
   flex-shrink: 0;
-  transition: transform 0.25s ease;
 }
-.ab-partners__logo:hover { transform: translateY(-4px); }
-.ab-partners__mark {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
+.ab-partners__logo strong {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #3d3d4d;
 }
 .ab-partners__logo img {
   display: block;
   max-width: 100%;
-  max-height: 52px;
+  max-height: 40px;
   object-fit: contain;
+  filter: grayscale(1);
+  opacity: 0.46;
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+.ab-partners__logo:hover img {
+  filter: grayscale(0.35);
+  opacity: 0.82;
 }
 @keyframes ab-partners-scroll {
   from { transform: translateX(0); }
@@ -4246,6 +4250,7 @@ body.demo-modal-open {
 }
 @media (prefers-reduced-motion: reduce) {
   .ab-partners__track { animation: none; }
+  .ab-partners__logo img { transition: none; }
 }
 .ab-join {
   padding: 88px 0 96px;
@@ -4672,8 +4677,10 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   .ab-contact__row { padding: 18px 20px; }
   .ab-values { padding: 72px 0; }
   .ab-footprint { padding: 64px 0 0; }
-  .ab-partners { margin-top: 28px; padding: 20px 0 28px; }
-  .ab-partners__logo { width: 188px; height: 80px; }
+  .ab-partners { margin-top: 24px; padding: 4px 0 40px; }
+  .ab-partners__group { gap: 36px; padding-right: 36px; }
+  .ab-partners__logo { width: 132px; height: 48px; }
+  .ab-partners__logo img { max-height: 32px; }
 }
 
 @media (max-width: 1024px) {

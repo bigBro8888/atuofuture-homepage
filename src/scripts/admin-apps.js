@@ -15,7 +15,7 @@ const ABOUT_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏', desc: '左文右图，主标题与两个按钮' },
   { id: 'story', no: '02', title: '公司介绍', desc: '左图右文两段介绍' },
   { id: 'values', no: '03', title: '使命价值观愿景', desc: '时间轴三列，大号 01–03' },
-  { id: 'partners', no: '04', title: '客户 Logo 墙', desc: '单行滚动商标，可增删换图' },
+  { id: 'partners', no: '04', title: '客户 Logo 墙', desc: '浅底透明 Logo，单行滚动' },
   { id: 'join', no: '05', title: '加入我们', desc: '轮播、招揽话术、招聘列表' },
   { id: 'contact', no: '06', title: '联系我们', desc: '左栏加入、右栏邮箱电话地址' },
 ]
@@ -620,7 +620,7 @@ function aboutItemFields(kind, index, item) {
     return `
       <p class="admin-form-section__hint">会出现在单行滚动的 Logo 墙上。透明底横图最清晰。</p>
       ${aboutField(`partners.items.${index}.name`, '客户名称', item.name, { help: '无 Logo 时前台显示这个名字' })}
-      ${aboutField(`partners.items.${index}.logoUrl`, '滚动墙 Logo', item.logoUrl, { image: true, wide: true, size: '480×160' })}`
+      ${aboutField(`partners.items.${index}.logoUrl`, '滚动墙 Logo', item.logoUrl, { image: true, wide: true, size: '480×160', help: '透明底横图，不要白底；前台会压成灰色融入背景' })}`
   }
   if (kind === 'joinSlides') {
     return `
@@ -992,7 +992,7 @@ function renderAboutEditor(content) {
       </fieldset>
       <fieldset data-about-section="partners">
         <legend>04 客户 Logo 墙</legend>
-        <p class="admin-form-section__hint">前台深蓝单行滚动带。上方改标题，下面每条对应墙上一个商标，可换图、排序、增删。</p>
+        <p class="admin-form-section__hint">前台浅底透明 Logo 滚动墙，左右淡出。请上传透明底 PNG，不要带白底卡片。</p>
         <div class="admin-form-grid">${aboutSectionFields('partners', content)}</div>
         ${aboutItemRows('partners', content.partners?.items)}
         <button type="button" class="admin-add-slide" data-about-partner-add>+ 新增客户 Logo</button>

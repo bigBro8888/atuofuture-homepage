@@ -27,18 +27,7 @@ function bg(selector, value) {
 }
 
 function partnerLockup(name) {
-  const colors = {
-    阿里巴巴: '#FF6A00',
-    盒马: '#00A86B',
-    饿了么: '#0097DC',
-    ZEBRA: '#111111',
-    银泰: '#C41E3A',
-    钉钉: '#0089FF',
-    蚂蚁集团: '#1677FF',
-    大润发: '#E60012',
-  }
-  const color = colors[name] || '#12122a'
-  return `<span class="ab-partners__mark" style="background:${color}"></span><strong style="color:${color}">${escapeHtml(name)}</strong>`
+  return `<strong>${escapeHtml(name)}</strong>`
 }
 
 function renderPartnerMarquee(items) {
