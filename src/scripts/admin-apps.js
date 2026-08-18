@@ -2,7 +2,7 @@ import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 import { bindNewsRichEditor, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
 
 const API = '/api/admin'
-const state = { user: null, app: null, homePage: null, aboutPage: null, sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, homeSection: 'hero' }
+const state = { user: null, app: null, homePage: null, aboutPage: null, aboutSection: 'hero', sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, homeSection: 'hero' }
 const HOME_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏轮播', desc: '多屏大图，可新增和逐屏编辑' },
   { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
@@ -11,11 +11,20 @@ const HOME_OUTLINE = [
   { id: 'news', no: '05', title: '新闻动态', desc: '新闻卡可新增删除' },
   { id: 'pitch', no: '06', title: '探索安托未来', desc: '底部宫格卡片可新增删除' },
 ]
+const ABOUT_OUTLINE = [
+  { id: 'hero', no: '01', title: '首屏主张', desc: '主标题、介绍与按钮' },
+  { id: 'story', no: '02', title: '公司介绍', desc: '文案与左侧图片' },
+  { id: 'values', no: '03', title: '使命价值观愿景', desc: '整区标题与三条主张' },
+  { id: 'partners', no: '04', title: '客户与网络', desc: '客户名称列表' },
+  { id: 'duties', no: '05', title: '责任与承诺', desc: '责任条目' },
+  { id: 'join', no: '06', title: '加入我们', desc: '加入步骤' },
+  { id: 'contact', no: '07', title: '联系我们', desc: '邮箱、地址与入口' },
+]
 const titles = {
   overview: ['页面目录', '每个前台路径对应一块后台配置，结构与官网导航一致'],
   site: ['全站设置', 'Logo、品牌名、顶栏按钮与联系方式'],
   home: ['官网首页', '路径 / · 按前台区块逐项编辑，点左侧大纲跳转'],
-  about: ['关于我们', '路径 /about/ · 编辑草稿并发布'],
+  about: ['关于我们', '路径 /about/ · 按前台区块逐项编辑，点左侧大纲打开'],
   'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏与方案列表'],
   'page-agents': ['空间智能体', '路径 /agents/ · 首屏与智能体列表'],
   'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏与产品列表'],
@@ -813,52 +822,76 @@ function aboutField(path, label, value, options = {}) {
   return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${control}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
 }
 
+function showAboutSection(id) {
+  if (!ABOUT_OUTLINE.some((item) => item.id === id)) id = 'hero'
+  state.aboutSection = id
+  document.querySelectorAll('[data-about-goto]').forEach((button) => button.classList.toggle('is-active', button.dataset.aboutGoto === id))
+  document.querySelectorAll('[data-about-section]').forEach((section) => {
+    section.hidden = section.dataset.aboutSection !== id
+  })
+}
+
 function renderAboutEditor(content) {
   const editor = document.querySelector('[data-about-editor]')
-  const sectionRow = (key, title, subtitle) => `
-    <div class="admin-item-row">
-      <div><strong>${title}</strong><small>${subtitle}</small></div>
-      <span class="admin-slide-tools"><button type="button" data-about-section-edit="${key}">编辑</button></span>
-    </div>`
+  if (!ABOUT_OUTLINE.some((item) => item.id === state.aboutSection)) state.aboutSection = 'hero'
+  const itemRows = (kind, items, label) => `
+        <div class="admin-home-list">${(items || []).map((item, index) => `
+          <div class="admin-item-row">
+            <div><strong>${escapeHtml(label(item, index))}</strong></div>
+            <span class="admin-slide-tools"><button type="button" data-about-item-edit="${kind}" data-item-index="${index}">编辑</button></span>
+          </div>`).join('')}</div>`
   editor.innerHTML = `
-    <div class="admin-home-list">
-      ${sectionRow('hero', '首屏主张', '主标题、介绍与按钮')}
-      ${sectionRow('story', '公司介绍', '文案与左侧图片')}
-      ${sectionRow('values', '使命、价值观与愿景', '整区标题')}
-    </div>
-    <div class="admin-home-list">${content.values.items.map((item, index) => `
-      <div class="admin-item-row">
-        <div><strong>${escapeHtml(item.title || `条目 ${index + 1}`)}</strong></div>
-        <span class="admin-slide-tools"><button type="button" data-about-item-edit="values" data-item-index="${index}">编辑</button></span>
-      </div>`).join('')}</div>
-    <div class="admin-home-list">
-      ${sectionRow('partners', '客户与网络', '整区标题与说明')}
-    </div>
-    <div class="admin-home-list">${content.partners.items.map((item, index) => `
-      <div class="admin-item-row">
-        <div><strong>客户 ${index + 1}：${escapeHtml(item.name || '未填写')}</strong></div>
-        <span class="admin-slide-tools"><button type="button" data-about-item-edit="partners" data-item-index="${index}">编辑</button></span>
-      </div>`).join('')}</div>
-    <div class="admin-home-list">
-      ${sectionRow('duties', '责任与承诺', '整区标题')}
-    </div>
-    <div class="admin-home-list">${content.duties.items.map((item, index) => `
-      <div class="admin-item-row">
-        <div><strong>${escapeHtml(item.title || `条目 ${index + 1}`)}</strong></div>
-        <span class="admin-slide-tools"><button type="button" data-about-item-edit="duties" data-item-index="${index}">编辑</button></span>
-      </div>`).join('')}</div>
-    <div class="admin-home-list">
-      ${sectionRow('join', '加入我们', '整区标题')}
-    </div>
-    <div class="admin-home-list">${content.join.items.map((item, index) => `
-      <div class="admin-item-row">
-        <div><strong>${escapeHtml(item.title || `步骤 ${index + 1}`)}</strong></div>
-        <span class="admin-slide-tools"><button type="button" data-about-item-edit="join" data-item-index="${index}">编辑</button></span>
-      </div>`).join('')}</div>
-    <div class="admin-home-list">
-      ${sectionRow('contact', '联系我们', '邮箱、地址与加入入口')}
+    <aside class="admin-home-outline">
+      <p>按关于我们页从上到下排列，点一项只打开这一块</p>
+      ${ABOUT_OUTLINE.map((item) => `
+        <button type="button" class="admin-home-outline__item${item.id === state.aboutSection ? ' is-active' : ''}" data-about-goto="${item.id}">
+          <em>${item.no}</em>
+          <span><b>${item.title}</b><small>${item.desc}</small></span>
+        </button>`).join('')}
+    </aside>
+    <div class="admin-home-stage">
+      <fieldset data-about-section="hero">
+        <legend>首屏主张</legend>
+        <p class="admin-form-section__hint">只改关于我们页最上方标题、介绍和按钮。</p>
+        <div class="admin-form-grid">${aboutSectionFields('hero', content)}</div>
+      </fieldset>
+      <fieldset data-about-section="story">
+        <legend>公司介绍</legend>
+        <p class="admin-form-section__hint">对应前台公司介绍区块。</p>
+        <div class="admin-form-grid">${aboutSectionFields('story', content)}</div>
+      </fieldset>
+      <fieldset data-about-section="values">
+        <legend>使命、价值观与愿景</legend>
+        <p class="admin-form-section__hint">上方改整区标题，下面三条点「编辑」改内容。</p>
+        <div class="admin-form-grid">${aboutSectionFields('values', content)}</div>
+        ${itemRows('values', content.values?.items, (item, index) => item.title || `条目 ${index + 1}`)}
+      </fieldset>
+      <fieldset data-about-section="partners">
+        <legend>客户与网络</legend>
+        <p class="admin-form-section__hint">整区标题在上面改，客户名称逐条编辑。</p>
+        <div class="admin-form-grid">${aboutSectionFields('partners', content)}</div>
+        ${itemRows('partners', content.partners?.items, (item, index) => `客户 ${index + 1}：${item.name || '未填写'}`)}
+      </fieldset>
+      <fieldset data-about-section="duties">
+        <legend>责任与承诺</legend>
+        <p class="admin-form-section__hint">整区标题在上面改，条目点「编辑」改文案和图片。</p>
+        <div class="admin-form-grid">${aboutSectionFields('duties', content)}</div>
+        ${itemRows('duties', content.duties?.items, (item, index) => item.title || `条目 ${index + 1}`)}
+      </fieldset>
+      <fieldset data-about-section="join">
+        <legend>加入我们</legend>
+        <p class="admin-form-section__hint">整区标题在上面改，步骤点「编辑」。</p>
+        <div class="admin-form-grid">${aboutSectionFields('join', content)}</div>
+        ${itemRows('join', content.join?.items, (item, index) => item.title || `步骤 ${index + 1}`)}
+      </fieldset>
+      <fieldset data-about-section="contact">
+        <legend>联系我们</legend>
+        <p class="admin-form-section__hint">邮箱、地址与加入入口。</p>
+        <div class="admin-form-grid">${aboutSectionFields('contact', content)}</div>
+      </fieldset>
     </div>
   `
+  showAboutSection(state.aboutSection)
 }
 
 function collectAboutContent() {
@@ -1837,14 +1870,10 @@ document.querySelector('[data-about-editor]').addEventListener('input', (event) 
 
 document.querySelector('[data-about-form]').addEventListener('submit', (event) => event.preventDefault())
 document.querySelector('[data-about-form]').addEventListener('click', (event) => {
-  const sectionEdit = event.target.closest('[data-about-section-edit]')
-  if (sectionEdit) {
+  const jump = event.target.closest('[data-about-goto]')
+  if (jump) {
     event.preventDefault()
-    const key = sectionEdit.dataset.aboutSectionEdit
-    const content = collectAboutContent()
-    state.aboutPage.draftContent = content
-    const titles = { hero: '编辑首屏主张', story: '编辑公司介绍', values: '编辑价值观标题', partners: '编辑客户与网络', duties: '编辑责任与承诺', join: '编辑加入我们', contact: '编辑联系我们' }
-    openItemModal({ scope: 'about-section', kind: key, title: titles[key] || '编辑', html: aboutSectionFields(key, content) })
+    showAboutSection(jump.dataset.aboutGoto)
     return
   }
   const itemEdit = event.target.closest('[data-about-item-edit]')
