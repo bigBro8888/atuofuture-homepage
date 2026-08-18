@@ -48,7 +48,9 @@ export function applyAboutContent(content) {
   document.querySelectorAll('[data-about-value]').forEach((card, index) => {
     const item = content.values?.items?.[index]
     if (!item) return
-    text('.material-symbols-outlined', item.icon, card)
+    src('[data-about-value-image]', item.imageUrl, card)
+    const image = card.querySelector('[data-about-value-image]')
+    if (image && item.title) image.alt = item.title
     text('h3', item.title, card)
     text('p', item.body, card)
   })

@@ -14,7 +14,7 @@ const HOME_OUTLINE = [
 const ABOUT_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏主张', desc: '主标题、介绍与按钮' },
   { id: 'story', no: '02', title: '公司介绍', desc: '文案与左侧图片' },
-  { id: 'values', no: '03', title: '使命价值观愿景', desc: '整区标题与三条主张' },
+  { id: 'values', no: '03', title: '使命价值观愿景', desc: '大图三列：使命、价值观、愿景' },
   { id: 'partners', no: '04', title: '客户与网络', desc: '客户名称列表' },
   { id: 'duties', no: '05', title: '责任与承诺', desc: '责任条目' },
   { id: 'join', no: '06', title: '加入我们', desc: '加入步骤' },
@@ -589,9 +589,9 @@ function aboutSectionFields(key, content) {
 function aboutItemFields(kind, index, item) {
   if (kind === 'values') {
     return `
-      ${aboutField(`values.items.${index}.icon`, '图标名称', item.icon)}
       ${aboutField(`values.items.${index}.title`, '名称', item.title)}
-      ${aboutField(`values.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}`
+      ${aboutField(`values.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}
+      ${aboutField(`values.items.${index}.imageUrl`, '配图', item.imageUrl, { image: true, wide: true, size: '880×560' })}`
   }
   if (kind === 'partners') {
     return `${aboutField(`partners.items.${index}.name`, '名称', item.name)}`
@@ -869,7 +869,7 @@ function renderAboutEditor(content) {
       </fieldset>
       <fieldset data-about-section="values">
         <legend>使命、价值观与愿景</legend>
-        <p class="admin-form-section__hint">上方改整区标题，下面三条点「编辑」改内容。</p>
+        <p class="admin-form-section__hint">上方改整区标题，下面三条点「编辑」改文案和大图（建议 880×560）。</p>
         <div class="admin-form-grid">${aboutSectionFields('values', content)}</div>
         ${itemRows('values', content.values?.items, (item, index) => item.title || `条目 ${index + 1}`)}
       </fieldset>

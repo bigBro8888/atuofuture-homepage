@@ -22,9 +22,9 @@ export const defaultAboutContent = {
     label: '我们努力践行的企业文化',
     title: '使命、价值观与愿景',
     items: [
-      { icon: 'flag', title: '使命', body: '让生活更智能，让每一刻更明亮。' },
-      { icon: 'workspace_premium', title: '价值观', body: '今天的最佳表现，是明天的最低要求。' },
-      { icon: 'handshake', title: '愿景', body: '共建、共享、高效协同。' },
+      { icon: 'flag', title: '使命', body: '让生活更智能，让每一刻更明亮。', imageUrl: '/images/home-agents/space.jpg' },
+      { icon: 'workspace_premium', title: '价值观', body: '今天的最佳表现，是明天的最低要求。', imageUrl: '/images/home-agents/meeting.jpg' },
+      { icon: 'handshake', title: '愿景', body: '共建、共享、高效协同。', imageUrl: '/images/solutions/campus.jpg' },
     ],
   },
   partners: {
@@ -133,6 +133,7 @@ export function validateAboutContent(value = {}) {
         icon: cleanText(item.icon, fallback.icon, 40),
         title: cleanText(item.title, fallback.title, 20),
         body: cleanText(item.body, fallback.body, 200),
+        imageUrl: cleanHref(item.imageUrl, fallback.imageUrl),
       })),
     },
     partners: {
@@ -193,5 +194,15 @@ export function getAboutPageConfig() {
     }
     db().pageConfigs.push(page)
   }
+  hydrateValueImages(page.draftContent)
+  hydrateValueImages(page.publishedContent)
   return page
+}
+
+function hydrateValueImages(content) {
+  const items = content?.values?.items
+  if (!Array.isArray(items)) return
+  defaultAboutContent.values.items.forEach((fallback, index) => {
+    if (items[index] && !items[index].imageUrl) items[index].imageUrl = fallback.imageUrl
+  })
 }
