@@ -59,6 +59,39 @@ function lines(value) {
   return Array.isArray(value) ? value.join('\n') : String(value || '')
 }
 
+function asList(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item ?? ''))
+  return value ? [String(value)] : ['']
+}
+
+function section(title, hint, inner) {
+  return `
+    <fieldset class="admin-form-section">
+      <legend>${title}</legend>
+      ${hint ? `<p class="admin-form-section__hint">${hint}</p>` : ''}
+      ${inner}
+    </fieldset>`
+}
+
+function listEditor(kind, path, items = [], { placeholder = '', addLabel = '添加一条', max = 12 } = {}) {
+  const rows = asList(items)
+  if (!rows.length) rows.push('')
+  return `
+    <div class="admin-sol-list">
+      ${rows
+        .map(
+          (value, index) => `
+        <label class="admin-sol-list__row">
+          <b>${String(index + 1).padStart(2, '0')}</b>
+          <input data-${kind}-field="${path}.${index}" type="text" value="${esc(value)}" placeholder="${esc(placeholder)}" />
+          <button type="button" data-sol-list-remove="${path}" data-sol-list-index="${index}" ${rows.length <= 1 ? 'disabled' : ''} aria-label="删除">×</button>
+        </label>`
+        )
+        .join('')}
+      ${rows.length < max ? `<button type="button" class="admin-sol-list__add" data-sol-list-add="${path}">+ ${addLabel}</button>` : ''}
+    </div>`
+}
+
 function setNested(target, path, value) {
   const keys = path.split('.')
   let cursor = target
@@ -162,17 +195,19 @@ function renderSolutionCompose(item) {
   const slides = [...(item.slides || [])]
   if (!slides.length) slides.push({ imageUrl: item.image || '' })
   body.innerHTML = `
-    <div class="admin-form-grid">
+    <div class="admin-sol-compose">
       <input type="hidden" data-solutions-field="id" value="${esc(item.id || '')}" />
-      ${field('solutions', 'name', '方案名称', item.name, { wide: true, placeholder: '例如 智慧园区' })}
-      ${field('solutions', 'id', '详情页标识', item.id, { help: '出现在 /solutions/?id= 后面' })}
-      ${field('solutions', 'icon', '图标', item.icon)}
-      ${field('solutions', 'image', '封面图', item.image, { image: true, wide: true, size: '1600×900' })}
-      ${field('solutions', 'summary', '简介', item.summary, { type: 'textarea', wide: true, rows: 2 })}
-      ${field('solutions', 'value', '一句话价值', item.value, { type: 'textarea', wide: true, rows: 2 })}
-      <div class="admin-sol-deck admin-form-wide">
-        <h4>方案介绍 PPT（16:9）</h4>
-        <p class="admin-form-section__hint">按讲解顺序排页，建议 1920×1080。点预览上传，也可粘贴图片地址。</p>
+      ${section('1. 基础信息', '出现在详情页顶部大图：名称、一句话价值和封面。', `
+        <div class="admin-form-grid">
+          ${field('solutions', 'name', '方案名称', item.name, { wide: true, placeholder: '例如 智慧园区' })}
+          ${field('solutions', 'id', '详情页标识', item.id, { help: '出现在 /solutions/?id= 后面，如 campus' })}
+          ${field('solutions', 'icon', '图标名', item.icon, { help: 'Material 图标英文名，如 domain' })}
+          ${field('solutions', 'image', '封面图', item.image, { image: true, wide: true, size: '1600×900' })}
+          ${field('solutions', 'value', '一句话价值', item.value, { type: 'textarea', rows: 3, placeholder: '详情页主标题下方的那句核心价值' })}
+          ${field('solutions', 'summary', '补充简介', item.summary, { type: 'textarea', rows: 3, placeholder: '详情页主标题下的第二段说明' })}
+        </div>
+      `)}
+      ${section('2. 方案介绍 PPT', '按讲解顺序排页，建议 1920×1080。点预览上传，也可粘贴图片地址。', `
         <div class="admin-sol-deck__grid">
           ${slides.map((slide, index) => {
             const url = slide.imageUrl || ''
@@ -197,28 +232,52 @@ function renderSolutionCompose(item) {
             <span>+ 添加一页</span>
           </button>
         </div>
-      </div>
-      ${field('solutions', 'approach', '方案做法', item.approach, { type: 'textarea', wide: true, rows: 3 })}
-      ${field('solutions', 'capabilities', '核心能力', lines(item.capabilities), { type: 'textarea', rows: 3, help: '每行一条' })}
-      ${field('solutions', 'pains', '痛点', lines(item.pains), { type: 'textarea', rows: 3, help: '每行一条' })}
-      ${field('solutions', 'scenarios', '场景', lines(item.scenarios), { type: 'textarea', rows: 3, help: '每行一条' })}
-      ${field('solutions', 'journey', '业务旅程', lines(item.journey), { type: 'textarea', rows: 3, help: '每行一条' })}
-      ${field('solutions', 'agents', '关联智能体 ID', lines(item.agents), { type: 'textarea', rows: 2, help: '如 space、visitor，每行一个' })}
-      ${field('solutions', 'highlightAgents', '重点智能体 ID', lines(item.highlightAgents), { type: 'textarea', rows: 2 })}
-      ${field('solutions', 'hardware', '关联硬件', lines(item.hardware), { type: 'textarea', rows: 2, help: '每行一条' })}
-      ${values.map((row, index) => `
-        <div class="admin-product-card admin-form-wide">
-          <h4>核心价值 ${index + 1}</h4>
-          <div class="admin-form-grid">
-            ${field('solutions', `coreValues.${index}.title`, '标题', row.title || '')}
-            ${field('solutions', `coreValues.${index}.icon`, '图标', row.icon || '')}
-            ${field('solutions', `coreValues.${index}.desc`, '说明', row.desc || '', { type: 'textarea', rows: 2, wide: true })}
+      `)}
+      ${section('3. 运营场景', '详情页 PPT 下方「覆盖关键运营场景」卡片，每条一个标题。', listEditor('solutions', 'scenarios', item.scenarios, { placeholder: '例如 多楼栋统一运营', addLabel: '添加场景', max: 12 }))}
+      ${section('4. 客户旅程', '详情页「端到端客户旅程」步骤，按顺序填写。', listEditor('solutions', 'journey', item.journey, { placeholder: '例如 到访接待', addLabel: '添加步骤', max: 8 }))}
+      ${section('5. 智能体与硬件', '详情页「智能体与硬件组合清单」。智能体填详情页标识，如 space、visitor。', `
+        <div class="admin-form-grid">
+          <div>
+            <h4 class="admin-sol-label">关联智能体</h4>
+            ${listEditor('solutions', 'agents', item.agents, { placeholder: '如 space', addLabel: '添加智能体', max: 12 })}
           </div>
-        </div>`).join('')}
-      <label class="admin-news-pin admin-form-wide">
-        <input data-solutions-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
-        <span><b>发布后前台可见</b><small>取消勾选则详情页不对外展示。</small></span>
-      </label>
+          <div>
+            <h4 class="admin-sol-label">列表页重点智能体</h4>
+            <p class="admin-form-section__hint">方案列表页底座里高亮的最多 3 个</p>
+            ${listEditor('solutions', 'highlightAgents', item.highlightAgents, { placeholder: '如 visitor', addLabel: '添加重点', max: 3 })}
+          </div>
+          <div class="admin-form-wide">
+            <h4 class="admin-sol-label">关联硬件 / 系统</h4>
+            ${listEditor('solutions', 'hardware', item.hardware, { placeholder: '例如 门禁闸机', addLabel: '添加硬件', max: 12 })}
+          </div>
+        </div>
+      `)}
+      ${section('6. 常见问题素材', '不单独成段，会拼进详情页 FAQ。', `
+        <div class="admin-form-grid">
+          <div>
+            <h4 class="admin-sol-label">行业痛点</h4>
+            ${listEditor('solutions', 'pains', item.pains, { placeholder: '例如 多楼栋系统割裂', addLabel: '添加痛点', max: 8 })}
+          </div>
+          ${field('solutions', 'approach', '方案做法', item.approach, { type: 'textarea', rows: 8, placeholder: '用一两段话说明怎么组合智能体与硬件落地' })}
+        </div>
+      `)}
+      ${section('7. 列表页核心价值', '出现在 /solutions/ 方案列表，不是详情页。固定 3 条。', `
+        <div class="admin-sol-values">
+          ${values.map((row, index) => `
+            <article class="admin-sol-value">
+              <h4>价值 ${index + 1}</h4>
+              ${field('solutions', `coreValues.${index}.title`, '标题', row.title || '')}
+              ${field('solutions', `coreValues.${index}.icon`, '图标名', row.icon || '', { help: '如 verified、bolt' })}
+              ${field('solutions', `coreValues.${index}.desc`, '说明', row.desc || '', { type: 'textarea', rows: 3 })}
+            </article>`).join('')}
+        </div>
+      `)}
+      ${section('8. 发布', '', `
+        <label class="admin-news-pin">
+          <input data-solutions-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
+          <span><b>发布后前台可见</b><small>取消勾选则详情页不对外展示。</small></span>
+        </label>
+      `)}
     </div>`
 }
 
@@ -382,6 +441,27 @@ function bindKind(kind) {
     }
   })
   compose.addEventListener('click', async (event) => {
+    if (kind === 'solutions' && event.target.closest('[data-sol-list-add]')) {
+      event.preventDefault()
+      const path = event.target.closest('[data-sol-list-add]').getAttribute('data-sol-list-add')
+      const article = collectFields(compose, kind)
+      article[path] = [...asList(article[path]), '']
+      renderSolutionCompose(article)
+      return
+    }
+    const removeList = kind === 'solutions' ? event.target.closest('[data-sol-list-remove]') : null
+    if (removeList) {
+      event.preventDefault()
+      const path = removeList.getAttribute('data-sol-list-remove')
+      const index = Number(removeList.getAttribute('data-sol-list-index'))
+      const article = collectFields(compose, kind)
+      const rows = asList(article[path])
+      if (rows.length <= 1) return
+      rows.splice(index, 1)
+      article[path] = rows
+      renderSolutionCompose(article)
+      return
+    }
     if (kind === 'solutions' && event.target.closest('[data-solutions-slide-add]')) {
       event.preventDefault()
       const article = collectFields(compose, kind)
