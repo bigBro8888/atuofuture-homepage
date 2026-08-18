@@ -16,8 +16,8 @@ const ABOUT_OUTLINE = [
   { id: 'story', no: '02', title: '公司介绍', desc: '左图右文两段介绍' },
   { id: 'values', no: '03', title: '使命价值观愿景', desc: '时间轴三列，大号 01–03' },
   { id: 'partners', no: '04', title: '客户 Logo 墙', desc: '单行滚动商标，可增删换图' },
-  { id: 'join', no: '05', title: '加入我们', desc: '左轮播图，右招揽话术' },
-  { id: 'contact', no: '06', title: '联系我们', desc: '邮箱、地址、投递入口三列' },
+  { id: 'join', no: '05', title: '加入我们', desc: '轮播、招揽话术、招聘列表' },
+  { id: 'contact', no: '06', title: '联系我们', desc: '邮箱、电话、地址、投递入口' },
 ]
 const titles = {
   overview: ['页面目录', '每个前台路径对应一块后台配置，结构与官网导航一致'],
@@ -568,23 +568,30 @@ function aboutSectionFields(key, content) {
       ${aboutField('join.title', '右侧标题', join.title)}
       ${aboutField('join.lead', '招揽导语', join.lead, { type: 'textarea', wide: true, help: '轮播图右侧、要点上方的那段话' })}
       ${aboutField('join.ctaLabel', '投递按钮文字', join.ctaLabel)}
-      ${aboutField('join.ctaHref', '投递按钮链接', join.ctaHref, { wide: true, help: '一般为 mailto: 邮箱' })}`
+      ${aboutField('join.ctaHref', '投递按钮链接', join.ctaHref, { wide: true, help: '一般为 mailto: 邮箱' })}
+      ${aboutField('join.jobsTitle', '招聘列表标题', join.jobsTitle, { help: '前台轮播下方「在招职位」' })}
+      ${aboutField('join.briefLabel', '招聘需求按钮', join.briefLabel)}
+      ${aboutField('join.briefUrl', '招聘需求文件', join.briefUrl, { file: true, wide: true, help: '上传 PDF 或 Word，前台「查看招聘需求」打开' })}`
   }
+  const contact = content.contact || {}
   return `
-    ${aboutField('contact.label', '紫色小标', content.contact.label)}
-    ${aboutField('contact.title', '区块标题', content.contact.title)}
-    ${aboutField('contact.lead', '标题下说明', content.contact.lead, { type: 'textarea', wide: true })}
-    <p class="admin-about-split">左列 · 邮箱</p>
-    ${aboutField('contact.email1', '邮箱 1', content.contact.email1)}
-    ${aboutField('contact.email2', '邮箱 2', content.contact.email2)}
-    <p class="admin-about-split">中列 · 地址</p>
-    ${aboutField('contact.addressZh', '中文地址', content.contact.addressZh, { wide: true })}
-    ${aboutField('contact.addressEn', '英文地址', content.contact.addressEn, { wide: true })}
-    <p class="admin-about-split">右列 · 加入入口</p>
-    ${aboutField('contact.joinTitle', '右列标题', content.contact.joinTitle)}
-    ${aboutField('contact.joinBody', '右列说明', content.contact.joinBody, { type: 'textarea', wide: true })}
-    ${aboutField('contact.joinLabel', '按钮文字', content.contact.joinLabel)}
-    ${aboutField('contact.joinHref', '按钮链接', content.contact.joinHref, { wide: true, help: '一般为 mailto: 邮箱' })}`
+    ${aboutField('contact.label', '紫色小标', contact.label)}
+    ${aboutField('contact.title', '区块标题', contact.title)}
+    ${aboutField('contact.lead', '标题下说明', contact.lead, { type: 'textarea', wide: true })}
+    <p class="admin-about-split">邮箱</p>
+    ${aboutField('contact.email1', '邮箱 1', contact.email1)}
+    ${aboutField('contact.email2', '邮箱 2', contact.email2)}
+    <p class="admin-about-split">电话</p>
+    ${aboutField('contact.phoneDisplay', '电话展示', contact.phoneDisplay, { help: '前台显示的号码，可含空格或横杠' })}
+    ${aboutField('contact.phone', '拨号号码', contact.phone, { help: '用于 tel: 拨打，可只填数字' })}
+    <p class="admin-about-split">地址</p>
+    ${aboutField('contact.addressZh', '中文地址', contact.addressZh, { wide: true })}
+    ${aboutField('contact.addressEn', '英文地址', contact.addressEn, { wide: true })}
+    <p class="admin-about-split">加入入口</p>
+    ${aboutField('contact.joinTitle', '右列标题', contact.joinTitle)}
+    ${aboutField('contact.joinBody', '右列说明', contact.joinBody, { type: 'textarea', wide: true })}
+    ${aboutField('contact.joinLabel', '按钮文字', contact.joinLabel)}
+    ${aboutField('contact.joinHref', '按钮链接', contact.joinHref, { wide: true, help: '一般为 mailto: 邮箱' })}`
 }
 
 function aboutItemFields(kind, index, item) {
@@ -606,6 +613,16 @@ function aboutItemFields(kind, index, item) {
       <p class="admin-form-section__hint">「加入我们」左侧轮播的一帧。建议横图 1200×800。</p>
       ${aboutField(`join.slides.${index}.caption`, '图片说明', item.caption, { help: '叠在照片左下角，可留空' })}
       ${aboutField(`join.slides.${index}.imageUrl`, '轮播图片', item.imageUrl, { image: true, wide: true, size: '1200×800' })}`
+  }
+  if (kind === 'joinJobs') {
+    return `
+      <p class="admin-form-section__hint">会出现在「加入我们」下方的招聘列表里。</p>
+      ${aboutField(`join.jobs.${index}.title`, '职位名称', item.title)}
+      ${aboutField(`join.jobs.${index}.dept`, '部门', item.dept)}
+      ${aboutField(`join.jobs.${index}.location`, '地点', item.location)}
+      ${aboutField(`join.jobs.${index}.type`, '类型', item.type, { help: '如 社招、校招' })}
+      ${aboutField(`join.jobs.${index}.summary`, '职位说明', item.summary, { type: 'textarea', wide: true })}
+      ${aboutField(`join.jobs.${index}.applyHref`, '投递链接', item.applyHref, { wide: true, help: '一般为 mailto: 邮箱，可带 subject' })}`
   }
   return `
     <p class="admin-form-section__hint">右侧招揽要点中的一条。</p>
@@ -831,7 +848,12 @@ function aboutField(path, label, value, options = {}) {
         <img data-about-preview-for="${path}" src="${escapeHtml(value)}" alt="" ${value ? '' : 'hidden'} />
         <label class="admin-home-upload">上传本地图片<input type="file" accept="image/jpeg,image/png,image/webp" data-about-upload-for="${path}" /></label>
       </div>`
-    : ''
+    : options.file
+      ? `<div class="admin-home-media">
+          <a class="admin-about-file" data-about-file-for="${path}" href="${escapeHtml(value)}" target="_blank" rel="noopener"${value ? '' : ' hidden'}>查看已上传文件</a>
+          <label class="admin-home-upload">上传 PDF / Word<input type="file" accept=".pdf,.doc,.docx,application/pdf" data-about-file-upload-for="${path}" /></label>
+        </div>`
+      : ''
   return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${control}${media}${fieldHint(options)}</label>`
 }
 
@@ -855,6 +877,11 @@ function aboutList(content, kind) {
     content.join = content.join || {}
     content.join.slides = content.join.slides || []
     return content.join.slides
+  }
+  if (kind === 'joinJobs') {
+    content.join = content.join || {}
+    content.join.jobs = content.join.jobs || []
+    return content.join.jobs
   }
   if (kind === 'join') {
     content.join = content.join || {}
@@ -895,6 +922,14 @@ function aboutItemRows(kind, items) {
         <button type="button" data-about-list-move="1" data-about-list="joinSlides" data-item-index="${index}" ${index === list.length - 1 ? 'disabled' : ''}>下移</button>
         <button type="button" data-about-item-edit="${kind}" data-item-index="${index}">编辑</button>
         <button type="button" data-about-list-remove="joinSlides" data-item-index="${index}" ${list.length <= 1 ? 'disabled' : ''}>删除</button>`
+    } else if (kind === 'joinJobs') {
+      title = item.title || `职位 ${index + 1}`
+      sub = [item.dept, item.location, item.type].filter(Boolean).join(' · ') || '招聘职位'
+      tools = `
+        <button type="button" data-about-list-move="-1" data-about-list="joinJobs" data-item-index="${index}" ${index === 0 ? 'disabled' : ''}>上移</button>
+        <button type="button" data-about-list-move="1" data-about-list="joinJobs" data-item-index="${index}" ${index === list.length - 1 ? 'disabled' : ''}>下移</button>
+        <button type="button" data-about-item-edit="${kind}" data-item-index="${index}">编辑</button>
+        <button type="button" data-about-list-remove="joinJobs" data-item-index="${index}">删除</button>`
     } else {
       media = `<em class="admin-about-no">${escapeHtml(item.step || no)}</em>`
       sub = item.body || '招揽要点'
@@ -950,7 +985,7 @@ function renderAboutEditor(content) {
       </fieldset>
       <fieldset data-about-section="join">
         <legend>05 加入我们</legend>
-        <p class="admin-form-section__hint">前台左图右文：左侧轮播公司照片，右侧是招揽导语和要点。</p>
+        <p class="admin-form-section__hint">前台左图右文：左侧轮播、右侧招揽；下方是招聘需求文件和职位列表。</p>
         <div class="admin-form-grid">${aboutSectionFields('join', content)}</div>
         <p class="admin-about-split">左侧轮播图</p>
         ${aboutItemRows('joinSlides', content.join?.slides)}
@@ -958,10 +993,13 @@ function renderAboutEditor(content) {
         <p class="admin-about-split">右侧招揽要点</p>
         ${aboutItemRows('join', content.join?.items)}
         <button type="button" class="admin-add-slide" data-about-list-add="join">+ 新增要点</button>
+        <p class="admin-about-split">招聘列表</p>
+        ${aboutItemRows('joinJobs', content.join?.jobs)}
+        <button type="button" class="admin-add-slide" data-about-list-add="joinJobs">+ 新增职位</button>
       </fieldset>
       <fieldset data-about-section="contact">
         <legend>06 联系我们</legend>
-        <p class="admin-form-section__hint">前台最底部三列：邮箱、地址、加入入口。</p>
+        <p class="admin-form-section__hint">前台最底部：邮箱、电话、地址、加入入口。</p>
         <div class="admin-form-grid">${aboutSectionFields('contact', content)}</div>
       </fieldset>
     </div>
@@ -1942,6 +1980,12 @@ document.querySelector('[data-about-editor]').addEventListener('input', (event) 
     preview.src = field.value.trim()
     preview.hidden = !field.value.trim()
   }
+  const fileLink = document.querySelector(`[data-about-file-for="${field.dataset.aboutField}"]`)
+  if (fileLink) {
+    const url = field.value.trim()
+    fileLink.href = url || '#'
+    fileLink.hidden = !url
+  }
 })
 
 document.querySelector('[data-about-form]').addEventListener('submit', (event) => event.preventDefault())
@@ -2000,13 +2044,16 @@ document.querySelector('[data-about-form]').addEventListener('click', (event) =>
     const kind = listAdd.dataset.aboutListAdd
     const content = collectAboutContent()
     const list = aboutList(content, kind)
-    if (list.length >= 8) {
-      toast(kind === 'joinSlides' ? '最多 8 张轮播图' : '最多 8 条招揽要点', true)
+    const limits = { joinSlides: 8, join: 8, joinJobs: 24 }
+    const max = limits[kind] || 8
+    if (list.length >= max) {
+      const messages = { joinSlides: '最多 8 张轮播图', join: '最多 8 条招揽要点', joinJobs: '最多 24 个职位' }
+      toast(messages[kind] || '数量已满', true)
       return
     }
-    list.push(kind === 'joinSlides'
-      ? { imageUrl: '', caption: '' }
-      : { step: String(list.length + 1).padStart(2, '0'), title: '新要点', body: '' })
+    if (kind === 'joinSlides') list.push({ imageUrl: '', caption: '' })
+    else if (kind === 'joinJobs') list.push({ title: '新职位', dept: '研发', location: '杭州', type: '社招', summary: '', applyHref: 'mailto:service@atuofuture.com' })
+    else list.push({ step: String(list.length + 1).padStart(2, '0'), title: '新要点', body: '' })
     state.aboutPage.draftContent = content
     renderAboutEditor(content)
     showAboutSection('join')
@@ -2019,7 +2066,7 @@ document.querySelector('[data-about-form]').addEventListener('click', (event) =>
     const index = Number(listRemove.dataset.itemIndex)
     const content = collectAboutContent()
     const list = aboutList(content, kind)
-    const min = kind === 'joinSlides' ? 1 : 3
+    const min = kind === 'joinSlides' ? 1 : kind === 'join' ? 3 : 0
     if (list.length <= min) return
     list.splice(index, 1)
     state.aboutPage.draftContent = content
@@ -2058,6 +2105,28 @@ document.querySelector('[data-about-form]').addEventListener('click', (event) =>
 })
 
 document.querySelector('[data-about-editor]').addEventListener('change', async (event) => {
+  const fileUpload = event.target.closest('[data-about-file-upload-for]')
+  if (fileUpload) {
+    const file = fileUpload.files?.[0]
+    if (!file) return
+    const path = fileUpload.dataset.aboutFileUploadFor
+    fileUpload.disabled = true
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const { url } = await api('/pages/media/file', { method: 'POST', body: formData })
+      const field = document.querySelector(`[data-about-field="${path}"]`)
+      field.value = url
+      field.dispatchEvent(new Event('input', { bubbles: true }))
+      toast('招聘文件已上传，请继续保存草稿')
+    } catch (error) {
+      toast(error.message, true)
+    } finally {
+      fileUpload.disabled = false
+      fileUpload.value = ''
+    }
+    return
+  }
   const upload = event.target.closest('[data-about-upload-for]')
   const file = upload?.files?.[0]
   if (!upload || !file) return

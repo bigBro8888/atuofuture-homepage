@@ -71,6 +71,65 @@ function renderJoinPoints(items) {
   }).join('')
 }
 
+function telHref(phone) {
+  const digits = String(phone || '').replace(/[^\d+]/g, '')
+  return digits ? `tel:${digits}` : ''
+}
+
+function renderJoinJobs(items) {
+  const list = document.querySelector('[data-about-join-jobs]')
+  if (!list) return
+  const jobs = (items || []).filter((item) => item?.title)
+  if (!jobs.length) {
+    list.innerHTML = '<li class="ab-join__empty">目前没有开放职位，欢迎把简历发到招聘邮箱。</li>'
+    return
+  }
+  list.innerHTML = jobs.map((item) => {
+    const meta = [item.dept, item.location, item.type].filter(Boolean).join(' · ')
+    const apply = item.applyHref
+      ? `<a href="${escapeHtml(item.applyHref)}">投递</a>`
+      : ''
+    return `<li>
+      <div>
+        <strong>${escapeHtml(item.title)}</strong>
+        ${meta ? `<small>${escapeHtml(meta)}</small>` : ''}
+        ${item.summary ? `<p>${escapeHtml(item.summary)}</p>` : ''}
+      </div>
+      ${apply}
+    </li>`
+  }).join('')
+}
+
+function applyJoinBrief(join = {}) {
+  const link = document.querySelector('[data-about-join-brief]')
+  if (!link) return
+  const url = String(join.briefUrl || '').trim()
+  link.textContent = join.briefLabel || '查看招聘需求'
+  if (url) {
+    link.href = url
+    link.hidden = false
+  } else {
+    link.removeAttribute('href')
+    link.hidden = true
+  }
+}
+
+function applyContactPhone(contact = {}) {
+  const card = document.querySelector('[data-about-contact-phone-card]')
+  const link = document.querySelector('[data-about-contact-phone]')
+  if (!card || !link) return
+  const display = String(contact.phoneDisplay || contact.phone || '').trim()
+  const href = telHref(contact.phone || contact.phoneDisplay)
+  if (!display) {
+    card.hidden = true
+    return
+  }
+  link.textContent = display
+  if (href) link.setAttribute('href', href)
+  else link.removeAttribute('href')
+  card.hidden = false
+}
+
 function renderJoinCarousel(slides) {
   const root = document.querySelector('[data-about-join-carousel]')
   if (!root) return
@@ -195,8 +254,11 @@ export function applyAboutContent(content) {
   text('[data-about-join-lead]', content.join?.lead)
   text('[data-about-join-cta]', content.join?.ctaLabel)
   href('[data-about-join-cta]', content.join?.ctaHref)
+  text('[data-about-join-jobs-title]', content.join?.jobsTitle)
+  applyJoinBrief(content.join)
   renderJoinPoints(content.join?.items)
   renderJoinCarousel(content.join?.slides)
+  renderJoinJobs(content.join?.jobs)
 
   text('[data-about-contact-label]', content.contact?.label)
   text('[data-about-contact-title]', content.contact?.title)
@@ -205,6 +267,7 @@ export function applyAboutContent(content) {
   href('[data-about-contact-email1]', content.contact?.email1 ? `mailto:${content.contact.email1}` : '')
   text('[data-about-contact-email2]', content.contact?.email2)
   href('[data-about-contact-email2]', content.contact?.email2 ? `mailto:${content.contact.email2}` : '')
+  applyContactPhone(content.contact)
   text('[data-about-contact-address-zh]', content.contact?.addressZh)
   text('[data-about-contact-address-en]', content.contact?.addressEn)
   text('[data-about-contact-join-title]', content.contact?.joinTitle)

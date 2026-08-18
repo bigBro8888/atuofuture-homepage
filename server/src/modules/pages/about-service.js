@@ -61,6 +61,14 @@ export const defaultAboutContent = {
       { step: '04', title: '乐在工作', body: '现代办公、食堂、健身与完善配套，提升工作幸福感。' },
       { step: '05', title: '温暖福利', body: '多元假期与综合福利，让同事在工作之外也有从容。' },
     ],
+    jobsTitle: '在招职位',
+    briefLabel: '查看招聘需求',
+    briefUrl: '',
+    jobs: [
+      { title: '嵌入式软件工程师', dept: '研发', location: '杭州', type: '社招', summary: '负责物联网终端固件与硬件联调，把设备稳定送进客户现场。', applyHref: 'mailto:service@atuofuture.com?subject=应聘嵌入式软件工程师' },
+      { title: '物联网产品经理', dept: '产品', location: '杭州', type: '社招', summary: '把空间智能体、硬件与交付流程做成可规模复制的产品。', applyHref: 'mailto:service@atuofuture.com?subject=应聘物联网产品经理' },
+      { title: '应届生培养计划', dept: '校招', location: '杭州', type: '校招', summary: '软件、硬件、交付方向同步开放，一对一导师带教。', applyHref: 'mailto:service@atuofuture.com?subject=应聘应届生培养计划' },
+    ],
   },
   contact: {
     label: '联系我们',
@@ -68,6 +76,8 @@ export const defaultAboutContent = {
     lead: '杭州安托未来科技有限公司。校园招聘与社会招聘同步开放，也欢迎客户、伙伴与投资者来信。',
     email1: 'service@atuofuture.com',
     email2: 'sherri@atuofuture.com',
+    phoneDisplay: '',
+    phone: '',
     addressZh: '杭州市余杭区阿里巴巴数字生态创新园 1 号楼 5 层',
     addressEn: '5th Floor, Building 1, Alibaba Digital Ecological Innovation Park, Yuhang District, Hangzhou',
     joinTitle: '加入我们',
@@ -85,7 +95,7 @@ function cleanText(value, fallback, maxLength = 500) {
 function cleanHref(value, fallback = '') {
   const url = String(value ?? fallback ?? '').trim()
   if (!url) return ''
-  if (url.startsWith('#') || url.startsWith('mailto:') || (url.startsWith('/') && !url.startsWith('//'))) {
+  if (url.startsWith('#') || url.startsWith('mailto:') || url.startsWith('tel:') || (url.startsWith('/') && !url.startsWith('//'))) {
     return url.slice(0, 1000)
   }
   const parsed = new URL(url)
@@ -103,6 +113,12 @@ function fixedItems(value, defaults, mapper) {
 function listItems(value, defaults, mapper, max = 16) {
   const fallback = defaults[0] || {}
   const source = Array.isArray(value) && value.length ? value : defaults
+  return source.slice(0, max).map((item, index) => mapper(item || {}, defaults[index] || fallback, index))
+}
+
+function openList(value, defaults, mapper, max = 16) {
+  const fallback = defaults[0] || {}
+  const source = Array.isArray(value) ? value : defaults
   return source.slice(0, max).map((item, index) => mapper(item || {}, defaults[index] || fallback, index))
 }
 
@@ -169,6 +185,17 @@ export function validateAboutContent(value = {}) {
         title: cleanText(item.title, fallback.title, 20),
         body: cleanText(item.body, fallback.body, 200),
       }), 8),
+      jobsTitle: cleanText(join.jobsTitle, defaultAboutContent.join.jobsTitle, 40),
+      briefLabel: cleanText(join.briefLabel, defaultAboutContent.join.briefLabel, 20),
+      briefUrl: cleanHref(join.briefUrl, defaultAboutContent.join.briefUrl),
+      jobs: openList(join.jobs, defaultAboutContent.join.jobs, (item, fallback) => ({
+        title: cleanText(item.title, fallback.title, 40),
+        dept: cleanText(item.dept, fallback.dept, 20),
+        location: cleanText(item.location, fallback.location, 20),
+        type: cleanText(item.type, fallback.type, 12),
+        summary: cleanText(item.summary, fallback.summary, 200),
+        applyHref: cleanHref(item.applyHref, fallback.applyHref),
+      }), 24),
     },
     contact: {
       label: cleanText(contact.label, defaultAboutContent.contact.label, 40),
@@ -176,6 +203,8 @@ export function validateAboutContent(value = {}) {
       lead: cleanText(contact.lead, defaultAboutContent.contact.lead, 400),
       email1: cleanText(contact.email1, defaultAboutContent.contact.email1, 80),
       email2: cleanText(contact.email2, defaultAboutContent.contact.email2, 80),
+      phoneDisplay: cleanText(contact.phoneDisplay, defaultAboutContent.contact.phoneDisplay, 40),
+      phone: cleanText(contact.phone, defaultAboutContent.contact.phone, 40),
       addressZh: cleanText(contact.addressZh, defaultAboutContent.contact.addressZh, 200),
       addressEn: cleanText(contact.addressEn, defaultAboutContent.contact.addressEn, 240),
       joinTitle: cleanText(contact.joinTitle, defaultAboutContent.contact.joinTitle, 40),
@@ -247,5 +276,11 @@ function hydrateJoinBlock(content) {
   if (!join.ctaHref) join.ctaHref = defaultAboutContent.join.ctaHref
   if (!Array.isArray(join.slides) || !join.slides.length) {
     join.slides = structuredClone(defaultAboutContent.join.slides)
+  }
+  if (!join.jobsTitle) join.jobsTitle = defaultAboutContent.join.jobsTitle
+  if (!join.briefLabel) join.briefLabel = defaultAboutContent.join.briefLabel
+  if (join.briefUrl == null) join.briefUrl = ''
+  if (!Array.isArray(join.jobs)) {
+    join.jobs = structuredClone(defaultAboutContent.join.jobs)
   }
 }

@@ -94,6 +94,49 @@ async function saveVideoBuffer(buffer, mimeType, admin) {
   return url
 }
 
+const fileUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024, files: 1 },
+})
+const fileExtensions = new Map([
+  ['application/pdf', '.pdf'],
+  ['application/msword', '.doc'],
+  ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', '.docx'],
+])
+
+function sniffDocument(buffer, mimeType, originalName = '') {
+  const type = String(mimeType || '').split(';')[0].trim().toLowerCase()
+  if (fileExtensions.has(type)) return type
+  const name = String(originalName || '').toLowerCase()
+  if (name.endsWith('.pdf') || (buffer?.[0] === 0x25 && buffer?.[1] === 0x50 && buffer?.[2] === 0x44 && buffer?.[3] === 0x46)) {
+    return 'application/pdf'
+  }
+  if (name.endsWith('.docx')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  if (name.endsWith('.doc')) return 'application/msword'
+  return ''
+}
+
+async function saveDocumentBuffer(buffer, mimeType, originalName, admin) {
+  const type = sniffDocument(buffer, mimeType, originalName)
+  const extension = fileExtensions.get(type)
+  if (!buffer?.length || !extension) {
+    const error = new Error('仅支持 PDF 或 Word 文件')
+    error.status = 400
+    throw error
+  }
+  const fileDirectory = path.join(config.uploadDir, 'files')
+  const filename = `join-${Date.now()}-${randomUUID()}${extension}`
+  await mkdir(fileDirectory, { recursive: true })
+  await writeFile(path.join(fileDirectory, filename), buffer)
+  const url = `/api/public/uploads/files/${filename}`
+  await addAudit(admin, 'about.media.file', 'about', {
+    filename,
+    size: buffer.length,
+    mimeType: type,
+  })
+  return url
+}
+
 function assertPublicImageUrl(raw) {
   let text = String(raw || '').trim().replace(/&amp;/g, '&')
   if (text.startsWith('//')) text = `https:${text}`
@@ -355,6 +398,15 @@ adminPagesRouter.post('/media/video', requireAuth('config:write'), videoUpload.s
     response.status(201).json({ url })
   } catch (error) {
     response.status(error.status || 400).json({ error: 'invalid_video', message: error.message })
+  }
+})
+
+adminPagesRouter.post('/media/file', requireAuth('config:write'), fileUpload.single('file'), async (request, response) => {
+  try {
+    const url = await saveDocumentBuffer(request.file?.buffer, request.file?.mimetype, request.file?.originalname, request.admin)
+    response.status(201).json({ url })
+  } catch (error) {
+    response.status(error.status || 400).json({ error: 'invalid_file', message: error.message })
   }
 })
 

@@ -204,7 +204,13 @@ textarea { resize: vertical; }
   object-fit: cover;
   padding: 0;
 }
-.admin-about-thumb.is-empty { background: #eef2f7; }
+.admin-about-file {
+  color: #1769ff;
+  font-size: 11px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.admin-about-file:hover { text-decoration: underline; }
 .admin-about-no {
   display: inline-flex;
   align-items: center;
