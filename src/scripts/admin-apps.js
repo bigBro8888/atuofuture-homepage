@@ -1027,6 +1027,10 @@ function collectAboutContent() {
     setHomeValue(content, field.dataset.aboutField, field.value.trim())
   })
   delete content.duties
+  if (content.contact) {
+    delete content.contact.joinLabel
+    delete content.contact.joinHref
+  }
   return content
 }
 
