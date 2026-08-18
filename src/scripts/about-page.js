@@ -53,11 +53,7 @@ function renderPartnerMarquee(items) {
     return `<figure class="ab-partners__logo">${visual}</figure>`
   }
   const group = (hideName) => `<div class="ab-partners__group"${hideName ? ' aria-hidden="true"' : ''}>${logos.map((item) => tile(item, hideName)).join('')}</div>`
-  const reversed = [...logos].reverse()
-  const reverseGroup = `<div class="ab-partners__group" aria-hidden="true">${reversed.map((item) => tile(item, true)).join('')}</div>`
-  root.innerHTML = `
-    <div class="ab-partners__row ab-partners__row--ltr"><div class="ab-partners__track">${group(false)}${group(true)}</div></div>
-    <div class="ab-partners__row ab-partners__row--rtl"><div class="ab-partners__track">${reverseGroup}${reverseGroup}</div></div>`
+  root.innerHTML = `<div class="ab-partners__row"><div class="ab-partners__track">${group(false)}${group(true)}</div></div>`
   root.querySelectorAll('img').forEach((image) => {
     image.addEventListener('error', () => {
       const figure = image.closest('figure')

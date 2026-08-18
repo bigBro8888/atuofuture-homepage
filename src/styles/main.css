@@ -4203,15 +4203,10 @@ body.demo-modal-open {
   position: relative;
   overflow: hidden;
 }
-.ab-partners__row + .ab-partners__row { margin-top: 16px; }
 .ab-partners__track {
   display: flex;
   width: max-content;
   animation: ab-partners-scroll 36s linear infinite;
-}
-.ab-partners__row--rtl .ab-partners__track {
-  animation-name: ab-partners-scroll-rev;
-  animation-duration: 42s;
 }
 .ab-partners:hover .ab-partners__track { animation-play-state: paused; }
 .ab-partners__group {
@@ -4248,10 +4243,6 @@ body.demo-modal-open {
 @keyframes ab-partners-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
-}
-@keyframes ab-partners-scroll-rev {
-  from { transform: translateX(-50%); }
-  to { transform: translateX(0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .ab-partners__track { animation: none; }
