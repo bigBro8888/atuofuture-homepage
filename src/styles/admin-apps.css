@@ -235,6 +235,51 @@ textarea { resize: vertical; }
   font-size: 11px;
   font-weight: 700;
 }
+.admin-contact-layout { display: grid; gap: 16px; }
+.admin-contact-layout__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+.admin-contact-layout__head > div { display: grid; gap: 12px; align-content: start; }
+.admin-contact-layout__panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.4fr) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #e4eaf2;
+  border-radius: 16px;
+  background: #fff;
+}
+.admin-contact-layout__aside,
+.admin-contact-layout__list {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 18px;
+}
+.admin-contact-layout__aside { background: #12122a; }
+.admin-contact-layout__aside > b {
+  color: #fff;
+  font-size: 12px;
+}
+.admin-contact-layout__aside > p {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
+  line-height: 1.55;
+}
+.admin-contact-layout__aside label span { color: rgba(255, 255, 255, 0.88); }
+.admin-contact-layout__aside label small { color: rgba(255, 255, 255, 0.45); }
+.admin-contact-layout__list { background: #fbfcfe; }
+.admin-contact-layout__list > b {
+  color: #172033;
+  font-size: 12px;
+}
+@media (max-width: 960px) {
+  .admin-contact-layout__head,
+  .admin-contact-layout__panel { grid-template-columns: 1fr; }
+}
 .admin-nav-groups {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, .9fr);

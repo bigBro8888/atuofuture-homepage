@@ -573,23 +573,38 @@ function aboutSectionFields(key, content) {
       ${aboutField('join.briefLabel', '招聘需求按钮', join.briefLabel)}
       ${aboutField('join.briefUrl', '招聘需求文件', join.briefUrl, { file: true, wide: true, help: '上传 PDF 或 Word，前台「查看招聘需求」打开' })}`
   }
+  return aboutContactFields(content)
+}
+
+function aboutContactFields(content) {
   const contact = content.contact || {}
   return `
-    ${aboutField('contact.label', '紫色小标', contact.label)}
-    ${aboutField('contact.title', '区块标题', contact.title)}
-    ${aboutField('contact.lead', '标题下说明', contact.lead, { type: 'textarea', wide: true })}
-    <p class="admin-about-split">邮箱</p>
-    ${aboutField('contact.email1', '邮箱 1', contact.email1)}
-    ${aboutField('contact.email2', '邮箱 2', contact.email2)}
-    <p class="admin-about-split">电话</p>
-    ${aboutField('contact.phoneDisplay', '电话展示', contact.phoneDisplay, { help: '前台显示的号码，可含空格或横杠' })}
-    ${aboutField('contact.phone', '拨号号码', contact.phone, { help: '用于 tel: 拨打，可只填数字' })}
-    <p class="admin-about-split">地址</p>
-    ${aboutField('contact.addressZh', '中文地址', contact.addressZh, { wide: true })}
-    ${aboutField('contact.addressEn', '英文地址', contact.addressEn, { wide: true })}
-    <p class="admin-about-split">左侧深蓝栏</p>
-    ${aboutField('contact.joinTitle', '加入标题', contact.joinTitle)}
-    ${aboutField('contact.joinBody', '加入说明', contact.joinBody, { type: 'textarea', wide: true, help: '左侧栏只放这段话和一个预约演示按钮，不再放投递简历' })}
+    <div class="admin-contact-layout">
+      <div class="admin-contact-layout__head">
+        <div>
+          ${aboutField('contact.label', '左上紫色小标', contact.label, { help: '如「联系我们」' })}
+          ${aboutField('contact.title', '左侧大标题', contact.title)}
+        </div>
+        ${aboutField('contact.lead', '右侧说明', contact.lead, { type: 'textarea', rows: 4, help: '标题右边那段灰字' })}
+      </div>
+      <div class="admin-contact-layout__panel">
+        <div class="admin-contact-layout__aside">
+          <b>左侧深蓝栏</b>
+          ${aboutField('contact.joinTitle', '加入标题', contact.joinTitle)}
+          ${aboutField('contact.joinBody', '加入说明', contact.joinBody, { type: 'textarea', rows: 4 })}
+          <p>底部「预约方案演示」按钮是固定的，这里不改。</p>
+        </div>
+        <div class="admin-contact-layout__list">
+          <b>右侧联系行</b>
+          ${aboutField('contact.email1', '邮箱 1', contact.email1, { help: '整行可点，打开这个邮箱' })}
+          ${aboutField('contact.email2', '邮箱 2', contact.email2, { help: '可留空，前台会隐藏第二行' })}
+          ${aboutField('contact.phoneDisplay', '电话展示', contact.phoneDisplay, { help: '前台显示的号码，可含空格。留空则隐藏电话行' })}
+          ${aboutField('contact.phone', '拨号号码', contact.phone, { help: '用于 tel: 拨打，可只填数字' })}
+          ${aboutField('contact.addressZh', '中文地址', contact.addressZh)}
+          ${aboutField('contact.addressEn', '英文地址', contact.addressEn, { type: 'textarea', rows: 3 })}
+        </div>
+      </div>
+    </div>
   `
 }
 
@@ -998,8 +1013,8 @@ function renderAboutEditor(content) {
       </fieldset>
       <fieldset data-about-section="contact">
         <legend>06 联系我们</legend>
-        <p class="admin-form-section__hint">标题在左、说明在右。下面一块：左侧深蓝「加入我们」，右侧邮箱、电话、地址。预约演示按钮是固定的。</p>
-        <div class="admin-form-grid">${aboutSectionFields('contact', content)}</div>
+        <p class="admin-form-section__hint">版式与线上一致：顶栏左标题右说明，下面一块左深蓝「加入我们」、右三行邮箱 / 电话 / 地址。不再放投递简历。</p>
+        ${aboutSectionFields('contact', content)}
       </fieldset>
     </div>
   `

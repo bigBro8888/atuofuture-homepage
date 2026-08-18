@@ -82,8 +82,6 @@ export const defaultAboutContent = {
     addressEn: '5th Floor, Building 1, Alibaba Digital Ecological Innovation Park, Yuhang District, Hangzhou',
     joinTitle: '加入我们',
     joinBody: '青春正好，我们在等你。你的经验与锋芒，值得更大的舞台。',
-    joinLabel: '投递简历',
-    joinHref: 'mailto:service@atuofuture.com',
   },
 }
 
@@ -209,8 +207,6 @@ export function validateAboutContent(value = {}) {
       addressEn: cleanText(contact.addressEn, defaultAboutContent.contact.addressEn, 240),
       joinTitle: cleanText(contact.joinTitle, defaultAboutContent.contact.joinTitle, 40),
       joinBody: cleanText(contact.joinBody, defaultAboutContent.contact.joinBody, 240),
-      joinLabel: cleanText(contact.joinLabel, defaultAboutContent.contact.joinLabel, 20),
-      joinHref: cleanHref(contact.joinHref, defaultAboutContent.contact.joinHref),
     },
   }
 }
