@@ -12,19 +12,19 @@ const HOME_OUTLINE = [
   { id: 'pitch', no: '06', title: '探索安托未来', desc: '底部宫格卡片可新增删除' },
 ]
 const ABOUT_OUTLINE = [
-  { id: 'hero', no: '01', title: '首屏主张', desc: '主标题、介绍与按钮' },
-  { id: 'story', no: '02', title: '公司介绍', desc: '文案与左侧图片' },
-  { id: 'values', no: '03', title: '使命价值观愿景', desc: '时间轴三列：使命、价值观、愿景' },
-  { id: 'partners', no: '04', title: '客户与网络', desc: 'Logo 滚动墙，可换图和增删' },
-  { id: 'duties', no: '05', title: '责任与承诺', desc: '责任条目' },
-  { id: 'join', no: '06', title: '加入我们', desc: '加入步骤' },
-  { id: 'contact', no: '07', title: '联系我们', desc: '邮箱、地址与入口' },
+  { id: 'hero', no: '01', title: '首屏', desc: '左文右图，主标题与两个按钮' },
+  { id: 'story', no: '02', title: '公司介绍', desc: '左图右文两段介绍' },
+  { id: 'values', no: '03', title: '使命价值观愿景', desc: '时间轴三列，大号 01–03' },
+  { id: 'partners', no: '04', title: '客户 Logo 墙', desc: '双向滚动商标，可增删换图' },
+  { id: 'duties', no: '05', title: '责任与承诺', desc: '三张图文：客户、员工、股东' },
+  { id: 'join', no: '06', title: '加入我们', desc: '五步成长路径' },
+  { id: 'contact', no: '07', title: '联系我们', desc: '邮箱、地址、投递入口三列' },
 ]
 const titles = {
   overview: ['页面目录', '每个前台路径对应一块后台配置，结构与官网导航一致'],
   site: ['全站设置', 'Logo、品牌名、顶栏按钮与联系方式'],
   home: ['官网首页', '路径 / · 按前台区块逐项编辑，点左侧大纲跳转'],
-  about: ['关于我们', '路径 /about/ · 按前台区块逐项编辑，点左侧大纲打开'],
+  about: ['关于我们', '路径 /about/ · 与线上七个区块一一对应'],
   'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏与方案列表'],
   'page-agents': ['空间智能体', '路径 /agents/ · 首屏与智能体列表'],
   'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏与产品列表'],
@@ -535,78 +535,86 @@ function homeItemFields(kind, index, item) {
 function aboutSectionFields(key, content) {
   if (key === 'hero') {
     return `
-      ${aboutField('hero.title', '主标题', content.hero.title)}
-      ${aboutField('hero.body', '介绍', content.hero.body, { type: 'textarea', wide: true, rows: 4 })}
+      ${aboutField('hero.title', '左栏主标题', content.hero.title, { help: '前台最大那一行' })}
+      ${aboutField('hero.body', '左栏介绍', content.hero.body, { type: 'textarea', wide: true, rows: 4 })}
       ${aboutField('hero.primaryLabel', '主按钮文字', content.hero.primaryLabel)}
-      ${aboutField('hero.primaryHref', '主按钮链接', content.hero.primaryHref)}
+      ${aboutField('hero.primaryHref', '主按钮链接', content.hero.primaryHref, { help: '默认 #contact 滚到联系我们' })}
       ${aboutField('hero.secondaryLabel', '次按钮文字', content.hero.secondaryLabel)}
-      ${aboutField('hero.secondaryHref', '次按钮链接', content.hero.secondaryHref)}
-      ${aboutField('hero.imageUrl', '右侧图片', content.hero.imageUrl, { image: true, wide: true, size: '1200×720' })}`
+      ${aboutField('hero.secondaryHref', '次按钮链接', content.hero.secondaryHref, { help: '默认 #story 滚到公司介绍' })}
+      ${aboutField('hero.imageUrl', '右侧首屏大图', content.hero.imageUrl, { image: true, wide: true, size: '1200×720' })}`
   }
   if (key === 'story') {
     return `
-      ${aboutField('story.label', '小标题', content.story.label)}
-      ${aboutField('story.title', '标题', content.story.title)}
-      ${aboutField('story.body1', '第一段', content.story.body1, { type: 'textarea', wide: true })}
-      ${aboutField('story.body2', '第二段', content.story.body2, { type: 'textarea', wide: true })}
+      ${aboutField('story.label', '右栏紫色小标', content.story.label)}
+      ${aboutField('story.title', '右栏标题', content.story.title)}
+      ${aboutField('story.body1', '第一段正文', content.story.body1, { type: 'textarea', wide: true })}
+      ${aboutField('story.body2', '第二段正文', content.story.body2, { type: 'textarea', wide: true })}
       ${aboutField('story.imageUrl', '左侧图片', content.story.imageUrl, { image: true, wide: true, size: '1200×760' })}`
   }
   if (key === 'values') {
     return `
-      ${aboutField('values.label', '小标题', content.values.label)}
-      ${aboutField('values.title', '标题', content.values.title)}`
+      ${aboutField('values.label', 'CULTURE 小标', content.values.label, { help: '前台左上角灰色小字，例如 CULTURE / 01—03' })}
+      ${aboutField('values.title', '区块大标题', content.values.title, { help: '时间轴上方主标题' })}`
   }
   if (key === 'partners') {
     return `
-      ${aboutField('partners.label', '小标题', content.partners.label)}
-      ${aboutField('partners.title', '标题', content.partners.title)}
-      ${aboutField('partners.intro', '说明', content.partners.intro, { type: 'textarea', wide: true })}`
+      ${aboutField('partners.label', '滚动墙上方小标', content.partners.label)}
+      ${aboutField('partners.title', '滚动墙上方标题', content.partners.title)}
+      ${aboutField('partners.intro', '标题下说明', content.partners.intro, { type: 'textarea', wide: true, help: '出现在 Logo 滚动带上方' })}`
   }
   if (key === 'duties') {
     return `
-      ${aboutField('duties.label', '小标题', content.duties.label)}
-      ${aboutField('duties.title', '标题', content.duties.title)}`
+      ${aboutField('duties.label', '紫色小标', content.duties.label)}
+      ${aboutField('duties.title', '区块标题', content.duties.title, { help: '前台三张横图卡片的总标题' })}`
   }
   if (key === 'join') {
     return `
-      ${aboutField('join.label', '小标题', content.join.label)}
-      ${aboutField('join.title', '标题', content.join.title)}`
+      ${aboutField('join.label', '紫色小标', content.join.label)}
+      ${aboutField('join.title', '区块标题', content.join.title, { help: '前台五步列表的总标题' })}`
   }
   return `
-    ${aboutField('contact.label', '小标题', content.contact.label)}
-    ${aboutField('contact.title', '标题', content.contact.title)}
-    ${aboutField('contact.lead', '说明', content.contact.lead, { type: 'textarea', wide: true })}
+    ${aboutField('contact.label', '紫色小标', content.contact.label)}
+    ${aboutField('contact.title', '区块标题', content.contact.title)}
+    ${aboutField('contact.lead', '标题下说明', content.contact.lead, { type: 'textarea', wide: true })}
+    <p class="admin-about-split">左列 · 邮箱</p>
     ${aboutField('contact.email1', '邮箱 1', content.contact.email1)}
     ${aboutField('contact.email2', '邮箱 2', content.contact.email2)}
+    <p class="admin-about-split">中列 · 地址</p>
     ${aboutField('contact.addressZh', '中文地址', content.contact.addressZh, { wide: true })}
     ${aboutField('contact.addressEn', '英文地址', content.contact.addressEn, { wide: true })}
-    ${aboutField('contact.joinTitle', '加入标题', content.contact.joinTitle)}
-    ${aboutField('contact.joinBody', '加入说明', content.contact.joinBody, { type: 'textarea', wide: true })}
+    <p class="admin-about-split">右列 · 加入入口</p>
+    ${aboutField('contact.joinTitle', '右列标题', content.contact.joinTitle)}
+    ${aboutField('contact.joinBody', '右列说明', content.contact.joinBody, { type: 'textarea', wide: true })}
     ${aboutField('contact.joinLabel', '按钮文字', content.contact.joinLabel)}
-    ${aboutField('contact.joinHref', '按钮链接', content.contact.joinHref, { wide: true })}`
+    ${aboutField('contact.joinHref', '按钮链接', content.contact.joinHref, { wide: true, help: '一般为 mailto: 邮箱' })}`
 }
 
 function aboutItemFields(kind, index, item) {
   if (kind === 'values') {
+    const no = String(index + 1).padStart(2, '0')
     return `
-      ${aboutField(`values.items.${index}.title`, '名称', item.title)}
-      ${aboutField(`values.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}`
+      <p class="admin-form-section__hint">前台时间轴第 ${no} 列。大号 ${no} 是版式固定的，这里只改名称和一句话。</p>
+      ${aboutField(`values.items.${index}.title`, `第 ${no} 列名称`, item.title, { help: '如 使命 / 价值观 / 愿景' })}
+      ${aboutField(`values.items.${index}.body`, '一句话说明', item.body, { type: 'textarea', wide: true })}`
   }
   if (kind === 'partners') {
     return `
-      ${aboutField(`partners.items.${index}.name`, '名称', item.name)}
-      ${aboutField(`partners.items.${index}.logoUrl`, 'Logo', item.logoUrl, { image: true, wide: true, size: '480×160' })}`
+      <p class="admin-form-section__hint">会出现在双向滚动的 Logo 墙上。透明底横图最清晰。</p>
+      ${aboutField(`partners.items.${index}.name`, '客户名称', item.name, { help: '无 Logo 时前台显示这个名字' })}
+      ${aboutField(`partners.items.${index}.logoUrl`, '滚动墙 Logo', item.logoUrl, { image: true, wide: true, size: '480×160' })}`
   }
   if (kind === 'duties') {
     return `
-      ${aboutField(`duties.items.${index}.title`, '标题', item.title)}
-      ${aboutField(`duties.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}
-      ${aboutField(`duties.items.${index}.imageUrl`, '图片', item.imageUrl, { image: true, wide: true, size: '880×360' })}`
+      <p class="admin-form-section__hint">前台三张横图卡片之一，上图下文案。</p>
+      ${aboutField(`duties.items.${index}.title`, '卡片标题', item.title)}
+      ${aboutField(`duties.items.${index}.body`, '卡片说明', item.body, { type: 'textarea', wide: true })}
+      ${aboutField(`duties.items.${index}.imageUrl`, '卡片横图', item.imageUrl, { image: true, wide: true, size: '880×360' })}`
   }
   return `
-    ${aboutField(`join.items.${index}.step`, '序号', item.step)}
-    ${aboutField(`join.items.${index}.title`, '标题', item.title)}
-    ${aboutField(`join.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}`
+    <p class="admin-form-section__hint">前台「加入我们」五步列表中的一步。</p>
+    ${aboutField(`join.items.${index}.step`, '左侧序号', item.step, { help: '如 01、02' })}
+    ${aboutField(`join.items.${index}.title`, '步骤标题', item.title)}
+    ${aboutField(`join.items.${index}.body`, '步骤说明', item.body, { type: 'textarea', wide: true })}`
 }
 
 function openItemModal({ scope, kind, index, title, html }) {
@@ -839,21 +847,52 @@ function showAboutSection(id) {
   })
 }
 
+function aboutThumb(src, kind) {
+  if (!src) return '<span class="admin-about-thumb is-empty"></span>'
+  return `<img class="admin-about-thumb admin-about-thumb--${kind}" src="${escapeHtml(src)}" alt="" />`
+}
+
+function aboutItemRows(kind, items) {
+  const list = items || []
+  return `<div class="admin-home-list">${list.map((item, index) => {
+    const no = String(index + 1).padStart(2, '0')
+    let media = ''
+    let title = item.title || item.name || `条目 ${index + 1}`
+    let sub = ''
+    let tools = `<button type="button" data-about-item-edit="${kind}" data-item-index="${index}">编辑</button>`
+    if (kind === 'values') {
+      media = `<em class="admin-about-no">${no}</em>`
+      sub = item.body || '时间轴上的一句话'
+    } else if (kind === 'partners') {
+      media = aboutThumb(item.logoUrl, 'logo')
+      title = item.name || `客户 ${index + 1}`
+      sub = item.logoUrl ? '滚动墙 Logo' : '尚未上传 Logo，前台显示名称'
+      tools = `
+        <button type="button" data-about-partner-move="-1" data-item-index="${index}" ${index === 0 ? 'disabled' : ''}>上移</button>
+        <button type="button" data-about-partner-move="1" data-item-index="${index}" ${index === list.length - 1 ? 'disabled' : ''}>下移</button>
+        <button type="button" data-about-item-edit="${kind}" data-item-index="${index}">编辑</button>
+        <button type="button" data-about-partner-remove="${index}" ${list.length <= 4 ? 'disabled' : ''}>删除</button>`
+    } else if (kind === 'duties') {
+      media = aboutThumb(item.imageUrl, 'duty')
+      sub = item.body || '横图卡片说明'
+    } else {
+      media = `<em class="admin-about-no">${escapeHtml(item.step || no)}</em>`
+      sub = item.body || '加入步骤说明'
+    }
+    return `<div class="admin-item-row admin-about-row">
+      ${media}
+      <div class="admin-about-row__copy"><strong>${escapeHtml(title)}</strong><small>${escapeHtml(sub)}</small></div>
+      <span class="admin-slide-tools">${tools}</span>
+    </div>`
+  }).join('')}</div>`
+}
+
 function renderAboutEditor(content) {
   const editor = document.querySelector('[data-about-editor]')
   if (!ABOUT_OUTLINE.some((item) => item.id === state.aboutSection)) state.aboutSection = 'hero'
-  const itemRows = (kind, items, label) => `
-        <div class="admin-home-list">${(items || []).map((item, index) => `
-          <div class="admin-item-row">
-            <div><strong>${escapeHtml(label(item, index))}</strong></div>
-            <span class="admin-slide-tools">
-              <button type="button" data-about-item-edit="${kind}" data-item-index="${index}">编辑</button>
-              ${kind === 'partners' ? `<button type="button" data-about-partner-remove="${index}" ${(items || []).length <= 4 ? 'disabled' : ''}>删除</button>` : ''}
-            </span>
-          </div>`).join('')}</div>`
   editor.innerHTML = `
     <aside class="admin-home-outline">
-      <p>按关于我们页从上到下排列，点一项只打开这一块</p>
+      <p>与线上 /about/ 从上到下一一对应，点一项只打开这一块</p>
       ${ABOUT_OUTLINE.map((item) => `
         <button type="button" class="admin-home-outline__item${item.id === state.aboutSection ? ' is-active' : ''}" data-about-goto="${item.id}">
           <em>${item.no}</em>
@@ -862,43 +901,43 @@ function renderAboutEditor(content) {
     </aside>
     <div class="admin-home-stage">
       <fieldset data-about-section="hero">
-        <legend>首屏主张</legend>
-        <p class="admin-form-section__hint">只改关于我们页最上方标题、介绍和按钮。</p>
+        <legend>01 首屏</legend>
+        <p class="admin-form-section__hint">前台最上方：左边标题和按钮，右边一张铺满的大图。</p>
         <div class="admin-form-grid">${aboutSectionFields('hero', content)}</div>
       </fieldset>
       <fieldset data-about-section="story">
-        <legend>公司介绍</legend>
-        <p class="admin-form-section__hint">对应前台公司介绍区块。</p>
+        <legend>02 公司介绍</legend>
+        <p class="admin-form-section__hint">前台第二屏：左边照片，右边小标、标题和两段正文。</p>
         <div class="admin-form-grid">${aboutSectionFields('story', content)}</div>
       </fieldset>
       <fieldset data-about-section="values">
-        <legend>使命、价值观与愿景</legend>
-        <p class="admin-form-section__hint">上方改整区标题，下面三条点「编辑」改名称和说明。</p>
+        <legend>03 使命、价值观与愿景</legend>
+        <p class="admin-form-section__hint">前台时间轴三列。大号 01 / 02 / 03 是版式，下面三条只改名称和一句话。</p>
         <div class="admin-form-grid">${aboutSectionFields('values', content)}</div>
-        ${itemRows('values', content.values?.items, (item, index) => item.title || `条目 ${index + 1}`)}
+        ${aboutItemRows('values', content.values?.items)}
       </fieldset>
       <fieldset data-about-section="partners">
-        <legend>客户与网络</legend>
-        <p class="admin-form-section__hint">上方改标题。下面每条点「编辑」上传 Logo（建议透明底 480×160），也可新增客户。</p>
+        <legend>04 客户 Logo 墙</legend>
+        <p class="admin-form-section__hint">前台深蓝滚动带。上方改标题，下面每条对应墙上一个商标，可换图、排序、增删。</p>
         <div class="admin-form-grid">${aboutSectionFields('partners', content)}</div>
-        ${itemRows('partners', content.partners?.items, (item, index) => `客户 ${index + 1}：${item.name || '未填写'}`)}
+        ${aboutItemRows('partners', content.partners?.items)}
         <button type="button" class="admin-add-slide" data-about-partner-add>+ 新增客户 Logo</button>
       </fieldset>
       <fieldset data-about-section="duties">
-        <legend>责任与承诺</legend>
-        <p class="admin-form-section__hint">整区标题在上面改，条目点「编辑」改文案和图片。</p>
+        <legend>05 责任与承诺</legend>
+        <p class="admin-form-section__hint">前台三张横图卡片。上方改总标题，点「编辑」改每张的图和文案。</p>
         <div class="admin-form-grid">${aboutSectionFields('duties', content)}</div>
-        ${itemRows('duties', content.duties?.items, (item, index) => item.title || `条目 ${index + 1}`)}
+        ${aboutItemRows('duties', content.duties?.items)}
       </fieldset>
       <fieldset data-about-section="join">
-        <legend>加入我们</legend>
-        <p class="admin-form-section__hint">整区标题在上面改，步骤点「编辑」。</p>
+        <legend>06 加入我们</legend>
+        <p class="admin-form-section__hint">前台五步列表。上方改总标题，点「编辑」改序号、步骤名和说明。</p>
         <div class="admin-form-grid">${aboutSectionFields('join', content)}</div>
-        ${itemRows('join', content.join?.items, (item, index) => item.title || `步骤 ${index + 1}`)}
+        ${aboutItemRows('join', content.join?.items)}
       </fieldset>
       <fieldset data-about-section="contact">
-        <legend>联系我们</legend>
-        <p class="admin-form-section__hint">邮箱、地址与加入入口。</p>
+        <legend>07 联系我们</legend>
+        <p class="admin-form-section__hint">前台最底部三列：邮箱、地址、加入入口。</p>
         <div class="admin-form-grid">${aboutSectionFields('contact', content)}</div>
       </fieldset>
     </div>
@@ -1910,6 +1949,21 @@ document.querySelector('[data-about-form]').addEventListener('click', (event) =>
     const content = collectAboutContent()
     if ((content.partners?.items || []).length <= 4) return
     content.partners.items.splice(index, 1)
+    state.aboutPage.draftContent = content
+    renderAboutEditor(content)
+    showAboutSection('partners')
+    return
+  }
+  const partnerMove = event.target.closest('[data-about-partner-move]')
+  if (partnerMove) {
+    event.preventDefault()
+    const index = Number(partnerMove.dataset.itemIndex)
+    const offset = Number(partnerMove.dataset.aboutPartnerMove)
+    const content = collectAboutContent()
+    const next = index + offset
+    if (!content.partners?.items?.[index] || next < 0 || next >= content.partners.items.length) return
+    const [item] = content.partners.items.splice(index, 1)
+    content.partners.items.splice(next, 0, item)
     state.aboutPage.draftContent = content
     renderAboutEditor(content)
     showAboutSection('partners')
