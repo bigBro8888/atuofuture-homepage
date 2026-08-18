@@ -17,7 +17,7 @@ const ABOUT_OUTLINE = [
   { id: 'values', no: '03', title: '使命价值观愿景', desc: '时间轴三列，大号 01–03' },
   { id: 'partners', no: '04', title: '客户 Logo 墙', desc: '单行滚动商标，可增删换图' },
   { id: 'join', no: '05', title: '加入我们', desc: '轮播、招揽话术、招聘列表' },
-  { id: 'contact', no: '06', title: '联系我们', desc: '邮箱、电话、地址、投递入口' },
+  { id: 'contact', no: '06', title: '联系我们', desc: '左栏加入、右栏邮箱电话地址' },
 ]
 const titles = {
   overview: ['页面目录', '每个前台路径对应一块后台配置，结构与官网导航一致'],
@@ -587,12 +587,10 @@ function aboutSectionFields(key, content) {
     <p class="admin-about-split">地址</p>
     ${aboutField('contact.addressZh', '中文地址', contact.addressZh, { wide: true })}
     ${aboutField('contact.addressEn', '英文地址', contact.addressEn, { wide: true })}
-    <p class="admin-about-split">加入入口</p>
-    ${aboutField('contact.joinTitle', '右列标题', contact.joinTitle)}
-    ${aboutField('contact.joinBody', '右列说明', contact.joinBody, { type: 'textarea', wide: true })}
-    ${aboutField('contact.joinLabel', '按钮文字', contact.joinLabel)}
-    ${aboutField('contact.joinHref', '按钮链接', contact.joinHref, { wide: true, help: '一般为 mailto: 邮箱' })}`
-}
+    <p class="admin-about-split">左侧深蓝栏</p>
+    ${aboutField('contact.joinTitle', '加入标题', contact.joinTitle)}
+    ${aboutField('contact.joinBody', '加入说明', contact.joinBody, { type: 'textarea', wide: true, help: '左侧栏只放这段话和一个预约演示按钮，不再放投递简历' })}
+`
 
 function aboutItemFields(kind, index, item) {
   if (kind === 'values') {
@@ -999,7 +997,7 @@ function renderAboutEditor(content) {
       </fieldset>
       <fieldset data-about-section="contact">
         <legend>06 联系我们</legend>
-        <p class="admin-form-section__hint">前台最底部：邮箱、电话、地址、加入入口。</p>
+        <p class="admin-form-section__hint">标题在左、说明在右。下面一块：左侧深蓝「加入我们」，右侧邮箱、电话、地址。预约演示按钮是固定的。</p>
         <div class="admin-form-grid">${aboutSectionFields('contact', content)}</div>
       </fieldset>
     </div>

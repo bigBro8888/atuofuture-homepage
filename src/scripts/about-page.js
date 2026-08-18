@@ -116,17 +116,17 @@ function applyJoinBrief(join = {}) {
 
 function applyContactPhone(contact = {}) {
   const card = document.querySelector('[data-about-contact-phone-card]')
-  const link = document.querySelector('[data-about-contact-phone]')
-  if (!card || !link) return
+  const label = document.querySelector('[data-about-contact-phone]')
+  if (!card) return
   const display = String(contact.phoneDisplay || contact.phone || '').trim()
   const href = telHref(contact.phone || contact.phoneDisplay)
   if (!display) {
     card.hidden = true
     return
   }
-  link.textContent = display
-  if (href) link.setAttribute('href', href)
-  else link.removeAttribute('href')
+  if (label) label.textContent = display
+  if (href) card.setAttribute('href', href)
+  else card.removeAttribute('href')
   card.hidden = false
 }
 
@@ -264,16 +264,15 @@ export function applyAboutContent(content) {
   text('[data-about-contact-title]', content.contact?.title)
   text('[data-about-contact-lead]', content.contact?.lead)
   text('[data-about-contact-email1]', content.contact?.email1)
-  href('[data-about-contact-email1]', content.contact?.email1 ? `mailto:${content.contact.email1}` : '')
   text('[data-about-contact-email2]', content.contact?.email2)
-  href('[data-about-contact-email2]', content.contact?.email2 ? `mailto:${content.contact.email2}` : '')
+  href('[data-about-contact-email-row]', content.contact?.email1 ? `mailto:${content.contact.email1}` : '')
+  const email2 = document.querySelector('[data-about-contact-email2]')
+  if (email2) email2.hidden = !content.contact?.email2
   applyContactPhone(content.contact)
   text('[data-about-contact-address-zh]', content.contact?.addressZh)
   text('[data-about-contact-address-en]', content.contact?.addressEn)
   text('[data-about-contact-join-title]', content.contact?.joinTitle)
   text('[data-about-contact-join-body]', content.contact?.joinBody)
-  text('[data-about-contact-join-label]', content.contact?.joinLabel)
-  href('[data-about-contact-join-label]', content.contact?.joinHref)
 }
 
 export async function loadAndApplyAboutContent() {
