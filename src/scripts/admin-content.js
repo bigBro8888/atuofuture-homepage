@@ -67,11 +67,12 @@ function asList(value) {
 const SOL_OUTLINE = [
   { id: 'basics', no: '01', title: '基础信息', desc: '名称、封面、价值' },
   { id: 'ppt', no: '02', title: '方案介绍 PPT', desc: '16:9 讲解页' },
-  { id: 'scenarios', no: '03', title: '运营场景', desc: '详情页场景卡片' },
-  { id: 'journey', no: '04', title: '客户旅程', desc: '端到端步骤' },
-  { id: 'stack', no: '05', title: '智能体与硬件', desc: '组合清单' },
-  { id: 'faq', no: '06', title: '常见问题', desc: '痛点与做法' },
-  { id: 'values', no: '07', title: '列表页价值', desc: '方案列表三卡' },
+  { id: 'scenarios', no: '03', title: '运营场景', desc: '图 + 标题卡片' },
+  { id: 'journey', no: '04', title: '客户旅程', desc: '文字步骤' },
+  { id: 'stack', no: '05', title: '智能体与硬件', desc: '标题 + 说明' },
+  { id: 'related', no: '06', title: '其他行业方案', desc: '自动取其他方案' },
+  { id: 'faq', no: '07', title: '常见问题', desc: '问答卡片' },
+  { id: 'values', no: '08', title: '列表页价值', desc: '方案列表三卡' },
 ]
 
 function showSolutionSection(id) {
@@ -83,6 +84,31 @@ function showSolutionSection(id) {
   document.querySelectorAll('[data-sol-section]').forEach((section) => {
     section.hidden = section.dataset.solSection !== next
   })
+}
+
+function asCards(value, normalize) {
+  const list = Array.isArray(value) ? value.map(normalize) : []
+  return list.length ? list : [normalize({})]
+}
+
+function asScene(item) {
+  if (typeof item === 'string') return { title: item, imageUrl: '' }
+  return { title: item?.title || '', imageUrl: item?.imageUrl || item?.image || '' }
+}
+
+function asHardwareCard(item) {
+  if (typeof item === 'string') return { title: item, desc: '' }
+  return { title: item?.title || '', desc: item?.desc || '' }
+}
+
+function asFaq(item) {
+  return { q: item?.q || '', a: item?.a || '' }
+}
+
+const EMPTY_CARD = {
+  scenarios: { title: '', imageUrl: '' },
+  hardware: { title: '', desc: '' },
+  faqs: { q: '', a: '' },
 }
 
 function listEditor(kind, path, items = [], { placeholder = '', addLabel = '添加一条', max = 12 } = {}) {
@@ -138,12 +164,13 @@ function emptySolution() {
     capabilities: [],
     coreValues: [{}, {}, {}],
     highlightAgents: [],
-    scenarios: [],
+    scenarios: [{ title: '', imageUrl: '' }],
     pains: [],
     approach: '',
     journey: [],
     agents: [],
-    hardware: [],
+    hardware: [{ title: '', desc: '' }],
+    faqs: [{ q: '', a: '' }],
     canDo: [],
     slides: [{ imageUrl: '' }],
     published: true,
@@ -206,6 +233,9 @@ function renderSolutionCompose(item) {
   const values = [...(item.coreValues || []), {}, {}, {}].slice(0, 3)
   const slides = [...(item.slides || [])]
   if (!slides.length) slides.push({ imageUrl: item.image || '' })
+  const scenes = asCards(item.scenarios, asScene)
+  const hardwares = asCards(item.hardware, asHardwareCard)
+  const faqs = asCards(item.faqs, asFaq)
   const active = ctx.state.solutionSection || 'basics'
   body.innerHTML = `
     <div class="admin-home-editor admin-sol-compose">
@@ -265,17 +295,41 @@ function renderSolutionCompose(item) {
         </fieldset>
         <fieldset data-sol-section="scenarios">
           <legend>运营场景</legend>
-          <p class="admin-form-section__hint">详情页 PPT 下方「覆盖关键运营场景」，每条一个短标题。</p>
-          ${listEditor('solutions', 'scenarios', item.scenarios, { placeholder: '例如 多楼栋统一运营', addLabel: '添加场景', max: 12 })}
+          <p class="admin-form-section__hint">对应前台 APPLICATIONS：每张卡片一张图 + 一个标题，建议 1200×680。</p>
+          <div class="admin-sol-deck__grid">
+            ${scenes.map((scene, index) => {
+              const path = `scenarios.${index}.imageUrl`
+              const url = scene.imageUrl || ''
+              return `
+            <article class="admin-sol-tile">
+              <div class="admin-sol-tile__head">
+                <strong>${String(index + 1).padStart(2, '0')}</strong>
+                <button type="button" data-sol-cards-remove="scenarios" data-sol-list-index="${index}" ${scenes.length <= 1 ? 'disabled' : ''}>删除</button>
+              </div>
+              <div class="admin-sol-tile__frame">
+                <img data-solutions-preview-for="${path}" src="${esc(url)}" alt="" ${url ? '' : 'hidden'} />
+                <label class="admin-sol-tile__upload">
+                  <span>${url ? '更换' : '上传图片'}</span>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" data-solutions-upload-for="${path}" />
+                </label>
+              </div>
+              <input class="admin-sol-tile__url" data-solutions-field="scenarios.${index}.title" type="text" value="${esc(scene.title)}" placeholder="场景标题" />
+              <input class="admin-sol-tile__url" data-solutions-field="${path}" type="text" value="${esc(url)}" placeholder="或粘贴图片地址" />
+            </article>`
+            }).join('')}
+            <button type="button" class="admin-sol-tile admin-sol-tile--add" data-sol-cards-add="scenarios">
+              <span>+ 添加场景</span>
+            </button>
+          </div>
         </fieldset>
         <fieldset data-sol-section="journey">
           <legend>客户旅程</legend>
-          <p class="admin-form-section__hint">详情页「端到端客户旅程」步骤。</p>
-          ${listEditor('solutions', 'journey', item.journey, { placeholder: '例如 到访接待', addLabel: '添加步骤', max: 8 })}
+          <p class="admin-form-section__hint">对应前台 JOURNEY：一行文字步骤，无需配图。</p>
+          ${listEditor('solutions', 'journey', item.journey, { placeholder: '例如 园区到访', addLabel: '添加步骤', max: 8 })}
         </fieldset>
         <fieldset data-sol-section="stack">
           <legend>智能体与硬件</legend>
-          <p class="admin-form-section__hint">详情页组合清单。智能体填详情页标识，如 space、visitor。</p>
+          <p class="admin-form-section__hint">对应前台 SOLUTION STACK。智能体填详情页标识，名称和说明自动取智能体库；硬件在这里写标题和说明。</p>
           <div class="admin-sol-stack">
             <div>
               <h4 class="admin-sol-label">关联智能体</h4>
@@ -286,18 +340,50 @@ function renderSolutionCompose(item) {
               <p class="admin-form-section__hint">方案列表页最多高亮 3 个</p>
               ${listEditor('solutions', 'highlightAgents', item.highlightAgents, { placeholder: '如 visitor', addLabel: '添加重点', max: 3 })}
             </div>
-            <div class="admin-sol-stack__wide">
-              <h4 class="admin-sol-label">关联硬件 / 系统</h4>
-              ${listEditor('solutions', 'hardware', item.hardware, { placeholder: '例如 门禁闸机', addLabel: '添加硬件', max: 12 })}
-            </div>
+          </div>
+          <h4 class="admin-sol-label" style="margin-top:18px">关联硬件 / 系统</h4>
+          <div class="admin-sol-hw">
+            ${hardwares.map((row, index) => `
+              <article class="admin-sol-hw__card">
+                <div class="admin-sol-tile__head">
+                  <strong>${String(index + 1).padStart(2, '0')}</strong>
+                  <button type="button" data-sol-cards-remove="hardware" data-sol-list-index="${index}" ${hardwares.length <= 1 ? 'disabled' : ''}>删除</button>
+                </div>
+                ${field('solutions', `hardware.${index}.title`, '标题', row.title, { placeholder: '例如 中控屏' })}
+                ${field('solutions', `hardware.${index}.desc`, '说明', row.desc, { type: 'textarea', rows: 3, placeholder: '前台清单里标题下方的灰色说明' })}
+              </article>`).join('')}
+            <button type="button" class="admin-sol-hw__add" data-sol-cards-add="hardware">+ 添加硬件</button>
+          </div>
+        </fieldset>
+        <fieldset data-sol-section="related">
+          <legend>其他行业方案</legend>
+          <p class="admin-form-section__hint">对应前台 MORE INDUSTRIES。卡片会自动取其他已发布方案的封面图、名称和一句话价值，这里不用单独维护。</p>
+          <div class="admin-sol-related">
+            ${(ctx.state.solutionsLibrary?.draftContent?.items || [])
+              .filter((row) => row.id && row.id !== item.id && row.published !== false)
+              .map((row) => `
+                <article class="admin-sol-related__card">
+                  <div class="admin-sol-related__media" style="background-image:url('${esc(row.image || '')}')"></div>
+                  <strong>${esc(row.name || '未命名')}</strong>
+                  <p>${esc(row.value || row.summary || '')}</p>
+                </article>`).join('') || '<p class="admin-form-section__hint">发布其他方案后，这里会自动出现对应卡片。</p>'}
           </div>
         </fieldset>
         <fieldset data-sol-section="faq">
           <legend>常见问题</legend>
-          <p class="admin-form-section__hint">不单独成段，会拼进详情页 FAQ。</p>
-          <h4 class="admin-sol-label">行业痛点</h4>
-          ${listEditor('solutions', 'pains', item.pains, { placeholder: '例如 多楼栋系统割裂', addLabel: '添加痛点', max: 8 })}
-          ${field('solutions', 'approach', '方案做法', item.approach, { type: 'textarea', wide: true, rows: 5, placeholder: '用一两段话说明怎么组合智能体与硬件落地' })}
+          <p class="admin-form-section__hint">对应前台 FAQ。每条是一个问题和一段回答。</p>
+          <div class="admin-sol-faq">
+            ${faqs.map((row, index) => `
+              <article class="admin-sol-faq__card">
+                <div class="admin-sol-tile__head">
+                  <strong>问题 ${String(index + 1).padStart(2, '0')}</strong>
+                  <button type="button" data-sol-cards-remove="faqs" data-sol-list-index="${index}" ${faqs.length <= 1 ? 'disabled' : ''}>删除</button>
+                </div>
+                ${field('solutions', `faqs.${index}.q`, '问题', row.q, { placeholder: '例如 方案主要解决什么问题？' })}
+                ${field('solutions', `faqs.${index}.a`, '回答', row.a, { type: 'textarea', rows: 3 })}
+              </article>`).join('')}
+            <button type="button" class="admin-sol-list__add" data-sol-cards-add="faqs">+ 添加问题</button>
+          </div>
         </fieldset>
         <fieldset data-sol-section="values">
           <legend>列表页核心价值</legend>
@@ -482,6 +568,31 @@ function bindKind(kind) {
     if (jump) {
       event.preventDefault()
       showSolutionSection(jump.dataset.solGoto)
+      return
+    }
+    const addCard = kind === 'solutions' ? event.target.closest('[data-sol-cards-add]') : null
+    if (addCard) {
+      event.preventDefault()
+      const path = addCard.getAttribute('data-sol-cards-add')
+      const article = collectFields(compose, kind)
+      const normalize = path === 'scenarios' ? asScene : path === 'hardware' ? asHardwareCard : asFaq
+      const blank = path === 'scenarios' ? { title: '', imageUrl: article.image || '' } : { ...EMPTY_CARD[path] }
+      article[path] = [...asCards(article[path], normalize), blank]
+      renderSolutionCompose(article)
+      return
+    }
+    const removeCard = kind === 'solutions' ? event.target.closest('[data-sol-cards-remove]') : null
+    if (removeCard) {
+      event.preventDefault()
+      const path = removeCard.getAttribute('data-sol-cards-remove')
+      const index = Number(removeCard.getAttribute('data-sol-list-index'))
+      const article = collectFields(compose, kind)
+      const normalize = path === 'scenarios' ? asScene : path === 'hardware' ? asHardwareCard : asFaq
+      const rows = asCards(article[path], normalize)
+      if (rows.length <= 1) return
+      rows.splice(index, 1)
+      article[path] = rows
+      renderSolutionCompose(article)
       return
     }
     if (kind === 'solutions' && event.target.closest('[data-sol-list-add]')) {

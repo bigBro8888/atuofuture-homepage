@@ -251,29 +251,50 @@ function renderDeck(s) {
     </section>`
 }
 
+function sceneTitle(item) {
+  return typeof item === 'string' ? item : item?.title || ''
+}
+
+function sceneImage(item, fallback = '') {
+  if (typeof item === 'string') return fallback
+  return item?.imageUrl || item?.image || fallback
+}
+
+function hardwareTitle(item) {
+  return typeof item === 'string' ? item : item?.title || ''
+}
+
+function hardwareDesc(item) {
+  if (typeof item === 'string') return '可接入空间智能中枢的硬件与系统能力'
+  return item?.desc || '可接入空间智能中枢的硬件与系统能力'
+}
+
 function renderDetailFaqs(s) {
-  const faqs = [
-    {
-      q: `${s.name}方案主要解决什么问题？`,
-      a: `${s.value}${(s.pains || []).length ? ` 常见痛点包括：${s.pains.join('、')}。` : ''}`,
-    },
-    {
-      q: '安托未来如何构建该行业方案？',
-      a: s.approach,
-    },
-    {
-      q: '落地需要哪些智能体与硬件？',
-      a: `可按场景组合 ${(s.agents || [])
-        .map((id) => getProductAgent(id)?.name)
-        .filter(Boolean)
-        .join('、')}；并连接 ${(s.hardware || []).join('、')} 等设备与系统。`,
-    },
-    {
-      q: '如何开始评估与交付？',
-      a: '从方案评估、现场勘测、设备部署、联调上线到运维优化，安托未来提供可规模复制的交付路径。可通过预约方案演示启动对接。',
-    },
-  ]
-  return faqs
+  const faqs = (s.faqs || []).filter((item) => item?.q && item?.a)
+  const list = faqs.length
+    ? faqs
+    : [
+        {
+          q: `${s.name}方案主要解决什么问题？`,
+          a: `${s.value}${(s.pains || []).length ? ` 常见痛点包括：${s.pains.join('、')}。` : ''}`,
+        },
+        {
+          q: '安托未来如何构建该行业方案？',
+          a: s.approach,
+        },
+        {
+          q: '落地需要哪些智能体与硬件？',
+          a: `可按场景组合 ${(s.agents || [])
+            .map((id) => getProductAgent(id)?.name)
+            .filter(Boolean)
+            .join('、')}；并连接 ${(s.hardware || []).map(hardwareTitle).filter(Boolean).join('、')} 等设备与系统。`,
+        },
+        {
+          q: '如何开始评估与交付？',
+          a: '从方案评估、现场勘测、设备部署、联调上线到运维优化，安托未来提供可规模复制的交付路径。可通过预约方案演示启动对接。',
+        },
+      ]
+  return list
     .map(
       (item) => `
     <details class="sol-d-faq__item">
@@ -332,10 +353,10 @@ function renderDetail(id) {
               .map(
                 (item, i) => `
               <article class="sol-d-apps__card">
-                <div class="sol-d-apps__media" style="background-image:url('${esc(s.image)}');background-position:${12 + (i % 3) * 35}% ${(i * 17) % 80}%"></div>
+                <div class="sol-d-apps__media" style="background-image:url('${esc(sceneImage(item, s.image))}')"></div>
                 <div class="sol-d-apps__body">
                   <span>${String(i + 1).padStart(2, '0')}</span>
-                  <h3>${esc(item)}</h3>
+                  <h3>${esc(sceneTitle(item))}</h3>
                 </div>
               </article>`
               )
@@ -391,8 +412,8 @@ function renderDetail(id) {
               <div class="sol-d-index__item sol-d-index__item--static">
                 <span class="material-symbols-outlined" aria-hidden="true">keyboard_double_arrow_right</span>
                 <div>
-                  <strong>${esc(item)}</strong>
-                  <p>可接入空间智能中枢的硬件与系统能力</p>
+                  <strong>${esc(hardwareTitle(item))}</strong>
+                  <p>${esc(hardwareDesc(item))}</p>
                 </div>
               </div>`
               )

@@ -11,6 +11,28 @@ test('solutions library seeds campus detail', () => {
   assert.ok(campus.coreValues.length >= 3)
   assert.ok(campus.approach.length > 10)
   assert.ok(campus.slides.length >= 1)
+  assert.equal(campus.scenarios[0].title, '多楼栋统一运营')
+  assert.ok(campus.scenarios[0].imageUrl)
+  assert.equal(campus.hardware[0].title, '无线网关')
+  assert.ok(campus.hardware[0].desc)
+  assert.ok(campus.faqs.length >= 1)
+})
+
+test('solutions library upgrades old string scenarios and hardware', () => {
+  const content = validateSolutionsLibraryContent({
+    items: [{
+      id: 'campus',
+      name: '智慧园区',
+      image: '/images/solutions/campus.jpg',
+      scenarios: ['多楼栋统一运营'],
+      hardware: ['中控屏'],
+    }],
+  })
+  const campus = content.items[0]
+  assert.equal(campus.scenarios[0].title, '多楼栋统一运营')
+  assert.equal(campus.scenarios[0].imageUrl, '/images/solutions/campus.jpg')
+  assert.equal(campus.hardware[0].title, '中控屏')
+  assert.ok(campus.hardware[0].desc)
 })
 
 test('solutions library keeps ppt slides', () => {

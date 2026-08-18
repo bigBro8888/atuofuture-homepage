@@ -14121,6 +14121,7 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 .sol-d-apps__media {
   height: 170px;
   background-size: cover;
+  background-position: center;
   filter: saturate(0.9) contrast(1.05);
 }
 .sol-d-apps__body { padding: 18px 18px 22px; }
