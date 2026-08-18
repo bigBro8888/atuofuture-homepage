@@ -269,6 +269,13 @@ async function loadConfig() {
   } catch (error) { toast(error.message, true) }
 }
 
+function fieldHint(options = {}) {
+  const parts = []
+  if (options.size) parts.push(`建议尺寸 ${options.size}`)
+  if (options.help) parts.push(options.help)
+  return parts.length ? `<small>${parts.join(' · ')}</small>` : ''
+}
+
 function homeField(path, label, value, options = {}) {
   const type = options.type || 'text'
   let field
@@ -288,7 +295,7 @@ function homeField(path, label, value, options = {}) {
         <label class="admin-home-upload">上传本地图片<input type="file" accept="image/jpeg,image/png,image/webp" data-home-upload-for="${path}" /></label>
       </div>`
     : ''
-  return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${field}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
+  return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${field}${media}${fieldHint(options)}</label>`
 }
 
 function compactRow(title, subtitle, tools) {
@@ -357,7 +364,7 @@ function renderHomeEditor(content) {
           ${homeField('banner.subtitle', '说明', banner.subtitle, { type: 'textarea', wide: true })}
           ${homeField('banner.ctaLabel', '按钮文字', banner.ctaLabel)}
           ${homeField('banner.ctaUrl', '按钮链接', banner.ctaUrl)}
-          ${homeField('banner.imageUrl', '左侧配图', banner.imageUrl, { image: true, wide: true })}
+          ${homeField('banner.imageUrl', '左侧配图', banner.imageUrl, { image: true, wide: true, size: '480×360' })}
         </div>
       </fieldset>
       <fieldset data-home-section="agents">
@@ -488,14 +495,14 @@ function homeItemFields(kind, index, item) {
       ${homeField(`heroSlides.${index}.description`, '说明', item.description, { type: 'textarea', wide: true })}
       ${homeField(`heroSlides.${index}.actionLabel`, '按钮文字', item.actionLabel)}
       ${homeField(`heroSlides.${index}.actionHref`, '按钮链接', item.actionHref)}
-      ${homeField(`heroSlides.${index}.background`, '背景图', item.background, { image: true, wide: true })}`
+      ${homeField(`heroSlides.${index}.background`, '背景图', item.background, { image: true, wide: true, size: '1920×600' })}`
   }
   if (kind === 'agents') {
     return `
       ${homeField(`agents.items.${index}.name`, '底部名称', item.name, { wide: true })}
       ${homeField(`agents.items.${index}.sceneTitle`, '画面标题', item.sceneTitle, { help: '叠在长图左下角，如「人员进入」' })}
       ${homeField(`agents.items.${index}.sceneCaption`, '画面说明', item.sceneCaption, { wide: true })}
-      ${homeField(`agents.items.${index}.imageUrl`, '21:9 场景图', item.imageUrl, { image: true, wide: true, help: '建议 21:9，左下留暗部给文字' })}
+      ${homeField(`agents.items.${index}.imageUrl`, '21:9 场景图', item.imageUrl, { image: true, wide: true, size: '2100×900', help: '左下留暗部给文字' })}
       ${homeField(`agents.items.${index}.id`, '内部编号', item.id, { help: '一般不用改，用于切换定位' })}`
   }
   if (kind === 'solutions') {
@@ -504,7 +511,7 @@ function homeItemFields(kind, index, item) {
       ${homeField(`solutions.items.${index}.title`, '标题', item.title)}
       ${homeField(`solutions.items.${index}.description`, '说明', item.description, { type: 'textarea', wide: true })}
       ${homeField(`solutions.items.${index}.tags`, '标签（逗号分隔）', (item.tags || []).join('，'), { wide: true })}
-      ${homeField(`solutions.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, help: '留空保留当前默认图片' })}
+      ${homeField(`solutions.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, size: '880×420', help: '留空保留当前默认图片' })}
       ${homeField(`solutions.items.${index}.linkUrl`, '详情链接', item.linkUrl)}`
   }
   if (kind === 'news') {
@@ -513,7 +520,7 @@ function homeItemFields(kind, index, item) {
       ${homeField(`news.items.${index}.title`, '标题', item.title, { wide: true })}
       ${homeField(`news.items.${index}.description`, '摘要', item.description, { type: 'textarea', wide: true })}
       ${homeField(`news.items.${index}.linkUrl`, '详情链接', item.linkUrl)}
-      ${homeField(`news.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, wide: true })}`
+      ${homeField(`news.items.${index}.imageUrl`, '封面图', item.imageUrl, { image: true, wide: true, size: '1280×720' })}`
   }
   return `
     ${homeField(`pitch.items.${index}.kicker`, '卡片小标题', item.kicker)}
@@ -521,7 +528,7 @@ function homeItemFields(kind, index, item) {
     ${homeField(`pitch.items.${index}.moreLabel`, '底部链接文字', item.moreLabel)}
     ${homeField(`pitch.items.${index}.href`, '跳转链接', item.href)}
     ${homeField(`pitch.items.${index}.variant`, '卡片样式', item.variant || 'photo', { type: 'select', options: [['photo', '图片卡'], ['wave', '深蓝波纹'], ['mint', '绿色纯色']] })}
-    ${homeField(`pitch.items.${index}.imageUrl`, '背景图（图片卡用）', item.imageUrl, { image: true, wide: true })}
+    ${homeField(`pitch.items.${index}.imageUrl`, '背景图（图片卡用）', item.imageUrl, { image: true, wide: true, size: '1200×800' })}
     ${homeField(`pitch.items.${index}.openDemo`, '点击打开预约演示', item.openDemo, { type: 'checkbox' })}`
 }
 
@@ -534,7 +541,7 @@ function aboutSectionFields(key, content) {
       ${aboutField('hero.primaryHref', '主按钮链接', content.hero.primaryHref)}
       ${aboutField('hero.secondaryLabel', '次按钮文字', content.hero.secondaryLabel)}
       ${aboutField('hero.secondaryHref', '次按钮链接', content.hero.secondaryHref)}
-      ${aboutField('hero.imageUrl', '右侧图片', content.hero.imageUrl, { image: true, wide: true })}`
+      ${aboutField('hero.imageUrl', '右侧图片', content.hero.imageUrl, { image: true, wide: true, size: '1200×720' })}`
   }
   if (key === 'story') {
     return `
@@ -542,7 +549,7 @@ function aboutSectionFields(key, content) {
       ${aboutField('story.title', '标题', content.story.title)}
       ${aboutField('story.body1', '第一段', content.story.body1, { type: 'textarea', wide: true })}
       ${aboutField('story.body2', '第二段', content.story.body2, { type: 'textarea', wide: true })}
-      ${aboutField('story.imageUrl', '左侧图片', content.story.imageUrl, { image: true, wide: true })}`
+      ${aboutField('story.imageUrl', '左侧图片', content.story.imageUrl, { image: true, wide: true, size: '1200×760' })}`
   }
   if (key === 'values') {
     return `
@@ -593,7 +600,7 @@ function aboutItemFields(kind, index, item) {
     return `
       ${aboutField(`duties.items.${index}.title`, '标题', item.title)}
       ${aboutField(`duties.items.${index}.body`, '说明', item.body, { type: 'textarea', wide: true })}
-      ${aboutField(`duties.items.${index}.imageUrl`, '图片', item.imageUrl, { image: true, wide: true })}`
+      ${aboutField(`duties.items.${index}.imageUrl`, '图片', item.imageUrl, { image: true, wide: true, size: '880×360' })}`
   }
   return `
     ${aboutField(`join.items.${index}.step`, '序号', item.step)}
@@ -819,7 +826,7 @@ function aboutField(path, label, value, options = {}) {
         <label class="admin-home-upload">上传本地图片<input type="file" accept="image/jpeg,image/png,image/webp" data-about-upload-for="${path}" /></label>
       </div>`
     : ''
-  return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${control}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
+  return `<label class="${options.wide ? 'admin-form-wide' : ''}"><span>${label}</span>${control}${media}${fieldHint(options)}</label>`
 }
 
 function showAboutSection(id) {
@@ -938,8 +945,8 @@ function renderSiteEditor(content) {
       <div class="admin-form-grid">
         ${homeField('brandZh', '中文品牌名', content.brandZh)}
         ${homeField('brandEn', '英文品牌名', content.brandEn)}
-        ${homeField('logoLightUrl', '浅色底 Logo', content.logoLightUrl, { image: true, wide: true, help: '用于官网顶栏、页脚。可填 /assets/... 或上传' })}
-        ${homeField('logoDarkUrl', '深色/下载页 Logo', content.logoDarkUrl, { image: true, wide: true, help: '用于 App 下载页等浅色或彩色 Logo' })}
+        ${homeField('logoLightUrl', '浅色底 Logo', content.logoLightUrl, { image: true, wide: true, size: '400×80', help: 'PNG 透明底，用于顶栏和页脚' })}
+        ${homeField('logoDarkUrl', '深色/下载页 Logo', content.logoDarkUrl, { image: true, wide: true, size: '400×80', help: 'PNG 透明底，用于 App 下载页' })}
       </div>
     </fieldset>
     <fieldset>
@@ -1061,7 +1068,7 @@ function renderHardwareNavEditor(navGroups, items = []) {
                   <input type="hidden" data-home-field="${prefix}.id" value="${escapeHtml(product.id || '')}" />
                   ${homeField(`${prefix}.label`, '显示名', name)}
                   ${homeField(`${prefix}.href`, '指向链接', href)}
-                  ${homeField(`${prefix}.imageUrl`, '缩略图', image, { image: true })}
+                  ${homeField(`${prefix}.imageUrl`, '缩略图', image, { image: true, size: '240×240' })}
                 </div>`
               }).join('')}
             </div>
@@ -1070,7 +1077,7 @@ function renderHardwareNavEditor(navGroups, items = []) {
       </fieldset>`
 }
 
-function renderSimpleItemFields(entry, index) {
+function renderSimpleItemFields(entry, index, key) {
   return `
     <div class="admin-item-row admin-simple-item" data-simple-item="${index}">
       <input type="hidden" data-home-field="items.${index}.id" value="${escapeHtml(entry.id || '')}" />
@@ -1079,7 +1086,7 @@ function renderSimpleItemFields(entry, index) {
       <div class="admin-simple-item__fields">
         ${homeField(`items.${index}.title`, '名称', entry.title)}
         ${homeField(`items.${index}.summary`, '简介', entry.summary, { type: 'textarea', rows: 2, wide: true })}
-        ${homeField(`items.${index}.imageUrl`, '图片', entry.imageUrl, { image: true, wide: true })}
+        ${homeField(`items.${index}.imageUrl`, '图片', entry.imageUrl, { image: true, wide: true, size: key === 'hardware' ? '1200×900' : '1200×800' })}
       </div>
     </div>`
 }
@@ -1108,7 +1115,7 @@ function renderSimpleEditor(key, content) {
       <fieldset data-simple-section="${entry.id}">
         <legend>${escapeHtml(sectionLegend[entry.id] || entry.title)}</legend>
         <p class="admin-form-section__hint">只改这一类前台内容，保存并发布后官网同步。</p>
-        <div class="admin-home-list">${rows.map(({ row, index }) => renderSimpleItemFields(row, index)).join('') || '<p class="admin-form-section__hint">此类暂无条目。</p>'}</div>
+        <div class="admin-home-list">${rows.map(({ row, index }) => renderSimpleItemFields(row, index, key)).join('') || '<p class="admin-form-section__hint">此类暂无条目。</p>'}</div>
       </fieldset>`
   }).join('')
   document.querySelector('[data-simple-editor]').innerHTML = `
@@ -1127,7 +1134,7 @@ function renderSimpleEditor(key, content) {
         <div class="admin-form-grid">
           ${homeField('title', '主标题', content.title, { wide: true })}
           ${homeField('subtitle', '说明', content.subtitle, { type: 'textarea', wide: true })}
-          ${homeField('bannerUrl', 'Banner 图', content.bannerUrl, { image: true, wide: true })}
+          ${homeField('bannerUrl', 'Banner 图', content.bannerUrl, { image: true, wide: true, size: ({ hardware: '1920×528', solutions: '1920×800', agents: '1920×1080', 'ai-token': '1920×800' }[key] || '1920×600') })}
           ${homeField('ctaLabel', '主按钮文案', content.ctaLabel)}
         </div>
       </fieldset>
@@ -1229,7 +1236,7 @@ function newsField(path, label, value, options = {}) {
           <label class="admin-home-upload">上传视频<input type="file" accept="video/mp4,video/webm,video/quicktime,video/*" data-news-upload-for="${path}" /></label>
         </div>`
       : ''
-  return `<label class="admin-news-field${options.wide ? ' is-wide' : ''}"><span>${label}</span>${field}${options.help ? `<small>${options.help}</small>` : ''}${media}</label>`
+  return `<label class="admin-news-field${options.wide ? ' is-wide' : ''}"><span>${label}</span>${field}${media}${fieldHint(options)}</label>`
 }
 
 function updateNewsStatus(page) {
@@ -1358,7 +1365,7 @@ function newsArticleFields(item = {}) {
         ${newsField('date', '日期', item.date || today, { type: 'date' })}
         ${newsField('author', '发布人', item.author || '安托未来')}
       </div>
-      ${newsField('cover', '封面', item.cover || '', { image: true, wide: true })}
+      ${newsField('cover', '封面', item.cover || '', { image: true, wide: true, size: '1280×720' })}
       <div data-news-panel="article"${type === 'video' ? ' hidden' : ''}>
         ${newsField('summary', '简介', item.summary || '', { type: 'textarea', wide: true, rows: 2, placeholder: '列表页展示的一两句摘要' })}
         ${newsField('tags', '标签', Array.isArray(item.tags) ? item.tags.join('，') : (item.tags || ''), { wide: true, placeholder: '可选，逗号分隔' })}

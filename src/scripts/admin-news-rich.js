@@ -32,7 +32,7 @@ export function newsRichEditorMarkup(item = {}) {
         <div class="admin-rich__editor" contenteditable="true" data-news-html-editor role="textbox" aria-multiline="true" aria-label="新闻正文">${html}</div>
         <input type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,image/*" data-news-rich-file />
         <input type="file" hidden accept="video/mp4,video/webm,video/quicktime,video/*" data-news-rich-video />
-        <small>粘贴会去掉原网站的加粗、颜色和字号。插图、视频可上传或粘贴链接。</small>
+        <small>粘贴会去掉原网站的加粗、颜色和字号。插图建议宽度不少于 1200px，视频可上传或粘贴链接。</small>
       </div>
     </div>`
 }

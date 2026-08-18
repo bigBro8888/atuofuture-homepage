@@ -110,7 +110,7 @@
             <p class="admin-form-section__hint">顶部导航与页面标题使用的应用身份信息</p>
             <div class="admin-form-grid">
               <label><span>App 名称</span><input name="name" required maxlength="80" /></label>
-              <label><span>App 图标地址</span><input name="iconUrl" type="url" placeholder="https://..." /></label>
+              <label><span>App 图标地址</span><input name="iconUrl" type="url" placeholder="https://..." /><small>建议尺寸 1024×1024，圆角方标</small></label>
               <label class="admin-form-wide"><span>产品介绍</span><textarea name="description" rows="3" maxlength="500"></textarea></label>
             </div>
           </fieldset>
@@ -129,10 +129,10 @@
             <legend>3 · 视觉素材</legend>
             <p class="admin-form-section__hint">桌面端顶部大图与手机端竖版展示图，可填链接或直接上传</p>
             <div class="admin-form-grid">
-              <label class="admin-form-wide"><span>桌面端 Banner 图片链接</span><input name="desktopBannerUrl" placeholder="https://... 或上传本地图片" /><small>仅用于 PC 端下载页顶部大图，建议使用宽屏图片</small></label>
-              <label class="admin-form-wide admin-image-upload"><span>上传桌面端 Banner</span><input name="desktopBannerFile" type="file" accept="image/jpeg,image/png,image/webp" /><small>最大 20 MB</small><img data-desktop-banner-preview alt="桌面端 Banner 预览" hidden /></label>
-              <label class="admin-form-wide"><span>移动端展示图链接</span><input name="heroImageUrl" placeholder="https://... 或上传本地图片" /><small>用于手机端页面中部的竖版功能展示图</small></label>
-              <label class="admin-form-wide admin-image-upload"><span>上传移动端展示图</span><input name="heroImageFile" type="file" accept="image/jpeg,image/png,image/webp" /><small>最大 20 MB</small><img data-hero-image-preview alt="移动端展示图预览" hidden /></label>
+              <label class="admin-form-wide"><span>桌面端 Banner 图片链接</span><input name="desktopBannerUrl" placeholder="https://... 或上传本地图片" /><small>仅用于 PC 端下载页顶部大图，建议尺寸 1920×823（21:9）</small></label>
+              <label class="admin-form-wide admin-image-upload"><span>上传桌面端 Banner</span><input name="desktopBannerFile" type="file" accept="image/jpeg,image/png,image/webp" /><small>建议 1920×823，最大 20 MB</small><img data-desktop-banner-preview alt="桌面端 Banner 预览" hidden /></label>
+              <label class="admin-form-wide"><span>移动端展示图链接</span><input name="heroImageUrl" placeholder="https://... 或上传本地图片" /><small>用于手机端中部竖版图，建议尺寸 750×1334</small></label>
+              <label class="admin-form-wide admin-image-upload"><span>上传移动端展示图</span><input name="heroImageFile" type="file" accept="image/jpeg,image/png,image/webp" /><small>建议 750×1334，最大 20 MB</small><img data-hero-image-preview alt="移动端展示图预览" hidden /></label>
             </div>
           </fieldset>
 
