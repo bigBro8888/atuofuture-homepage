@@ -95,6 +95,15 @@ function cleanHref(value, fallback = '') {
   return `/${text.replace(/^\/+/, '')}`.slice(0, 1000)
 }
 
+function cleanLines(value, maxItems = 8, maxLen = 80) {
+  const list = Array.isArray(value)
+    ? value
+    : String(value || '')
+      .split(/[\n,，]+/)
+      .map((item) => item.trim())
+  return list.map((item) => cleanText(item, '', maxLen)).filter(Boolean).slice(0, maxItems)
+}
+
 function cleanItems(value, catalog) {
   const saved = Array.isArray(value) ? value : []
   const byId = new Map(saved.map((item) => [String(item.id || '').trim(), item]))
@@ -107,6 +116,13 @@ function cleanItems(value, catalog) {
       title: cleanText(extra.title, item.title || '未命名', 80),
       summary: cleanText(extra.summary, item.summary || '', 240),
       imageUrl: cleanUrl(extra.imageUrl || item.imageUrl || '', item.imageUrl || ''),
+      detailId: cleanText(extra.detailId, '', 40),
+      tag: cleanText(extra.tag, extra.tag || '', 20),
+      fullDescription: cleanText(extra.fullDescription, extra.fullDescription || '', 600),
+      capabilities: cleanLines(extra.capabilities, 8, 40),
+      detailCtaLabel: cleanText(extra.detailCtaLabel, extra.detailCtaLabel || '', 20),
+      solutionLabel: cleanText(extra.solutionLabel, extra.solutionLabel || '', 40),
+      solutionHref: extra.solutionHref ? cleanHref(extra.solutionHref, '') : '',
     }
   }).filter((item) => item.id)
 }

@@ -365,6 +365,7 @@ export const HARDWARE_MEGA_GROUPS = [
 ]
 
 let navGroupOverride = null
+let productLibraryItems = []
 
 export function applyHardwareSimpleCms(content) {
   if (!content) return
@@ -377,7 +378,41 @@ export function applyHardwareSimpleCms(content) {
     if (hit.title) product.name = hit.title
     if (hit.summary) product.shortDescription = hit.summary
     if (hit.imageUrl) product.coverImage = hit.imageUrl
+    if (hit.detailId) product.detailId = hit.detailId
+    if (hit.tag) product.tag = hit.tag
+    if (hit.fullDescription) product.fullDescription = hit.fullDescription
+    if (Array.isArray(hit.capabilities) && hit.capabilities.length) product.capabilities = hit.capabilities
+    if (hit.detailCtaLabel) product.detailCtaLabel = hit.detailCtaLabel
+    if (hit.solutionLabel != null) product.solutionLabel = hit.solutionLabel
+    if (hit.solutionHref != null) product.solutionHref = hit.solutionHref
   }
+}
+
+export function applyProductLibraryCms(content) {
+  productLibraryItems = Array.isArray(content?.items)
+    ? content.items.filter((item) => item && item.published !== false)
+    : []
+}
+
+export function getProductLibraryItems() {
+  return productLibraryItems
+}
+
+export function getProductLibraryItem(idOrSlug) {
+  if (!idOrSlug) return null
+  return productLibraryItems.find((item) => item.id === idOrSlug || item.slug === idOrSlug) || null
+}
+
+export function resolveLibraryProductForHardware(product) {
+  if (!product) return null
+  if (product.detailId) {
+    const hit = getProductLibraryItem(product.detailId)
+    if (hit) return hit
+  }
+  const hardwareId = product.id || product.slug
+  const linked = productLibraryItems.find((item) => (item.linkedHardwareIds || []).includes(hardwareId) || (item.linkedHardwareIds || []).includes(product.slug))
+  if (linked) return linked
+  return getProductLibraryItem(product.slug || product.id)
 }
 
 function megaSourceGroups() {
@@ -414,12 +449,13 @@ export function resolveHardwareMegaGroups() {
     products: group.products
       .map((entry) => {
         const product = getProductBySlug(entry.id)
+        const presented = presentHardwareProduct(product) || product
         return {
           id: entry.id,
-          slug: product?.slug || entry.id,
-          name: entry.label || product?.name || entry.id,
-          coverImage: entry.imageUrl || hardwareLineThumb(entry.id) || product?.coverImage || '',
-          href: entry.href || (product ? getProductDetailHref(product) : `/hardware/product/?id=${encodeURIComponent(entry.id)}`),
+          slug: presented?.slug || entry.id,
+          name: entry.label || presented?.name || entry.id,
+          coverImage: entry.imageUrl || hardwareLineThumb(entry.id) || presented?.coverImage || '',
+          href: resolveMegaHref(entry, product),
         }
       })
       .filter((item) => item.id),
@@ -464,7 +500,47 @@ export function getProductDetailPath(product) {
 }
 
 export function getProductDetailHref(product) {
-  return `/hardware/product/?id=${encodeURIComponent(product.slug)}`
+  const library = resolveLibraryProductForHardware(product)
+  const slug = library?.slug || product?.detailId || product?.slug || product?.id || ''
+  return `/hardware/product/?id=${encodeURIComponent(slug)}`
+}
+
+function resolveMegaHref(entry, product) {
+  const defaultHref = `/hardware/product/?id=${encodeURIComponent(entry.id)}`
+  if (entry.href && entry.href !== defaultHref && entry.href !== `/hardware/product/?id=${entry.id}`) {
+    return entry.href
+  }
+  if (product) return getProductDetailHref(product)
+  return defaultHref
+}
+
+export function presentHardwareProduct(product) {
+  if (!product) return null
+  const library = resolveLibraryProductForHardware(product)
+  if (!library) return product
+  return {
+    ...product,
+    name: library.name || product.name,
+    coverImage: library.coverImage || product.coverImage,
+    shortDescription: library.shortDescription || product.shortDescription,
+    fullDescription: library.fullDescription || product.fullDescription,
+    capabilities: Array.isArray(library.capabilities) && library.capabilities.length ? library.capabilities : product.capabilities,
+    tag: library.tag || product.tag,
+  }
+}
+
+export function listingActions(product) {
+  const library = resolveLibraryProductForHardware(product)
+  const fallbackHref = product?.productLine === 'space' ? ASPACE_SOLUTION_HREF : ''
+  const solutionHref = product?.solutionHref || library?.solutionHref || fallbackHref
+  const solutionLabel = product?.solutionLabel || library?.solutionLabel || (solutionHref ? '了解 ASpace 总体方案' : '')
+  return {
+    detailLabel: product?.detailCtaLabel || library?.detailCtaLabel || '查看产品详情',
+    detailHref: getProductDetailHref(product),
+    solutionLabel,
+    solutionHref,
+    tag: product?.tag || library?.tag || '',
+  }
 }
 
 /** 兼容旧锚点与导航 */

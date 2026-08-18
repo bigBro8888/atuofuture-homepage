@@ -1,7 +1,7 @@
 import { SITE_NAV_ITEMS } from '../data/site-nav.js'
 import { SHOW_APP_DOWNLOAD, SITE_CTA, APP_DOWNLOAD_PATH } from '../data/site-links.js'
-import { applyHardwareSimpleCms, resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
-import { loadSimplePageContent } from '../services/site-settings-api.js'
+import { applyHardwareSimpleCms, applyProductLibraryCms, resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
+import { loadProductLibraryContent, loadSimplePageContent } from '../services/site-settings-api.js'
 import { SOLUTIONS } from '../data/solutions.js'
 import { AGENTS_OVERVIEW } from '../data/agents-overview.js'
 
@@ -321,9 +321,10 @@ export function initSiteNav() {
   }
 
   paint()
-  void loadSimplePageContent('hardware')
-    .then((content) => {
+  void Promise.all([loadSimplePageContent('hardware'), loadProductLibraryContent()])
+    .then(([content, library]) => {
       applyHardwareSimpleCms(content)
+      applyProductLibraryCms(library)
       const header = document.getElementById('site-header')
       if (!header) return
       const root = getRootPrefix()

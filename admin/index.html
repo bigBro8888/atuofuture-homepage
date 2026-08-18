@@ -35,6 +35,7 @@
           <button type="button" data-tab="page-solutions"><span class="material-symbols-outlined">domain</span>行业解决方案</button>
           <button type="button" data-tab="page-agents"><span class="material-symbols-outlined">smart_toy</span>空间智能体</button>
           <button type="button" data-tab="page-hardware"><span class="material-symbols-outlined">memory</span>智能硬件</button>
+          <button type="button" data-tab="page-products"><span class="material-symbols-outlined">inventory_2</span>产品库</button>
           <button type="button" data-tab="page-news"><span class="material-symbols-outlined">newspaper</span>新闻中心</button>
           <button type="button" data-tab="page-ai-token"><span class="material-symbols-outlined">token</span>AI Token</button>
           <button type="button" data-tab="config"><span class="material-symbols-outlined">install_mobile</span>App 下载页</button>
@@ -200,6 +201,30 @@
             <button type="button" data-simple-publish>发布到前台</button>
           </div>
         </form>
+      </section>
+
+      <section class="admin-panel" data-panel="products">
+        <form class="admin-card admin-home-form" data-products-form data-products-list-view>
+          <div class="admin-card__head">
+            <div>
+              <h2>产品库</h2>
+              <p>专门编辑产品详情页（名称、图片、详情）。编好后可关联智能硬件库产品；智能硬件页也可反过来选择关联哪条详情。</p>
+            </div>
+            <div class="admin-home-status"><span data-products-draft-time>尚未加载</span><b data-products-publish-status>--</b></div>
+          </div>
+          <div class="admin-home-editor" data-products-editor></div>
+          <div class="admin-home-actions">
+            <a href="/hardware/" target="_blank">预览智能硬件</a>
+          </div>
+        </form>
+        <div class="admin-news-compose" data-products-compose-view hidden>
+          <header class="admin-news-compose__bar">
+            <button type="button" class="admin-news-compose__back" data-products-compose-back>← 返回列表</button>
+            <strong>编辑产品详情</strong>
+            <button type="button" class="admin-news-compose__publish" data-products-compose-publish>发布上线</button>
+          </header>
+          <div class="admin-news-compose__body" data-products-compose-body></div>
+        </div>
       </section>
 
       <section class="admin-panel" data-panel="home">

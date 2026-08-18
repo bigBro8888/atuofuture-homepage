@@ -1,10 +1,12 @@
-import { loadSimplePageContent } from '../services/site-settings-api.js'
+import { loadProductLibraryContent, loadSimplePageContent } from '../services/site-settings-api.js'
 import {
   HARDWARE_SPACE_FLOW,
-  ASPACE_SOLUTION_HREF,
   applyHardwareSimpleCms,
+  applyProductLibraryCms,
   getProductBySlug,
-  getProductsByLine,
+  getProductDetailHref,
+  listingActions,
+  presentHardwareProduct,
   resolveHardwareMegaGroups,
 } from '../data/hardware-catalog.js'
 
@@ -17,7 +19,11 @@ function esc(str = '') {
 }
 
 function productHref(product) {
-  return `/hardware/product/?id=${encodeURIComponent(product.slug)}`
+  return getProductDetailHref(product)
+}
+
+function viewProduct(product) {
+  return presentHardwareProduct(product) || product
 }
 
 function renderHero() {
@@ -79,7 +85,7 @@ function renderLineOverview() {
 }
 
 function renderSpaceSection() {
-  const flagship = getProductBySlug('control-screen')
+  const flagship = viewProduct(getProductBySlug('control-screen'))
   const matrixIds = [
     { id: 'e-table-sign', label: '电子桌牌' },
     { id: 'desk-screen', label: '工位屏' },
@@ -89,7 +95,7 @@ function renderSpaceSection() {
   ]
   const matrix = matrixIds
     .map((item) => {
-      const p = getProductBySlug(item.id)
+      const p = viewProduct(getProductBySlug(item.id))
       return p ? { ...p, displayName: item.label } : null
     })
     .filter(Boolean)
@@ -105,13 +111,15 @@ function renderSpaceSection() {
 
         ${
           flagship
-            ? `
+            ? (() => {
+                const actions = listingActions(flagship)
+                return `
         <article class="hwx-flagship">
           <div class="hwx-flagship__media">
             <img src="${esc(flagship.coverImage)}" alt="${esc(flagship.name)}" width="1200" height="900" loading="lazy" />
           </div>
           <div class="hwx-flagship__copy">
-            <p class="hwx-flagship__tag">旗舰产品</p>
+            <p class="hwx-flagship__tag">${esc(actions.tag || '旗舰产品')}</p>
             <h3>${esc(flagship.name)}</h3>
             <p class="hwx-flagship__lead">${esc(flagship.shortDescription)}</p>
             <p>${esc(flagship.fullDescription || '')}</p>
@@ -121,11 +129,16 @@ function renderSpaceSection() {
                 .join('')}
             </ul>
             <div class="hwx-flagship__actions">
-              <a class="hwc-btn hwc-btn--orange" href="${productHref(flagship)}">查看产品详情</a>
-              <a class="hwc-text-link" href="${ASPACE_SOLUTION_HREF}">了解 ASpace 总体方案</a>
+              <a class="hwc-btn hwc-btn--orange" href="${esc(actions.detailHref)}">${esc(actions.detailLabel)}</a>
+              ${
+                actions.solutionHref
+                  ? `<a class="hwc-text-link" href="${esc(actions.solutionHref)}">${esc(actions.solutionLabel || '了解 ASpace 总体方案')}</a>`
+                  : ''
+              }
             </div>
           </div>
         </article>`
+              })()
             : ''
         }
 
@@ -159,7 +172,7 @@ function renderSpaceSection() {
               <h3 id="hwx-arch-title">空间智能硬件如何协同</h3>
               <p>从数据采集到终端交互的横向能力链路。</p>
             </div>
-            <a class="hwc-text-link" href="${ASPACE_SOLUTION_HREF}">了解 ASpace 总体解决方案 →</a>
+            <a class="hwc-text-link" href="${esc(listingActions(getProductBySlug('control-screen') || {}).solutionHref || '/solutions/')}">了解 ASpace 总体解决方案 →</a>
           </div>
           <ol class="hwx-arch__flow">
             ${HARDWARE_SPACE_FLOW.map(
@@ -197,7 +210,7 @@ function renderRetailSection() {
     },
   ]
     .map((item) => {
-      const p = getProductBySlug(item.id)
+      const p = viewProduct(getProductBySlug(item.id))
       return p ? { ...p, use: item.use } : null
     })
     .filter(Boolean)
@@ -231,7 +244,7 @@ function renderRetailSection() {
                     <p>${esc((p.scenarios || []).join(' · '))}</p>
                   </div>
                 </div>
-                <a class="hwc-text-link" href="${productHref(p)}">查看产品详情 →</a>
+                <a class="hwc-text-link" href="${esc(productHref(p))}">${esc(listingActions(p).detailLabel)} →</a>
               </div>
             </article>`
             )
@@ -255,7 +268,7 @@ function renderConsumerSection() {
     },
   ]
     .map((item) => {
-      const p = getProductBySlug(item.id)
+      const p = viewProduct(getProductBySlug(item.id))
       return p ? { ...p, scene: item.scene, use: item.use } : null
     })
     .filter(Boolean)
@@ -309,8 +322,10 @@ let cmsHero = null
 export async function initHardwareStore() {
   const root = document.getElementById('hardware-root')
   if (!root) return
-  cmsHero = await loadSimplePageContent('hardware')
-  applyHardwareSimpleCms(cmsHero)
+  const [simple, library] = await Promise.all([loadSimplePageContent('hardware'), loadProductLibraryContent()])
+  cmsHero = simple
+  applyHardwareSimpleCms(simple)
+  applyProductLibraryCms(library)
 
   root.innerHTML = `
     <div class="hwc-first">
@@ -337,6 +352,4 @@ export async function initHardwareStore() {
       document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 80)
   }
-
-  void getProductsByLine
 }

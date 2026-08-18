@@ -1,6 +1,6 @@
-import { getPublishedPage } from '../services/site-settings-api.js'
+import { applyHardwareSimpleCms, applyProductLibraryCms, getLine, getProductBySlug, getProductLibraryItem } from '../data/hardware-catalog.js'
 import { buildProductStory } from '../data/hardware-product-details.js'
-import { findHardwareLine, findHardwareProduct, setHardwareRuntime } from '../lib/cms-pages.js'
+import { loadProductLibraryContent, loadSimplePageContent } from '../services/site-settings-api.js'
 
 function esc(str = '') {
   return String(str)
@@ -189,32 +189,48 @@ function renderClosing(story) {
     </section>`
 }
 
-function renderStory(product) {
-  const line = findHardwareLine(product.productLine)
-  const story = buildProductStory(product)
+function renderStory(product, story) {
+  const line = getLine(product.productLine)
+  const resolved = story || buildProductStory(product)
   return `
     <article class="hpi">
-      ${renderHero(story, product, line)}
-      ${renderValue(story)}
-      ${renderHow(story)}
-      ${renderScenarios(story)}
-      ${renderSystem(story)}
-      ${renderClosing(story)}
+      ${renderHero(resolved, product, line)}
+      ${renderValue(resolved)}
+      ${renderHow(resolved)}
+      ${renderScenarios(resolved)}
+      ${renderSystem(resolved)}
+      ${renderClosing(resolved)}
     </article>`
+}
+
+function productFromLibrary(item) {
+  if (!item) return null
+  const catalog = getProductBySlug(item.slug) || getProductBySlug(item.id)
+  return {
+    id: item.id,
+    slug: item.slug,
+    name: item.name || catalog?.name || '未命名产品',
+    productLine: item.hardwareLine || catalog?.productLine || 'space',
+    coverImage: item.coverImage || catalog?.coverImage || '',
+    shortDescription: item.shortDescription || catalog?.shortDescription || '',
+  }
 }
 
 export async function initHardwareProductPage() {
   const root = document.getElementById('hardware-product-root')
   if (!root) return
-  const cms = await getPublishedPage('/api/public/pages/hardware')
-  if (cms) setHardwareRuntime(cms)
   const slug = resolveSlug()
-  const product = findHardwareProduct(slug)
+  const [simple, library] = await Promise.all([loadSimplePageContent('hardware'), loadProductLibraryContent()])
+  applyHardwareSimpleCms(simple)
+  applyProductLibraryCms(library)
+
+  const libItem = getProductLibraryItem(slug)
+  const product = libItem ? productFromLibrary(libItem) : getProductBySlug(slug)
   if (!product) {
     document.title = '产品未找到 | 安托未来'
     root.innerHTML = renderNotFound(slug)
     return
   }
   document.title = `${product.name} | 智能硬件产品介绍 | 安托未来`
-  root.innerHTML = renderStory(product)
+  root.innerHTML = renderStory(product, libItem?.story)
 }

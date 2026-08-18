@@ -1,8 +1,9 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 import { bindNewsRichEditor, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
+import { bindProductLibraryAdmin, closeProductCompose, loadProductLibrary, productLibraryOptions } from './admin-products.js'
 
 const API = '/api/admin'
-const state = { user: null, app: null, homePage: null, aboutPage: null, aboutSection: 'hero', sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, homeSection: 'hero' }
+const state = { user: null, app: null, homePage: null, aboutPage: null, aboutSection: 'hero', sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, productLibrary: null, homeSection: 'hero' }
 const HOME_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏轮播', desc: '多屏大图，可新增和逐屏编辑' },
   { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
@@ -26,7 +27,8 @@ const titles = {
   about: ['关于我们', '路径 /about/ · 与线上六个区块一一对应'],
   'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏与方案列表'],
   'page-agents': ['空间智能体', '路径 /agents/ · 首屏与智能体列表'],
-  'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏与产品列表'],
+  'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏、产品列表，以及关联产品库详情'],
+  'page-products': ['产品库', '路径 /hardware/product/ · 编辑产品详情页，再与智能硬件关联'],
   'page-news': ['新闻中心', '路径 /news/ · 列表管理，点编辑即可改稿并发布'],
   'page-ai-token': ['AI Token', '路径 /ai-token/ · 首屏标题'],
   config: ['App 下载页', '路径 /app-download/ · 文案、Banner、商店链接'],
@@ -174,7 +176,7 @@ async function loadOverview() {
 
 function openTab(name, options = {}) {
   if (!titles[name]) name = 'overview'
-  const panelName = name === 'page-news' ? 'news' : name.startsWith('page-') ? 'simple' : name
+  const panelName = name === 'page-news' ? 'news' : name === 'page-products' ? 'products' : name.startsWith('page-') ? 'simple' : name
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === name))
   document.querySelectorAll('[data-panel]').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === panelName))
   const [title, subtitle] = titles[name]
@@ -194,6 +196,9 @@ function openTab(name, options = {}) {
   if (name === 'page-news') {
     closeNewsCompose()
     loadNewsFeed()
+  } else if (name === 'page-products') {
+    closeProductCompose()
+    loadProductLibrary()
   }
   else if (name.startsWith('page-')) loadSimplePage(name.slice('page-'.length))
   if (name === 'home') loadHomePage()
@@ -1224,6 +1229,20 @@ function renderHardwareNavEditor(navGroups, items = []) {
 }
 
 function renderSimpleItemFields(entry, index, key) {
+  const extra = key === 'hardware'
+    ? `
+        ${homeField(`items.${index}.detailId`, '关联产品详情', entry.detailId || '', {
+          type: 'select',
+          options: productLibraryOptions(),
+          help: '选产品库里的详情页，「查看产品详情」会跳到该页',
+        })}
+        ${homeField(`items.${index}.tag`, '列表标签', entry.tag || '', { help: '例如：旗舰产品' })}
+        ${homeField(`items.${index}.fullDescription`, '详细介绍', entry.fullDescription || '', { type: 'textarea', rows: 2, wide: true })}
+        ${homeField(`items.${index}.capabilities`, '能力卖点', Array.isArray(entry.capabilities) ? entry.capabilities.join('\n') : (entry.capabilities || ''), { type: 'textarea', rows: 3, wide: true, help: '每行一条' })}
+        ${homeField(`items.${index}.detailCtaLabel`, '详情按钮文案', entry.detailCtaLabel || '', { help: '默认用产品库里的文案' })}
+        ${homeField(`items.${index}.solutionLabel`, '方案链接文案', entry.solutionLabel || '')}
+        ${homeField(`items.${index}.solutionHref`, '方案链接地址', entry.solutionHref || '', { wide: true, placeholder: '/solutions/' })}`
+    : ''
   return `
     <div class="admin-item-row admin-simple-item" data-simple-item="${index}">
       <input type="hidden" data-home-field="items.${index}.id" value="${escapeHtml(entry.id || '')}" />
@@ -1233,6 +1252,7 @@ function renderSimpleItemFields(entry, index, key) {
         ${homeField(`items.${index}.title`, '名称', entry.title)}
         ${homeField(`items.${index}.summary`, '简介', entry.summary, { type: 'textarea', rows: 2, wide: true })}
         ${homeField(`items.${index}.imageUrl`, '图片', entry.imageUrl, { image: true, wide: true, size: key === 'hardware' ? '1200×900' : '1200×800' })}
+        ${extra}
       </div>
     </div>`
 }
@@ -1260,7 +1280,7 @@ function renderSimpleEditor(key, content) {
     return `
       <fieldset data-simple-section="${entry.id}">
         <legend>${escapeHtml(sectionLegend[entry.id] || entry.title)}</legend>
-        <p class="admin-form-section__hint">只改这一类前台内容，保存并发布后官网同步。</p>
+        <p class="admin-form-section__hint">只改这一类前台列表内容。产品详情页请到「产品库」编辑，然后在下面选择关联哪一条。</p>
         <div class="admin-home-list">${rows.map(({ row, index }) => renderSimpleItemFields(row, index, key)).join('') || '<p class="admin-form-section__hint">此类暂无条目。</p>'}</div>
       </fieldset>`
   }).join('')
@@ -1334,6 +1354,14 @@ async function loadSimplePage(key) {
   state.simpleSection = 'hero'
   const item = ADMIN_SITEMAP.find((entry) => entry.key === key)
   try {
+    if (key === 'hardware') {
+      try {
+        const library = await api('/pages/product-library')
+        state.productLibrary = library.page
+      } catch {
+        state.productLibrary = state.productLibrary || { draftContent: { items: [] } }
+      }
+    }
     const { page } = await api(`/pages/simple/${encodeURIComponent(key)}`)
     state.simplePage = page
     renderSimpleEditor(key, page.draftContent)
@@ -2545,3 +2573,4 @@ document.querySelector('[data-item-modal]').addEventListener('change', async (ev
 })
 
 api('/me').then(({ user }) => showAdmin(user)).catch(showLogin)
+bindProductLibraryAdmin({ api, toast, escapeHtml, dateTime, state })

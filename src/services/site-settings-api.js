@@ -63,3 +63,11 @@ export async function loadNewsFeedContent() {
     return null
   }
 }
+
+export async function loadProductLibraryContent() {
+  try {
+    return await getPublishedPage('/api/public/pages/product-library')
+  } catch {
+    return null
+  }
+}

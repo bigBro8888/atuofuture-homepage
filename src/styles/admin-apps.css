@@ -765,6 +765,33 @@ body.admin-modal-open { overflow: hidden; }
   min-height: 420px;
   max-height: none;
 }
+.admin-product-editor { align-items: start; }
+.admin-product-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+.admin-product-links label {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #e8eef5;
+  border-radius: 10px;
+  background: #f8fafc;
+  align-items: flex-start;
+}
+.admin-product-links input { width: 16px; height: 16px; margin-top: 2px; flex: none; }
+.admin-product-links b { display: block; font-size: 13px; color: #172033; }
+.admin-product-links small { display: block; margin-top: 2px; color: #8b97a8; font-size: 11px; }
+.admin-product-card {
+  padding: 14px;
+  border: 1px solid #e8eef5;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+.admin-product-card h4 { margin: 0 0 10px; font-size: 13px; }
+.admin-news-compose__bar strong { font-size: 14px; color: #172033; }
 @media (max-width: 760px) {
   .admin-news-compose__meta { grid-template-columns: 1fr; }
   .admin-news-compose__bar { flex-wrap: wrap; }

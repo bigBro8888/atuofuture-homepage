@@ -11,6 +11,7 @@ import { getAboutPageConfig, validateAboutContent } from './about-service.js'
 import { getSiteSettingsPage, validateSiteSettings } from './site-settings-service.js'
 import { SIMPLE_PAGE_KEYS, getSimplePageConfig, presentSimplePage, validateSimplePage } from './simple-page-service.js'
 import { getNewsFeedConfig, validateNewsFeedContent } from './news-feed-service.js'
+import { getProductLibraryConfig, publicProductLibraryContent, validateProductLibraryContent } from './product-library-service.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -336,6 +337,47 @@ adminPagesRouter.post('/news-feed/publish', requireAuth('config:write'), async (
   page.updatedAt = page.publishedAt
   await save()
   await addAudit(request.admin, 'news.feed.publish', 'news-feed', { publishedAt: page.publishedAt })
+  response.json({ page })
+})
+
+publicPagesRouter.get('/product-library', (request, response) => {
+  const page = getProductLibraryConfig()
+  if (page.status !== 'published' || !page.publishedContent) {
+    return response.status(404).json({ error: 'page_not_published' })
+  }
+  response.set('Cache-Control', 'no-cache')
+  response.json({
+    pageKey: page.pageKey,
+    content: publicProductLibraryContent(page),
+    publishedAt: page.publishedAt,
+  })
+})
+
+adminPagesRouter.get('/product-library', requireAuth(), (request, response) => {
+  response.json({ page: presentProductLibrary(getProductLibraryConfig()) })
+})
+
+adminPagesRouter.put('/product-library/draft', requireAuth('config:write'), async (request, response) => {
+  try {
+    const page = getProductLibraryConfig()
+    page.draftContent = validateProductLibraryContent(request.body?.content)
+    page.updatedAt = new Date().toISOString()
+    await save()
+    await addAudit(request.admin, 'product.library.update', 'product-library', { count: page.draftContent.items.length })
+    response.json({ page })
+  } catch (error) {
+    response.status(400).json({ error: 'invalid_product_library', message: error.message })
+  }
+})
+
+adminPagesRouter.post('/product-library/publish', requireAuth('config:write'), async (request, response) => {
+  const page = getProductLibraryConfig()
+  page.publishedContent = structuredClone(page.draftContent)
+  page.status = 'published'
+  page.publishedAt = new Date().toISOString()
+  page.updatedAt = page.publishedAt
+  await save()
+  await addAudit(request.admin, 'product.library.publish', 'product-library', { publishedAt: page.publishedAt })
   response.json({ page })
 })
 
