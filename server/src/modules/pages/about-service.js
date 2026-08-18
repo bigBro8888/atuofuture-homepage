@@ -42,18 +42,18 @@ export const defaultAboutContent = {
       { name: '大润发', logoUrl: '/images/partners/rtmart.png' },
     ],
   },
-  duties: {
-    label: '责任与承诺',
-    title: '对客户、员工与股东负责',
-    items: [
-      { imageUrl: '/images/hardware/eink-price-tag.jpg', title: '对客户', body: '品质、公允定价、及时履约，以及交付前后的一流服务。' },
-      { imageUrl: '/images/solutions/campus.jpg', title: '对员工', body: '建设包容、多元、相互尊重的工作环境，关心健康与职业发展。' },
-      { imageUrl: '/images/solutions/building.jpg', title: '对社区与股东', body: '支持公益、依法纳税、保护环境；拥抱创新，实现可持续增长与合理回报。' },
-    ],
-  },
   join: {
     label: '加入我们',
     title: '关注成长，鼓励创新',
+    lead: '青春正好，我们在等你。无论你刚走出校园，还是已有锋芒，这里都有成长路径、动手空间，和一份看得见的日常。',
+    ctaLabel: '投递简历',
+    ctaHref: 'mailto:service@atuofuture.com',
+    slides: [
+      { imageUrl: '/images/solutions/building.jpg', caption: '杭州办公空间' },
+      { imageUrl: '/images/home-agents/meeting.jpg', caption: '协作与共创' },
+      { imageUrl: '/images/solutions/campus.jpg', caption: '数字生态园区' },
+      { imageUrl: '/images/hardware/smart-meeting.jpg', caption: '智能会议室' },
+    ],
     items: [
       { step: '01', title: '聚焦成长', body: '通过应届生培养与一对一导师，帮助每一位新人发光。' },
       { step: '02', title: '助力攀登', body: '阶梯式领导力项目，帮助核心骨干从超越走向卓越。' },
@@ -111,7 +111,6 @@ export function validateAboutContent(value = {}) {
   const story = value.story || {}
   const values = value.values || {}
   const partners = value.partners || {}
-  const duties = value.duties || {}
   const join = value.join || {}
   const contact = value.contact || {}
 
@@ -155,23 +154,21 @@ export function validateAboutContent(value = {}) {
         }
       }, 16),
     },
-    duties: {
-      label: cleanText(duties.label, defaultAboutContent.duties.label, 40),
-      title: cleanText(duties.title, defaultAboutContent.duties.title, 40),
-      items: fixedItems(duties.items, defaultAboutContent.duties.items, (item, fallback) => ({
-        imageUrl: cleanHref(item.imageUrl, fallback.imageUrl),
-        title: cleanText(item.title, fallback.title, 40),
-        body: cleanText(item.body, fallback.body, 240),
-      })),
-    },
     join: {
       label: cleanText(join.label, defaultAboutContent.join.label, 40),
       title: cleanText(join.title, defaultAboutContent.join.title, 40),
-      items: fixedItems(join.items, defaultAboutContent.join.items, (item, fallback) => ({
+      lead: cleanText(join.lead, defaultAboutContent.join.lead, 400),
+      ctaLabel: cleanText(join.ctaLabel, defaultAboutContent.join.ctaLabel, 20),
+      ctaHref: cleanHref(join.ctaHref, defaultAboutContent.join.ctaHref),
+      slides: listItems(join.slides, defaultAboutContent.join.slides, (item, fallback) => ({
+        imageUrl: cleanHref(item.imageUrl, fallback.imageUrl),
+        caption: cleanText(item.caption, fallback.caption, 40),
+      }), 8),
+      items: listItems(join.items, defaultAboutContent.join.items, (item, fallback) => ({
         step: cleanText(item.step, fallback.step, 8),
         title: cleanText(item.title, fallback.title, 20),
         body: cleanText(item.body, fallback.body, 200),
-      })),
+      }), 8),
     },
     contact: {
       label: cleanText(contact.label, defaultAboutContent.contact.label, 40),
@@ -211,6 +208,8 @@ export function getAboutPageConfig() {
   hydratePartnerLogos(page.publishedContent)
   hydrateValuesKicker(page.draftContent)
   hydrateValuesKicker(page.publishedContent)
+  hydrateJoinBlock(page.draftContent)
+  hydrateJoinBlock(page.publishedContent)
   return page
 }
 
@@ -235,4 +234,18 @@ function hydratePartnerLogos(content) {
   items.forEach((item) => {
     if (item && !item.logoUrl) item.logoUrl = byName[item.name] || ''
   })
+}
+
+function hydrateJoinBlock(content) {
+  if (!content?.join) {
+    if (content) content.join = structuredClone(defaultAboutContent.join)
+    return
+  }
+  const join = content.join
+  if (!join.lead) join.lead = defaultAboutContent.join.lead
+  if (!join.ctaLabel) join.ctaLabel = defaultAboutContent.join.ctaLabel
+  if (!join.ctaHref) join.ctaHref = defaultAboutContent.join.ctaHref
+  if (!Array.isArray(join.slides) || !join.slides.length) {
+    join.slides = structuredClone(defaultAboutContent.join.slides)
+  }
 }

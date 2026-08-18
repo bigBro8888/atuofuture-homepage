@@ -36,7 +36,7 @@ export function renderSiteFooter() {
             <h6>关于安托未来</h6>
             <ul>
               <li><a href="${root}about/#intro">公司介绍</a></li>
-              <li><a href="${root}about/#team">团队与能力</a></li>
+              <li><a href="${root}about/#join">加入我们</a></li>
               <li><a href="${root}news/">新闻动态</a></li>
               <li><a href="${root}about/#contact">联系我们</a></li>
             </ul>

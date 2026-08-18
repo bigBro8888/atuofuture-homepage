@@ -66,6 +66,103 @@ function renderPartnerMarquee(items) {
   })
 }
 
+function renderJoinPoints(items) {
+  const list = document.querySelector('[data-about-join-points]')
+  if (!list || !items?.length) return
+  list.innerHTML = items.map((item, index) => {
+    const step = escapeHtml(item.step || String(index + 1).padStart(2, '0'))
+    return `<li data-about-join-item><b>${step}</b><div><h3>${escapeHtml(item.title || '')}</h3><p>${escapeHtml(item.body || '')}</p></div></li>`
+  }).join('')
+}
+
+function renderJoinCarousel(slides) {
+  const root = document.querySelector('[data-about-join-carousel]')
+  if (!root) return
+  const list = (slides || []).filter((item) => item?.imageUrl)
+  if (list.length) {
+    root.innerHTML = `
+      <div class="ab-join__film">
+        ${list.map((item, index) => `
+          <figure class="ab-join__slide${index === 0 ? ' is-active' : ''}">
+            <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.caption || '')}">
+            ${item.caption ? `<figcaption>${escapeHtml(item.caption)}</figcaption>` : ''}
+          </figure>`).join('')}
+      </div>
+      <div class="ab-join__bar">
+        <button type="button" class="ab-join__ctrl" data-about-join-prev aria-label="上一张">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4.5 8 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="ab-join__dots" data-about-join-dots>
+          ${list.map((_, index) => `<button type="button" class="${index === 0 ? 'is-active' : ''}" aria-label="第 ${index + 1} 张"></button>`).join('')}
+        </div>
+        <button type="button" class="ab-join__ctrl" data-about-join-next aria-label="下一张">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 4.5 16 12l-7.5 7.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>`
+  }
+  bindJoinCarousel(root)
+}
+
+function bindJoinCarousel(root) {
+  if (!root) return
+  root._joinCleanup?.()
+  const slides = [...root.querySelectorAll('.ab-join__slide')]
+  const dots = [...root.querySelectorAll('[data-about-join-dots] button')]
+  if (slides.length < 2) return
+
+  let index = Math.max(0, slides.findIndex((slide) => slide.classList.contains('is-active')))
+  let timer = 0
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  function goTo(next) {
+    index = ((next % slides.length) + slides.length) % slides.length
+    slides.forEach((slide, i) => slide.classList.toggle('is-active', i === index))
+    dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index))
+  }
+
+  function play() {
+    if (reduced) return
+    stop()
+    timer = window.setInterval(() => goTo(index + 1), 5200)
+  }
+
+  function stop() {
+    window.clearInterval(timer)
+    timer = 0
+  }
+
+  const onPrev = () => { goTo(index - 1); play() }
+  const onNext = () => { goTo(index + 1); play() }
+  root.querySelector('[data-about-join-prev]')?.addEventListener('click', onPrev)
+  root.querySelector('[data-about-join-next]')?.addEventListener('click', onNext)
+  dots.forEach((dot, i) => dot.addEventListener('click', () => { goTo(i); play() }))
+  root.addEventListener('mouseenter', stop)
+  root.addEventListener('mouseleave', play)
+  root.addEventListener('focusin', stop)
+  root.addEventListener('focusout', play)
+
+  let touchX = 0
+  const film = root.querySelector('.ab-join__film')
+  const onTouchStart = (event) => { touchX = event.changedTouches[0].clientX }
+  const onTouchEnd = (event) => {
+    const dx = event.changedTouches[0].clientX - touchX
+    if (Math.abs(dx) > 40) { goTo(index + (dx < 0 ? 1 : -1)); play() }
+  }
+  film?.addEventListener('touchstart', onTouchStart, { passive: true })
+  film?.addEventListener('touchend', onTouchEnd, { passive: true })
+
+  root._joinCleanup = () => {
+    stop()
+    root.removeEventListener('mouseenter', stop)
+    root.removeEventListener('mouseleave', play)
+    root.removeEventListener('focusin', stop)
+    root.removeEventListener('focusout', play)
+    film?.removeEventListener('touchstart', onTouchStart)
+    film?.removeEventListener('touchend', onTouchEnd)
+  }
+  play()
+}
+
 export function applyAboutContent(content) {
   if (!content) return
 
@@ -97,25 +194,13 @@ export function applyAboutContent(content) {
   text('[data-about-partners-intro]', content.partners?.intro)
   renderPartnerMarquee(content.partners?.items)
 
-  text('[data-about-duties-label]', content.duties?.label)
-  text('[data-about-duties-title]', content.duties?.title)
-  document.querySelectorAll('[data-about-duty]').forEach((card, index) => {
-    const item = content.duties?.items?.[index]
-    if (!item) return
-    src('img', item.imageUrl, card)
-    text('strong', item.title, card)
-    text('span', item.body, card)
-  })
-
   text('[data-about-join-label]', content.join?.label)
   text('[data-about-join-title]', content.join?.title)
-  document.querySelectorAll('[data-about-join-item]').forEach((card, index) => {
-    const item = content.join?.items?.[index]
-    if (!item) return
-    text('b', item.step, card)
-    text('h3', item.title, card)
-    text('p', item.body, card)
-  })
+  text('[data-about-join-lead]', content.join?.lead)
+  text('[data-about-join-cta]', content.join?.ctaLabel)
+  href('[data-about-join-cta]', content.join?.ctaHref)
+  renderJoinPoints(content.join?.items)
+  renderJoinCarousel(content.join?.slides)
 
   text('[data-about-contact-label]', content.contact?.label)
   text('[data-about-contact-title]', content.contact?.title)
@@ -133,6 +218,7 @@ export function applyAboutContent(content) {
 }
 
 export async function loadAndApplyAboutContent() {
+  bindJoinCarousel(document.querySelector('[data-about-join-carousel]'))
   try {
     const payload = await getAboutContent()
     applyAboutContent(payload.content)

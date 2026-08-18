@@ -16,15 +16,14 @@ const ABOUT_OUTLINE = [
   { id: 'story', no: '02', title: '公司介绍', desc: '左图右文两段介绍' },
   { id: 'values', no: '03', title: '使命价值观愿景', desc: '时间轴三列，大号 01–03' },
   { id: 'partners', no: '04', title: '客户 Logo 墙', desc: '双向滚动商标，可增删换图' },
-  { id: 'duties', no: '05', title: '责任与承诺', desc: '三张图文：客户、员工、股东' },
-  { id: 'join', no: '06', title: '加入我们', desc: '五步成长路径' },
-  { id: 'contact', no: '07', title: '联系我们', desc: '邮箱、地址、投递入口三列' },
+  { id: 'join', no: '05', title: '加入我们', desc: '左轮播图，右招揽话术' },
+  { id: 'contact', no: '06', title: '联系我们', desc: '邮箱、地址、投递入口三列' },
 ]
 const titles = {
   overview: ['页面目录', '每个前台路径对应一块后台配置，结构与官网导航一致'],
   site: ['全站设置', 'Logo、品牌名、顶栏按钮与联系方式'],
   home: ['官网首页', '路径 / · 按前台区块逐项编辑，点左侧大纲跳转'],
-  about: ['关于我们', '路径 /about/ · 与线上七个区块一一对应'],
+  about: ['关于我们', '路径 /about/ · 与线上六个区块一一对应'],
   'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏与方案列表'],
   'page-agents': ['空间智能体', '路径 /agents/ · 首屏与智能体列表'],
   'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏与产品列表'],
@@ -562,15 +561,14 @@ function aboutSectionFields(key, content) {
       ${aboutField('partners.title', '滚动墙上方标题', content.partners.title)}
       ${aboutField('partners.intro', '标题下说明', content.partners.intro, { type: 'textarea', wide: true, help: '出现在 Logo 滚动带上方' })}`
   }
-  if (key === 'duties') {
-    return `
-      ${aboutField('duties.label', '紫色小标', content.duties.label)}
-      ${aboutField('duties.title', '区块标题', content.duties.title, { help: '前台三张横图卡片的总标题' })}`
-  }
   if (key === 'join') {
+    const join = content.join || {}
     return `
-      ${aboutField('join.label', '紫色小标', content.join.label)}
-      ${aboutField('join.title', '区块标题', content.join.title, { help: '前台五步列表的总标题' })}`
+      ${aboutField('join.label', '右侧紫色小标', join.label)}
+      ${aboutField('join.title', '右侧标题', join.title)}
+      ${aboutField('join.lead', '招揽导语', join.lead, { type: 'textarea', wide: true, help: '轮播图右侧、要点上方的那段话' })}
+      ${aboutField('join.ctaLabel', '投递按钮文字', join.ctaLabel)}
+      ${aboutField('join.ctaHref', '投递按钮链接', join.ctaHref, { wide: true, help: '一般为 mailto: 邮箱' })}`
   }
   return `
     ${aboutField('contact.label', '紫色小标', content.contact.label)}
@@ -603,18 +601,17 @@ function aboutItemFields(kind, index, item) {
       ${aboutField(`partners.items.${index}.name`, '客户名称', item.name, { help: '无 Logo 时前台显示这个名字' })}
       ${aboutField(`partners.items.${index}.logoUrl`, '滚动墙 Logo', item.logoUrl, { image: true, wide: true, size: '480×160' })}`
   }
-  if (kind === 'duties') {
+  if (kind === 'joinSlides') {
     return `
-      <p class="admin-form-section__hint">前台三张横图卡片之一，上图下文案。</p>
-      ${aboutField(`duties.items.${index}.title`, '卡片标题', item.title)}
-      ${aboutField(`duties.items.${index}.body`, '卡片说明', item.body, { type: 'textarea', wide: true })}
-      ${aboutField(`duties.items.${index}.imageUrl`, '卡片横图', item.imageUrl, { image: true, wide: true, size: '880×360' })}`
+      <p class="admin-form-section__hint">「加入我们」左侧轮播的一帧。建议横图 1200×800。</p>
+      ${aboutField(`join.slides.${index}.caption`, '图片说明', item.caption, { help: '叠在照片左下角，可留空' })}
+      ${aboutField(`join.slides.${index}.imageUrl`, '轮播图片', item.imageUrl, { image: true, wide: true, size: '1200×800' })}`
   }
   return `
-    <p class="admin-form-section__hint">前台「加入我们」五步列表中的一步。</p>
+    <p class="admin-form-section__hint">右侧招揽要点中的一条。</p>
     ${aboutField(`join.items.${index}.step`, '左侧序号', item.step, { help: '如 01、02' })}
-    ${aboutField(`join.items.${index}.title`, '步骤标题', item.title)}
-    ${aboutField(`join.items.${index}.body`, '步骤说明', item.body, { type: 'textarea', wide: true })}`
+    ${aboutField(`join.items.${index}.title`, '要点标题', item.title)}
+    ${aboutField(`join.items.${index}.body`, '要点说明', item.body, { type: 'textarea', wide: true })}`
 }
 
 function openItemModal({ scope, kind, index, title, html }) {
@@ -839,6 +836,7 @@ function aboutField(path, label, value, options = {}) {
 }
 
 function showAboutSection(id) {
+  if (id === 'duties') id = 'join'
   if (!ABOUT_OUTLINE.some((item) => item.id === id)) id = 'hero'
   state.aboutSection = id
   document.querySelectorAll('[data-about-goto]').forEach((button) => button.classList.toggle('is-active', button.dataset.aboutGoto === id))
@@ -850,6 +848,22 @@ function showAboutSection(id) {
 function aboutThumb(src, kind) {
   if (!src) return '<span class="admin-about-thumb is-empty"></span>'
   return `<img class="admin-about-thumb admin-about-thumb--${kind}" src="${escapeHtml(src)}" alt="" />`
+}
+
+function aboutList(content, kind) {
+  if (kind === 'joinSlides') {
+    content.join = content.join || {}
+    content.join.slides = content.join.slides || []
+    return content.join.slides
+  }
+  if (kind === 'join') {
+    content.join = content.join || {}
+    content.join.items = content.join.items || []
+    return content.join.items
+  }
+  content[kind] = content[kind] || {}
+  content[kind].items = content[kind].items || []
+  return content[kind].items
 }
 
 function aboutItemRows(kind, items) {
@@ -872,12 +886,23 @@ function aboutItemRows(kind, items) {
         <button type="button" data-about-partner-move="1" data-item-index="${index}" ${index === list.length - 1 ? 'disabled' : ''}>下移</button>
         <button type="button" data-about-item-edit="${kind}" data-item-index="${index}">编辑</button>
         <button type="button" data-about-partner-remove="${index}" ${list.length <= 4 ? 'disabled' : ''}>删除</button>`
-    } else if (kind === 'duties') {
-      media = aboutThumb(item.imageUrl, 'duty')
-      sub = item.body || '横图卡片说明'
+    } else if (kind === 'joinSlides') {
+      media = aboutThumb(item.imageUrl, 'photo')
+      title = item.caption || `轮播图 ${index + 1}`
+      sub = item.imageUrl ? '左侧轮播' : '尚未上传图片'
+      tools = `
+        <button type="button" data-about-list-move="-1" data-about-list="joinSlides" data-item-index="${index}" ${index === 0 ? 'disabled' : ''}>上移</button>
+        <button type="button" data-about-list-move="1" data-about-list="joinSlides" data-item-index="${index}" ${index === list.length - 1 ? 'disabled' : ''}>下移</button>
+        <button type="button" data-about-item-edit="${kind}" data-item-index="${index}">编辑</button>
+        <button type="button" data-about-list-remove="joinSlides" data-item-index="${index}" ${list.length <= 1 ? 'disabled' : ''}>删除</button>`
     } else {
       media = `<em class="admin-about-no">${escapeHtml(item.step || no)}</em>`
-      sub = item.body || '加入步骤说明'
+      sub = item.body || '招揽要点'
+      tools = `
+        <button type="button" data-about-list-move="-1" data-about-list="join" data-item-index="${index}" ${index === 0 ? 'disabled' : ''}>上移</button>
+        <button type="button" data-about-list-move="1" data-about-list="join" data-item-index="${index}" ${index === list.length - 1 ? 'disabled' : ''}>下移</button>
+        <button type="button" data-about-item-edit="${kind}" data-item-index="${index}">编辑</button>
+        <button type="button" data-about-list-remove="join" data-item-index="${index}" ${list.length <= 3 ? 'disabled' : ''}>删除</button>`
     }
     return `<div class="admin-item-row admin-about-row">
       ${media}
@@ -889,7 +914,7 @@ function aboutItemRows(kind, items) {
 
 function renderAboutEditor(content) {
   const editor = document.querySelector('[data-about-editor]')
-  if (!ABOUT_OUTLINE.some((item) => item.id === state.aboutSection)) state.aboutSection = 'hero'
+  if (!ABOUT_OUTLINE.some((item) => item.id === state.aboutSection) || state.aboutSection === 'duties') state.aboutSection = state.aboutSection === 'duties' ? 'join' : 'hero'
   editor.innerHTML = `
     <aside class="admin-home-outline">
       <p>与线上 /about/ 从上到下一一对应，点一项只打开这一块</p>
@@ -923,20 +948,19 @@ function renderAboutEditor(content) {
         ${aboutItemRows('partners', content.partners?.items)}
         <button type="button" class="admin-add-slide" data-about-partner-add>+ 新增客户 Logo</button>
       </fieldset>
-      <fieldset data-about-section="duties">
-        <legend>05 责任与承诺</legend>
-        <p class="admin-form-section__hint">前台三张横图卡片。上方改总标题，点「编辑」改每张的图和文案。</p>
-        <div class="admin-form-grid">${aboutSectionFields('duties', content)}</div>
-        ${aboutItemRows('duties', content.duties?.items)}
-      </fieldset>
       <fieldset data-about-section="join">
-        <legend>06 加入我们</legend>
-        <p class="admin-form-section__hint">前台五步列表。上方改总标题，点「编辑」改序号、步骤名和说明。</p>
+        <legend>05 加入我们</legend>
+        <p class="admin-form-section__hint">前台左图右文：左侧轮播公司照片，右侧是招揽导语和要点。</p>
         <div class="admin-form-grid">${aboutSectionFields('join', content)}</div>
+        <p class="admin-about-split">左侧轮播图</p>
+        ${aboutItemRows('joinSlides', content.join?.slides)}
+        <button type="button" class="admin-add-slide" data-about-list-add="joinSlides">+ 新增轮播图</button>
+        <p class="admin-about-split">右侧招揽要点</p>
         ${aboutItemRows('join', content.join?.items)}
+        <button type="button" class="admin-add-slide" data-about-list-add="join">+ 新增要点</button>
       </fieldset>
       <fieldset data-about-section="contact">
-        <legend>07 联系我们</legend>
+        <legend>06 联系我们</legend>
         <p class="admin-form-section__hint">前台最底部三列：邮箱、地址、加入入口。</p>
         <div class="admin-form-grid">${aboutSectionFields('contact', content)}</div>
       </fieldset>
@@ -950,6 +974,7 @@ function collectAboutContent() {
   document.querySelectorAll('[data-about-field]').forEach((field) => {
     setHomeValue(content, field.dataset.aboutField, field.value.trim())
   })
+  delete content.duties
   return content
 }
 
@@ -1969,6 +1994,56 @@ document.querySelector('[data-about-form]').addEventListener('click', (event) =>
     showAboutSection('partners')
     return
   }
+  const listAdd = event.target.closest('[data-about-list-add]')
+  if (listAdd) {
+    event.preventDefault()
+    const kind = listAdd.dataset.aboutListAdd
+    const content = collectAboutContent()
+    const list = aboutList(content, kind)
+    if (list.length >= 8) {
+      toast(kind === 'joinSlides' ? '最多 8 张轮播图' : '最多 8 条招揽要点', true)
+      return
+    }
+    list.push(kind === 'joinSlides'
+      ? { imageUrl: '', caption: '' }
+      : { step: String(list.length + 1).padStart(2, '0'), title: '新要点', body: '' })
+    state.aboutPage.draftContent = content
+    renderAboutEditor(content)
+    showAboutSection('join')
+    return
+  }
+  const listRemove = event.target.closest('[data-about-list-remove]')
+  if (listRemove) {
+    event.preventDefault()
+    const kind = listRemove.dataset.aboutListRemove
+    const index = Number(listRemove.dataset.itemIndex)
+    const content = collectAboutContent()
+    const list = aboutList(content, kind)
+    const min = kind === 'joinSlides' ? 1 : 3
+    if (list.length <= min) return
+    list.splice(index, 1)
+    state.aboutPage.draftContent = content
+    renderAboutEditor(content)
+    showAboutSection('join')
+    return
+  }
+  const listMove = event.target.closest('[data-about-list-move]')
+  if (listMove) {
+    event.preventDefault()
+    const kind = listMove.dataset.aboutList
+    const index = Number(listMove.dataset.itemIndex)
+    const offset = Number(listMove.dataset.aboutListMove)
+    const content = collectAboutContent()
+    const list = aboutList(content, kind)
+    const next = index + offset
+    if (!list[index] || next < 0 || next >= list.length) return
+    const [item] = list.splice(index, 1)
+    list.splice(next, 0, item)
+    state.aboutPage.draftContent = content
+    renderAboutEditor(content)
+    showAboutSection('join')
+    return
+  }
   const itemEdit = event.target.closest('[data-about-item-edit]')
   if (itemEdit) {
     event.preventDefault()
@@ -1976,9 +2051,9 @@ document.querySelector('[data-about-form]').addEventListener('click', (event) =>
     const index = Number(itemEdit.dataset.itemIndex)
     const content = collectAboutContent()
     state.aboutPage.draftContent = content
-    const item = content[kind]?.items?.[index]
+    const item = aboutList(content, kind)?.[index]
     if (!item) return
-    openItemModal({ scope: 'about', kind, index, title: `编辑${item.title || item.name || '条目'}`, html: aboutItemFields(kind, index, item) })
+    openItemModal({ scope: 'about', kind, index, title: `编辑${item.title || item.caption || item.name || '条目'}`, html: aboutItemFields(kind, index, item) })
   }
 })
 

@@ -197,7 +197,8 @@ textarea { resize: vertical; }
   background: #fff;
   padding: 4px;
 }
-.admin-about-thumb--duty {
+.admin-about-thumb--duty,
+.admin-about-thumb--photo {
   width: 72px;
   height: 48px;
   object-fit: cover;
