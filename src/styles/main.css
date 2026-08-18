@@ -4110,15 +4110,39 @@ body.demo-modal-open {
   color: #5c5c72;
 }
 .ab-partners {
+  --ab-col: min(1440px, 100%);
+  --ab-side: max(0px, calc((100% - var(--ab-col)) / 2));
+  position: relative;
   margin-top: 40px;
   padding: 28px 0 40px;
+  overflow: hidden;
   background: #12122a;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    rgba(0, 0, 0, 0.1) max(24px, var(--ab-side)),
+    rgba(0, 0, 0, 0.32) calc(var(--ab-side) + 40px),
+    #000 calc(var(--ab-side) + 80px),
+    #000 calc(100% - var(--ab-side) - 80px),
+    rgba(0, 0, 0, 0.32) calc(100% - var(--ab-side) - 40px),
+    rgba(0, 0, 0, 0.1) calc(100% - max(24px, var(--ab-side))),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    rgba(0, 0, 0, 0.1) max(24px, var(--ab-side)),
+    rgba(0, 0, 0, 0.32) calc(var(--ab-side) + 40px),
+    #000 calc(var(--ab-side) + 80px),
+    #000 calc(100% - var(--ab-side) - 80px),
+    rgba(0, 0, 0, 0.32) calc(100% - var(--ab-side) - 40px),
+    rgba(0, 0, 0, 0.1) calc(100% - max(24px, var(--ab-side))),
+    transparent 100%
+  );
 }
 .ab-partners__row {
   position: relative;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
 .ab-partners__row + .ab-partners__row { margin-top: 16px; }
 .ab-partners__track {
