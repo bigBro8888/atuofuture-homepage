@@ -11,7 +11,7 @@ import { getAboutPageConfig, validateAboutContent } from './about-service.js'
 import { getSiteSettingsPage, validateSiteSettings } from './site-settings-service.js'
 import { SIMPLE_PAGE_KEYS, getSimplePageConfig, presentSimplePage, validateSimplePage } from './simple-page-service.js'
 import { getNewsFeedConfig, validateNewsFeedContent } from './news-feed-service.js'
-import { getProductLibraryConfig, publicProductLibraryContent, validateProductLibraryContent } from './product-library-service.js'
+import { getProductLibraryConfig, presentProductLibrary, publicProductLibraryContent, validateProductLibraryContent } from './product-library-service.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -364,7 +364,7 @@ adminPagesRouter.put('/product-library/draft', requireAuth('config:write'), asyn
     page.updatedAt = new Date().toISOString()
     await save()
     await addAudit(request.admin, 'product.library.update', 'product-library', { count: page.draftContent.items.length })
-    response.json({ page })
+    response.json({ page: presentProductLibrary(page) })
   } catch (error) {
     response.status(400).json({ error: 'invalid_product_library', message: error.message })
   }
@@ -378,7 +378,7 @@ adminPagesRouter.post('/product-library/publish', requireAuth('config:write'), a
   page.updatedAt = page.publishedAt
   await save()
   await addAudit(request.admin, 'product.library.publish', 'product-library', { publishedAt: page.publishedAt })
-  response.json({ page })
+  response.json({ page: presentProductLibrary(page) })
 })
 
 publicPagesRouter.get('/simple/:key', (request, response) => {
