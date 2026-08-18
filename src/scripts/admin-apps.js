@@ -590,7 +590,8 @@ function aboutSectionFields(key, content) {
     <p class="admin-about-split">左侧深蓝栏</p>
     ${aboutField('contact.joinTitle', '加入标题', contact.joinTitle)}
     ${aboutField('contact.joinBody', '加入说明', contact.joinBody, { type: 'textarea', wide: true, help: '左侧栏只放这段话和一个预约演示按钮，不再放投递简历' })}
-`
+  `
+}
 
 function aboutItemFields(kind, index, item) {
   if (kind === 'values') {
