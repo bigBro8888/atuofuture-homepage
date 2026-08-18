@@ -873,6 +873,7 @@ body.admin-modal-open { overflow: hidden; }
 @media (max-width: 960px) {
   .admin-sol-values { grid-template-columns: 1fr; }
 }
+.admin-sol-deck__grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
