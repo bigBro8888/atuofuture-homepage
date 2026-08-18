@@ -556,10 +556,13 @@ function aboutSectionFields(key, content) {
       ${aboutField('values.title', '区块大标题', content.values.title, { help: '时间轴上方主标题' })}`
   }
   if (key === 'partners') {
+    const partners = content.partners || {}
     return `
-      ${aboutField('partners.label', '滚动墙上方小标', content.partners.label)}
-      ${aboutField('partners.title', '滚动墙上方标题', content.partners.title)}
-      ${aboutField('partners.intro', '标题下说明', content.partners.intro, { type: 'textarea', wide: true, help: '出现在 Logo 滚动带上方' })}`
+      <div class="admin-partners-layout__head">
+        ${aboutField('partners.label', '紫色小标', partners.label, { help: '如「客户与网络」' })}
+        ${aboutField('partners.title', '区块标题', partners.title)}
+        ${aboutField('partners.intro', '标题下说明', partners.intro, { type: 'textarea', wide: true, rows: 3, help: '标题下方那段灰字' })}
+      </div>`
   }
   if (key === 'join') {
     const join = content.join || {}
@@ -618,9 +621,9 @@ function aboutItemFields(kind, index, item) {
   }
   if (kind === 'partners') {
     return `
-      <p class="admin-form-section__hint">会出现在单行滚动的 Logo 墙上。透明底横图最清晰。</p>
+      <p class="admin-form-section__hint">会出现在浅底滚动墙上，压成灰色。请上传透明底横图，不要白底卡片。</p>
       ${aboutField(`partners.items.${index}.name`, '客户名称', item.name, { help: '无 Logo 时前台显示这个名字' })}
-      ${aboutField(`partners.items.${index}.logoUrl`, '滚动墙 Logo', item.logoUrl, { image: true, wide: true, size: '480×160', help: '透明底横图，不要白底；前台会压成灰色融入背景' })}`
+      ${aboutField(`partners.items.${index}.logoUrl`, '透明 Logo', item.logoUrl, { image: true, wide: true, size: '480×160', help: 'PNG 透明底；前台会压成灰色、左右淡出' })}`
   }
   if (kind === 'joinSlides') {
     return `
@@ -882,8 +885,20 @@ function showAboutSection(id) {
 }
 
 function aboutThumb(src, kind) {
-  if (!src) return '<span class="admin-about-thumb is-empty"></span>'
-  return `<img class="admin-about-thumb admin-about-thumb--${kind}" src="${escapeHtml(src)}" alt="" />`
+  const kindClass = kind ? ` admin-about-thumb--${kind}` : ''
+  if (!src) return `<span class="admin-about-thumb is-empty${kindClass}"></span>`
+  return `<img class="admin-about-thumb${kindClass}" src="${escapeHtml(src)}" alt="" />`
+}
+
+function aboutPartnersPreview(items) {
+  const logos = (items || []).filter((item) => item?.logoUrl || item?.name)
+  if (!logos.length) return ''
+  const tiles = logos.map((item) => (
+    item.logoUrl
+      ? `<img src="${escapeHtml(item.logoUrl)}" alt="">`
+      : `<strong>${escapeHtml(item.name)}</strong>`
+  )).join('')
+  return `<div class="admin-partners-preview" aria-hidden="true">${tiles}${tiles}</div>`
 }
 
 function aboutList(content, kind) {
@@ -921,7 +936,7 @@ function aboutItemRows(kind, items) {
     } else if (kind === 'partners') {
       media = aboutThumb(item.logoUrl, 'logo')
       title = item.name || `客户 ${index + 1}`
-      sub = item.logoUrl ? '滚动墙 Logo' : '尚未上传 Logo，前台显示名称'
+      sub = item.logoUrl ? '浅底透明灰标' : '尚未上传 Logo，前台显示名称'
       tools = `
         <button type="button" data-about-partner-move="-1" data-item-index="${index}" ${index === 0 ? 'disabled' : ''}>上移</button>
         <button type="button" data-about-partner-move="1" data-item-index="${index}" ${index === list.length - 1 ? 'disabled' : ''}>下移</button>
@@ -992,10 +1007,16 @@ function renderAboutEditor(content) {
       </fieldset>
       <fieldset data-about-section="partners">
         <legend>04 客户 Logo 墙</legend>
-        <p class="admin-form-section__hint">前台浅底透明 Logo 滚动墙，左右淡出。请上传透明底 PNG，不要带白底卡片。</p>
-        <div class="admin-form-grid">${aboutSectionFields('partners', content)}</div>
-        ${aboutItemRows('partners', content.partners?.items)}
-        <button type="button" class="admin-add-slide" data-about-partner-add>+ 新增客户 Logo</button>
+        <p class="admin-form-section__hint">版式与线上一致：上方小标、标题、说明；下面浅底透明灰标单行滚动，左右淡出。请上传透明底 PNG，不要白底卡片。</p>
+        <div class="admin-partners-layout">
+          ${aboutSectionFields('partners', content)}
+          <div class="admin-partners-layout__wall">
+            <b>浅底滚动 Logo</b>
+            ${aboutPartnersPreview(content.partners?.items)}
+            ${aboutItemRows('partners', content.partners?.items)}
+            <button type="button" class="admin-add-slide" data-about-partner-add>+ 新增客户 Logo</button>
+          </div>
+        </div>
       </fieldset>
       <fieldset data-about-section="join">
         <legend>05 加入我们</legend>
