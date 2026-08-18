@@ -13730,8 +13730,6 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 .sol-d-subnav__inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
   min-height: 56px;
 }
 .sol-d-crumb {
@@ -13745,35 +13743,6 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 .sol-d-crumb a { color: #6b7785; text-decoration: none; }
 .sol-d-crumb a:hover { color: #0b1c3a; }
 .sol-d-crumb span:last-child { color: #0b1c3a; }
-
-.sol-d-trust {
-  border-bottom: 1px solid rgba(15,40,80,0.06);
-  background: #fff;
-}
-.sol-d-trust__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 22px 0;
-}
-.sol-d-trust__copy {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  max-width: 920px;
-}
-.sol-d-trust__copy .material-symbols-outlined {
-  color: #00b89a;
-  font-size: 26px;
-  margin-top: 2px;
-}
-.sol-d-trust__copy p {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.65;
-  color: #3d4b5c;
-}
 
 .sol-d-deck {
   padding: 36px 0 72px;
@@ -14396,7 +14365,6 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   .sol-d-related__grid,
   .sol-d-contact__grid,
   .sol-d-index { grid-template-columns: 1fr 1fr; }
-  .sol-d-trust__inner { flex-direction: column; align-items: flex-start; }
 }
 @media (max-width: 720px) {
   .sol-d-hero { min-height: 560px; }

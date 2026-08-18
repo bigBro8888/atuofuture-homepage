@@ -315,19 +315,8 @@ function renderDetail(id) {
             <a href="./">行业解决方案</a><span>/</span>
             <span>${esc(s.name)}</span>
           </nav>
-          <button type="button" class="sol-btn sol-btn--primary sol-btn--compact" data-demo-modal-open>预约演示</button>
         </div>
       </div>
-
-      <section class="sol-d-trust">
-        <div class="sol-home-shell sol-d-trust__inner">
-          <div class="sol-d-trust__copy">
-            <span class="material-symbols-outlined" aria-hidden="true">verified</span>
-            <p>以空间智能中枢组合场景智能体、智能硬件与开放接口，为${esc(s.name)}构建可感知、可协同、可执行的运营方案。</p>
-          </div>
-          <button type="button" class="sol-btn sol-btn--primary sol-btn--compact" data-demo-modal-open>联系我们</button>
-        </div>
-      </section>
 
       ${renderDeck(s)}
 
