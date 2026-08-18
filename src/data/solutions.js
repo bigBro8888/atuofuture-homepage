@@ -19,6 +19,7 @@
  *   agents: string[],
  *   hardware: string[],
  *   canDo: string[],
+ *   slides?: { imageUrl: string }[],
  * }} SolutionItem
  */
 
@@ -316,6 +317,9 @@ export function applySolutionsLibraryCms(content) {
       agents: item.agents || [],
       hardware: item.hardware || [],
       canDo: item.canDo || [],
+      slides: Array.isArray(item.slides) && item.slides.length
+        ? item.slides
+        : (item.image ? [{ imageUrl: item.image }] : []),
       published: true,
     }
     if (existing) Object.assign(existing, mapped)

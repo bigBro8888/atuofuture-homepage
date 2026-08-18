@@ -184,37 +184,71 @@ function renderList() {
   `
 }
 
-function buildDetailStats(s) {
-  return [
-    {
-      figure: String(s.scenarios?.length || 6),
-      suffix: '+',
-      label: '关键业务场景',
-      desc: `覆盖${(s.scenarios || []).slice(0, 2).join('、')}等运营环节。`,
-    },
-    {
-      figure: String(s.agents?.length || 4),
-      suffix: '',
-      label: '场景智能体可组合',
-      desc: '按行业灵活编排空间、访客、会议、能源等能力。',
-    },
-    {
-      figure: String(s.journey?.length || 5),
-      suffix: '步',
-      label: '运营闭环路径',
-      desc: '从业务发生到执行反馈形成可复制交付链路。',
-    },
-  ]
+function solutionSlides(s) {
+  const slides = (s.slides || [])
+    .map((item) => (typeof item === 'string' ? item : item?.imageUrl || ''))
+    .map((url) => String(url || '').trim())
+    .filter(Boolean)
+  if (slides.length) return slides
+  return s.image ? [s.image] : []
 }
 
-function buildDetailTabs(s) {
-  return (s.coreValues || []).map((item, index) => ({
-    id: `${s.id}-tab-${index}`,
-    label: item.title.includes('，') ? item.title.split('，')[0] : item.title.slice(0, 6),
-    title: item.title,
-    body: `${item.desc} 安托未来以空间智能中枢连接场景智能体与硬件，支撑「${(s.capabilities || [])[index] || s.capabilities?.[0] || '行业场景'}」持续落地。`,
-    icon: item.icon,
-  }))
+function renderDeck(s) {
+  const slides = solutionSlides(s)
+  if (!slides.length) return ''
+  return `
+    <section class="sol-d-deck" id="sol-d-deck">
+      <div class="sol-home-shell">
+        <div class="sol-d-deck__stage" data-sol-deck>
+          <div class="sol-d-deck__viewport">
+            <div class="sol-d-deck__track" data-sol-deck-track>
+              ${slides
+                .map(
+                  (url, i) => `
+                <figure class="sol-d-deck__slide">
+                  <img src="${esc(url)}" alt="${esc(s.name)} 方案介绍 ${i + 1}" width="1920" height="1080" ${i === 0 ? '' : 'loading="lazy"'} />
+                </figure>`
+                )
+                .join('')}
+            </div>
+            <button type="button" class="sol-d-deck__side sol-d-deck__side--prev" data-sol-deck-prev aria-label="上一页">
+              <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+            </button>
+            <button type="button" class="sol-d-deck__side sol-d-deck__side--next" data-sol-deck-next aria-label="下一页">
+              <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+            </button>
+          </div>
+          <div class="sol-d-deck__bar">
+            <button type="button" class="sol-d-deck__nav" data-sol-deck-prev aria-label="上一页">
+              <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+            </button>
+            <p class="sol-d-deck__index"><span data-sol-deck-current>1</span> / ${slides.length}</p>
+            <button type="button" class="sol-d-deck__nav" data-sol-deck-next aria-label="下一页">
+              <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+            </button>
+            <button type="button" class="sol-d-deck__full" data-sol-deck-full>
+              <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
+              全屏浏览
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="sol-d-deck-fs" data-sol-deck-fs hidden>
+        <button type="button" class="sol-d-deck-fs__close" data-sol-deck-close aria-label="退出全屏">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+        <button type="button" class="sol-d-deck-fs__nav sol-d-deck-fs__nav--prev" data-sol-deck-prev aria-label="上一页">
+          <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+        </button>
+        <figure class="sol-d-deck-fs__frame">
+          <img data-sol-deck-fs-image src="${esc(slides[0])}" alt="${esc(s.name)} 方案介绍" width="1920" height="1080" />
+        </figure>
+        <button type="button" class="sol-d-deck-fs__nav sol-d-deck-fs__nav--next" data-sol-deck-next aria-label="下一页">
+          <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+        </button>
+        <p class="sol-d-deck-fs__index"><span data-sol-deck-fs-current>1</span> / ${slides.length}</p>
+      </div>
+    </section>`
 }
 
 function renderDetailFaqs(s) {
@@ -255,9 +289,6 @@ function renderDetail(id) {
   if (!s) return renderList()
   document.title = `${s.name} | 安托未来`
   const related = getPublishedSolutions().filter((item) => item.id !== s.id)
-  const stats = buildDetailStats(s)
-  const tabs = buildDetailTabs(s)
-  const highlightAgents = (s.highlightAgents || s.agents || []).slice(0, 4)
 
   return `
     <article class="sol-d">
@@ -271,7 +302,7 @@ function renderDetail(id) {
             <p class="sol-d-hero__desc">${esc(s.summary)}</p>
             <div class="sol-d-hero__actions">
               <button type="button" class="sol-btn sol-btn--primary" data-demo-modal-open>预约方案演示</button>
-              <a class="sol-btn sol-btn--ghost" href="#sol-d-capabilities">了解能力组合</a>
+              <a class="sol-btn sol-btn--ghost" href="#sol-d-deck">浏览方案介绍</a>
             </div>
           </div>
         </div>
@@ -298,85 +329,7 @@ function renderDetail(id) {
         </div>
       </section>
 
-      <section class="sol-d-overview">
-        <div class="sol-home-shell sol-d-overview__grid">
-          <div class="sol-d-overview__copy">
-            <h2>加快${esc(s.name)}智能化落地</h2>
-            <p>${esc(s.approach)}</p>
-            <ul>
-              ${(s.pains || []).slice(0, 4).map((item) => `<li>${esc(item)}</li>`).join('')}
-            </ul>
-          </div>
-          <aside class="sol-d-overview__panel" aria-label="能力概览">
-            <div class="sol-d-overview__panel-bg" style="background-image:url('${esc(s.image)}')" aria-hidden="true"></div>
-            <div class="sol-d-overview__panel-content">
-              <p>核心能力组合</p>
-              <div class="sol-d-overview__chips">
-                ${highlightAgents
-                  .map((aid) => {
-                    const a = getProductAgent(aid)
-                    if (!a) return ''
-                    return `<span><i class="material-symbols-outlined" aria-hidden="true">${esc(a.icon)}</i>${esc(agentLabel(aid))}</span>`
-                  })
-                  .join('')}
-              </div>
-              <div class="sol-d-overview__hw">
-                ${(s.hardware || [])
-                  .slice(0, 4)
-                  .map((item) => `<em>${esc(item)}</em>`)
-                  .join('')}
-              </div>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <section class="sol-d-stats">
-        <div class="sol-home-shell sol-d-stats__grid">
-          ${stats
-            .map(
-              (item) => `
-            <article>
-              <strong><b>${esc(item.figure)}</b>${esc(item.suffix || '')}</strong>
-              <h3>${esc(item.label)}</h3>
-              <p>${esc(item.desc)}</p>
-            </article>`
-            )
-            .join('')}
-        </div>
-      </section>
-
-      <section class="sol-d-tabs" id="sol-d-capabilities">
-        <div class="sol-home-shell">
-          <header class="sol-d-tabs__head">
-            <p class="sol-d-eyebrow sol-d-eyebrow--light">CAPABILITY</p>
-            <h2>交付下一代空间运营能力</h2>
-          </header>
-          <div class="sol-d-tabs__nav" role="tablist" aria-label="核心能力">
-            ${tabs
-              .map(
-                (tab, i) => `
-              <button type="button" class="sol-d-tabs__btn${i === 0 ? ' is-active' : ''}" role="tab" aria-selected="${i === 0 ? 'true' : 'false'}" data-sol-d-tab="${esc(tab.id)}">${esc(tab.label)}</button>`
-              )
-              .join('')}
-          </div>
-          <div class="sol-d-tabs__panels">
-            ${tabs
-              .map(
-                (tab, i) => `
-              <div class="sol-d-tabs__panel${i === 0 ? ' is-active' : ''}" data-sol-d-panel="${esc(tab.id)}" ${i === 0 ? '' : 'hidden'}>
-                <div class="sol-d-tabs__panel-icon"><span class="material-symbols-outlined" aria-hidden="true">${esc(tab.icon)}</span></div>
-                <div>
-                  <h3>${esc(tab.title)}</h3>
-                  <p>${esc(tab.body)}</p>
-                  <a href="#sol-d-stack">查看智能体与硬件组合 →</a>
-                </div>
-              </div>`
-              )
-              .join('')}
-          </div>
-        </div>
-      </section>
+      ${renderDeck(s)}
 
       <section class="sol-d-apps">
         <div class="sol-home-shell">
@@ -526,25 +479,72 @@ function renderDetail(id) {
     </article>`
 }
 
-function initDetailTabs(root) {
-  const buttons = [...root.querySelectorAll('[data-sol-d-tab]')]
-  const panels = [...root.querySelectorAll('[data-sol-d-panel]')]
-  if (!buttons.length) return
-  buttons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.solDTab
-      buttons.forEach((b) => {
-        const on = b === btn
-        b.classList.toggle('is-active', on)
-        b.setAttribute('aria-selected', on ? 'true' : 'false')
-      })
-      panels.forEach((panel) => {
-        const on = panel.dataset.solDPanel === id
-        panel.classList.toggle('is-active', on)
-        panel.toggleAttribute('hidden', !on)
-      })
+function initDetailDeck(root) {
+  const stage = root.querySelector('[data-sol-deck]')
+  if (!stage) return
+  const track = stage.querySelector('[data-sol-deck-track]')
+  const slides = [...stage.querySelectorAll('.sol-d-deck__slide')]
+  const currentEl = stage.querySelector('[data-sol-deck-current]')
+  const fs = root.querySelector('[data-sol-deck-fs]')
+  const fsImage = fs?.querySelector('[data-sol-deck-fs-image]')
+  const fsCurrent = fs?.querySelector('[data-sol-deck-fs-current]')
+  const total = slides.length
+  if (!total || !track) return
+  let index = 0
+  let fullscreen = false
+
+  const paint = () => {
+    track.style.transform = `translateX(-${index * 100}%)`
+    if (currentEl) currentEl.textContent = String(index + 1)
+    const src = slides[index]?.querySelector('img')?.src || ''
+    if (fsImage && src) fsImage.src = src
+    if (fsCurrent) fsCurrent.textContent = String(index + 1)
+  }
+
+  const go = (next) => {
+    index = (next + total) % total
+    paint()
+  }
+
+  const setFullscreen = (on) => {
+    fullscreen = on
+    if (!fs) return
+    fs.hidden = !on
+    document.body.style.overflow = on ? 'hidden' : ''
+    if (on) fs.focus?.()
+  }
+
+  root.querySelectorAll('[data-sol-deck-prev]').forEach((btn) => {
+    btn.addEventListener('click', () => go(index - 1))
+  })
+  root.querySelectorAll('[data-sol-deck-next]').forEach((btn) => {
+    btn.addEventListener('click', () => go(index + 1))
+  })
+  stage.querySelector('[data-sol-deck-full]')?.addEventListener('click', () => setFullscreen(true))
+  fs?.querySelector('[data-sol-deck-close]')?.addEventListener('click', () => setFullscreen(false))
+  slides.forEach((slide, i) => {
+    slide.addEventListener('click', () => {
+      index = i
+      paint()
+      setFullscreen(true)
     })
   })
+
+  window.addEventListener('keydown', (event) => {
+    const tag = String(event.target?.tagName || '').toLowerCase()
+    if (['input', 'textarea', 'select'].includes(tag) || event.target?.isContentEditable) return
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      go(index - 1)
+    }
+    if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      go(index + 1)
+    }
+    if (event.key === 'Escape' && fullscreen) setFullscreen(false)
+  })
+
+  paint()
 }
 
 function applySolution(root, id) {
@@ -632,5 +632,5 @@ export async function initSolutionsPage() {
   const id = resolveSolutionId(raw)
   root.innerHTML = id ? renderDetail(id) : renderList()
   if (!id) initHomeInteractions(root)
-  else initDetailTabs(root)
+  else initDetailDeck(root)
 }

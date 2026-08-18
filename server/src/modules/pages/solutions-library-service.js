@@ -47,6 +47,22 @@ function cleanCoreValue(value = {}, fallback = {}) {
   }
 }
 
+function cleanSlides(value, cover = '') {
+  const list = Array.isArray(value) ? value : []
+  const slides = list
+    .map((item) => {
+      const imageUrl = cleanUrl(typeof item === 'string' ? item : (item?.imageUrl || item?.url || ''), '')
+      return imageUrl ? { imageUrl } : null
+    })
+    .filter(Boolean)
+    .slice(0, 30)
+  if (!slides.length && cover) {
+    const imageUrl = cleanUrl(cover, '')
+    if (imageUrl) slides.push({ imageUrl })
+  }
+  return slides
+}
+
 function seedItem(item) {
   return {
     id: item.id,
@@ -66,6 +82,9 @@ function seedItem(item) {
     agents: item.agents || [],
     hardware: item.hardware || [],
     canDo: item.canDo || [],
+    slides: Array.isArray(item.slides) && item.slides.length
+      ? item.slides
+      : (item.image ? [{ imageUrl: item.image }] : []),
     published: true,
   }
 }
@@ -99,6 +118,7 @@ function validateItem(value = {}, fallback = {}) {
     agents: cleanLines(value.agents ?? fallback.agents ?? base.agents, 12, 40),
     hardware: cleanLines(value.hardware ?? fallback.hardware ?? base.hardware, 12, 40),
     canDo: cleanLines(value.canDo ?? fallback.canDo ?? base.canDo, 12, 40),
+    slides: cleanSlides(value.slides ?? fallback.slides ?? base.slides, value.image || fallback.image || base.image || ''),
     published: value.published === undefined ? fallback.published !== false : Boolean(value.published),
   }
 }

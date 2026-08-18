@@ -100,6 +100,7 @@ function emptySolution() {
     agents: [],
     hardware: [],
     canDo: [],
+    slides: [{ imageUrl: '' }],
     published: true,
   }
 }
@@ -158,6 +159,8 @@ function renderKindList(kind, items, previewBase) {
 function renderSolutionCompose(item) {
   const body = document.querySelector('[data-solutions-compose-body]')
   const values = [...(item.coreValues || []), {}, {}, {}].slice(0, 3)
+  const slides = [...(item.slides || [])]
+  if (!slides.length) slides.push({ imageUrl: item.image || '' })
   body.innerHTML = `
     <div class="admin-form-grid">
       <input type="hidden" data-solutions-field="id" value="${esc(item.id || '')}" />
@@ -167,6 +170,19 @@ function renderSolutionCompose(item) {
       ${field('solutions', 'image', '封面图', item.image, { image: true, wide: true, size: '1600×900' })}
       ${field('solutions', 'summary', '简介', item.summary, { type: 'textarea', wide: true, rows: 2 })}
       ${field('solutions', 'value', '一句话价值', item.value, { type: 'textarea', wide: true, rows: 2 })}
+      <div class="admin-product-card admin-form-wide">
+        <h4>方案介绍 PPT（16:9）</h4>
+        <p class="admin-form-section__hint">详情页红框位置改成轮播。按讲解顺序上传图片，建议 1920×1080。访客可左右翻页，也可全屏浏览。</p>
+        ${slides.map((slide, index) => `
+          <div class="admin-product-card" data-solutions-slide="${index}">
+            <div class="admin-slide-tools" style="justify-content:space-between;margin-bottom:8px">
+              <h4 style="margin:0">第 ${index + 1} 页</h4>
+              <button type="button" data-solutions-slide-remove="${index}" ${slides.length <= 1 ? 'disabled' : ''}>删除</button>
+            </div>
+            ${field('solutions', `slides.${index}.imageUrl`, '图片', slide.imageUrl || '', { image: true, wide: true, size: '1920×1080' })}
+          </div>`).join('')}
+        <button type="button" class="admin-add-slide" data-solutions-slide-add>+ 添加一页</button>
+      </div>
       ${field('solutions', 'approach', '方案做法', item.approach, { type: 'textarea', wide: true, rows: 3 })}
       ${field('solutions', 'capabilities', '核心能力', lines(item.capabilities), { type: 'textarea', rows: 3, help: '每行一条' })}
       ${field('solutions', 'pains', '痛点', lines(item.pains), { type: 'textarea', rows: 3, help: '每行一条' })}
@@ -351,6 +367,25 @@ function bindKind(kind) {
     }
   })
   compose.addEventListener('click', async (event) => {
+    if (kind === 'solutions' && event.target.closest('[data-solutions-slide-add]')) {
+      event.preventDefault()
+      const article = collectFields(compose, kind)
+      article.slides = [...(article.slides || []), { imageUrl: '' }]
+      renderSolutionCompose(article)
+      return
+    }
+    const removeSlide = kind === 'solutions' ? event.target.closest('[data-solutions-slide-remove]') : null
+    if (removeSlide) {
+      event.preventDefault()
+      const article = collectFields(compose, kind)
+      const index = Number(removeSlide.dataset.solutionsSlideRemove)
+      const slides = [...(article.slides || [])]
+      if (slides.length <= 1) return
+      slides.splice(index, 1)
+      article.slides = slides
+      renderSolutionCompose(article)
+      return
+    }
     if (event.target.closest(`[data-${kind}-compose-back]`)) {
       event.preventDefault()
       closeCompose(kind)
