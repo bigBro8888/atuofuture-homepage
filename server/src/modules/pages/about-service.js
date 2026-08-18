@@ -19,7 +19,7 @@ export const defaultAboutContent = {
     imageUrl: '/images/hardware/eink-price-tag.jpg',
   },
   values: {
-    label: '我们努力践行的企业文化',
+    label: 'CULTURE / 01—03',
     title: '使命、价值观与愿景',
     items: [
       { icon: 'flag', title: '使命', body: '让生活更智能，让每一刻更明亮。', imageUrl: '/images/home-agents/space.jpg' },
@@ -209,7 +209,15 @@ export function getAboutPageConfig() {
   hydrateValueImages(page.publishedContent)
   hydratePartnerLogos(page.draftContent)
   hydratePartnerLogos(page.publishedContent)
+  hydrateValuesKicker(page.draftContent)
+  hydrateValuesKicker(page.publishedContent)
   return page
+}
+
+function hydrateValuesKicker(content) {
+  if (content?.values?.label === '我们努力践行的企业文化') {
+    content.values.label = defaultAboutContent.values.label
+  }
 }
 
 function hydrateValueImages(content) {
