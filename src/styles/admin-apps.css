@@ -807,49 +807,63 @@ body.admin-modal-open { overflow: hidden; }
   background: #f8fafc;
 }
 .admin-product-card h4 { margin: 0 0 10px; font-size: 13px; }
-.admin-sol-compose { display: grid; gap: 16px; }
-.admin-sol-compose .admin-form-section { margin: 0; }
+.admin-sol-compose { min-height: 520px; }
 .admin-sol-compose .admin-form-section__hint { margin-bottom: 12px; }
 .admin-sol-label {
   margin: 0 0 10px;
   font-size: 12px;
   color: #172033;
 }
-.admin-sol-list { display: grid; gap: 8px; }
+.admin-sol-stack {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.admin-sol-stack__wide { grid-column: 1 / -1; }
+.admin-sol-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+}
 .admin-sol-list__row {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 32px;
-  gap: 8px;
+  grid-template-columns: 28px minmax(0, 1fr) 28px;
+  gap: 6px;
   align-items: center;
   margin: 0;
+  padding: 8px;
+  border: 1px solid #e8eef5;
+  border-radius: 10px;
+  background: #fff;
 }
 .admin-sol-list__row b {
   color: #8b97a8;
-  font-size: 12px;
+  font-size: 11px;
   text-align: center;
 }
 .admin-sol-list__row input {
   width: 100%;
-  padding: 9px 10px;
+  min-width: 0;
+  padding: 7px 8px;
   border: 1px solid #dce4ef;
-  border-radius: 8px;
+  border-radius: 7px;
   font-size: 13px;
 }
 .admin-sol-list__row button {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: 1px solid #dce4ef;
-  border-radius: 8px;
+  border-radius: 7px;
   color: #8b97a8;
   background: #fff;
   cursor: pointer;
 }
 .admin-sol-list__row button:disabled { opacity: .35; cursor: not-allowed; }
 .admin-sol-list__add {
-  justify-self: start;
+  min-height: 46px;
   padding: 8px 12px;
   border: 1px dashed #1769ff;
-  border-radius: 8px;
+  border-radius: 10px;
   color: #1769ff;
   background: #f5f9ff;
   font-size: 12px;
@@ -872,6 +886,7 @@ body.admin-modal-open { overflow: hidden; }
 .admin-sol-value .admin-news-field:last-child { margin-bottom: 0; }
 @media (max-width: 960px) {
   .admin-sol-values { grid-template-columns: 1fr; }
+  .admin-sol-stack { grid-template-columns: 1fr; }
 }
 .admin-sol-deck__grid {
   display: grid;

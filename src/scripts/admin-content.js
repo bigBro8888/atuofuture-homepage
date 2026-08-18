@@ -64,13 +64,25 @@ function asList(value) {
   return value ? [String(value)] : ['']
 }
 
-function section(title, hint, inner) {
-  return `
-    <fieldset class="admin-form-section">
-      <legend>${title}</legend>
-      ${hint ? `<p class="admin-form-section__hint">${hint}</p>` : ''}
-      ${inner}
-    </fieldset>`
+const SOL_OUTLINE = [
+  { id: 'basics', no: '01', title: '基础信息', desc: '名称、封面、价值' },
+  { id: 'ppt', no: '02', title: '方案介绍 PPT', desc: '16:9 讲解页' },
+  { id: 'scenarios', no: '03', title: '运营场景', desc: '详情页场景卡片' },
+  { id: 'journey', no: '04', title: '客户旅程', desc: '端到端步骤' },
+  { id: 'stack', no: '05', title: '智能体与硬件', desc: '组合清单' },
+  { id: 'faq', no: '06', title: '常见问题', desc: '痛点与做法' },
+  { id: 'values', no: '07', title: '列表页价值', desc: '方案列表三卡' },
+]
+
+function showSolutionSection(id) {
+  const next = SOL_OUTLINE.some((entry) => entry.id === id) ? id : 'basics'
+  ctx.state.solutionSection = next
+  document.querySelectorAll('[data-sol-goto]').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.solGoto === next)
+  })
+  document.querySelectorAll('[data-sol-section]').forEach((section) => {
+    section.hidden = section.dataset.solSection !== next
+  })
 }
 
 function listEditor(kind, path, items = [], { placeholder = '', addLabel = '添加一条', max = 12 } = {}) {
@@ -194,91 +206,115 @@ function renderSolutionCompose(item) {
   const values = [...(item.coreValues || []), {}, {}, {}].slice(0, 3)
   const slides = [...(item.slides || [])]
   if (!slides.length) slides.push({ imageUrl: item.image || '' })
+  const active = ctx.state.solutionSection || 'basics'
   body.innerHTML = `
-    <div class="admin-sol-compose">
-      <input type="hidden" data-solutions-field="id" value="${esc(item.id || '')}" />
-      ${section('1. 基础信息', '出现在详情页顶部大图：名称、一句话价值和封面。', `
-        <div class="admin-form-grid">
-          ${field('solutions', 'name', '方案名称', item.name, { wide: true, placeholder: '例如 智慧园区' })}
-          ${field('solutions', 'id', '详情页标识', item.id, { help: '出现在 /solutions/?id= 后面，如 campus' })}
-          ${field('solutions', 'icon', '图标名', item.icon, { help: 'Material 图标英文名，如 domain' })}
-          ${field('solutions', 'image', '封面图', item.image, { image: true, wide: true, size: '1600×900' })}
-          ${field('solutions', 'value', '一句话价值', item.value, { type: 'textarea', rows: 3, placeholder: '详情页主标题下方的那句核心价值' })}
-          ${field('solutions', 'summary', '补充简介', item.summary, { type: 'textarea', rows: 3, placeholder: '详情页主标题下的第二段说明' })}
-        </div>
-      `)}
-      ${section('2. 方案介绍 PPT', '按讲解顺序排页，建议 1920×1080。点预览上传，也可粘贴图片地址。', `
-        <div class="admin-sol-deck__grid">
-          ${slides.map((slide, index) => {
-            const url = slide.imageUrl || ''
-            const path = `slides.${index}.imageUrl`
-            return `
-          <article class="admin-sol-tile" data-solutions-slide="${index}">
-            <div class="admin-sol-tile__head">
-              <strong>第 ${index + 1} 页</strong>
-              <button type="button" data-solutions-slide-remove="${index}" ${slides.length <= 1 ? 'disabled' : ''}>删除</button>
+    <div class="admin-home-editor admin-sol-compose">
+      <aside class="admin-home-outline">
+        <p>点左侧一项，右侧只编辑这一块</p>
+        ${SOL_OUTLINE.map((entry) => `
+          <button type="button" class="admin-home-outline__item${entry.id === active ? ' is-active' : ''}" data-sol-goto="${entry.id}">
+            <em>${entry.no}</em>
+            <span><b>${entry.title}</b><small>${entry.desc}</small></span>
+          </button>`).join('')}
+      </aside>
+      <div class="admin-home-stage">
+        <input type="hidden" data-solutions-field="id" value="${esc(item.id || '')}" />
+        <fieldset data-sol-section="basics">
+          <legend>基础信息</legend>
+          <p class="admin-form-section__hint">出现在详情页顶部大图。</p>
+          <div class="admin-form-grid">
+            ${field('solutions', 'name', '方案名称', item.name, { wide: true, placeholder: '例如 智慧园区' })}
+            ${field('solutions', 'id', '详情页标识', item.id, { help: '出现在 /solutions/?id= 后面，如 campus' })}
+            ${field('solutions', 'icon', '图标名', item.icon, { help: 'Material 图标英文名，如 domain' })}
+            ${field('solutions', 'image', '封面图', item.image, { image: true, wide: true, size: '1600×900' })}
+            ${field('solutions', 'value', '一句话价值', item.value, { type: 'textarea', rows: 3, placeholder: '详情页主标题下方的那句核心价值' })}
+            ${field('solutions', 'summary', '补充简介', item.summary, { type: 'textarea', rows: 3, placeholder: '详情页主标题下的第二段说明' })}
+            <label class="admin-news-pin admin-form-wide">
+              <input data-solutions-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
+              <span><b>发布后前台可见</b><small>取消勾选则详情页不对外展示。</small></span>
+            </label>
+          </div>
+        </fieldset>
+        <fieldset data-sol-section="ppt">
+          <legend>方案介绍 PPT</legend>
+          <p class="admin-form-section__hint">按讲解顺序排页，建议 1920×1080。点预览上传，也可粘贴图片地址。</p>
+          <div class="admin-sol-deck__grid">
+            ${slides.map((slide, index) => {
+              const url = slide.imageUrl || ''
+              const path = `slides.${index}.imageUrl`
+              return `
+            <article class="admin-sol-tile" data-solutions-slide="${index}">
+              <div class="admin-sol-tile__head">
+                <strong>第 ${index + 1} 页</strong>
+                <button type="button" data-solutions-slide-remove="${index}" ${slides.length <= 1 ? 'disabled' : ''}>删除</button>
+              </div>
+              <div class="admin-sol-tile__frame">
+                <img data-solutions-preview-for="${path}" src="${esc(url)}" alt="" ${url ? '' : 'hidden'} />
+                <label class="admin-sol-tile__upload">
+                  <span>${url ? '更换' : '上传图片'}</span>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" data-solutions-upload-for="${path}" />
+                </label>
+              </div>
+              <input class="admin-sol-tile__url" data-solutions-field="${path}" type="text" value="${esc(url)}" placeholder="或粘贴图片地址" />
+            </article>`
+            }).join('')}
+            <button type="button" class="admin-sol-tile admin-sol-tile--add" data-solutions-slide-add>
+              <span>+ 添加一页</span>
+            </button>
+          </div>
+        </fieldset>
+        <fieldset data-sol-section="scenarios">
+          <legend>运营场景</legend>
+          <p class="admin-form-section__hint">详情页 PPT 下方「覆盖关键运营场景」，每条一个短标题。</p>
+          ${listEditor('solutions', 'scenarios', item.scenarios, { placeholder: '例如 多楼栋统一运营', addLabel: '添加场景', max: 12 })}
+        </fieldset>
+        <fieldset data-sol-section="journey">
+          <legend>客户旅程</legend>
+          <p class="admin-form-section__hint">详情页「端到端客户旅程」步骤。</p>
+          ${listEditor('solutions', 'journey', item.journey, { placeholder: '例如 到访接待', addLabel: '添加步骤', max: 8 })}
+        </fieldset>
+        <fieldset data-sol-section="stack">
+          <legend>智能体与硬件</legend>
+          <p class="admin-form-section__hint">详情页组合清单。智能体填详情页标识，如 space、visitor。</p>
+          <div class="admin-sol-stack">
+            <div>
+              <h4 class="admin-sol-label">关联智能体</h4>
+              ${listEditor('solutions', 'agents', item.agents, { placeholder: '如 space', addLabel: '添加智能体', max: 12 })}
             </div>
-            <div class="admin-sol-tile__frame">
-              <img data-solutions-preview-for="${path}" src="${esc(url)}" alt="" ${url ? '' : 'hidden'} />
-              <label class="admin-sol-tile__upload">
-                <span>${url ? '更换' : '上传图片'}</span>
-                <input type="file" accept="image/jpeg,image/png,image/webp" data-solutions-upload-for="${path}" />
-              </label>
+            <div>
+              <h4 class="admin-sol-label">列表页重点智能体</h4>
+              <p class="admin-form-section__hint">方案列表页最多高亮 3 个</p>
+              ${listEditor('solutions', 'highlightAgents', item.highlightAgents, { placeholder: '如 visitor', addLabel: '添加重点', max: 3 })}
             </div>
-            <input class="admin-sol-tile__url" data-solutions-field="${path}" type="text" value="${esc(url)}" placeholder="或粘贴图片地址" />
-          </article>`
-          }).join('')}
-          <button type="button" class="admin-sol-tile admin-sol-tile--add" data-solutions-slide-add>
-            <span>+ 添加一页</span>
-          </button>
-        </div>
-      `)}
-      ${section('3. 运营场景', '详情页 PPT 下方「覆盖关键运营场景」卡片，每条一个标题。', listEditor('solutions', 'scenarios', item.scenarios, { placeholder: '例如 多楼栋统一运营', addLabel: '添加场景', max: 12 }))}
-      ${section('4. 客户旅程', '详情页「端到端客户旅程」步骤，按顺序填写。', listEditor('solutions', 'journey', item.journey, { placeholder: '例如 到访接待', addLabel: '添加步骤', max: 8 }))}
-      ${section('5. 智能体与硬件', '详情页「智能体与硬件组合清单」。智能体填详情页标识，如 space、visitor。', `
-        <div class="admin-form-grid">
-          <div>
-            <h4 class="admin-sol-label">关联智能体</h4>
-            ${listEditor('solutions', 'agents', item.agents, { placeholder: '如 space', addLabel: '添加智能体', max: 12 })}
+            <div class="admin-sol-stack__wide">
+              <h4 class="admin-sol-label">关联硬件 / 系统</h4>
+              ${listEditor('solutions', 'hardware', item.hardware, { placeholder: '例如 门禁闸机', addLabel: '添加硬件', max: 12 })}
+            </div>
           </div>
-          <div>
-            <h4 class="admin-sol-label">列表页重点智能体</h4>
-            <p class="admin-form-section__hint">方案列表页底座里高亮的最多 3 个</p>
-            ${listEditor('solutions', 'highlightAgents', item.highlightAgents, { placeholder: '如 visitor', addLabel: '添加重点', max: 3 })}
+        </fieldset>
+        <fieldset data-sol-section="faq">
+          <legend>常见问题</legend>
+          <p class="admin-form-section__hint">不单独成段，会拼进详情页 FAQ。</p>
+          <h4 class="admin-sol-label">行业痛点</h4>
+          ${listEditor('solutions', 'pains', item.pains, { placeholder: '例如 多楼栋系统割裂', addLabel: '添加痛点', max: 8 })}
+          ${field('solutions', 'approach', '方案做法', item.approach, { type: 'textarea', wide: true, rows: 5, placeholder: '用一两段话说明怎么组合智能体与硬件落地' })}
+        </fieldset>
+        <fieldset data-sol-section="values">
+          <legend>列表页核心价值</legend>
+          <p class="admin-form-section__hint">出现在 /solutions/ 方案列表，不是详情页。固定 3 条。</p>
+          <div class="admin-sol-values">
+            ${values.map((row, index) => `
+              <article class="admin-sol-value">
+                <h4>价值 ${index + 1}</h4>
+                ${field('solutions', `coreValues.${index}.title`, '标题', row.title || '')}
+                ${field('solutions', `coreValues.${index}.icon`, '图标名', row.icon || '', { help: '如 verified、bolt' })}
+                ${field('solutions', `coreValues.${index}.desc`, '说明', row.desc || '', { type: 'textarea', rows: 3 })}
+              </article>`).join('')}
           </div>
-          <div class="admin-form-wide">
-            <h4 class="admin-sol-label">关联硬件 / 系统</h4>
-            ${listEditor('solutions', 'hardware', item.hardware, { placeholder: '例如 门禁闸机', addLabel: '添加硬件', max: 12 })}
-          </div>
-        </div>
-      `)}
-      ${section('6. 常见问题素材', '不单独成段，会拼进详情页 FAQ。', `
-        <div class="admin-form-grid">
-          <div>
-            <h4 class="admin-sol-label">行业痛点</h4>
-            ${listEditor('solutions', 'pains', item.pains, { placeholder: '例如 多楼栋系统割裂', addLabel: '添加痛点', max: 8 })}
-          </div>
-          ${field('solutions', 'approach', '方案做法', item.approach, { type: 'textarea', rows: 8, placeholder: '用一两段话说明怎么组合智能体与硬件落地' })}
-        </div>
-      `)}
-      ${section('7. 列表页核心价值', '出现在 /solutions/ 方案列表，不是详情页。固定 3 条。', `
-        <div class="admin-sol-values">
-          ${values.map((row, index) => `
-            <article class="admin-sol-value">
-              <h4>价值 ${index + 1}</h4>
-              ${field('solutions', `coreValues.${index}.title`, '标题', row.title || '')}
-              ${field('solutions', `coreValues.${index}.icon`, '图标名', row.icon || '', { help: '如 verified、bolt' })}
-              ${field('solutions', `coreValues.${index}.desc`, '说明', row.desc || '', { type: 'textarea', rows: 3 })}
-            </article>`).join('')}
-        </div>
-      `)}
-      ${section('8. 发布', '', `
-        <label class="admin-news-pin">
-          <input data-solutions-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
-          <span><b>发布后前台可见</b><small>取消勾选则详情页不对外展示。</small></span>
-        </label>
-      `)}
+        </fieldset>
+      </div>
     </div>`
+  showSolutionSection(active)
 }
 
 function renderAgentCompose(item) {
@@ -359,6 +395,7 @@ function openCompose(kind, index) {
   const items = page?.draftContent?.items || []
   const item = index >= 0 ? items[index] : (kind === 'solutions' ? emptySolution() : emptyAgent())
   ctx.state[`${kind}ComposeIndex`] = index
+  if (kind === 'solutions') ctx.state.solutionSection = 'basics'
   document.querySelector(`[data-${kind}-list-view]`).hidden = true
   const compose = document.querySelector(`[data-${kind}-compose-view]`)
   compose.hidden = false
@@ -441,6 +478,12 @@ function bindKind(kind) {
     }
   })
   compose.addEventListener('click', async (event) => {
+    const jump = kind === 'solutions' ? event.target.closest('[data-sol-goto]') : null
+    if (jump) {
+      event.preventDefault()
+      showSolutionSection(jump.dataset.solGoto)
+      return
+    }
     if (kind === 'solutions' && event.target.closest('[data-sol-list-add]')) {
       event.preventDefault()
       const path = event.target.closest('[data-sol-list-add]').getAttribute('data-sol-list-add')
