@@ -266,6 +266,7 @@ export function bindNewsRichEditor(modal, { api, toast }) {
           return
         }
         insertNodesAtMarker(editor, nodes)
+        editor.innerHTML = sanitizeNewsHtml(editor.innerHTML)
         editor.focus()
         toast('视频已插入')
         return
@@ -314,6 +315,7 @@ export function bindNewsRichEditor(modal, { api, toast }) {
       toast('正在上传视频…')
       const url = await uploadVideoFile(file, api)
       insertNodesAtMarker(editor, createVideoNodes(url))
+      editor.innerHTML = sanitizeNewsHtml(editor.innerHTML)
       editor.focus()
       toast('视频已插入')
     } catch (error) {

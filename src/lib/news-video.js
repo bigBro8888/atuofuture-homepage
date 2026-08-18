@@ -50,6 +50,6 @@ export function newsVideoMarkup(raw) {
   if (!video) return ''
   const inner = video.kind === 'embed'
     ? `<iframe src="${escapeAttr(video.src)}" title="视频" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>`
-    : `<video src="${escapeAttr(video.src)}" controls playsinline preload="metadata"></video>`
+    : `<video src="${escapeAttr(video.src)}" controls="controls" playsinline="true" preload="metadata"></video>`
   return `<figure class="sx-news-video" data-news-video="1" contenteditable="false">${inner}</figure><p><br></p>`
 }

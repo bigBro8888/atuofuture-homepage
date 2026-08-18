@@ -2,6 +2,7 @@ import { NEWS_ITEMS, getNewsById, formatNewsDate } from '../data/news.js'
 import { loadNewsFeedContent } from '../services/site-settings-api.js'
 import { hydrateNewsItem } from '../lib/format-news-body.js'
 import { resolveNewsVideo } from '../lib/news-video.js'
+import { sanitizeNewsHtml } from '../lib/sanitize-news-html.js'
 
 function esc(str = '') {
   return String(str)
@@ -87,7 +88,7 @@ function renderBody(n) {
       </div>
       ${n.summary ? `<p>${esc(n.summary)}</p>` : ''}`
   }
-  if (n.bodyHtml) return n.bodyHtml
+  if (n.bodyHtml) return sanitizeNewsHtml(n.bodyHtml)
   return renderSections(n)
 }
 

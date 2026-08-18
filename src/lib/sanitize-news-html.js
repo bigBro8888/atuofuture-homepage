@@ -9,6 +9,8 @@ const ALLOWED_TAGS = new Set([
 ])
 
 const VOID_TAGS = new Set(['br', 'img', 'hr'])
+const BREAK_PHRASING = new Set(['figure', 'table', 'ul', 'ol', 'blockquote', 'div', 'h2', 'h3', 'h4', 'video', 'iframe'])
+const BOOLEAN_ATTRS = new Set(['controls', 'playsinline', 'allowfullscreen'])
 
 const ALLOWED_ATTR = {
   a: new Set(['href', 'title', 'target', 'rel']),
@@ -58,12 +60,14 @@ function parseAttributes(raw, tag, keepColor = true) {
   const allowed = ALLOWED_ATTR[tag]
   if (!allowed) return ''
   const out = []
+  const seen = new Set()
   const re = /([a-zA-Z:_][a-zA-Z0-9:_.-]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/g
   let match
   while ((match = re.exec(raw))) {
     const name = match[1].toLowerCase()
     if (name.startsWith('on')) continue
     if (!allowed.has(name)) continue
+    seen.add(name)
     const value = match[3] ?? match[4] ?? match[5] ?? ''
     if (name === 'href' || name === 'src') {
       const cleaned = safeUrl(value, tag === 'img' ? 'img' : 'a')
@@ -117,6 +121,18 @@ function parseAttributes(raw, tag, keepColor = true) {
     }
     out.push(`${name}="${String(value).replace(/[<>"']/g, '')}"`)
   }
+  const boolRe = /(?:^|\s)([a-zA-Z:_][a-zA-Z0-9:_.-]*)(?=\s|\/|$)/g
+  while ((match = boolRe.exec(raw))) {
+    const name = match[1].toLowerCase()
+    if (seen.has(name) || name.startsWith('on') || !allowed.has(name) || !BOOLEAN_ATTRS.has(name)) continue
+    seen.add(name)
+    out.push(name)
+  }
+  if (tag === 'video' && out.some((item) => item.startsWith('src='))) {
+    if (!seen.has('controls')) out.push('controls')
+    if (!seen.has('playsinline')) out.push('playsinline')
+    if (!seen.has('preload')) out.push('preload="metadata"')
+  }
   return out.length ? ` ${out.join(' ')}` : ''
 }
 
@@ -164,6 +180,11 @@ export function sanitizeNewsHtml(dirty, options = {}) {
     if (!open) continue
     const tag = open[1].toLowerCase()
     if (!ALLOWED_TAGS.has(tag)) continue
+    if (BREAK_PHRASING.has(tag)) {
+      while (stack.length && (stack.at(-1) === 'p' || stack.at(-1) === 'span')) {
+        html += `</${stack.pop()}>`
+      }
+    }
     const attrs = parseAttributes(open[2] || '', tag, keepColor)
     const selfClosing = VOID_TAGS.has(tag) || Boolean(open[3])
     html += `<${tag}${attrs}>`

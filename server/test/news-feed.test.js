@@ -28,6 +28,17 @@ test('keeps in-article video embeds and file players', () => {
   assert.match(html, /youtube.com\/embed\/dQw4w9wgxcQ/)
   const file = sanitizeNewsHtml('<video src="/api/public/uploads/videos/demo.mp4" controls></video>')
   assert.match(file, /\/api\/public\/uploads\/videos\/demo.mp4/)
+  assert.match(file, /\scontrols(?:\s|>)/)
+})
+
+test('keeps wezhan mp4 query urls and hoists video out of paragraphs', () => {
+  const src = 'https://video.2020.wezhan.cn/a06b3ba6a58971f081af6632b68f0102/clip-sd.mp4?auth_key=abc-0-def'
+  const html = sanitizeNewsHtml(`<p><span><figure class="sx-news-video" data-news-video="1"><video src="${src}" preload="metadata"></video></figure><p><br></p></span></p>`)
+  assert.match(html, /auth_key=abc-0-def/)
+  assert.match(html, /<figure class="sx-news-video"/)
+  assert.match(html, /\scontrols(?:\s|>)/)
+  assert.match(html, /playsinline/)
+  assert.doesNotMatch(html, /<p><span><figure/)
 })
 
 test('keeps tables and images but strips scripts from news html', () => {
