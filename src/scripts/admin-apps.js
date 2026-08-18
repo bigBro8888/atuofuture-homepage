@@ -15,7 +15,7 @@ const ABOUT_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏主张', desc: '主标题、介绍与按钮' },
   { id: 'story', no: '02', title: '公司介绍', desc: '文案与左侧图片' },
   { id: 'values', no: '03', title: '使命价值观愿景', desc: '大图三列：使命、价值观、愿景' },
-  { id: 'partners', no: '04', title: '客户与网络', desc: '客户名称列表' },
+  { id: 'partners', no: '04', title: '客户与网络', desc: 'Logo 滚动墙，可换图和增删' },
   { id: 'duties', no: '05', title: '责任与承诺', desc: '责任条目' },
   { id: 'join', no: '06', title: '加入我们', desc: '加入步骤' },
   { id: 'contact', no: '07', title: '联系我们', desc: '邮箱、地址与入口' },
@@ -594,7 +594,9 @@ function aboutItemFields(kind, index, item) {
       ${aboutField(`values.items.${index}.imageUrl`, '配图', item.imageUrl, { image: true, wide: true, size: '880×560' })}`
   }
   if (kind === 'partners') {
-    return `${aboutField(`partners.items.${index}.name`, '名称', item.name)}`
+    return `
+      ${aboutField(`partners.items.${index}.name`, '名称', item.name)}
+      ${aboutField(`partners.items.${index}.logoUrl`, 'Logo', item.logoUrl, { image: true, wide: true, size: '480×160' })}`
   }
   if (kind === 'duties') {
     return `
@@ -845,7 +847,10 @@ function renderAboutEditor(content) {
         <div class="admin-home-list">${(items || []).map((item, index) => `
           <div class="admin-item-row">
             <div><strong>${escapeHtml(label(item, index))}</strong></div>
-            <span class="admin-slide-tools"><button type="button" data-about-item-edit="${kind}" data-item-index="${index}">编辑</button></span>
+            <span class="admin-slide-tools">
+              <button type="button" data-about-item-edit="${kind}" data-item-index="${index}">编辑</button>
+              ${kind === 'partners' ? `<button type="button" data-about-partner-remove="${index}" ${(items || []).length <= 4 ? 'disabled' : ''}>删除</button>` : ''}
+            </span>
           </div>`).join('')}</div>`
   editor.innerHTML = `
     <aside class="admin-home-outline">
@@ -875,9 +880,10 @@ function renderAboutEditor(content) {
       </fieldset>
       <fieldset data-about-section="partners">
         <legend>客户与网络</legend>
-        <p class="admin-form-section__hint">整区标题在上面改，客户名称逐条编辑。</p>
+        <p class="admin-form-section__hint">上方改标题。下面每条点「编辑」上传 Logo（建议透明底 480×160），也可新增客户。</p>
         <div class="admin-form-grid">${aboutSectionFields('partners', content)}</div>
         ${itemRows('partners', content.partners?.items, (item, index) => `客户 ${index + 1}：${item.name || '未填写'}`)}
+        <button type="button" class="admin-add-slide" data-about-partner-add>+ 新增客户 Logo</button>
       </fieldset>
       <fieldset data-about-section="duties">
         <legend>责任与承诺</legend>
@@ -1881,6 +1887,33 @@ document.querySelector('[data-about-form]').addEventListener('click', (event) =>
   if (jump) {
     event.preventDefault()
     showAboutSection(jump.dataset.aboutGoto)
+    return
+  }
+  const partnerAdd = event.target.closest('[data-about-partner-add]')
+  if (partnerAdd) {
+    event.preventDefault()
+    const content = collectAboutContent()
+    content.partners.items = content.partners.items || []
+    if (content.partners.items.length >= 16) {
+      toast('最多 16 个客户 Logo', true)
+      return
+    }
+    content.partners.items.push({ name: '新客户', logoUrl: '' })
+    state.aboutPage.draftContent = content
+    renderAboutEditor(content)
+    showAboutSection('partners')
+    return
+  }
+  const partnerRemove = event.target.closest('[data-about-partner-remove]')
+  if (partnerRemove) {
+    event.preventDefault()
+    const index = Number(partnerRemove.dataset.aboutPartnerRemove)
+    const content = collectAboutContent()
+    if ((content.partners?.items || []).length <= 4) return
+    content.partners.items.splice(index, 1)
+    state.aboutPage.draftContent = content
+    renderAboutEditor(content)
+    showAboutSection('partners')
     return
   }
   const itemEdit = event.target.closest('[data-about-item-edit]')

@@ -32,14 +32,14 @@ export const defaultAboutContent = {
     title: '服务领先企业与零售网络',
     intro: '数千万件产品运行在客户的商业与零售网络中。以下为我们长期服务的部分客户与合作伙伴。',
     items: [
-      { name: '阿里巴巴' },
-      { name: '盒马' },
-      { name: '饿了么' },
-      { name: 'ZEBRA' },
-      { name: '银泰' },
-      { name: '钉钉' },
-      { name: '蚂蚁集团' },
-      { name: '大润发' },
+      { name: '阿里巴巴', logoUrl: '/images/partners/alibaba.png' },
+      { name: '盒马', logoUrl: '/images/partners/hema.png' },
+      { name: '饿了么', logoUrl: '/images/partners/eleme.png' },
+      { name: 'ZEBRA', logoUrl: '/images/partners/zebra.png' },
+      { name: '银泰', logoUrl: '/images/partners/intime.png' },
+      { name: '钉钉', logoUrl: '/images/partners/dingtalk.png' },
+      { name: '蚂蚁集团', logoUrl: '/images/partners/ant.png' },
+      { name: '大润发', logoUrl: '/images/partners/rtmart.png' },
     ],
   },
   duties: {
@@ -100,6 +100,12 @@ function fixedItems(value, defaults, mapper) {
   return defaults.map((fallback, index) => mapper(source[index] || {}, fallback))
 }
 
+function listItems(value, defaults, mapper, max = 16) {
+  const fallback = defaults[0] || {}
+  const source = Array.isArray(value) && value.length ? value : defaults
+  return source.slice(0, max).map((item, index) => mapper(item || {}, defaults[index] || fallback, index))
+}
+
 export function validateAboutContent(value = {}) {
   const hero = value.hero || {}
   const story = value.story || {}
@@ -140,9 +146,14 @@ export function validateAboutContent(value = {}) {
       label: cleanText(partners.label, defaultAboutContent.partners.label, 40),
       title: cleanText(partners.title, defaultAboutContent.partners.title, 40),
       intro: cleanText(partners.intro, defaultAboutContent.partners.intro, 400),
-      items: fixedItems(partners.items, defaultAboutContent.partners.items, (item, fallback) => ({
-        name: cleanText(item.name, fallback.name, 40),
-      })),
+      items: listItems(partners.items, defaultAboutContent.partners.items, (item, fallback) => {
+        const name = cleanText(item.name, fallback.name, 40)
+        const named = defaultAboutContent.partners.items.find((entry) => entry.name === name)
+        return {
+          name,
+          logoUrl: cleanHref(item.logoUrl, named?.logoUrl || ''),
+        }
+      }, 16),
     },
     duties: {
       label: cleanText(duties.label, defaultAboutContent.duties.label, 40),
@@ -196,6 +207,8 @@ export function getAboutPageConfig() {
   }
   hydrateValueImages(page.draftContent)
   hydrateValueImages(page.publishedContent)
+  hydratePartnerLogos(page.draftContent)
+  hydratePartnerLogos(page.publishedContent)
   return page
 }
 
@@ -204,5 +217,14 @@ function hydrateValueImages(content) {
   if (!Array.isArray(items)) return
   defaultAboutContent.values.items.forEach((fallback, index) => {
     if (items[index] && !items[index].imageUrl) items[index].imageUrl = fallback.imageUrl
+  })
+}
+
+function hydratePartnerLogos(content) {
+  const items = content?.partners?.items
+  if (!Array.isArray(items)) return
+  const byName = Object.fromEntries(defaultAboutContent.partners.items.map((item) => [item.name, item.logoUrl]))
+  items.forEach((item) => {
+    if (item && !item.logoUrl) item.logoUrl = byName[item.name] || ''
   })
 }

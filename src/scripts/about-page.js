@@ -26,6 +26,46 @@ function bg(selector, value) {
   if (element && value) element.style.backgroundImage = `url("${value}")`
 }
 
+function partnerLockup(name) {
+  const colors = {
+    阿里巴巴: '#FF6A00',
+    盒马: '#00A86B',
+    饿了么: '#0097DC',
+    ZEBRA: '#111111',
+    银泰: '#C41E3A',
+    钉钉: '#0089FF',
+    蚂蚁集团: '#1677FF',
+    大润发: '#E60012',
+  }
+  const color = colors[name] || '#12122a'
+  return `<span class="ab-partners__mark" style="background:${color}"></span><strong style="color:${color}">${escapeHtml(name)}</strong>`
+}
+
+function renderPartnerMarquee(items) {
+  const root = document.querySelector('[data-about-partners]')
+  if (!root) return
+  const logos = (items || []).filter((item) => item?.name)
+  if (!logos.length) return
+  const tile = (item, hideName) => {
+    const visual = item.logoUrl
+      ? `<img src="${escapeHtml(item.logoUrl)}" alt="${hideName ? '' : escapeHtml(item.name)}">`
+      : partnerLockup(item.name)
+    return `<figure class="ab-partners__logo">${visual}</figure>`
+  }
+  const group = (hideName) => `<div class="ab-partners__group"${hideName ? ' aria-hidden="true"' : ''}>${logos.map((item) => tile(item, hideName)).join('')}</div>`
+  const reversed = [...logos].reverse()
+  const reverseGroup = `<div class="ab-partners__group" aria-hidden="true">${reversed.map((item) => tile(item, true)).join('')}</div>`
+  root.innerHTML = `
+    <div class="ab-partners__row ab-partners__row--ltr"><div class="ab-partners__track">${group(false)}${group(true)}</div></div>
+    <div class="ab-partners__row ab-partners__row--rtl"><div class="ab-partners__track">${reverseGroup}${reverseGroup}</div></div>`
+  root.querySelectorAll('img').forEach((image) => {
+    image.addEventListener('error', () => {
+      const figure = image.closest('figure')
+      if (figure) figure.innerHTML = partnerLockup(image.alt || '客户')
+    })
+  })
+}
+
 export function applyAboutContent(content) {
   if (!content) return
 
@@ -58,12 +98,7 @@ export function applyAboutContent(content) {
   text('[data-about-partners-label]', content.partners?.label)
   text('[data-about-partners-title]', content.partners?.title)
   text('[data-about-partners-intro]', content.partners?.intro)
-  const partnerRoot = document.querySelector('[data-about-partners]')
-  if (partnerRoot && content.partners?.items) {
-    partnerRoot.innerHTML = content.partners.items
-      .map((item) => `<span>${escapeHtml(item.name)}</span>`)
-      .join('')
-  }
+  renderPartnerMarquee(content.partners?.items)
 
   text('[data-about-duties-label]', content.duties?.label)
   text('[data-about-duties-title]', content.duties?.title)
