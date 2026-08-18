@@ -119,7 +119,7 @@ function defaultNavGroups() {
     products: group.products.map((item) => ({
       id: item.id,
       label: item.label || '',
-      imageUrl: '',
+      imageUrl: `/images/hardware/thumb-${item.id}.png`,
       href: `/hardware/product/?id=${item.id}`,
     })),
   }))
@@ -136,12 +136,16 @@ function cleanNavGroups(value) {
       title: cleanText(extra.title, base.title, 40),
       icon: cleanText(extra.icon, base.icon, 40),
       products: base.products.map((item, productIndex) => {
-        const extraProduct = extraProducts.find((row) => row.id === item.id) || extraProducts[productIndex] || {}
+        const extraProduct = extraProducts.find((row) => row.id === item.id)
+          || (item.id === 'smart-lighting' ? extraProducts.find((row) => row.id === 'switch-control') : null)
+          || extraProducts[productIndex]
+          || {}
         const defaultHref = `/hardware/product/?id=${item.id}`
+        const defaultImage = `/images/hardware/thumb-${item.id}.png`
         return {
           id: item.id,
           label: cleanText(extraProduct.label, item.label || '', 40),
-          imageUrl: cleanUrl(extraProduct.imageUrl, ''),
+          imageUrl: cleanUrl(extraProduct.imageUrl, defaultImage),
           href: cleanHref(extraProduct.href, defaultHref),
         }
       }),

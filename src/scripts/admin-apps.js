@@ -970,7 +970,7 @@ function simpleOutline(key, items = []) {
   if (key === 'hardware') {
     return [
       hero,
-      { id: 'nav', no: '02', title: '导航分类设置', desc: '顶栏下拉三列，和官网一致' },
+      { id: 'nav', no: '02', title: '导航分类设置', desc: 'Banner 下三列：名称、缩略图、链接' },
       { id: 'space', no: '03', title: '空间智能', desc: '中控屏、桌牌、工位屏等' },
       { id: 'retail', no: '04', title: '新零售与电子纸', desc: '价签、冷链与资产盘点' },
       { id: 'consumer', no: '05', title: '3C 数码', desc: '手机壳与艺术相框' },
@@ -1005,7 +1005,7 @@ function renderHardwareNavEditor(navGroups, items = []) {
   return `
       <fieldset data-simple-section="nav">
         <legend>导航分类设置</legend>
-        <p class="admin-form-section__hint">对应官网顶栏「智能硬件」下拉三列。点某个产品可改显示名、缩略图和跳转链接，保存并发布后全站同步。</p>
+        <p class="admin-form-section__hint">对应硬件频道 Banner 下面的三列，以及顶栏「智能硬件」下拉。每项可改显示名、缩略图和跳转链接，保存并发布后官网同步。</p>
         <div class="admin-nav-groups">${navGroups.map((group, groupIndex) => `
           <article class="admin-nav-col">
             <header class="admin-nav-col__head">
@@ -1020,25 +1020,15 @@ function renderHardwareNavEditor(navGroups, items = []) {
               ${(group.products || []).map((product, productIndex) => {
                 const item = items.find((row) => row.id === product.id) || {}
                 const name = product.label || item.title || product.id
-                const image = product.imageUrl || item.imageUrl || ''
+                const image = product.imageUrl || `/images/hardware/thumb-${product.id}.png`
                 const href = product.href || `/hardware/product/?id=${encodeURIComponent(product.id || '')}`
                 const prefix = `navGroups.${groupIndex}.products.${productIndex}`
                 return `
                 <div class="admin-nav-prod" data-nav-prod>
-                  <button type="button" class="admin-nav-prod__summary" data-nav-prod-toggle>
-                    ${image ? `<img data-nav-prod-thumb src="${escapeHtml(image)}" alt="" />` : '<span class="admin-nav-prod__ph" data-nav-prod-thumb-ph></span>'}
-                    <span>
-                      <b>${escapeHtml(name)}</b>
-                      <small>点击设置图片与链接</small>
-                    </span>
-                    <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
-                  </button>
-                  <div class="admin-nav-prod__edit">
-                    <input type="hidden" data-home-field="${prefix}.id" value="${escapeHtml(product.id || '')}" />
-                    ${homeField(`${prefix}.label`, '导航显示名', name)}
-                    ${homeField(`${prefix}.href`, '指向链接', href, { help: '默认进产品详情，也可改成其它站内页或外链' })}
-                    ${homeField(`${prefix}.imageUrl`, '导航缩略图', image, { image: true })}
-                  </div>
+                  <input type="hidden" data-home-field="${prefix}.id" value="${escapeHtml(product.id || '')}" />
+                  ${homeField(`${prefix}.label`, '显示名', name)}
+                  ${homeField(`${prefix}.href`, '指向链接', href)}
+                  ${homeField(`${prefix}.imageUrl`, '缩略图', image, { image: true })}
                 </div>`
               }).join('')}
             </div>
@@ -2081,21 +2071,9 @@ document.querySelector('[data-site-editor]').addEventListener('change', async (e
 document.querySelector('[data-simple-form]').addEventListener('submit', (event) => event.preventDefault())
 document.querySelector('[data-simple-editor]').addEventListener('click', (event) => {
   const jump = event.target.closest('[data-simple-goto]')
-  if (jump) {
-    event.preventDefault()
-    showSimpleSection(jump.dataset.simpleGoto)
-    return
-  }
-  const toggle = event.target.closest('[data-nav-prod-toggle]')
-  if (!toggle) return
+  if (!jump) return
   event.preventDefault()
-  const card = toggle.closest('[data-nav-prod]')
-  if (!card) return
-  const open = !card.classList.contains('is-open')
-  card.closest('.admin-nav-col')?.querySelectorAll('[data-nav-prod].is-open').forEach((other) => {
-    if (other !== card) other.classList.remove('is-open')
-  })
-  card.classList.toggle('is-open', open)
+  showSimpleSection(jump.dataset.simpleGoto)
 })
 document.querySelector('[data-simple-save]').addEventListener('click', async (event) => {
   const button = event.currentTarget
@@ -2121,26 +2099,6 @@ document.querySelector('[data-simple-editor]').addEventListener('input', (event)
   if (preview) {
     preview.src = field.value.trim()
     preview.hidden = !field.value.trim()
-  }
-  if (String(field.dataset.homeField || '').endsWith('.imageUrl')) {
-    const card = field.closest('[data-nav-prod]')
-    const thumb = card?.querySelector('[data-nav-prod-thumb]')
-    const placeholder = card?.querySelector('[data-nav-prod-thumb-ph]')
-    const url = field.value.trim()
-    if (thumb) {
-      thumb.src = url
-      thumb.hidden = !url
-    } else if (url && placeholder) {
-      const img = document.createElement('img')
-      img.setAttribute('data-nav-prod-thumb', '')
-      img.src = url
-      img.alt = ''
-      placeholder.replaceWith(img)
-    }
-  }
-  if (String(field.dataset.homeField || '').endsWith('.label')) {
-    const title = field.closest('[data-nav-prod]')?.querySelector('.admin-nav-prod__summary b')
-    if (title && field.value.trim()) title.textContent = field.value.trim()
   }
 })
 document.querySelector('[data-simple-editor]').addEventListener('change', async (event) => {

@@ -1,12 +1,11 @@
 import { loadSimplePageContent } from '../services/site-settings-api.js'
 import {
-  HARDWARE_LINES,
-  HARDWARE_PRODUCTS,
   HARDWARE_SPACE_FLOW,
   ASPACE_SOLUTION_HREF,
   applyHardwareSimpleCms,
   getProductBySlug,
   getProductsByLine,
+  resolveHardwareMegaGroups,
 } from '../data/hardware-catalog.js'
 
 function esc(str = '') {
@@ -19,41 +18,6 @@ function esc(str = '') {
 
 function productHref(product) {
   return `/hardware/product/?id=${encodeURIComponent(product.slug)}`
-}
-
-function linePreviewItems(lineId) {
-  const map = {
-    space: [
-      { id: 'control-screen', label: '中控屏' },
-      { id: 'e-table-sign', label: '电子桌牌' },
-      { id: 'desk-screen', label: '工位屏' },
-      { id: 'smart-lighting', label: '照明与空调' },
-      { id: 'sensor', label: '传感器' },
-      { id: 'gateway', label: '网关' },
-    ],
-    retail: [
-      { id: 'eink-price-tag', label: '墨水屏电子价签' },
-      { id: 'lcd-price-tag', label: 'LCD电子价签' },
-      { id: 'cold-tag', label: '低温标签' },
-      { id: 'aap', label: 'AAP资产盘点' },
-    ],
-    consumer: [
-      { id: 'eink-phone-case', label: 'AI墨水屏手机壳' },
-      { id: 'eink-frame', label: 'AI电子纸艺术相框' },
-    ],
-  }
-  return (map[lineId] || [])
-    .map((item) => {
-      const p = getProductBySlug(item.id)
-      return p
-        ? {
-            ...item,
-            product: p,
-            thumb: `/images/hardware/thumb-${item.id}.png`,
-          }
-        : null
-    })
-    .filter(Boolean)
 }
 
 function renderHero() {
@@ -80,39 +44,35 @@ function renderHero() {
 }
 
 function renderLineOverview() {
-  const lineMeta = {
-    space: { icon: 'apartment', href: '#hwc-space' },
-    retail: { icon: 'shopping_bag', href: '#hwc-retail' },
-    consumer: { icon: 'smartphone', href: '#hwc-consumer' },
-  }
+  const groups = resolveHardwareMegaGroups()
+  const anchors = { space: '#hwc-space', retail: '#hwc-retail', consumer: '#hwc-consumer' }
   return `
     <section class="hwc-lines" id="hwc-lines">
       <div class="hwc-shell hwc-lines__shell">
         <div class="hwc-lines__grid">
-          ${HARDWARE_LINES.map((line) => {
-            const items = linePreviewItems(line.id)
-            const meta = lineMeta[line.id] || { icon: line.icon, href: `#hwc-${line.id}` }
-            return `
-            <article class="hwc-lines__card hwc-lines__card--${esc(line.id)}">
-              <a class="hwc-lines__head" href="${esc(meta.href)}">
-                <span class="material-symbols-outlined hwc-lines__icon" aria-hidden="true">${esc(meta.icon)}</span>
-                <strong>${esc(line.name)}</strong>
+          ${groups
+            .map((group) => `
+            <article class="hwc-lines__card hwc-lines__card--${esc(group.id)}">
+              <a class="hwc-lines__head" href="${esc(anchors[group.id] || `#hwc-${group.id}`)}">
+                <span class="material-symbols-outlined hwc-lines__icon" aria-hidden="true">${esc(group.icon)}</span>
+                <strong>${esc(group.title)}</strong>
               </a>
               <div class="hwc-lines__items">
-                ${items
+                ${group.products
                   .map(
                     (item) => `
-                  <a class="hwc-lines__item" href="${productHref(item.product)}">
+                  <a class="hwc-lines__item" href="${esc(item.href)}">
                     <span class="hwc-lines__thumb">
-                      <img src="${esc(item.thumb)}" alt="" width="72" height="72" loading="lazy" />
+                      <img src="${esc(item.coverImage)}" alt="" width="72" height="72" loading="lazy" />
                     </span>
-                    <span class="hwc-lines__label">${esc(item.label)}</span>
+                    <span class="hwc-lines__label">${esc(item.name)}</span>
                   </a>`
                   )
                   .join('')}
               </div>
             </article>`
-          }).join('')}
+            )
+            .join('')}
         </div>
       </div>
     </section>`

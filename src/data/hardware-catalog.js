@@ -337,7 +337,7 @@ export const HARDWARE_MEGA_GROUPS = [
       { id: 'control-screen' },
       { id: 'e-table-sign' },
       { id: 'desk-screen' },
-      { id: 'switch-control', label: '照明与空调' },
+      { id: 'smart-lighting', label: '照明与空调' },
       { id: 'sensor' },
       { id: 'gateway' },
     ],
@@ -404,22 +404,25 @@ function megaSourceGroups() {
   })
 }
 
+export function hardwareLineThumb(id) {
+  return `/images/hardware/thumb-${id}.png`
+}
+
 export function resolveHardwareMegaGroups() {
   return megaSourceGroups().map((group) => ({
     ...group,
     products: group.products
       .map((entry) => {
         const product = getProductBySlug(entry.id)
-        if (!product) return null
         return {
-          id: product.id,
-          slug: product.slug,
-          name: entry.label || product.name,
-          coverImage: entry.imageUrl || product.coverImage,
-          href: entry.href || getProductDetailHref(product),
+          id: entry.id,
+          slug: product?.slug || entry.id,
+          name: entry.label || product?.name || entry.id,
+          coverImage: entry.imageUrl || hardwareLineThumb(entry.id) || product?.coverImage || '',
+          href: entry.href || (product ? getProductDetailHref(product) : `/hardware/product/?id=${encodeURIComponent(entry.id)}`),
         }
       })
-      .filter(Boolean),
+      .filter((item) => item.id),
   }))
 }
 
