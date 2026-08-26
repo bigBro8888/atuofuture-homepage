@@ -4,7 +4,15 @@ import { bindProductLibraryAdmin, closeProductCompose, loadProductLibrary, produ
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 
 const API = '/api/admin'
-const state = { user: null, app: null, homePage: null, aboutPage: null, aboutSection: 'hero', sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, productLibrary: null, homeSection: 'hero' }
+const state = { user: null, app: null, homePage: null, aboutPage: null, aboutSection: 'hero', sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, productLibrary: null, homeSection: 'hero', configSection: 'basic' }
+const CONFIG_OUTLINE = [
+  { id: 'basic', no: '01', title: '应用基础', desc: '名称、图标、介绍' },
+  { id: 'copy', no: '02', title: '首屏文案', desc: '主标题、副标题、说明' },
+  { id: 'media', no: '03', title: '视觉素材', desc: '桌面 Banner、手机展示图' },
+  { id: 'features', no: '04', title: '功能亮点', desc: 'PC 端四张能力卡' },
+  { id: 'buttons', no: '05', title: '按钮文案', desc: '下载提示与平台切换' },
+  { id: 'links', no: '06', title: '下载链接', desc: 'Android、iOS、协议' },
+]
 const HOME_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏轮播', desc: '多屏大图，可新增和逐屏编辑' },
   { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
@@ -37,7 +45,7 @@ const titles = {
   'page-news': ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
   'page-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
   'page-ai-token': ['AI Token', '路径 /ai-token/ · 首屏标题'],
-  config: ['App 下载页', '路径 /app-download/ · 文案、Banner、商店链接'],
+  config: ['App 下载页', '路径 /app-download/ · 按区块逐项编辑，点左侧大纲切换'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
   analytics: ['下载统计', '查看匿名点击趋势和终端分布'],
   users: ['账号权限', '按职责管理后台访问权限'],
@@ -200,8 +208,8 @@ function openTab(name, options = {}) {
   if (name === 'site') loadSitePage()
   if (name === 'config') {
     loadConfig()
+    showConfigSection(state.configSection || 'basic')
     window.scrollTo({ top: 0 })
-    updateAnchorState()
   }
   if (contentKind) showContentKind(contentKind)
   else if (name.startsWith('page-')) loadSimplePage(name.slice('page-'.length))
@@ -255,6 +263,17 @@ function renderFeatureCards(features) {
   })
 }
 
+function showConfigSection(id) {
+  if (!CONFIG_OUTLINE.some((item) => item.id === id)) id = 'basic'
+  state.configSection = id
+  document.querySelectorAll('[data-config-goto]').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.configGoto === id)
+  })
+  document.querySelectorAll('[data-config-section]').forEach((section) => {
+    section.hidden = section.dataset.configSection !== id
+  })
+}
+
 async function loadConfig() {
   try {
     const { app } = await api('/app')
@@ -274,6 +293,7 @@ async function loadConfig() {
     showHeroImagePreview(app.heroImageUrl)
     showDesktopBannerPreview(app.desktopBannerUrl)
     form.elements.published.checked = Boolean(app.published)
+    showConfigSection(state.configSection || 'basic')
   } catch (error) { toast(error.message, true) }
 }
 
@@ -1814,26 +1834,11 @@ document.querySelector('[name="heroImageFile"]').addEventListener('change', (eve
   const file = event.currentTarget.files[0]
   if (file) showHeroImagePreview(URL.createObjectURL(file))
 })
-function updateAnchorState() {
-  const panel = document.querySelector('[data-panel="config"]')
-  if (!panel.classList.contains('is-active')) return
-  const sections = [...panel.querySelectorAll('[data-section]')]
-  let active = sections[0]?.dataset.section
-  for (const section of sections) {
-    if (section.getBoundingClientRect().top <= 120) active = section.dataset.section
-  }
-  document.querySelectorAll('[data-anchor]').forEach((button) => {
-    button.classList.toggle('is-active', button.dataset.anchor === active)
-  })
-}
-
-document.querySelector('[data-anchor-nav]').addEventListener('click', (event) => {
-  const button = event.target.closest('[data-anchor]')
+document.querySelector('[data-config-outline]')?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-config-goto]')
   if (!button) return
-  document.querySelector(`[data-section="${button.dataset.anchor}"]`).scrollIntoView({ behavior: 'smooth', block: 'start' })
+  showConfigSection(button.dataset.configGoto)
 })
-
-window.addEventListener('scroll', updateAnchorState, { passive: true })
 
 document.querySelector('[data-feature-cards]').addEventListener('change', (event) => {
   const select = event.target.closest('[data-feature-icon]')

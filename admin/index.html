@@ -95,80 +95,105 @@
       </section>
 
       <section class="admin-panel" data-panel="config">
-        <nav class="admin-anchor-nav" data-anchor-nav aria-label="下载页配置分区">
-          <button class="is-active" type="button" data-anchor="basic">应用基础信息</button>
-          <button type="button" data-anchor="copy">首屏文案</button>
-          <button type="button" data-anchor="media">视觉素材</button>
-          <button type="button" data-anchor="features">功能亮点</button>
-          <button type="button" data-anchor="buttons">按钮文案</button>
-          <button type="button" data-anchor="links">下载链接</button>
-        </nav>
-        <form class="admin-card admin-config-form" data-config-form>
-          <div class="admin-card__head"><div><h2>App 下载页配置</h2><p>独立管理桌面 Banner、移动展示图和下载入口</p></div><label class="admin-switch"><input type="checkbox" name="published" /><span></span>公开展示</label></div>
-          <fieldset class="admin-form-section" data-section="basic">
-            <legend>1 · 应用基础信息</legend>
-            <p class="admin-form-section__hint">顶部导航与页面标题使用的应用身份信息</p>
-            <div class="admin-form-grid">
-              <label><span>App 名称</span><input name="name" required maxlength="80" /></label>
-              <label><span>App 图标地址</span><input name="iconUrl" type="url" placeholder="https://..." /><small>建议尺寸 1024×1024，圆角方标</small></label>
-              <label class="admin-form-wide"><span>产品介绍</span><textarea name="description" rows="3" maxlength="500"></textarea></label>
+        <form class="admin-card admin-home-form admin-config-form" data-config-form>
+          <div class="admin-card__head">
+            <div><h2>App 下载页</h2><p>路径 /app-download/ · 点左侧一项只编辑这一块</p></div>
+            <div class="admin-home-status">
+              <label class="admin-switch"><input type="checkbox" name="published" /><span></span>公开展示</label>
             </div>
-          </fieldset>
+          </div>
+          <div class="admin-home-editor" data-config-editor>
+            <aside class="admin-home-outline" data-config-outline aria-label="下载页配置分区">
+              <p>按下载页从上到下排列，点一项只打开这一块</p>
+              <button type="button" class="admin-home-outline__item is-active" data-config-goto="basic">
+                <em>01</em><span><b>应用基础</b><small>名称、图标、介绍</small></span>
+              </button>
+              <button type="button" class="admin-home-outline__item" data-config-goto="copy">
+                <em>02</em><span><b>首屏文案</b><small>主标题、副标题、说明</small></span>
+              </button>
+              <button type="button" class="admin-home-outline__item" data-config-goto="media">
+                <em>03</em><span><b>视觉素材</b><small>桌面 Banner、手机展示图</small></span>
+              </button>
+              <button type="button" class="admin-home-outline__item" data-config-goto="features">
+                <em>04</em><span><b>功能亮点</b><small>PC 端四张能力卡</small></span>
+              </button>
+              <button type="button" class="admin-home-outline__item" data-config-goto="buttons">
+                <em>05</em><span><b>按钮文案</b><small>下载提示与平台切换</small></span>
+              </button>
+              <button type="button" class="admin-home-outline__item" data-config-goto="links">
+                <em>06</em><span><b>下载链接</b><small>Android、iOS、协议</small></span>
+              </button>
+            </aside>
+            <div class="admin-home-stage">
+              <fieldset data-config-section="basic">
+                <legend>应用基础</legend>
+                <p class="admin-form-section__hint">顶部导航与页面标题使用的应用身份信息</p>
+                <div class="admin-form-grid">
+                  <label><span>App 名称</span><input name="name" required maxlength="80" /></label>
+                  <label><span>App 图标地址</span><input name="iconUrl" type="url" placeholder="https://..." /><small>建议 1024×1024</small></label>
+                  <label class="admin-form-wide"><span>产品介绍</span><textarea name="description" rows="3" maxlength="500"></textarea></label>
+                </div>
+              </fieldset>
 
-          <fieldset class="admin-form-section" data-section="copy">
-            <legend>2 · 首屏文案</legend>
-            <p class="admin-form-section__hint">下载页顶部主视觉区域的三段文字</p>
-            <div class="admin-form-grid">
-              <label><span>主标题</span><input name="downloadTitle" maxlength="120" placeholder="默认使用 App 名称" /></label>
-              <label><span>副标题</span><input name="downloadSubtitle" maxlength="240" /></label>
-              <label class="admin-form-wide"><span>详细说明</span><textarea name="downloadDescription" rows="3" maxlength="500"></textarea></label>
-            </div>
-          </fieldset>
+              <fieldset data-config-section="copy" hidden>
+                <legend>首屏文案</legend>
+                <p class="admin-form-section__hint">下载页顶部主视觉区域的三段文字</p>
+                <div class="admin-form-grid">
+                  <label><span>主标题</span><input name="downloadTitle" maxlength="120" placeholder="默认使用 App 名称" /></label>
+                  <label><span>副标题</span><input name="downloadSubtitle" maxlength="240" /></label>
+                  <label class="admin-form-wide"><span>详细说明</span><textarea name="downloadDescription" rows="3" maxlength="500"></textarea></label>
+                </div>
+              </fieldset>
 
-          <fieldset class="admin-form-section" data-section="media">
-            <legend>3 · 视觉素材</legend>
-            <p class="admin-form-section__hint">桌面端顶部大图与手机端竖版展示图，可填链接或直接上传</p>
-            <div class="admin-form-grid">
-              <label class="admin-form-wide"><span>桌面端 Banner 图片链接</span><input name="desktopBannerUrl" placeholder="https://... 或上传本地图片" /><small>仅用于 PC 端下载页顶部大图，建议尺寸 1920×823（21:9）</small></label>
-              <label class="admin-form-wide admin-image-upload"><span>上传桌面端 Banner</span><input name="desktopBannerFile" type="file" accept="image/jpeg,image/png,image/webp" /><small>建议 1920×823，最大 20 MB</small><img data-desktop-banner-preview alt="桌面端 Banner 预览" hidden /></label>
-              <label class="admin-form-wide"><span>移动端展示图链接</span><input name="heroImageUrl" placeholder="https://... 或上传本地图片" /><small>用于手机端中部竖版图，建议尺寸 750×1334</small></label>
-              <label class="admin-form-wide admin-image-upload"><span>上传移动端展示图</span><input name="heroImageFile" type="file" accept="image/jpeg,image/png,image/webp" /><small>建议 750×1334，最大 20 MB</small><img data-hero-image-preview alt="移动端展示图预览" hidden /></label>
-            </div>
-          </fieldset>
+              <fieldset data-config-section="media" hidden>
+                <legend>视觉素材</legend>
+                <p class="admin-form-section__hint">可填链接或直接上传</p>
+                <div class="admin-form-grid">
+                  <label class="admin-form-wide"><span>桌面端 Banner 图片链接</span><input name="desktopBannerUrl" placeholder="https://... 或上传本地图片" /><small>建议 1920×823（21:9）</small></label>
+                  <label class="admin-form-wide admin-image-upload"><span>上传桌面端 Banner</span><input name="desktopBannerFile" type="file" accept="image/jpeg,image/png,image/webp" /><small>最大 20 MB</small><img data-desktop-banner-preview alt="桌面端 Banner 预览" hidden /></label>
+                  <label class="admin-form-wide"><span>移动端展示图链接</span><input name="heroImageUrl" placeholder="https://... 或上传本地图片" /><small>建议 750×1334</small></label>
+                  <label class="admin-form-wide admin-image-upload"><span>上传移动端展示图</span><input name="heroImageFile" type="file" accept="image/jpeg,image/png,image/webp" /><small>最大 20 MB</small><img data-hero-image-preview alt="移动端展示图预览" hidden /></label>
+                </div>
+              </fieldset>
 
-          <fieldset class="admin-form-section" data-section="features">
-            <legend>4 · 功能亮点区块</legend>
-            <p class="admin-form-section__hint">下载页中部四张能力卡片，仅在 PC 端展示</p>
-            <div class="admin-form-grid">
-              <label><span>区块标题</span><input name="features.title" maxlength="120" /></label>
-              <label><span>区块副标题</span><input name="features.subtitle" maxlength="240" /></label>
-            </div>
-            <div class="admin-feature-cards" data-feature-cards></div>
-          </fieldset>
+              <fieldset data-config-section="features" hidden>
+                <legend>功能亮点</legend>
+                <p class="admin-form-section__hint">下载页中部四张能力卡片，仅在 PC 端展示</p>
+                <div class="admin-form-grid">
+                  <label><span>区块标题</span><input name="features.title" maxlength="120" /></label>
+                  <label><span>区块副标题</span><input name="features.subtitle" maxlength="240" /></label>
+                </div>
+                <div class="admin-feature-cards" data-feature-cards></div>
+              </fieldset>
 
-          <fieldset class="admin-form-section" data-section="buttons">
-            <legend>5 · 按钮文案</legend>
-            <div class="admin-form-grid">
-              <label><span>Android 提示</span><input name="buttons.androidLabel" maxlength="40" placeholder="可用 {version}" /></label>
-              <label><span>iOS 提示</span><input name="buttons.iosLabel" maxlength="40" /></label>
-              <label><span>Android 说明</span><input name="buttons.switchToAndroid" maxlength="40" /></label>
-              <label><span>iOS 说明</span><input name="buttons.switchToIos" maxlength="40" /></label>
-              <label><span>Android 角标</span><input name="buttons.switchToAndroidTag" maxlength="12" placeholder="可留空" /></label>
-              <label><span>iOS 角标</span><input name="buttons.switchToIosTag" maxlength="12" placeholder="可留空" /></label>
-            </div>
-          </fieldset>
+              <fieldset data-config-section="buttons" hidden>
+                <legend>按钮文案</legend>
+                <div class="admin-form-grid">
+                  <label><span>Android 提示</span><input name="buttons.androidLabel" maxlength="40" placeholder="可用 {version}" /></label>
+                  <label><span>iOS 提示</span><input name="buttons.iosLabel" maxlength="40" /></label>
+                  <label><span>Android 说明</span><input name="buttons.switchToAndroid" maxlength="40" /></label>
+                  <label><span>iOS 说明</span><input name="buttons.switchToIos" maxlength="40" /></label>
+                  <label><span>Android 角标</span><input name="buttons.switchToAndroidTag" maxlength="12" placeholder="可留空" /></label>
+                  <label><span>iOS 角标</span><input name="buttons.switchToIosTag" maxlength="12" placeholder="可留空" /></label>
+                </div>
+              </fieldset>
 
-          <fieldset class="admin-form-section" data-section="links">
-            <legend>6 · 下载链接</legend>
-            <p class="admin-form-section__hint">安卓留空则继续用「版本发布」最新包；填写后优先用手动链接。</p>
-            <div class="admin-form-grid">
-              <label><span>Android 下载链接</span><input name="androidDownloadUrl" type="url" placeholder="https://.../*.apk 或安装页" /></label>
-              <label><span>iOS App Store 链接</span><input name="iosStoreUrl" type="url" placeholder="https://apps.apple.com/..." /></label>
-              <label><span>隐私政策链接</span><input name="privacyUrl" placeholder="/privacy/ 或 https://..." /></label>
-              <label><span>服务协议链接</span><input name="termsUrl" placeholder="/terms/ 或 https://..." /></label>
+              <fieldset data-config-section="links" hidden>
+                <legend>下载链接</legend>
+                <p class="admin-form-section__hint">安卓留空则继续用「版本发布」最新包；填写后优先用手动链接。</p>
+                <div class="admin-form-grid">
+                  <label><span>Android 下载链接</span><input name="androidDownloadUrl" type="url" placeholder="https://.../*.apk 或安装页" /></label>
+                  <label><span>iOS App Store 链接</span><input name="iosStoreUrl" type="url" placeholder="https://apps.apple.com/..." /></label>
+                  <label><span>隐私政策链接</span><input name="privacyUrl" placeholder="/privacy/ 或 https://..." /></label>
+                  <label><span>服务协议链接</span><input name="termsUrl" placeholder="/terms/ 或 https://..." /></label>
+                </div>
+              </fieldset>
             </div>
-          </fieldset>
-          <div class="admin-form-actions"><button type="submit">保存并发布配置</button></div>
+          </div>
+          <div class="admin-home-actions">
+            <a href="/app-download/" target="_blank">预览下载页</a>
+            <button type="submit">保存并发布配置</button>
+          </div>
         </form>
       </section>
 

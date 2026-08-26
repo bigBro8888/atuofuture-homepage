@@ -153,8 +153,13 @@ textarea { resize: vertical; }
 .admin-home-outline__item b { display: block; color: #172033; font-size: 12px; }
 .admin-home-outline__item small { display: block; margin-top: 2px; color: #8b97a8; font-size: 10px; }
 .admin-home-outline__item:hover { background: #f4f7fb; }
-.admin-home-outline__item.is-active { border-color: #b9d0ff; background: #edf4ff; }
+.admin-home-outline__item.is-active { border-color: #b9d0ff; background: #edf4ff; box-shadow: inset 3px 0 0 #1769ff; }
 .admin-home-outline__item.is-active em, .admin-home-outline__item.is-active b { color: #1769ff; }
+.admin-config-form .admin-home-editor { margin-top: 4px; }
+.admin-config-form .admin-home-stage fieldset { margin: 0; padding: 18px; border: 1px solid #e4eaf2; border-radius: 14px; background: #fbfcfe; }
+.admin-config-form .admin-home-stage legend { padding: 0 8px; color: #172033; font-size: 13px; font-weight: 700; }
+.admin-config-form .admin-home-actions { margin-top: 18px; }
+.admin-config-form .admin-home-actions button[type=submit] { width: auto; margin: 0; }
 .admin-home-stage { display: grid; gap: 18px; min-width: 0; }
 .admin-home-editor fieldset { margin: 0; padding: 18px; border: 1px solid #e4eaf2; border-radius: 14px; }
 .admin-home-editor legend { padding: 0 8px; color: #172033; font-size: 13px; font-weight: 700; }
