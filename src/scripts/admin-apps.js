@@ -170,7 +170,9 @@ async function loadOverview() {
     const [{ app, currentVersion, sourceHealth }, stats] = await Promise.all([api('/app'), api('/stats?days=30')])
     state.app = app
     document.querySelector('[data-overview-version]').textContent = currentVersion ? `v${currentVersion.version}` : '--'
-    document.querySelector('[data-version-source]').textContent = currentVersion?.source === 'remote' ? 'OSS 实时同步' : (currentVersion?.source || '暂无版本')
+    document.querySelector('[data-version-source]').textContent = app.androidDownloadUrl
+      ? '手动下载链接优先'
+      : currentVersion?.source === 'remote' ? 'OSS 实时同步' : (currentVersion?.source || '暂无版本')
     document.querySelector('[data-overview-downloads]').textContent = stats.total.toLocaleString()
     document.querySelector('[data-health-status]').textContent = sourceHealth.status === 'healthy' ? '正常' : sourceHealth.status === 'degraded' ? '降级' : '待检查'
     document.querySelector('[data-health-time]').textContent = sourceHealth.checkedAt ? dateTime(sourceHealth.checkedAt) : '尚未检查'
@@ -264,7 +266,7 @@ async function loadConfig() {
     for (const key of ['androidLabel', 'iosLabel', 'switchToAndroid', 'switchToIos', 'switchToAndroidTag', 'switchToIosTag']) {
       form.elements[`buttons.${key}`].value = app.buttons[key] || ''
     }
-    for (const name of ['name', 'description', 'iconUrl', 'downloadTitle', 'downloadSubtitle', 'downloadDescription', 'desktopBannerUrl', 'heroImageUrl', 'iosStoreUrl', 'privacyUrl', 'termsUrl']) {
+    for (const name of ['name', 'description', 'iconUrl', 'downloadTitle', 'downloadSubtitle', 'downloadDescription', 'desktopBannerUrl', 'heroImageUrl', 'androidDownloadUrl', 'iosStoreUrl', 'privacyUrl', 'termsUrl']) {
       form.elements[name].value = app[name] || ''
     }
     form.elements.heroImageFile.value = ''

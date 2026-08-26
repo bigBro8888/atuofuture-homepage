@@ -69,6 +69,7 @@ const initialData = {
     features: structuredClone(defaultAppFeatures),
     buttons: structuredClone(defaultAppButtons),
     iosStoreUrl: 'https://apps.apple.com/cn/app/id6590617105',
+    androidDownloadUrl: '',
     privacyUrl: '',
     termsUrl: '',
     published: true,

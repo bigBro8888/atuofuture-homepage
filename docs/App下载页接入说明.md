@@ -165,6 +165,7 @@ CSS 变量 `--download-desktop-banner` 由 JS 写成 `url("后台 desktopBannerU
 | `desktopBannerUrl` | PC 顶部大图 |
 | `heroImageUrl` | 手机竖版展示图 |
 | `iosStoreUrl` | App Store 链接；空则禁用 iOS 入口 |
+| `androidDownloadUrl` | Android 手动下载链接；空则走「版本发布」最新包 |
 | `privacyUrl` / `termsUrl` | 页脚法务 |
 | `published` | false 时公开 API 返回 404 |
 

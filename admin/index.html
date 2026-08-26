@@ -148,22 +148,22 @@
 
           <fieldset class="admin-form-section" data-section="buttons">
             <legend>5 · 按钮文案</legend>
-            <p class="admin-form-section__hint">手机端顶部的下载按钮与平台切换按钮，建议控制在 10 个字以内</p>
             <div class="admin-form-grid">
-              <label><span>Android 下载按钮</span><input name="buttons.androidLabel" maxlength="40" /><small>写入 {version} 会自动替换为当前版本号，例如「立即下载 V1.0.25」</small></label>
-              <label><span>iOS 下载按钮</span><input name="buttons.iosLabel" maxlength="40" /><small>未配置 App Store 链接时会显示「App Store 暂未配置」</small></label>
-              <label><span>切换到 Android 的按钮</span><input name="buttons.switchToAndroid" maxlength="40" /><small>iPhone 访客看到的切换提示</small></label>
-              <label><span>切换到 iPhone 的按钮</span><input name="buttons.switchToIos" maxlength="40" /><small>Android 访客看到的切换提示</small></label>
-              <label><span>切换按钮左侧角标（Android）</span><input name="buttons.switchToAndroidTag" maxlength="12" placeholder="留空则不显示" /><small>切换提示前面的小标签，清空即可隐藏</small></label>
-              <label><span>切换按钮左侧角标（iOS）</span><input name="buttons.switchToIosTag" maxlength="12" placeholder="留空则不显示" /><small>清空后按钮只显示文字，可容纳更长的文案</small></label>
+              <label><span>Android 提示</span><input name="buttons.androidLabel" maxlength="40" placeholder="可用 {version}" /></label>
+              <label><span>iOS 提示</span><input name="buttons.iosLabel" maxlength="40" /></label>
+              <label><span>Android 说明</span><input name="buttons.switchToAndroid" maxlength="40" /></label>
+              <label><span>iOS 说明</span><input name="buttons.switchToIos" maxlength="40" /></label>
+              <label><span>Android 角标</span><input name="buttons.switchToAndroidTag" maxlength="12" placeholder="可留空" /></label>
+              <label><span>iOS 角标</span><input name="buttons.switchToIosTag" maxlength="12" placeholder="可留空" /></label>
             </div>
           </fieldset>
 
           <fieldset class="admin-form-section" data-section="links">
-            <legend>6 · 下载入口与合规链接</legend>
-            <p class="admin-form-section__hint">Android 版本由「版本发布」独立管理，此处只配置 iOS 与法务链接</p>
+            <legend>6 · 下载链接</legend>
+            <p class="admin-form-section__hint">安卓留空则继续用「版本发布」最新包；填写后优先用手动链接。</p>
             <div class="admin-form-grid">
-              <label class="admin-form-wide"><span>Apple App Store 链接</span><input name="iosStoreUrl" type="url" placeholder="https://apps.apple.com/..." /><small>未配置时公开页面将禁用 iOS 下载入口</small></label>
+              <label><span>Android 下载链接</span><input name="androidDownloadUrl" type="url" placeholder="https://.../*.apk 或安装页" /></label>
+              <label><span>iOS App Store 链接</span><input name="iosStoreUrl" type="url" placeholder="https://apps.apple.com/..." /></label>
               <label><span>隐私政策链接</span><input name="privacyUrl" placeholder="/privacy/ 或 https://..." /></label>
               <label><span>服务协议链接</span><input name="termsUrl" placeholder="/terms/ 或 https://..." /></label>
             </div>

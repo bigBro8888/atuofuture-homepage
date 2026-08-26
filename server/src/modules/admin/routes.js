@@ -89,6 +89,7 @@ adminRouter.put('/app', requireAuth('config:write'), async (request, response) =
     app.features = normalizeAppFeatures(request.body.features)
     app.buttons = normalizeAppButtons(request.body.buttons)
     app.iosStoreUrl = cleanUrl(request.body.iosStoreUrl)
+    app.androidDownloadUrl = cleanUrl(request.body.androidDownloadUrl)
     app.privacyUrl = cleanUrl(request.body.privacyUrl)
     app.termsUrl = cleanUrl(request.body.termsUrl)
     app.published = Boolean(request.body.published)

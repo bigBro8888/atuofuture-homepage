@@ -25,7 +25,14 @@ publicAppsRouter.get('/artink', async (request, response, next) => {
   try {
     const app = appConfig()
     if (!app?.published) return response.status(404).json({ error: 'app_not_available' })
-    const android = await getLatestAndroidVersion()
+    const customAndroidUrl = String(app.androidDownloadUrl || '').trim()
+    let android = null
+    try {
+      android = await getLatestAndroidVersion()
+    } catch (error) {
+      if (!customAndroidUrl) throw error
+    }
+    const androidAvailable = Boolean(customAndroidUrl || android?.apkUrl)
     response.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=120')
     response.json({
       id: app.id,
@@ -41,14 +48,15 @@ publicAppsRouter.get('/artink', async (request, response, next) => {
       buttons: normalizeAppButtons(app.buttons),
       privacyUrl: app.privacyUrl,
       termsUrl: app.termsUrl,
+      androidDownloadUrl: customAndroidUrl,
       platforms: {
         android: {
-          version: android.version,
-          updatedAt: android.updatedAt,
-          downloadUrl: android.apkUrl,
+          version: android?.version || '',
+          updatedAt: android?.updatedAt || '',
+          downloadUrl: androidAvailable ? '/api/public/apps/artink/android/download' : '',
           trackingUrl: '/api/public/apps/artink/android/event',
-          available: true,
-          source: android.source,
+          available: androidAvailable,
+          source: customAndroidUrl ? 'manual' : android?.source,
         },
         ios: {
           storeUrl: app.iosStoreUrl || '',
@@ -70,6 +78,12 @@ publicAppsRouter.post('/artink/android/event', async (request, response) => {
 
 publicAppsRouter.get('/artink/android/download', async (request, response, next) => {
   try {
+    const customAndroidUrl = String(appConfig()?.androidDownloadUrl || '').trim()
+    if (customAndroidUrl) {
+      await addRecord('downloadEvents', clientInfo(request, 'android'))
+      response.set('Cache-Control', 'no-store')
+      return response.redirect(302, customAndroidUrl)
+    }
     const android = await getLatestAndroidVersion()
     await addRecord('downloadEvents', clientInfo(request, 'android'))
     response.set('Cache-Control', 'no-store')
