@@ -391,7 +391,7 @@ function renderHomeEditor(content) {
           ${homeField('banner.title', '标题', banner.title, { wide: true })}
           ${homeField('banner.subtitle', '说明', banner.subtitle, { type: 'textarea', wide: true })}
           ${homeField('banner.ctaLabel', '按钮文字', banner.ctaLabel)}
-          ${homeField('banner.ctaUrl', '按钮链接', banner.ctaUrl)}
+          ${homeField('banner.ctaUrl', '跳转链接', banner.ctaUrl, { help: '普通路径如 /agents/；填 #demo 则打开「预约方案演示」弹窗' })}
           ${homeField('banner.imageUrl', '左侧配图', banner.imageUrl, { image: true, wide: true, size: '480×360' })}
         </div>
       </fieldset>

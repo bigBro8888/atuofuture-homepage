@@ -678,12 +678,24 @@ export function initDemoRequestModal() {
 
   closeButtons.forEach((btn) => btn.addEventListener('click', close))
 
+  const isDemoLink = (el) => {
+    if (!el) return false
+    if (el.matches?.('[data-demo-modal-open]')) return true
+    if (el.tagName !== 'A') return false
+    const href = String(el.getAttribute('href') || '').trim().toLowerCase()
+    return href === '#demo' || href === '#demo-modal' || href.endsWith('/#demo') || href.endsWith('/#demo-modal')
+  }
+
   document.addEventListener('click', (event) => {
-    const opener = event.target.closest('[data-demo-modal-open]')
-    if (!opener) return
-    if (opener.tagName === 'A') event.preventDefault()
+    const opener = event.target.closest('a, button, [data-demo-modal-open]')
+    if (!isDemoLink(opener)) return
+    event.preventDefault()
     open()
   })
+
+  if (/^#(demo|demo-modal)$/i.test(location.hash)) {
+    window.setTimeout(open, 120)
+  }
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && modal.classList.contains('is-open')) close()
