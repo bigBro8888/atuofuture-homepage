@@ -126,8 +126,10 @@ export function db() {
 }
 
 export function save() {
-  writeQueue = writeQueue.then(persist)
-  return writeQueue
+  // 上一次写盘失败时不能让队列永久 rejected，否则后续所有保存都会连环失败。
+  const job = writeQueue.catch(() => {}).then(persist)
+  writeQueue = job.catch(() => {})
+  return job
 }
 
 export function addRecord(collection, record) {

@@ -205,19 +205,29 @@ adminPagesRouter.put('/home/draft', requireAuth('config:write'), async (request,
     await addAudit(request.admin, 'home.content.update', 'home', { sections: Object.keys(page.draftContent) })
     response.json({ page })
   } catch (error) {
-    response.status(400).json({ error: 'invalid_home_content', message: error.message })
+    const validation = /http\(s\)|链接|URL|Invalid URL/i.test(String(error?.message || ''))
+    console.error('home.draft failed:', error)
+    response.status(validation ? 400 : 500).json({
+      error: validation ? 'invalid_home_content' : 'service_error',
+      message: error.message || '保存失败，请稍后重试',
+    })
   }
 })
 
 adminPagesRouter.post('/home/publish', requireAuth('config:write'), async (request, response) => {
-  const page = getHomePageConfig()
-  page.publishedContent = structuredClone(page.draftContent)
-  page.status = 'published'
-  page.publishedAt = new Date().toISOString()
-  page.updatedAt = page.publishedAt
-  await save()
-  await addAudit(request.admin, 'home.content.publish', 'home', { publishedAt: page.publishedAt })
-  response.json({ page })
+  try {
+    const page = getHomePageConfig()
+    page.publishedContent = structuredClone(page.draftContent)
+    page.status = 'published'
+    page.publishedAt = new Date().toISOString()
+    page.updatedAt = page.publishedAt
+    await save()
+    await addAudit(request.admin, 'home.content.publish', 'home', { publishedAt: page.publishedAt })
+    response.json({ page })
+  } catch (error) {
+    console.error('home.publish failed:', error)
+    response.status(500).json({ error: 'service_error', message: error.message || '发布失败，请稍后重试' })
+  }
 })
 
 publicPagesRouter.get('/about', (request, response) => {
