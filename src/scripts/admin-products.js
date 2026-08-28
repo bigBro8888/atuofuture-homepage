@@ -190,8 +190,10 @@ function renderProductCompose(item) {
             <label class="admin-news-field is-wide"><span>显示文案</span><input type="text" data-link-label placeholder="例如：查看它如何工作" /></label>
             <fieldset class="admin-link-modal__type">
               <legend>跳转方式</legend>
-              <label><input type="radio" name="link-type" value="anchor" data-link-type /> 当前页锚点</label>
-              <label><input type="radio" name="link-type" value="url" data-link-type /> 跳转到其他页面</label>
+              <div class="admin-link-modal__type-list">
+                <label><input type="radio" name="link-type" value="anchor" data-link-type /><em>当前页锚点</em></label>
+                <label><input type="radio" name="link-type" value="url" data-link-type /><em>跳转到其他页面</em></label>
+              </div>
             </fieldset>
             <label class="admin-news-field is-wide" data-link-anchor-wrap>
               <span>锚点板块</span>
