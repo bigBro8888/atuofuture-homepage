@@ -554,7 +554,7 @@ function homeItemFields(kind, index, item) {
     ${homeField(`pitch.items.${index}.kicker`, '卡片小标题', item.kicker)}
     ${homeField(`pitch.items.${index}.title`, '卡片主文案', item.title, { type: 'textarea', wide: true })}
     ${homeField(`pitch.items.${index}.moreLabel`, '底部链接文字', item.moreLabel)}
-    ${homeField(`pitch.items.${index}.href`, '跳转链接', item.href)}
+    ${homeField(`pitch.items.${index}.href`, '跳转链接', item.href, { help: '普通路径；或填 #demo 打开预约弹窗（也可勾选下方开关）' })}
     ${homeField(`pitch.items.${index}.variant`, '卡片样式', item.variant || 'photo', { type: 'select', options: [['photo', '图片卡'], ['wave', '深蓝波纹'], ['mint', '绿色纯色']] })}
     ${homeField(`pitch.items.${index}.imageUrl`, '背景图（图片卡用）', item.imageUrl, { image: true, wide: true, size: '1200×800' })}
     ${homeField(`pitch.items.${index}.openDemo`, '点击打开预约演示', item.openDemo, { type: 'checkbox' })}`
@@ -877,6 +877,11 @@ async function loadHomePage() {
 
 async function saveHomeDraft({ quiet = false } = {}) {
   const content = collectHomeContent()
+  try {
+    await mergeHomeNewsFromFeed(content)
+  } catch {
+    // 新闻中心暂不可用时，保留首页里现有新闻配置
+  }
   const { page } = await api('/pages/home/draft', { method: 'PUT', body: JSON.stringify({ content }) })
   state.homePage = page
   updateHomeStatus(page)
@@ -1629,15 +1634,22 @@ function toHomeNewsCard(article) {
   }
 }
 
-async function syncPinnedNewsToHome(items) {
+async function mergeHomeNewsFromFeed(content, feedItems) {
+  let items = feedItems
+  if (!items) {
+    const { page } = await api('/pages/news-feed')
+    items = page?.publishedContent?.items || page?.draftContent?.items || []
+  }
+  const byId = new Map(items.filter((item) => item.id).map((item) => [item.id, item]))
   const pinned = items
     .filter((item) => item.pinHome && item.id)
     .sort((a, b) => String(b.pinnedAt || '').localeCompare(String(a.pinnedAt || '')))
     .slice(0, 3)
     .map(toHomeNewsCard)
-  const { page } = await api('/pages/home')
-  const content = page.draftContent
-  const existing = content.news?.items || []
+  const existing = (content.news?.items || []).map((item) => {
+    const id = decodeURIComponent(String(item.linkUrl || '').split('id=').pop() || '')
+    return byId.has(id) ? toHomeNewsCard(byId.get(id)) : item
+  })
   const cards = [...pinned]
   const used = new Set(cards.map((item) => item.linkUrl))
   for (const item of existing) {
@@ -1649,6 +1661,12 @@ async function syncPinnedNewsToHome(items) {
   }
   content.news = content.news || {}
   content.news.items = cards.slice(0, 3)
+}
+
+async function syncPinnedNewsToHome(items) {
+  const { page } = await api('/pages/home')
+  const content = page.draftContent
+  await mergeHomeNewsFromFeed(content, items)
   await api('/pages/home/draft', { method: 'PUT', body: JSON.stringify({ content }) })
   await api('/pages/home/publish', { method: 'POST' })
 }
