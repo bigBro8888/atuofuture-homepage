@@ -6,7 +6,6 @@ import {
   getProductDetailHref,
   listingActions,
   presentHardwareProduct,
-  resolveHardwareMegaGroups,
   resolveHardwareSpaceMatrixRows,
 } from '../data/hardware-catalog.js'
 
@@ -44,41 +43,6 @@ function renderHero() {
             <a class="hwc-btn hwc-btn--cyan hwc-btn--hero" href="#hwc-space">浏览全部产品</a>
             <button type="button" class="hwc-btn hwc-btn--outline-dark" data-demo-modal-open>${esc(cta)}</button>
           </div>
-        </div>
-      </div>
-    </section>`
-}
-
-function renderLineOverview() {
-  const groups = resolveHardwareMegaGroups()
-  const anchors = { space: '#hwc-space', retail: '#hwc-retail', consumer: '#hwc-consumer' }
-  return `
-    <section class="hwc-lines" id="hwc-lines">
-      <div class="hwc-shell hwc-lines__shell">
-        <div class="hwc-lines__grid">
-          ${groups
-            .map((group) => `
-            <article class="hwc-lines__card hwc-lines__card--${esc(group.id)}">
-              <a class="hwc-lines__head" href="${esc(anchors[group.id] || `#hwc-${group.id}`)}">
-                <span class="material-symbols-outlined hwc-lines__icon" aria-hidden="true">${esc(group.icon)}</span>
-                <strong>${esc(group.title)}</strong>
-              </a>
-              <div class="hwc-lines__items">
-                ${group.products
-                  .map(
-                    (item) => `
-                  <a class="hwc-lines__item" href="${esc(item.href)}">
-                    <span class="hwc-lines__thumb">
-                      <img src="${esc(item.coverImage)}" alt="" width="72" height="72" loading="lazy" />
-                    </span>
-                    <span class="hwc-lines__label">${esc(item.name)}</span>
-                  </a>`
-                  )
-                  .join('')}
-              </div>
-            </article>`
-            )
-            .join('')}
         </div>
       </div>
     </section>`
@@ -319,7 +283,6 @@ export async function initHardwareStore() {
   root.innerHTML = `
     <div class="hwc-first">
       ${renderHero()}
-      ${renderLineOverview()}
     </div>
     ${renderSpaceSection()}
     ${renderRetailSection()}

@@ -1190,7 +1190,7 @@ function simpleOutline(key, items = []) {
   if (key === 'hardware') {
     return [
       hero,
-      { id: 'nav', no: '02', title: '导航分类设置', desc: 'Banner 下三列：名称、缩略图、链接' },
+      { id: 'nav', no: '02', title: '顶栏下拉菜单', desc: '顶栏「智能硬件」下拉：名称、缩略图、链接' },
       { id: 'space', no: '03', title: '空间智能', desc: '中控屏、两行商品矩阵与详情关联' },
       { id: 'retail', no: '04', title: '新零售与电子纸', desc: '价签、冷链与资产盘点' },
       { id: 'consumer', no: '05', title: '3C 数码', desc: '手机壳与艺术相框' },
@@ -1253,8 +1253,8 @@ function renderSpaceMatrixEditor(spaceMatrixRows = [], items = []) {
 function renderHardwareNavEditor(navGroups, items = []) {
   return `
       <fieldset data-simple-section="nav">
-        <legend>导航分类设置</legend>
-        <p class="admin-form-section__hint">对应硬件频道 Banner 下面的三列，以及顶栏「智能硬件」下拉。每项可改显示名、缩略图和跳转链接，保存并发布后官网同步。</p>
+        <legend>顶栏下拉菜单</legend>
+        <p class="admin-form-section__hint">只影响全站顶栏「智能硬件」下拉菜单，不在硬件频道首页展示。每项可改显示名、缩略图和跳转链接，保存并发布后官网同步。</p>
         <div class="admin-nav-groups">${navGroups.map((group, groupIndex) => `
           <article class="admin-nav-col">
             <header class="admin-nav-col__head">
