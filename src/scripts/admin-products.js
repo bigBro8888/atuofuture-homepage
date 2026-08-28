@@ -12,6 +12,12 @@ const IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'coverImage', label: '列表封面图', size: '1200×900', tip: '商品列表与封面用图' },
 ]
 
+const LINE_OPTIONS = [
+  ['space', '空间智能'],
+  ['retail', '新零售与电子纸'],
+  ['consumer', '3C 数码'],
+]
+
 function resolveImageSizeGuide(path = '') {
   const hit = IMAGE_SIZE_GUIDE.find((item) => item.test(path))
   return hit || { label: '图片', size: '1200×800', tip: '按前台展示比例裁切即可' }
