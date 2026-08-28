@@ -16927,8 +16927,22 @@ button.hpi-hero__link {
 .hpi-system__layer--mid {
   display: grid; justify-items: center; gap: 12px;
   background: #fff; border-color: rgba(255,90,31,.35);
+  padding: 28px 32px 32px;
 }
-.hpi-system__layer--mid img { width: min(260px, 70%); height: auto; }
+.hpi-system__layer--mid img,
+.hpi-system__layer--mid .hpi-edit-img {
+  width: min(560px, 92%);
+  max-width: 100%;
+  height: auto;
+}
+.hpi-system__layer--mid .hpi-edit-img {
+  display: block;
+  margin: 0 auto;
+}
+.hpi-system__layer--mid .hpi-edit-img img {
+  width: 100%;
+  height: auto;
+}
 .hpi-system__label {
   margin: 0 0 12px; text-align: center; font-size: 14px; font-weight: 700; color: #081A38;
 }
