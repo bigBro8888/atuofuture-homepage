@@ -237,7 +237,7 @@ function renderProductCompose(item) {
               上传本地图片
               <input type="file" accept="image/jpeg,image/png,image/webp" data-image-modal-file />
             </label>
-            <p class="admin-form-section__hint" style="margin:0">商品详情页里的设备图、场景图、背景图都可用此方式更换。</p>
+            <p class="admin-form-section__hint" style="margin:0">可填链接、上传本地，或留空不显示图片。设备图、场景图、背景图都一样。</p>
           </div>
           <footer>
             <button type="button" data-image-modal-close>取消</button>
@@ -312,13 +312,21 @@ function collectProductFromCompose() {
   })
   root.querySelectorAll('[data-edit-image]').forEach((el) => {
     const path = el.dataset.editImage
-    const url = el.dataset.editImageUrl || el.querySelector('img')?.getAttribute('src') || ''
-    if (path && url) setNested(item, path, url)
+    if (!path) return
+    const url = el.dataset.editImageUrl != null
+      ? el.dataset.editImageUrl
+      : (el.querySelector('img')?.getAttribute('src') || '')
+    setNested(item, path, url || '')
   })
   const hero = root.querySelector('.hpi-hero')
   const bgBtn = root.querySelector('[data-edit-image="story.hero.backgroundImage"]')
-  if (bgBtn?.dataset.editImageUrl) {
-    setNested(item, 'story.hero.backgroundImage', bgBtn.dataset.editImageUrl)
+  if (bgBtn) {
+    if (bgBtn.dataset.editImageUrl != null) {
+      setNested(item, 'story.hero.backgroundImage', bgBtn.dataset.editImageUrl || '')
+    } else if (hero) {
+      const match = String(hero.style.getPropertyValue('--hpi-hero-image') || '').match(/url\(['"]?(.*?)['"]?\)/)
+      setNested(item, 'story.hero.backgroundImage', match?.[1] || '')
+    }
   } else if (hero) {
     const match = String(hero.style.getPropertyValue('--hpi-hero-image') || '').match(/url\(['"]?(.*?)['"]?\)/)
     if (match?.[1]) setNested(item, 'story.hero.backgroundImage', match[1])
@@ -518,21 +526,28 @@ function setImageModalPreview(modal, url) {
 }
 
 function applyVisualImage(composeView, path, url) {
-  if (!path || !url) return
+  if (!path) return
   const canvas = composeView.querySelector('[data-product-visual]')
   const target =
     canvas?.querySelector(`[data-edit-image="${CSS.escape(path)}"]`) ||
     canvas?.querySelector(`[data-edit-image="${path}"]`)
+  const safeUrl = String(url || '').trim()
   if (target) {
     const img = target.querySelector('img')
-    if (img) img.src = url
-    target.dataset.editImageUrl = url
+    if (img) {
+      if (safeUrl) img.src = safeUrl
+      else img.removeAttribute('src')
+    }
+    target.dataset.editImageUrl = safeUrl
   }
   if (path.includes('backgroundImage')) {
     const hero = canvas?.querySelector('.hpi-hero')
-    if (hero) hero.style.setProperty('--hpi-hero-image', `url('${url}')`)
+    if (hero) {
+      if (safeUrl) hero.style.setProperty('--hpi-hero-image', `url('${safeUrl}')`)
+      else hero.style.setProperty('--hpi-hero-image', 'none')
+    }
     const bgBtn = canvas?.querySelector('[data-edit-image="story.hero.backgroundImage"]')
-    if (bgBtn) bgBtn.dataset.editImageUrl = url
+    if (bgBtn) bgBtn.dataset.editImageUrl = safeUrl
   }
 }
 
@@ -563,13 +578,9 @@ function saveImageModal(composeView) {
   const modal = composeView.querySelector('[data-image-modal]')
   if (!modal?._targetPath) return
   const url = modal.querySelector('[data-image-modal-url]')?.value.trim() || ''
-  if (!url) {
-    ctx.toast('请填写图片链接，或先上传本地图片', true)
-    return
-  }
   applyVisualImage(composeView, modal._targetPath, url)
   closeImageModal(composeView)
-  ctx.toast('图片已更新')
+  ctx.toast(url ? '图片已更新' : '已清除图片')
 }
 
 export function bindProductLibraryAdmin(helpers) {
