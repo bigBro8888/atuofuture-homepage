@@ -16806,6 +16806,15 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   color: #fff; font-size: 16px; font-weight: 600; text-decoration: none;
   border-bottom: 1px solid #00CFC3; padding-bottom: 4px;
 }
+button.hpi-hero__link {
+  background: transparent;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+  cursor: pointer;
+  font: inherit;
+}
 .hpi-hero__link:hover { color: #00CFC3; }
 .hpi-hero__device {
   display: flex; justify-content: flex-end; align-items: center;
@@ -16931,7 +16940,8 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   font-size: 13px; color: #3d4a63;
 }
 .hpi-system__link { margin: 28px 0 0; text-align: right; }
-.hpi-system__link a {
+.hpi-system__link a,
+.hpi-system__link .hpi-edit-link {
   color: #00CFC3; font-weight: 600; text-decoration: none;
 }
 

@@ -46,11 +46,19 @@ function chipList(path, items, { editable = false, empty = 3 } = {}) {
     .join('')
 }
 
+/** 可配置跳转/锚点的链接（可视化编辑时点开弹窗） */
+function linkNode({ className = '', href = '', label = '', labelPath, hrefPath, editable = false, arrow = true } = {}) {
+  const safeHref = esc(href || '#')
+  const safeLabel = esc(label || '')
+  if (!editable) {
+    return `<a class="${className}" href="${safeHref}">${safeLabel}${arrow ? ' →' : ''}</a>`
+  }
+  return `<button type="button" class="${className} hpi-edit-link" data-edit-link data-edit-label-path="${esc(labelPath)}" data-edit-href-path="${esc(hrefPath)}" data-edit-href="${safeHref}" title="点击设置文案与跳转"><span data-edit-link-label>${safeLabel || '链接文案'}</span>${arrow ? ' →' : ''}</button>`
+}
+
 export function renderProductHero(story, product, line, { editable = false } = {}) {
   const hero = story.hero || {}
-  const bgStyle = editable
-    ? `--hpi-hero-image:url('${esc(hero.backgroundImage || '')}')`
-    : `--hpi-hero-image:url('${esc(hero.backgroundImage || '')}')`
+  const bgStyle = `--hpi-hero-image:url('${esc(hero.backgroundImage || '')}')`
   const bgEdit = editable
     ? `<button type="button" class="hpi-edit-bg" data-edit-image="story.hero.backgroundImage" title="更换背景图">更换背景图</button>`
     : ''
@@ -64,7 +72,14 @@ export function renderProductHero(story, product, line, { editable = false } = {
           ${textNode('story.hero.title', hero.title, { editable, tag: 'h1' })}
           ${textNode('story.hero.headline', hero.headline, { editable, tag: 'p', className: 'hpi-hero__headline' })}
           ${textNode('story.hero.description', hero.description, { editable, tag: 'p', className: 'hpi-hero__desc', multiline: true })}
-          <a class="hpi-hero__link" href="${esc(hero.ctaHref || '#hpi-how')}"${editable ? ' tabindex="-1"' : ''}>${textNode('story.hero.ctaLabel', hero.ctaLabel || '查看它如何工作', { editable, tag: 'span' })} →</a>
+          ${linkNode({
+            className: 'hpi-hero__link',
+            href: hero.ctaHref || '#hpi-how',
+            label: hero.ctaLabel || '查看它如何工作',
+            labelPath: 'story.hero.ctaLabel',
+            hrefPath: 'story.hero.ctaHref',
+            editable,
+          })}
         </div>
         <div class="hpi-hero__device" aria-hidden="${editable ? 'false' : 'true'}">
           ${imgNode('story.hero.deviceImage', hero.deviceImage, { editable, width: 520, height: 420 })}
@@ -78,7 +93,7 @@ export function renderProductValue(story, { editable = false } = {}) {
   if (!v && !editable) return ''
   const value = v || {}
   return `
-    <section class="hpi-value">
+    <section class="hpi-value" id="hpi-value">
       <div class="hwc-shell">
         ${textNode('story.value.title', value.title, { editable, tag: 'h2', className: 'hpi-value__title' })}
         <div class="hpi-value__map">
@@ -131,7 +146,7 @@ export function renderProductScenarios(story, { editable = false } = {}) {
   if (!block?.items?.length && !editable) return ''
   const items = [...(block?.items || []), {}, {}, {}].slice(0, 3)
   return `
-    <section class="hpi-scenes">
+    <section class="hpi-scenes" id="hpi-scenes">
       <div class="hwc-shell">
         ${textNode('story.scenarios.title', block?.title || '', { editable, tag: 'h2', className: 'hpi-scenes__title' })}
         <div class="hpi-scenes__list">
@@ -162,7 +177,7 @@ export function renderProductSystem(story, { editable = false } = {}) {
   if (!sys && !editable) return ''
   const system = sys || {}
   return `
-    <section class="hpi-system">
+    <section class="hpi-system" id="hpi-system">
       <div class="hwc-shell">
         ${textNode('story.system.title', system.title || '', { editable, tag: 'h2', className: 'hpi-system__title' })}
         <div class="hpi-system__stack">
@@ -184,7 +199,14 @@ export function renderProductSystem(story, { editable = false } = {}) {
         </div>
         ${
           system.aspaceHref || editable
-            ? `<p class="hpi-system__link"><a href="${esc(system.aspaceHref || '/solutions/')}"${editable ? ' tabindex="-1"' : ''}>${textNode('story.system.aspaceLabel', system.aspaceLabel || '了解 ASpace 总体解决方案', { editable, tag: 'span' })} →</a></p>`
+            ? `<p class="hpi-system__link">${linkNode({
+                className: '',
+                href: system.aspaceHref || '/solutions/',
+                label: system.aspaceLabel || '了解 ASpace 总体解决方案',
+                labelPath: 'story.system.aspaceLabel',
+                hrefPath: 'story.system.aspaceHref',
+                editable,
+              })}</p>`
             : ''
         }
       </div>
@@ -197,7 +219,7 @@ export function renderProductClosing(story, { editable = false } = {}) {
   const closing = c || {}
   const soft = [...(closing.softLinks || []), {}, {}].slice(0, 2)
   return `
-    <section class="hpi-close">
+    <section class="hpi-close" id="hpi-close">
       <div class="hpi-close__bg" aria-hidden="true"></div>
       <div class="hwc-shell hpi-close__inner">
         ${textNode('story.closing.title', closing.title || '', { editable, tag: 'h2' })}

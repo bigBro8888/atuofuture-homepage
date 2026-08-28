@@ -127,7 +127,6 @@ function previewProduct(item) {
 
 function renderBasicsBar(item) {
   const linked = new Set(item.linkedHardwareIds || [])
-  const story = item.story || emptyProduct().story
   return `
     <details class="admin-vedit-basics" open>
       <summary>
@@ -149,8 +148,6 @@ function renderBasicsBar(item) {
           ${productField('detailCtaLabel', '详情按钮文案', item.detailCtaLabel || '查看产品详情')}
           ${productField('solutionLabel', '方案链接文案', item.solutionLabel || '')}
           ${productField('solutionHref', '方案链接地址', item.solutionHref || '', { wide: true, placeholder: '/solutions/' })}
-          ${productField('story.hero.ctaHref', '首屏按钮链接', story.hero?.ctaHref || '#hpi-how')}
-          ${productField('story.system.aspaceHref', '系统区方案链接', story.system?.aspaceHref || '/solutions/', { wide: true })}
           <label class="admin-news-pin admin-form-wide">
             <input data-product-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
             <span><b>发布后前台可见</b><small>取消勾选则详情页不对外展示。</small></span>
@@ -177,11 +174,46 @@ function renderProductCompose(item) {
   body.innerHTML = `
     <div class="admin-vedit">
       ${renderBasicsBar(item)}
-      <div class="admin-vedit-hint">下方即详情页预览：点文字直接改，点图片可更换。改完点右上角「发布上线」。</div>
+      <div class="admin-vedit-hint">下方即详情页预览：点文字直接改，点图片可更换，点跳转链接会弹出设置。改完点右上角「发布上线」。</div>
       <div class="admin-vedit-canvas" data-product-visual>
         ${renderProductStory(product, story, line, { editable: true })}
       </div>
       <input type="file" accept="image/jpeg,image/png,image/webp" hidden data-product-visual-file />
+      <div class="admin-link-modal" data-link-modal hidden>
+        <div class="admin-link-modal__backdrop" data-link-modal-close></div>
+        <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="admin-link-modal-title">
+          <header>
+            <h3 id="admin-link-modal-title">设置链接</h3>
+            <button type="button" data-link-modal-close aria-label="关闭">×</button>
+          </header>
+          <div class="admin-link-modal__body">
+            <label class="admin-news-field is-wide"><span>显示文案</span><input type="text" data-link-label placeholder="例如：查看它如何工作" /></label>
+            <fieldset class="admin-link-modal__type">
+              <legend>跳转方式</legend>
+              <label><input type="radio" name="link-type" value="anchor" data-link-type /> 当前页锚点</label>
+              <label><input type="radio" name="link-type" value="url" data-link-type /> 跳转到其他页面</label>
+            </fieldset>
+            <label class="admin-news-field is-wide" data-link-anchor-wrap>
+              <span>锚点板块</span>
+              <select data-link-anchor>
+                <option value="#hpi-value">价值说明</option>
+                <option value="#hpi-how">如何工作</option>
+                <option value="#hpi-scenes">应用场景</option>
+                <option value="#hpi-system">系统位置</option>
+                <option value="#hpi-close">收尾预约</option>
+              </select>
+            </label>
+            <label class="admin-news-field is-wide" data-link-url-wrap hidden>
+              <span>跳转地址</span>
+              <input type="text" data-link-url placeholder="/solutions/ 或 https://..." />
+            </label>
+          </div>
+          <footer>
+            <button type="button" data-link-modal-close>取消</button>
+            <button type="button" class="admin-link-modal__ok" data-link-modal-save>确定</button>
+          </footer>
+        </div>
+      </div>
     </div>`
 }
 
@@ -238,6 +270,14 @@ function collectProductFromCompose() {
   })
   root.querySelectorAll('[data-edit-path]').forEach((el) => {
     setNested(item, el.dataset.editPath, readEditableText(el))
+  })
+  root.querySelectorAll('[data-edit-link]').forEach((el) => {
+    const labelPath = el.dataset.editLabelPath
+    const hrefPath = el.dataset.editHrefPath
+    const label = el.querySelector('[data-edit-link-label]')?.textContent?.trim() || ''
+    const href = el.dataset.editHref || ''
+    if (labelPath) setNested(item, labelPath, label)
+    if (hrefPath) setNested(item, hrefPath, href)
   })
   root.querySelectorAll('[data-edit-image]').forEach((el) => {
     const path = el.dataset.editImage
@@ -338,6 +378,86 @@ async function uploadImageFile(file) {
   return url
 }
 
+const ANCHOR_IDS = new Set(['#hpi-value', '#hpi-how', '#hpi-scenes', '#hpi-system', '#hpi-close'])
+
+function isAnchorHref(href) {
+  const value = String(href || '').trim()
+  return value.startsWith('#') || ANCHOR_IDS.has(value)
+}
+
+function syncLinkModalType(composeView) {
+  const type = composeView.querySelector('[data-link-type]:checked')?.value || 'anchor'
+  const anchorWrap = composeView.querySelector('[data-link-anchor-wrap]')
+  const urlWrap = composeView.querySelector('[data-link-url-wrap]')
+  if (anchorWrap) anchorWrap.hidden = type !== 'anchor'
+  if (urlWrap) urlWrap.hidden = type !== 'url'
+}
+
+function openLinkModal(composeView, linkEl) {
+  const modal = composeView.querySelector('[data-link-modal]')
+  if (!modal || !linkEl) return
+  modal.hidden = false
+  modal._targetLink = linkEl
+  const label = linkEl.querySelector('[data-edit-link-label]')?.textContent?.trim() || ''
+  const href = linkEl.dataset.editHref || ''
+  const labelInput = modal.querySelector('[data-link-label]')
+  const urlInput = modal.querySelector('[data-link-url]')
+  const anchorSelect = modal.querySelector('[data-link-anchor]')
+  if (labelInput) labelInput.value = label
+  const useAnchor = isAnchorHref(href)
+  modal.querySelectorAll('[data-link-type]').forEach((input) => {
+    input.checked = input.value === (useAnchor ? 'anchor' : 'url')
+  })
+  if (useAnchor) {
+    const normalized = href.startsWith('#') ? href : `#${href.replace(/^#/, '')}`
+    if (anchorSelect) {
+      if (![...anchorSelect.options].some((opt) => opt.value === normalized)) {
+        const option = document.createElement('option')
+        option.value = normalized
+        option.textContent = `自定义 ${normalized}`
+        anchorSelect.appendChild(option)
+      }
+      anchorSelect.value = normalized
+    }
+    if (urlInput) urlInput.value = ''
+  } else {
+    if (urlInput) urlInput.value = href
+    if (anchorSelect) anchorSelect.value = '#hpi-how'
+  }
+  syncLinkModalType(composeView)
+  labelInput?.focus()
+}
+
+function closeLinkModal(composeView) {
+  const modal = composeView.querySelector('[data-link-modal]')
+  if (!modal) return
+  modal.hidden = true
+  modal._targetLink = null
+}
+
+function saveLinkModal(composeView) {
+  const modal = composeView.querySelector('[data-link-modal]')
+  const linkEl = modal?._targetLink
+  if (!modal || !linkEl) return
+  const label = modal.querySelector('[data-link-label]')?.value.trim() || ''
+  const type = modal.querySelector('[data-link-type]:checked')?.value || 'anchor'
+  let href = ''
+  if (type === 'anchor') {
+    href = modal.querySelector('[data-link-anchor]')?.value || '#hpi-how'
+  } else {
+    href = modal.querySelector('[data-link-url]')?.value.trim() || ''
+    if (!href) {
+      ctx.toast('请填写跳转地址', true)
+      return
+    }
+  }
+  const labelNode = linkEl.querySelector('[data-edit-link-label]')
+  if (labelNode) labelNode.textContent = label || '链接文案'
+  linkEl.dataset.editHref = href
+  closeLinkModal(composeView)
+  ctx.toast(type === 'anchor' ? '已设为页内锚点' : '已设为跳转链接')
+}
+
 export function bindProductLibraryAdmin(helpers) {
   ctx = { ...ctx, ...helpers }
   const listView = document.querySelector('[data-products-list-view]')
@@ -373,6 +493,16 @@ export function bindProductLibraryAdmin(helpers) {
   })
 
   composeView.addEventListener('click', async (event) => {
+    if (event.target.closest('[data-link-modal-close]')) {
+      event.preventDefault()
+      closeLinkModal(composeView)
+      return
+    }
+    if (event.target.closest('[data-link-modal-save]')) {
+      event.preventDefault()
+      saveLinkModal(composeView)
+      return
+    }
     if (event.target.closest('[data-products-compose-back]')) {
       event.preventDefault()
       closeProductCompose()
@@ -407,6 +537,13 @@ export function bindProductLibraryAdmin(helpers) {
       return
     }
 
+    const linkBtn = event.target.closest('[data-edit-link]')
+    if (linkBtn) {
+      event.preventDefault()
+      openLinkModal(composeView, linkBtn)
+      return
+    }
+
     const imageBtn = event.target.closest('[data-edit-image]')
     if (imageBtn) {
       event.preventDefault()
@@ -421,7 +558,17 @@ export function bindProductLibraryAdmin(helpers) {
     if (link) event.preventDefault()
   })
 
+  composeView.addEventListener('change', (event) => {
+    if (event.target.closest('[data-link-type]')) {
+      syncLinkModalType(composeView)
+    }
+  })
+
   composeView.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && composeView.querySelector('[data-link-modal]:not([hidden])')) {
+      closeLinkModal(composeView)
+      return
+    }
     const editable = event.target.closest('[data-edit-path]')
     if (!editable) return
     if (event.key === 'Enter' && !editable.dataset.editMultiline) {
@@ -453,6 +600,8 @@ export function bindProductLibraryAdmin(helpers) {
   })
 
   composeView.addEventListener('change', async (event) => {
+    if (event.target.closest('[data-link-type]')) return
+
     const visualFile = event.target.closest('[data-product-visual-file]')
     if (visualFile) {
       const file = visualFile.files?.[0]
