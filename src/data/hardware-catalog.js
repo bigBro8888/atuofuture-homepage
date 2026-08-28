@@ -319,12 +319,32 @@ export const HARDWARE_PRODUCTS = [
   },
 ]
 
-export const HARDWARE_SPACE_FLOW = [
-  { id: 'sense', title: '传感器与计量', desc: '环境、占用与能耗数据采集', icon: 'sensors' },
-  { id: 'edge', title: '网关与边缘', desc: '协议汇聚、本地处理与可靠上云', icon: 'router' },
-  { id: 'hub', title: '空间智能中枢 / 智能体', desc: '策略编排、场景理解与任务决策', icon: 'psychology' },
-  { id: 'actuate', title: '控制执行设备', desc: '照明、空调、开关与回路执行', icon: 'tune' },
-  { id: 'terminal', title: '中控屏与信息终端', desc: '人机交互、状态呈现与会务信息', icon: 'smart_display' },
+/** 空间智能区商品矩阵行（首页两行卡片） */
+export const HARDWARE_SPACE_MATRIX_ROWS = [
+  {
+    id: 'row1',
+    title: '空间智能配套硬件',
+    subtitle: '围绕交互、环境、感知与边缘接入，覆盖会议室、办公与楼宇场景。',
+    products: [
+      { id: 'e-table-sign', label: '电子桌牌' },
+      { id: 'desk-screen', label: '工位屏' },
+      { id: 'smart-lighting', label: '照明与空调' },
+      { id: 'sensor', label: '传感器' },
+      { id: 'gateway', label: '网关' },
+    ],
+  },
+  {
+    id: 'row2',
+    title: '',
+    subtitle: '',
+    products: [
+      { id: 'smart-hvac', label: '' },
+      { id: 'switch-control', label: '' },
+      { id: 'energy-meter', label: '' },
+      { id: 'smart-meeting', label: '' },
+      { id: 'office-device', label: '' },
+    ],
+  },
 ]
 
 /** 顶部「智能硬件」下拉：按产品线展示具体产品（对齐导航设计稿） */
@@ -365,12 +385,16 @@ export const HARDWARE_MEGA_GROUPS = [
 ]
 
 let navGroupOverride = null
+let spaceMatrixRowsOverride = null
 let productLibraryItems = []
 
 export function applyHardwareSimpleCms(content) {
   if (!content) return
   if (Array.isArray(content.navGroups) && content.navGroups.length) {
     navGroupOverride = content.navGroups
+  }
+  if (Array.isArray(content.spaceMatrixRows) && content.spaceMatrixRows.length) {
+    spaceMatrixRowsOverride = content.spaceMatrixRows
   }
   for (const product of HARDWARE_PRODUCTS) {
     const hit = (content.items || []).find((item) => item.id === product.slug || item.id === product.id)
@@ -413,6 +437,34 @@ export function resolveLibraryProductForHardware(product) {
   const linked = productLibraryItems.find((item) => (item.linkedHardwareIds || []).includes(hardwareId) || (item.linkedHardwareIds || []).includes(product.slug))
   if (linked) return linked
   return getProductLibraryItem(product.slug || product.id)
+}
+
+function matrixSourceRows() {
+  if (!Array.isArray(spaceMatrixRowsOverride) || !spaceMatrixRowsOverride.length) {
+    return HARDWARE_SPACE_MATRIX_ROWS
+  }
+  return HARDWARE_SPACE_MATRIX_ROWS.map((base, index) => {
+    const extra = spaceMatrixRowsOverride.find((row) => row.id === base.id) || spaceMatrixRowsOverride[index] || {}
+    const savedProducts = Array.isArray(extra.products) ? extra.products : []
+    const products = (savedProducts.length ? savedProducts : base.products).map((entry) => {
+      const id = entry.id
+      const fallback = base.products.find((item) => item.id === id)
+      return {
+        id,
+        label: entry.label || fallback?.label || '',
+      }
+    }).filter((entry) => entry.id)
+    return {
+      id: base.id,
+      title: extra.title ?? base.title,
+      subtitle: extra.subtitle ?? base.subtitle,
+      products: products.length ? products : base.products,
+    }
+  })
+}
+
+export function resolveHardwareSpaceMatrixRows() {
+  return matrixSourceRows()
 }
 
 function megaSourceGroups() {

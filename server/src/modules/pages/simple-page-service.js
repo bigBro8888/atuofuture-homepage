@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { db } from '../../lib/store.js'
-import { HARDWARE_MEGA_GROUPS, HARDWARE_PRODUCTS } from '../../../../src/data/hardware-catalog.js'
+import { HARDWARE_MEGA_GROUPS, HARDWARE_PRODUCTS, HARDWARE_SPACE_MATRIX_ROWS } from '../../../../src/data/hardware-catalog.js'
 import { SOLUTIONS } from '../../../../src/data/solutions.js'
 import { AGENTS_OVERVIEW } from '../../../../src/data/agents-overview.js'
 
@@ -141,6 +141,40 @@ function defaultNavGroups() {
   }))
 }
 
+function defaultSpaceMatrixRows() {
+  return HARDWARE_SPACE_MATRIX_ROWS.map((row) => ({
+    id: row.id,
+    title: row.title || '',
+    subtitle: row.subtitle || '',
+    products: row.products.map((item) => ({
+      id: item.id,
+      label: item.label || '',
+    })),
+  }))
+}
+
+function cleanSpaceMatrixRows(value) {
+  const fallback = defaultSpaceMatrixRows()
+  const saved = Array.isArray(value) ? value : []
+  return fallback.map((base, index) => {
+    const extra = saved.find((row) => row.id === base.id) || saved[index] || {}
+    const extraProducts = Array.isArray(extra.products) ? extra.products : []
+    const products = base.products.map((item, productIndex) => {
+      const hit = extraProducts.find((entry) => entry.id === item.id) || extraProducts[productIndex] || {}
+      return {
+        id: cleanText(hit.id || item.id, item.id, 40),
+        label: cleanText(hit.label, item.label || '', 40),
+      }
+    }).filter((entry) => entry.id)
+    return {
+      id: base.id,
+      title: cleanText(extra.title, base.title || '', 80),
+      subtitle: cleanText(extra.subtitle, base.subtitle || '', 160),
+      products: products.length ? products : base.products,
+    }
+  })
+}
+
 function cleanNavGroups(value) {
   const fallback = defaultNavGroups()
   const saved = Array.isArray(value) ? value : []
@@ -180,7 +214,10 @@ export function validateSimplePage(key, value = {}) {
     ctaLabel: cleanText(value.ctaLabel, fallback.ctaLabel, 20),
     items: cleanItems(value.items, catalog),
   }
-  if (key === 'hardware') page.navGroups = cleanNavGroups(value.navGroups)
+  if (key === 'hardware') {
+    page.navGroups = cleanNavGroups(value.navGroups)
+    page.spaceMatrixRows = cleanSpaceMatrixRows(value.spaceMatrixRows)
+  }
   return page
 }
 

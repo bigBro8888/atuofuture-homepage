@@ -16243,6 +16243,8 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 }
 
 .hwx-matrix { margin-bottom: 56px; }
+.hwx-matrix--compact { margin-top: -12px; margin-bottom: 56px; }
+.hwx-matrix--compact .hwx-matrix__grid { margin-top: 0; }
 .hwx-matrix__head {
   display: flex;
   flex-wrap: wrap;

@@ -1,6 +1,5 @@
 import { loadProductLibraryContent, loadSimplePageContent } from '../services/site-settings-api.js'
 import {
-  HARDWARE_SPACE_FLOW,
   applyHardwareSimpleCms,
   applyProductLibraryCms,
   getProductBySlug,
@@ -8,6 +7,7 @@ import {
   listingActions,
   presentHardwareProduct,
   resolveHardwareMegaGroups,
+  resolveHardwareSpaceMatrixRows,
 } from '../data/hardware-catalog.js'
 
 function esc(str = '') {
@@ -84,21 +84,53 @@ function renderLineOverview() {
     </section>`
 }
 
-function renderSpaceSection() {
-  const flagship = viewProduct(getProductBySlug('control-screen'))
-  const matrixIds = [
-    { id: 'e-table-sign', label: '电子桌牌' },
-    { id: 'desk-screen', label: '工位屏' },
-    { id: 'smart-lighting', label: '照明与空调' },
-    { id: 'sensor', label: '传感器' },
-    { id: 'gateway', label: '网关' },
-  ]
-  const matrix = matrixIds
+function renderMatrixRow(row, { compact = false } = {}) {
+  const matrix = (row.products || [])
     .map((item) => {
       const p = viewProduct(getProductBySlug(item.id))
-      return p ? { ...p, displayName: item.label } : null
+      if (!p) return null
+      return { ...p, displayName: item.label || p.name }
     })
     .filter(Boolean)
+  if (!matrix.length) return ''
+
+  const head =
+    row.title || row.subtitle
+      ? `
+          <div class="hwx-matrix__head">
+            ${row.title ? `<h3>${esc(row.title)}</h3>` : ''}
+            ${row.subtitle ? `<p>${esc(row.subtitle)}</p>` : ''}
+          </div>`
+      : compact
+        ? ''
+        : ''
+
+  return `
+        <div class="hwx-matrix${compact ? ' hwx-matrix--compact' : ''}">
+          ${head}
+          <div class="hwx-matrix__grid">
+            ${matrix
+              .map(
+                (p) => `
+              <a class="hwx-matrix__card" href="${productHref(p)}">
+                <span class="hwx-matrix__media">
+                  <img src="${esc(p.coverImage)}" alt="${esc(p.displayName)}" width="640" height="480" loading="lazy" />
+                </span>
+                <span class="hwx-matrix__body">
+                  <strong>${esc(p.displayName)}</strong>
+                  <small>${esc(p.shortDescription)}</small>
+                  <span class="hwx-matrix__link">查看详情</span>
+                </span>
+              </a>`
+              )
+              .join('')}
+          </div>
+        </div>`
+}
+
+function renderSpaceSection() {
+  const flagship = viewProduct(getProductBySlug('control-screen'))
+  const matrixRows = resolveHardwareSpaceMatrixRows()
 
   return `
     <section class="hwx-space" id="hwc-space">
@@ -142,50 +174,7 @@ function renderSpaceSection() {
             : ''
         }
 
-        <div class="hwx-matrix">
-          <div class="hwx-matrix__head">
-            <h3>空间智能配套硬件</h3>
-            <p>围绕交互、环境、感知与边缘接入，覆盖会议室、办公与楼宇场景。</p>
-          </div>
-          <div class="hwx-matrix__grid">
-            ${matrix
-              .map(
-                (p) => `
-              <a class="hwx-matrix__card" href="${productHref(p)}">
-                <span class="hwx-matrix__media">
-                  <img src="${esc(p.coverImage)}" alt="${esc(p.displayName)}" width="640" height="480" loading="lazy" />
-                </span>
-                <span class="hwx-matrix__body">
-                  <strong>${esc(p.displayName)}</strong>
-                  <small>${esc(p.shortDescription)}</small>
-                  <span class="hwx-matrix__link">查看详情</span>
-                </span>
-              </a>`
-              )
-              .join('')}
-          </div>
-        </div>
-
-        <section class="hwx-arch" aria-labelledby="hwx-arch-title">
-          <div class="hwx-arch__head">
-            <div>
-              <h3 id="hwx-arch-title">空间智能硬件如何协同</h3>
-              <p>从数据采集到终端交互的横向能力链路。</p>
-            </div>
-            <a class="hwc-text-link" href="${esc(listingActions(getProductBySlug('control-screen') || {}).solutionHref || '/solutions/')}">了解 ASpace 总体解决方案 →</a>
-          </div>
-          <ol class="hwx-arch__flow">
-            ${HARDWARE_SPACE_FLOW.map(
-              (step, index) => `
-              <li class="hwx-arch__step">
-                <span class="hwx-arch__index">${String(index + 1).padStart(2, '0')}</span>
-                <span class="material-symbols-outlined hwx-arch__icon" aria-hidden="true">${esc(step.icon)}</span>
-                <strong>${esc(step.title)}</strong>
-                <small>${esc(step.desc)}</small>
-              </li>`
-            ).join('')}
-          </ol>
-        </section>
+        ${matrixRows.map((row, index) => renderMatrixRow(row, { compact: index > 0 })).join('')}
       </div>
     </section>`
 }

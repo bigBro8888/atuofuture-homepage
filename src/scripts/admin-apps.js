@@ -1191,7 +1191,7 @@ function simpleOutline(key, items = []) {
     return [
       hero,
       { id: 'nav', no: '02', title: '导航分类设置', desc: 'Banner 下三列：名称、缩略图、链接' },
-      { id: 'space', no: '03', title: '空间智能', desc: '中控屏、桌牌、工位屏等' },
+      { id: 'space', no: '03', title: '空间智能', desc: '中控屏、两行商品矩阵与详情关联' },
       { id: 'retail', no: '04', title: '新零售与电子纸', desc: '价签、冷链与资产盘点' },
       { id: 'consumer', no: '05', title: '3C 数码', desc: '手机壳与艺术相框' },
     ]
@@ -1219,6 +1219,35 @@ function showSimpleSection(id) {
   document.querySelectorAll('[data-simple-section]').forEach((section) => {
     section.hidden = section.dataset.simpleSection !== id
   })
+}
+
+function renderSpaceMatrixEditor(spaceMatrixRows = [], items = []) {
+  return `
+        <div class="admin-space-matrix">
+          ${spaceMatrixRows.map((row, rowIndex) => `
+            <article class="admin-space-matrix__row">
+              <header class="admin-space-matrix__head">
+                <strong>${rowIndex === 0 ? '第一行商品' : '第二行商品'}</strong>
+                <span class="admin-form-section__hint">对应前台空间智能区的商品卡片行，留空标题则只展示卡片。</span>
+              </header>
+              <input type="hidden" data-home-field="spaceMatrixRows.${rowIndex}.id" value="${escapeHtml(row.id || '')}" />
+              ${homeField(`spaceMatrixRows.${rowIndex}.title`, '区块标题', row.title || '', { help: '可留空' })}
+              ${homeField(`spaceMatrixRows.${rowIndex}.subtitle`, '区块说明', row.subtitle || '', { type: 'textarea', rows: 2, wide: true })}
+              <div class="admin-space-matrix__products">
+                ${(row.products || []).map((product, productIndex) => {
+                  const item = items.find((row) => row.id === product.id) || {}
+                  const name = product.label || item.title || product.id
+                  const prefix = `spaceMatrixRows.${rowIndex}.products.${productIndex}`
+                  return `
+                  <div class="admin-nav-prod" data-nav-prod>
+                    <input type="hidden" data-home-field="${prefix}.id" value="${escapeHtml(product.id || '')}" />
+                    ${homeField(`${prefix}.label`, '显示名', name, { help: '留空则用商品库名称' })}
+                    <p class="admin-form-section__hint">商品图与简介请在下方「空间智能商品列表」或「内容中心 → 商品详情」编辑。</p>
+                  </div>`
+                }).join('')}
+              </div>
+            </article>`).join('')}
+        </div>`
 }
 
 function renderHardwareNavEditor(navGroups, items = []) {
@@ -1295,14 +1324,19 @@ function renderSimpleEditor(key, content) {
     consumer: '3C 数码',
   }
   const navGroups = Array.isArray(content.navGroups) ? content.navGroups : []
+  const spaceMatrixRows = Array.isArray(content.spaceMatrixRows) ? content.spaceMatrixRows : []
   const navSection = key === 'hardware' ? renderHardwareNavEditor(navGroups, items) : ''
   const listSections = outline.filter((entry) => entry.id !== 'hero' && entry.id !== 'nav').map((entry) => {
     const rows = items
       .map((row, index) => ({ row, index }))
       .filter(({ row }) => (row.group || row.id) === entry.id)
+    const matrixEditor = key === 'hardware' && entry.id === 'space'
+      ? renderSpaceMatrixEditor(spaceMatrixRows, items)
+      : ''
     return `
       <fieldset data-simple-section="${entry.id}">
         <legend>${escapeHtml(sectionLegend[entry.id] || entry.title)}</legend>
+        ${matrixEditor}
         <p class="admin-form-section__hint">${key === 'hardware' ? '列表展示可改名称和图片。详情页请到「内容中心 → 商品详情」编辑，然后在下面关联。' : '频道列表可改名称、简介和图片。完整详情请到「内容中心」编辑。'}</p>
         <div class="admin-home-list">${rows.map(({ row, index }) => renderSimpleItemFields(row, index, key)).join('') || '<p class="admin-form-section__hint">此类暂无条目。</p>'}</div>
       </fieldset>`
@@ -1335,7 +1369,7 @@ function renderSimpleEditor(key, content) {
 }
 
 function collectSimpleContent() {
-  const content = { items: [], navGroups: [] }
+  const content = { items: [], navGroups: [], spaceMatrixRows: [] }
   document.querySelectorAll('[data-simple-editor] [data-home-field]').forEach((field) => {
     const path = field.dataset.homeField
     const value = field.value
@@ -1344,6 +1378,22 @@ function collectSimpleContent() {
       const index = Number(match[1])
       content.items[index] = content.items[index] || {}
       content.items[index][match[2]] = value
+      return
+    }
+    const matrixRow = /^spaceMatrixRows\.(\d+)\.(id|title|subtitle)$/.exec(path)
+    if (matrixRow) {
+      const index = Number(matrixRow[1])
+      content.spaceMatrixRows[index] = content.spaceMatrixRows[index] || { products: [] }
+      content.spaceMatrixRows[index][matrixRow[2]] = value
+      return
+    }
+    const matrixProduct = /^spaceMatrixRows\.(\d+)\.products\.(\d+)\.(id|label)$/.exec(path)
+    if (matrixProduct) {
+      const rowIndex = Number(matrixProduct[1])
+      const productIndex = Number(matrixProduct[2])
+      content.spaceMatrixRows[rowIndex] = content.spaceMatrixRows[rowIndex] || { products: [] }
+      content.spaceMatrixRows[rowIndex].products[productIndex] = content.spaceMatrixRows[rowIndex].products[productIndex] || {}
+      content.spaceMatrixRows[rowIndex].products[productIndex][matrixProduct[3]] = value
       return
     }
     const navGroup = /^navGroups\.(\d+)\.(id|title|icon)$/.exec(path)
@@ -1368,6 +1418,10 @@ function collectSimpleContent() {
   content.navGroups = content.navGroups.filter(Boolean).map((group) => ({
     ...group,
     products: Array.isArray(group.products) ? group.products.filter(Boolean) : [],
+  }))
+  content.spaceMatrixRows = content.spaceMatrixRows.filter(Boolean).map((row) => ({
+    ...row,
+    products: Array.isArray(row.products) ? row.products.filter(Boolean) : [],
   }))
   return content
 }
