@@ -1,11 +1,21 @@
 import { HARDWARE_PRODUCTS, getLine } from '../data/hardware-catalog.js'
 import { renderProductStory } from '../lib/product-story-render.js'
 
-const LINE_OPTIONS = [
-  ['space', '空间智能'],
-  ['retail', '新零售与电子纸'],
-  ['consumer', '3C 数码'],
+const IMAGE_SIZE_GUIDE = [
+  { test: (path) => path === 'story.hero.backgroundImage', label: '首屏背景图', size: '1920×1080', tip: '横向全宽背景，建议 JPG/WebP' },
+  { test: (path) => path === 'story.hero.deviceImage', label: '首屏设备图', size: '800×640', tip: '右侧产品主图，透明底 PNG 更佳' },
+  { test: (path) => path === 'story.value.deviceImage', label: '价值区中心图', size: '640×480', tip: '中间设备图' },
+  { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
+  { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '应用场景大图', size: '1200×700', tip: '场景氛围图，横向构图' },
+  { test: (path) => /story\.scenarios\.items\.\d+\.deviceImage/.test(path), label: '应用场景设备图', size: '640×480', tip: '场景旁设备图' },
+  { test: (path) => path === 'story.system.middleImage', label: '系统位置中层图', size: '560×400', tip: '系统架构中间层配图' },
+  { test: (path) => path === 'coverImage', label: '列表封面图', size: '1200×900', tip: '商品列表与封面用图' },
 ]
+
+function resolveImageSizeGuide(path = '') {
+  const hit = IMAGE_SIZE_GUIDE.find((item) => item.test(path))
+  return hit || { label: '图片', size: '1200×800', tip: '按前台展示比例裁切即可' }
+}
 
 let ctx = {
   api: null,
@@ -224,6 +234,11 @@ function renderProductCompose(item) {
             <button type="button" data-image-modal-close aria-label="关闭">×</button>
           </header>
           <div class="admin-link-modal__body">
+            <div class="admin-image-modal__size" data-image-modal-size>
+              <strong data-image-modal-size-label>建议尺寸</strong>
+              <em data-image-modal-size-value>1200×800</em>
+              <span data-image-modal-size-tip>上传前请按建议尺寸准备素材</span>
+            </div>
             <div class="admin-image-modal__preview">
               <img data-image-modal-preview src="" alt="" hidden />
               <span data-image-modal-empty>暂无预览</span>
@@ -237,7 +252,7 @@ function renderProductCompose(item) {
               上传本地图片
               <input type="file" accept="image/jpeg,image/png,image/webp" data-image-modal-file />
             </label>
-            <p class="admin-form-section__hint" style="margin:0">可填链接、上传本地，或留空不显示图片。设备图、场景图、背景图都一样。</p>
+            <p class="admin-form-section__hint" style="margin:0">可填链接、上传本地，或留空不显示图片。</p>
           </div>
           <footer>
             <button type="button" data-image-modal-close>取消</button>
@@ -590,6 +605,15 @@ function openImageModal(composeView, imageEl) {
   modal.hidden = false
   modal._targetImage = imageEl
   modal._targetPath = imageEl.dataset.editImage || ''
+  const guide = resolveImageSizeGuide(modal._targetPath)
+  const title = modal.querySelector('#admin-image-modal-title')
+  if (title) title.textContent = `更换图片 · ${guide.label}`
+  const sizeLabel = modal.querySelector('[data-image-modal-size-label]')
+  const sizeValue = modal.querySelector('[data-image-modal-size-value]')
+  const sizeTip = modal.querySelector('[data-image-modal-size-tip]')
+  if (sizeLabel) sizeLabel.textContent = `${guide.label} · 建议尺寸`
+  if (sizeValue) sizeValue.textContent = guide.size
+  if (sizeTip) sizeTip.textContent = guide.tip
   const url = currentImageUrl(imageEl)
   const urlInput = modal.querySelector('[data-image-modal-url]')
   if (urlInput) urlInput.value = url

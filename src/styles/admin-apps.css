@@ -1156,6 +1156,32 @@ button.hpi-edit-link.hpi-hero__link {
   color: #fff !important;
 }
 
+.admin-image-modal__size {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid #cfe0ff;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f3f8ff, #eaf2ff);
+}
+.admin-image-modal__size strong {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a6288;
+}
+.admin-image-modal__size em {
+  font-style: normal;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #1769ff;
+  line-height: 1.2;
+}
+.admin-image-modal__size span {
+  font-size: 12px;
+  color: #6b7c94;
+  line-height: 1.45;
+}
 .admin-image-modal__preview {
   display: grid;
   place-items: center;
