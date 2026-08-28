@@ -913,8 +913,28 @@ body.admin-modal-open { overflow: hidden; }
   pointer-events: none;
   transition: opacity .15s;
 }
-.hpi-edit-img:hover .hpi-edit-img__tip,
-.hpi-edit-img:focus-visible .hpi-edit-img__tip { opacity: 1; }
+.hpi-edit-img--empty {
+  min-height: 160px;
+  display: grid !important;
+  place-items: center;
+  border: 1px dashed rgba(255, 255, 255, 0.45);
+  border-radius: 12px;
+  background: rgba(12, 24, 48, 0.28);
+}
+.hpi-value .hpi-edit-img--empty,
+.hpi-how .hpi-edit-img--empty,
+.hpi-scenes .hpi-edit-img--empty,
+.hpi-system .hpi-edit-img--empty {
+  border-color: #c9d5e6;
+  background: #f4f7fb;
+  color: #5a6a82;
+}
+.hpi-edit-img__tip.is-visible { opacity: 1; position: static; transform: none; }
+.hpi-hero--no-device .hpi-hero__grid { grid-template-columns: 1fr; }
+.hpi-hero--no-bg {
+  background:
+    linear-gradient(90deg, rgba(5,8,47,.92) 0%, rgba(5,8,47,.78) 50%, rgba(5,8,47,.7) 100%);
+}
 .hpi-edit-bg {
   position: absolute;
   z-index: 3;

@@ -27,9 +27,14 @@ function textNode(path, value, { editable = false, tag = 'span', className = '',
 }
 
 function imgNode(path, src, { editable = false, width, height, alt = '', loading = '' } = {}) {
-  const img = `<img src="${esc(src || '')}" alt="${esc(alt)}"${width ? ` width="${width}"` : ''}${height ? ` height="${height}"` : ''}${loading ? ` loading="${loading}"` : ''} />`
+  const url = String(src || '').trim()
+  if (!url && !editable) return ''
+  if (!url && editable) {
+    return `<button type="button" class="hpi-edit-img hpi-edit-img--empty" data-edit-image="${esc(path)}" data-edit-image-url="" title="点击添加图片"><span class="hpi-edit-img__tip is-visible">添加图片</span></button>`
+  }
+  const img = `<img src="${esc(url)}" alt="${esc(alt)}"${width ? ` width="${width}"` : ''}${height ? ` height="${height}"` : ''}${loading ? ` loading="${loading}"` : ''} />`
   if (!editable) return img
-  return `<button type="button" class="hpi-edit-img" data-edit-image="${esc(path)}" title="点击更换图片">${img}<span class="hpi-edit-img__tip">更换图片</span></button>`
+  return `<button type="button" class="hpi-edit-img" data-edit-image="${esc(path)}" data-edit-image-url="${esc(url)}" title="点击更换图片">${img}<span class="hpi-edit-img__tip">更换图片</span></button>`
 }
 
 function lineList(path, items, { editable = false, tag = 'p', empty = 3 } = {}) {
@@ -58,12 +63,14 @@ function linkNode({ className = '', href = '', label = '', labelPath, hrefPath, 
 
 export function renderProductHero(story, product, line, { editable = false } = {}) {
   const hero = story.hero || {}
-  const bgStyle = `--hpi-hero-image:url('${esc(hero.backgroundImage || '')}')`
+  const bg = String(hero.backgroundImage || '').trim()
+  const bgStyle = bg ? `--hpi-hero-image:url('${esc(bg)}')` : '--hpi-hero-image:none'
   const bgEdit = editable
-    ? `<button type="button" class="hpi-edit-bg" data-edit-image="story.hero.backgroundImage" title="更换背景图">更换背景图</button>`
+    ? `<button type="button" class="hpi-edit-bg" data-edit-image="story.hero.backgroundImage" data-edit-image-url="${esc(bg)}" title="更换背景图">${bg ? '更换背景图' : '添加背景图'}</button>`
     : ''
+  const device = imgNode('story.hero.deviceImage', hero.deviceImage, { editable, width: 520, height: 420 })
   return `
-    <section class="hpi-hero" style="${bgStyle}">
+    <section class="hpi-hero${!bg ? ' hpi-hero--no-bg' : ''}${!device && !editable ? ' hpi-hero--no-device' : ''}" style="${bgStyle}">
       <div class="hpi-hero__overlay" aria-hidden="true"></div>
       ${bgEdit}
       <div class="hwc-shell hpi-hero__grid">
@@ -81,9 +88,11 @@ export function renderProductHero(story, product, line, { editable = false } = {
             editable,
           })}
         </div>
-        <div class="hpi-hero__device" aria-hidden="${editable ? 'false' : 'true'}">
-          ${imgNode('story.hero.deviceImage', hero.deviceImage, { editable, width: 520, height: 420 })}
-        </div>
+        ${
+          device || editable
+            ? `<div class="hpi-hero__device" aria-hidden="${editable ? 'false' : 'true'}">${device}</div>`
+            : ''
+        }
       </div>
     </section>`
 }

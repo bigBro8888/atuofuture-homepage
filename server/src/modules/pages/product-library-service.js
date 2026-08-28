@@ -12,15 +12,22 @@ function cleanText(value, fallback = '', max = 2000) {
 }
 
 function cleanUrl(value, fallback = '') {
-  const url = String(value ?? fallback ?? '').trim()
-  if (!url) return fallback || ''
+  // 明确传空字符串表示用户清空，不要回填默认图
+  if (value === '' || value === null) return ''
+  if (value === undefined) {
+    const fb = String(fallback ?? '').trim()
+    if (!fb) return ''
+    return cleanUrl(fb, '')
+  }
+  const url = String(value).trim()
+  if (!url) return ''
   if (url.startsWith('/') && !url.startsWith('//')) return url.slice(0, 1000)
   try {
     const parsed = new URL(url)
-    if (!['http:', 'https:'].includes(parsed.protocol)) return fallback || ''
+    if (!['http:', 'https:'].includes(parsed.protocol)) return ''
     return parsed.toString().slice(0, 2000)
   } catch {
-    return fallback || ''
+    return ''
   }
 }
 

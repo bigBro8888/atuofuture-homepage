@@ -533,21 +533,54 @@ function applyVisualImage(composeView, path, url) {
     canvas?.querySelector(`[data-edit-image="${path}"]`)
   const safeUrl = String(url || '').trim()
   if (target) {
-    const img = target.querySelector('img')
-    if (img) {
-      if (safeUrl) img.src = safeUrl
-      else img.removeAttribute('src')
-    }
     target.dataset.editImageUrl = safeUrl
+    let img = target.querySelector('img')
+    if (safeUrl) {
+      target.classList.remove('hpi-edit-img--empty')
+      if (!img) {
+        img = document.createElement('img')
+        img.alt = ''
+        target.prepend(img)
+      }
+      img.src = safeUrl
+      const tip = target.querySelector('.hpi-edit-img__tip')
+      if (tip) {
+        tip.textContent = path.includes('backgroundImage') ? '更换背景图' : '更换图片'
+        tip.classList.remove('is-visible')
+      }
+      if (target.matches('.hpi-edit-bg')) target.textContent = '更换背景图'
+    } else {
+      if (img) img.remove()
+      target.classList.add('hpi-edit-img--empty')
+      let tip = target.querySelector('.hpi-edit-img__tip')
+      if (!tip && !target.matches('.hpi-edit-bg')) {
+        tip = document.createElement('span')
+        tip.className = 'hpi-edit-img__tip is-visible'
+        target.appendChild(tip)
+      }
+      if (tip) {
+        tip.textContent = '添加图片'
+        tip.classList.add('is-visible')
+      }
+      if (target.matches('.hpi-edit-bg')) target.textContent = '添加背景图'
+    }
   }
   if (path.includes('backgroundImage')) {
     const hero = canvas?.querySelector('.hpi-hero')
     if (hero) {
-      if (safeUrl) hero.style.setProperty('--hpi-hero-image', `url('${safeUrl}')`)
-      else hero.style.setProperty('--hpi-hero-image', 'none')
+      if (safeUrl) {
+        hero.style.setProperty('--hpi-hero-image', `url('${safeUrl}')`)
+        hero.classList.remove('hpi-hero--no-bg')
+      } else {
+        hero.style.setProperty('--hpi-hero-image', 'none')
+        hero.classList.add('hpi-hero--no-bg')
+      }
     }
     const bgBtn = canvas?.querySelector('[data-edit-image="story.hero.backgroundImage"]')
-    if (bgBtn) bgBtn.dataset.editImageUrl = safeUrl
+    if (bgBtn) {
+      bgBtn.dataset.editImageUrl = safeUrl
+      bgBtn.textContent = safeUrl ? '更换背景图' : '添加背景图'
+    }
   }
 }
 
