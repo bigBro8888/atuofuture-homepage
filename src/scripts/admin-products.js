@@ -1,16 +1,5 @@
-import { HARDWARE_PRODUCTS } from '../data/hardware-catalog.js'
-
-const PRODUCT_OUTLINE = [
-  { id: 'basics', no: '01', title: '基础信息', desc: '名称、图片、简介与卖点' },
-  { id: 'links', no: '02', title: '列表按钮', desc: '查看详情与方案链接' },
-  { id: 'hardware', no: '03', title: '关联智能硬件', desc: '对应硬件库里的产品' },
-  { id: 'hero', no: '04', title: '详情首屏', desc: '标题、背景与设备图' },
-  { id: 'value', no: '05', title: '价值说明', desc: '左右能力与中心图' },
-  { id: 'how', no: '06', title: '如何工作', desc: '四步流程' },
-  { id: 'scenes', no: '07', title: '应用场景', desc: '三组场景图文' },
-  { id: 'system', no: '08', title: '系统位置', desc: '上下层与方案链接' },
-  { id: 'closing', no: '09', title: '收尾预约', desc: '底部行动按钮' },
-]
+import { HARDWARE_PRODUCTS, getLine } from '../data/hardware-catalog.js'
+import { renderProductStory } from '../lib/product-story-render.js'
 
 const LINE_OPTIONS = [
   ['space', '空间智能'],
@@ -105,7 +94,7 @@ function renderProductList(content) {
   editor.classList.add('admin-news-editor')
   editor.innerHTML = `
     <div class="admin-news-toolbar">
-      <p class="admin-form-section__hint" style="margin:0">这里编辑产品详情页。智能硬件页再选择关联哪一条，前台「查看产品详情」就会跳过来。</p>
+      <p class="admin-form-section__hint" style="margin:0">点「编辑」进入可视化详情页，直接在预览上改文案和图片。</p>
       <div class="admin-news-toolbar__actions">
         <button type="button" class="admin-add-slide" data-product-add>+ 新建产品</button>
       </div>
@@ -125,158 +114,75 @@ function renderProductList(content) {
       </div>`).join('') || '<p class="admin-form-section__hint">还没有产品，先点上面的新建。</p>'}</div>`
 }
 
-function showProductSection(id) {
-  if (!PRODUCT_OUTLINE.some((item) => item.id === id)) id = 'basics'
-  ctx.state.productSection = id
-  document.querySelectorAll('[data-product-goto]').forEach((button) => button.classList.toggle('is-active', button.dataset.productGoto === id))
-  document.querySelectorAll('[data-product-section]').forEach((section) => {
-    section.hidden = section.dataset.productSection !== id
-  })
+function previewProduct(item) {
+  return {
+    id: item.id,
+    slug: item.slug,
+    name: item.name || '未命名产品',
+    productLine: item.hardwareLine || 'space',
+    coverImage: item.coverImage || '',
+    shortDescription: item.shortDescription || '',
+  }
+}
+
+function renderBasicsBar(item) {
+  const linked = new Set(item.linkedHardwareIds || [])
+  const story = item.story || emptyProduct().story
+  return `
+    <details class="admin-vedit-basics" open>
+      <summary>
+        <strong>基础设置</strong>
+        <span>名称、标识、分类、封面与列表字段（页面上看不见的配置）</span>
+      </summary>
+      <div class="admin-vedit-basics__body">
+        <input type="hidden" data-product-field="id" value="${esc(item.id || '')}" />
+        <div class="admin-form-grid">
+          ${productField('name', '产品名称', item.name, { wide: true, placeholder: '例如 中控屏' })}
+          ${productField('slug', '详情页标识', item.slug, { placeholder: 'control-screen', help: '出现在 /hardware/product/?id= 后面' })}
+          ${productField('tag', '列表标签', item.tag, { placeholder: '旗舰产品' })}
+          ${productField('hardwareLine', '所属产品线', item.hardwareLine || 'space', { type: 'select', options: LINE_OPTIONS })}
+          ${productField('coverImage', '列表封面图', item.coverImage, { image: true, wide: true, size: '1200×900' })}
+          ${productField('shortDescription', '一句话简介（列表用）', item.shortDescription, { type: 'textarea', wide: true, rows: 2 })}
+          ${productField('fullDescription', '详细介绍（列表用）', item.fullDescription, { type: 'textarea', wide: true, rows: 2 })}
+          ${productField('capabilities', '能力卖点（列表用）', lines(item.capabilities), { type: 'textarea', wide: true, rows: 2, placeholder: '每行一条' })}
+          ${productField('scenarios', '适用场景（列表用）', lines(item.scenarios), { type: 'textarea', wide: true, rows: 2, placeholder: '每行一条' })}
+          ${productField('detailCtaLabel', '详情按钮文案', item.detailCtaLabel || '查看产品详情')}
+          ${productField('solutionLabel', '方案链接文案', item.solutionLabel || '')}
+          ${productField('solutionHref', '方案链接地址', item.solutionHref || '', { wide: true, placeholder: '/solutions/' })}
+          ${productField('story.hero.ctaHref', '首屏按钮链接', story.hero?.ctaHref || '#hpi-how')}
+          ${productField('story.system.aspaceHref', '系统区方案链接', story.system?.aspaceHref || '/solutions/', { wide: true })}
+          <label class="admin-news-pin admin-form-wide">
+            <input data-product-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
+            <span><b>发布后前台可见</b><small>取消勾选则详情页不对外展示。</small></span>
+          </label>
+        </div>
+        <div class="admin-product-links">
+          <p class="admin-form-section__hint">关联智能硬件：勾选后，硬件列表里对应产品会默认跳到本详情页。</p>
+          ${HARDWARE_PRODUCTS.map((product) => `
+            <label>
+              <input type="checkbox" data-product-link="${esc(product.id)}"${linked.has(product.id) ? ' checked' : ''} />
+              <span><b>${esc(product.name)}</b><small>${esc(product.id)}</small></span>
+            </label>`).join('')}
+        </div>
+      </div>
+    </details>`
 }
 
 function renderProductCompose(item) {
-  const story = item.story || emptyProduct().story
-  const hero = story.hero || {}
-  const value = story.value || {}
-  const how = story.howItWorks || {}
-  const scenes = story.scenarios || {}
-  const system = story.system || {}
-  const closing = story.closing || {}
-  const stages = [...(how.stages || []), {}, {}, {}, {}].slice(0, 4)
-  const sceneItems = [...(scenes.items || []), {}, {}, {}].slice(0, 3)
-  const linked = new Set(item.linkedHardwareIds || [])
   const body = document.querySelector('[data-products-compose-body]')
   if (!body) return
+  const product = previewProduct(item)
+  const line = getLine(product.productLine)
+  const story = item.story || emptyProduct().story
   body.innerHTML = `
-    <div class="admin-home-editor admin-product-editor">
-      <aside class="admin-home-outline">
-        <p>按详情页从上到下编辑</p>
-        ${PRODUCT_OUTLINE.map((entry) => `
-          <button type="button" class="admin-home-outline__item${entry.id === (ctx.state.productSection || 'basics') ? ' is-active' : ''}" data-product-goto="${entry.id}">
-            <em>${entry.no}</em>
-            <span><b>${entry.title}</b><small>${entry.desc}</small></span>
-          </button>`).join('')}
-      </aside>
-      <div class="admin-home-stage">
-        <fieldset data-product-section="basics">
-          <legend>基础信息</legend>
-          <p class="admin-form-section__hint">这些字段同时用于产品详情页，以及硬件列表里关联后的名称、图片和卖点。</p>
-          <input type="hidden" data-product-field="id" value="${esc(item.id || '')}" />
-          <div class="admin-form-grid">
-            ${productField('name', '产品名称', item.name, { wide: true, placeholder: '例如 中控屏' })}
-            ${productField('slug', '详情页标识', item.slug, { placeholder: 'control-screen', help: '出现在 /hardware/product/?id= 后面' })}
-            ${productField('tag', '列表标签', item.tag, { placeholder: '旗舰产品' })}
-            ${productField('hardwareLine', '所属产品线', item.hardwareLine || 'space', { type: 'select', options: LINE_OPTIONS })}
-            ${productField('coverImage', '产品图片', item.coverImage, { image: true, wide: true, size: '1200×900' })}
-            ${productField('shortDescription', '一句话简介', item.shortDescription, { type: 'textarea', wide: true, rows: 2 })}
-            ${productField('fullDescription', '详细介绍', item.fullDescription, { type: 'textarea', wide: true, rows: 3 })}
-            ${productField('capabilities', '能力卖点', lines(item.capabilities), { type: 'textarea', wide: true, rows: 3, placeholder: '每行一条，例如：场景一键执行' })}
-            ${productField('scenarios', '适用场景', lines(item.scenarios), { type: 'textarea', wide: true, rows: 2, placeholder: '每行一条' })}
-            <label class="admin-news-pin admin-form-wide">
-              <input data-product-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
-              <span><b>发布后前台可见</b><small>取消勾选则详情页不对外展示。</small></span>
-            </label>
-          </div>
-        </fieldset>
-        <fieldset data-product-section="links">
-          <legend>列表按钮</legend>
-          <p class="admin-form-section__hint">对应智能硬件页红框里的两个入口。关联到该产品后即可生效，也可在智能硬件页再单独改。</p>
-          <div class="admin-form-grid">
-            ${productField('detailCtaLabel', '详情按钮文案', item.detailCtaLabel || '查看产品详情')}
-            ${productField('solutionLabel', '方案链接文案', item.solutionLabel || '')}
-            ${productField('solutionHref', '方案链接地址', item.solutionHref || '', { wide: true, placeholder: '/solutions/' })}
-          </div>
-        </fieldset>
-        <fieldset data-product-section="hardware">
-          <legend>关联智能硬件</legend>
-          <p class="admin-form-section__hint">勾选后，硬件列表里对应产品会默认跳到本详情页。也可反过来在「智能硬件」里下拉选择。</p>
-          <div class="admin-product-links">
-            ${HARDWARE_PRODUCTS.map((product) => `
-              <label>
-                <input type="checkbox" data-product-link="${esc(product.id)}"${linked.has(product.id) ? ' checked' : ''} />
-                <span><b>${esc(product.name)}</b><small>${esc(product.id)}</small></span>
-              </label>`).join('')}
-          </div>
-        </fieldset>
-        <fieldset data-product-section="hero">
-          <legend>详情首屏</legend>
-          <div class="admin-form-grid">
-            ${productField('story.hero.title', '主标题', hero.title, { wide: true })}
-            ${productField('story.hero.headline', '副标题', hero.headline, { wide: true })}
-            ${productField('story.hero.description', '说明', hero.description, { type: 'textarea', wide: true, rows: 3 })}
-            ${productField('story.hero.ctaLabel', '首屏按钮文案', hero.ctaLabel || '查看它如何工作')}
-            ${productField('story.hero.ctaHref', '首屏按钮链接', hero.ctaHref || '#hpi-how')}
-            ${productField('story.hero.backgroundImage', '背景图', hero.backgroundImage, { image: true, wide: true, size: '1920×1080' })}
-            ${productField('story.hero.deviceImage', '设备图', hero.deviceImage, { image: true, wide: true, size: '800×640' })}
-          </div>
-        </fieldset>
-        <fieldset data-product-section="value">
-          <legend>价值说明</legend>
-          <div class="admin-form-grid">
-            ${productField('story.value.title', '标题', value.title, { wide: true })}
-            ${productField('story.value.deviceImage', '中心设备图', value.deviceImage, { image: true, wide: true, size: '640×480' })}
-            ${productField('story.value.left', '左侧能力', lines(value.left), { type: 'textarea', rows: 4, placeholder: '每行一条' })}
-            ${productField('story.value.right', '右侧能力', lines(value.right), { type: 'textarea', rows: 4, placeholder: '每行一条' })}
-            ${productField('story.value.footer', '底部说明', value.footer, { type: 'textarea', wide: true, rows: 2 })}
-          </div>
-        </fieldset>
-        <fieldset data-product-section="how">
-          <legend>如何工作</legend>
-          <div class="admin-form-grid">
-            ${productField('story.howItWorks.title', '标题', how.title, { wide: true })}
-            ${stages.map((stage, index) => `
-              <div class="admin-product-card admin-form-wide">
-                <h4>第 ${index + 1} 步</h4>
-                <div class="admin-form-grid">
-                  ${productField(`story.howItWorks.stages.${index}.title`, '步骤名', stage.title || '')}
-                  ${productField(`story.howItWorks.stages.${index}.caption`, '说明', stage.caption || '')}
-                  ${productField(`story.howItWorks.stages.${index}.image`, '配图', stage.image || '', { image: true, wide: true, size: '560×360' })}
-                </div>
-              </div>`).join('')}
-          </div>
-        </fieldset>
-        <fieldset data-product-section="scenes">
-          <legend>应用场景</legend>
-          <div class="admin-form-grid">
-            ${productField('story.scenarios.title', '标题', scenes.title, { wide: true })}
-            ${sceneItems.map((scene, index) => `
-              <div class="admin-product-card admin-form-wide">
-                <h4>场景 ${index + 1}</h4>
-                <div class="admin-form-grid">
-                  ${productField(`story.scenarios.items.${index}.title`, '名称', scene.title || '')}
-                  ${productField(`story.scenarios.items.${index}.desc`, '说明', scene.desc || '', { type: 'textarea', rows: 2, wide: true })}
-                  ${productField(`story.scenarios.items.${index}.sceneImage`, '场景图', scene.sceneImage || '', { image: true, wide: true, size: '1200×700' })}
-                  ${productField(`story.scenarios.items.${index}.deviceImage`, '设备图', scene.deviceImage || '', { image: true, wide: true, size: '640×480' })}
-                </div>
-              </div>`).join('')}
-          </div>
-        </fieldset>
-        <fieldset data-product-section="system">
-          <legend>系统位置</legend>
-          <div class="admin-form-grid">
-            ${productField('story.system.title', '标题', system.title, { wide: true })}
-            ${productField('story.system.upperLabel', '上层标签', system.upperLabel)}
-            ${productField('story.system.upperItems', '上层能力', lines(system.upperItems), { type: 'textarea', rows: 3, placeholder: '每行一条' })}
-            ${productField('story.system.middleLabel', '中间层说明', system.middleLabel, { wide: true })}
-            ${productField('story.system.middleImage', '中间层图片', system.middleImage, { image: true, wide: true, size: '560×400' })}
-            ${productField('story.system.lowerItems', '下层设备', lines(system.lowerItems), { type: 'textarea', rows: 3, placeholder: '每行一条' })}
-            ${productField('story.system.aspaceLabel', '方案链接文案', system.aspaceLabel)}
-            ${productField('story.system.aspaceHref', '方案链接地址', system.aspaceHref, { wide: true })}
-          </div>
-        </fieldset>
-        <fieldset data-product-section="closing">
-          <legend>收尾预约</legend>
-          <div class="admin-form-grid">
-            ${productField('story.closing.title', '标题', closing.title, { wide: true })}
-            ${productField('story.closing.desc', '说明', closing.desc, { type: 'textarea', wide: true, rows: 2 })}
-            ${productField('story.closing.primaryLabel', '主按钮文案', closing.primaryLabel || '预约方案演示')}
-            ${productField('story.closing.softLinks.0.label', '辅助链接 1', closing.softLinks?.[0]?.label || '')}
-            ${productField('story.closing.softLinks.1.label', '辅助链接 2', closing.softLinks?.[1]?.label || '')}
-          </div>
-        </fieldset>
+    <div class="admin-vedit">
+      ${renderBasicsBar(item)}
+      <div class="admin-vedit-hint">下方即详情页预览：点文字直接改，点图片可更换。改完点右上角「发布上线」。</div>
+      <div class="admin-vedit-canvas" data-product-visual>
+        ${renderProductStory(product, story, line, { editable: true })}
       </div>
+      <input type="file" accept="image/jpeg,image/png,image/webp" hidden data-product-visual-file />
     </div>`
-  showProductSection(ctx.state.productSection || 'basics')
 }
 
 function setNested(target, path, value) {
@@ -294,6 +200,34 @@ function setNested(target, path, value) {
   })
 }
 
+function readEditableText(el) {
+  return (el.innerText || '').replace(/\u00a0/g, ' ').trim()
+}
+
+function packIndexed(obj, key) {
+  if (!obj || typeof obj[key] !== 'object' || Array.isArray(obj[key])) return
+  const map = obj[key]
+  const keys = Object.keys(map)
+    .filter((k) => /^\d+$/.test(k))
+    .sort((a, b) => Number(a) - Number(b))
+  if (!keys.length) return
+  obj[key] = keys.map((k) => String(map[k] || '').trim()).filter(Boolean)
+}
+
+function ensureArray(parent, key, length) {
+  if (!parent) return
+  const raw = parent[key]
+  if (Array.isArray(raw)) {
+    parent[key] = raw.slice(0, length)
+    return
+  }
+  if (raw && typeof raw === 'object') {
+    parent[key] = Array.from({ length }, (_, i) => raw[i] || raw[String(i)] || {})
+    return
+  }
+  parent[key] = Array.from({ length }, () => ({}))
+}
+
 function collectProductFromCompose() {
   const root = document.querySelector('[data-products-compose-view]')
   const item = emptyProduct()
@@ -302,17 +236,44 @@ function collectProductFromCompose() {
     const value = field.type === 'checkbox' ? field.checked : field.value
     setNested(item, path, value)
   })
+  root.querySelectorAll('[data-edit-path]').forEach((el) => {
+    setNested(item, el.dataset.editPath, readEditableText(el))
+  })
+  root.querySelectorAll('[data-edit-image]').forEach((el) => {
+    const path = el.dataset.editImage
+    const url = el.dataset.editImageUrl || el.querySelector('img')?.getAttribute('src') || ''
+    if (path && url) setNested(item, path, url)
+  })
+  const hero = root.querySelector('.hpi-hero')
+  const bgBtn = root.querySelector('[data-edit-image="story.hero.backgroundImage"]')
+  if (bgBtn?.dataset.editImageUrl) {
+    setNested(item, 'story.hero.backgroundImage', bgBtn.dataset.editImageUrl)
+  } else if (hero) {
+    const match = String(hero.style.getPropertyValue('--hpi-hero-image') || '').match(/url\(['"]?(.*?)['"]?\)/)
+    if (match?.[1]) setNested(item, 'story.hero.backgroundImage', match[1])
+  }
+
   item.linkedHardwareIds = [...root.querySelectorAll('[data-product-link]:checked')].map((input) => input.dataset.productLink)
-  item.capabilities = item.capabilities || ''
-  item.scenarios = item.scenarios || ''
+  const splitLines = (value) =>
+    String(value || '')
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+  item.capabilities = splitLines(item.capabilities)
+  item.scenarios = splitLines(item.scenarios)
+
   if (item.story?.value) {
-    item.story.value.left = item.story.value.left || ''
-    item.story.value.right = item.story.value.right || ''
+    packIndexed(item.story.value, 'left')
+    packIndexed(item.story.value, 'right')
   }
   if (item.story?.system) {
-    item.story.system.upperItems = item.story.system.upperItems || ''
-    item.story.system.lowerItems = item.story.system.lowerItems || ''
+    packIndexed(item.story.system, 'upperItems')
+    packIndexed(item.story.system, 'lowerItems')
   }
+  if (item.story?.howItWorks) ensureArray(item.story.howItWorks, 'stages', 4)
+  if (item.story?.scenarios) ensureArray(item.story.scenarios, 'items', 3)
+  if (item.story?.closing) ensureArray(item.story.closing, 'softLinks', 2)
+
   return item
 }
 
@@ -330,12 +291,13 @@ export function closeProductCompose() {
 
 function openProductCompose(index) {
   const items = ctx.state.productLibrary?.draftContent?.items || []
-  const item = index >= 0 ? items[index] : emptyProduct()
+  const item = index >= 0 ? structuredClone(items[index]) : emptyProduct()
   ctx.state.productComposeIndex = index
-  ctx.state.productSection = 'basics'
   document.querySelector('[data-products-list-view]').hidden = true
   const compose = document.querySelector('[data-products-compose-view]')
   compose.hidden = false
+  const title = compose.querySelector('.admin-news-compose__bar strong')
+  if (title) title.textContent = item?.name ? `可视化编辑 · ${item.name}` : '可视化编辑 · 新建产品'
   renderProductCompose(item || emptyProduct())
   window.scrollTo({ top: 0 })
 }
@@ -367,6 +329,13 @@ export function productLibraryOptions() {
     ['', '默认（与产品 ID 同名）'],
     ...items.map((item) => [item.id, `${item.name || '未命名'}（${item.slug || item.id}）`]),
   ]
+}
+
+async function uploadImageFile(file) {
+  const formData = new FormData()
+  formData.append('image', file)
+  const { url } = await ctx.api('/pages/media/image', { method: 'POST', body: formData })
+  return url
 }
 
 export function bindProductLibraryAdmin(helpers) {
@@ -404,12 +373,6 @@ export function bindProductLibraryAdmin(helpers) {
   })
 
   composeView.addEventListener('click', async (event) => {
-    const jump = event.target.closest('[data-product-goto]')
-    if (jump) {
-      event.preventDefault()
-      showProductSection(jump.dataset.productGoto)
-      return
-    }
     if (event.target.closest('[data-products-compose-back]')) {
       event.preventDefault()
       closeProductCompose()
@@ -423,10 +386,15 @@ export function bindProductLibraryAdmin(helpers) {
         ctx.toast('请填写产品名称', true)
         return
       }
+      if (!article.slug.trim()) {
+        ctx.toast('请填写详情页标识', true)
+        return
+      }
       button.disabled = true
       try {
         const items = [...(ctx.state.productLibrary?.draftContent?.items || [])]
         const index = ctx.state.productComposeIndex
+        if (!article.id) article.id = article.slug
         if (index >= 0 && items[index]) items[index] = { ...items[index], ...article }
         else items.unshift(article)
         await persistProductLibrary({ items }, '产品详情已发布')
@@ -436,6 +404,29 @@ export function bindProductLibraryAdmin(helpers) {
       } finally {
         button.disabled = false
       }
+      return
+    }
+
+    const imageBtn = event.target.closest('[data-edit-image]')
+    if (imageBtn) {
+      event.preventDefault()
+      const fileInput = composeView.querySelector('[data-product-visual-file]')
+      if (!fileInput) return
+      fileInput.dataset.targetPath = imageBtn.dataset.editImage
+      fileInput.click()
+      return
+    }
+
+    const link = event.target.closest('.admin-vedit-canvas a')
+    if (link) event.preventDefault()
+  })
+
+  composeView.addEventListener('keydown', (event) => {
+    const editable = event.target.closest('[data-edit-path]')
+    if (!editable) return
+    if (event.key === 'Enter' && !editable.dataset.editMultiline) {
+      event.preventDefault()
+      editable.blur()
     }
   })
 
@@ -447,17 +438,59 @@ export function bindProductLibraryAdmin(helpers) {
       preview.src = field.value.trim()
       preview.hidden = !field.value.trim()
     }
+    if (field.dataset.productField === 'name') {
+      const crumb = composeView.querySelector('.hpi-hero__crumb')
+      if (crumb) {
+        const parts = crumb.innerHTML.split(' / ')
+        if (parts.length) {
+          parts[parts.length - 1] = esc(field.value || '未命名产品')
+          crumb.innerHTML = parts.join(' / ')
+        }
+      }
+      const title = composeView.querySelector('.admin-news-compose__bar strong')
+      if (title) title.textContent = `可视化编辑 · ${field.value || '未命名产品'}`
+    }
   })
 
   composeView.addEventListener('change', async (event) => {
+    const visualFile = event.target.closest('[data-product-visual-file]')
+    if (visualFile) {
+      const file = visualFile.files?.[0]
+      const path = visualFile.dataset.targetPath
+      if (!file || !path) return
+      visualFile.disabled = true
+      try {
+        const url = await uploadImageFile(file)
+        const canvas = composeView.querySelector('[data-product-visual]')
+        const target = canvas?.querySelector(`[data-edit-image="${CSS.escape(path)}"]`) || canvas?.querySelector(`[data-edit-image="${path}"]`)
+        if (target) {
+          const img = target.querySelector('img')
+          if (img) img.src = url
+          target.dataset.editImageUrl = url
+        }
+        if (path.includes('backgroundImage')) {
+          const hero = canvas?.querySelector('.hpi-hero')
+          if (hero) hero.style.setProperty('--hpi-hero-image', `url('${url}')`)
+          const bgBtn = canvas?.querySelector('[data-edit-image="story.hero.backgroundImage"]')
+          if (bgBtn) bgBtn.dataset.editImageUrl = url
+        }
+        ctx.toast('图片已上传')
+      } catch (error) {
+        ctx.toast(error.message, true)
+      } finally {
+        visualFile.disabled = false
+        visualFile.value = ''
+        delete visualFile.dataset.targetPath
+      }
+      return
+    }
+
     const upload = event.target.closest('[data-product-upload-for]')
     const file = upload?.files?.[0]
     if (!upload || !file) return
     upload.disabled = true
     try {
-      const formData = new FormData()
-      formData.append('image', file)
-      const { url } = await ctx.api('/pages/media/image', { method: 'POST', body: formData })
+      const url = await uploadImageFile(file)
       const field = composeView.querySelector(`[data-product-field="${upload.dataset.productUploadFor}"]`)
       if (field) {
         field.value = url
