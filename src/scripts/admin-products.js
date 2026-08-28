@@ -174,7 +174,7 @@ function renderProductCompose(item) {
   body.innerHTML = `
     <div class="admin-vedit">
       ${renderBasicsBar(item)}
-      <div class="admin-vedit-hint">下方即详情页预览：点文字直接改，点图片可更换，点跳转链接会弹出设置。改完点右上角「发布上线」。</div>
+      <div class="admin-vedit-hint">下方即详情页预览：点文字直接改；点图片可填链接或上传本地；点跳转链接弹出设置。改完点右上角「发布上线」。</div>
       <div class="admin-vedit-canvas" data-product-visual>
         ${renderProductStory(product, story, line, { editable: true })}
       </div>
@@ -216,8 +216,37 @@ function renderProductCompose(item) {
           </footer>
         </div>
       </div>
+      <div class="admin-link-modal" data-image-modal hidden>
+        <div class="admin-link-modal__backdrop" data-image-modal-close></div>
+        <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="admin-image-modal-title">
+          <header>
+            <h3 id="admin-image-modal-title">更换图片</h3>
+            <button type="button" data-image-modal-close aria-label="关闭">×</button>
+          </header>
+          <div class="admin-link-modal__body">
+            <div class="admin-image-modal__preview">
+              <img data-image-modal-preview src="" alt="" hidden />
+              <span data-image-modal-empty>暂无预览</span>
+            </div>
+            <label class="admin-news-field is-wide">
+              <span>图片链接</span>
+              <input type="text" data-image-modal-url placeholder="/images/... 或 https://..." />
+            </label>
+            <div class="admin-image-modal__or">或</div>
+            <label class="admin-image-modal__upload">
+              上传本地图片
+              <input type="file" accept="image/jpeg,image/png,image/webp" data-image-modal-file />
+            </label>
+            <p class="admin-form-section__hint" style="margin:0">商品详情页里的设备图、场景图、背景图都可用此方式更换。</p>
+          </div>
+          <footer>
+            <button type="button" data-image-modal-close>取消</button>
+            <button type="button" class="admin-link-modal__ok" data-image-modal-save>确定</button>
+          </footer>
+        </div>
+      </div>
     </div>`
-}
+}}
 
 function setNested(target, path, value) {
   const keys = path.split('.')
@@ -460,6 +489,89 @@ function saveLinkModal(composeView) {
   ctx.toast(type === 'anchor' ? '已设为页内锚点' : '已设为跳转链接')
 }
 
+function currentImageUrl(imageEl) {
+  if (!imageEl) return ''
+  if (imageEl.dataset.editImageUrl) return imageEl.dataset.editImageUrl
+  const img = imageEl.querySelector('img')
+  if (img?.getAttribute('src')) return img.getAttribute('src')
+  if (imageEl.dataset.editImage?.includes('backgroundImage')) {
+    const hero = imageEl.closest('.hpi-hero') || document.querySelector('.admin-vedit-canvas .hpi-hero')
+    const match = String(hero?.style.getPropertyValue('--hpi-hero-image') || '').match(/url\(['"]?(.*?)['"]?\)/)
+    if (match?.[1]) return match[1]
+  }
+  return ''
+}
+
+function setImageModalPreview(modal, url) {
+  const preview = modal.querySelector('[data-image-modal-preview]')
+  const empty = modal.querySelector('[data-image-modal-empty]')
+  if (!preview) return
+  if (url) {
+    preview.src = url
+    preview.hidden = false
+    if (empty) empty.hidden = true
+  } else {
+    preview.removeAttribute('src')
+    preview.hidden = true
+    if (empty) empty.hidden = false
+  }
+}
+
+function applyVisualImage(composeView, path, url) {
+  if (!path || !url) return
+  const canvas = composeView.querySelector('[data-product-visual]')
+  const target =
+    canvas?.querySelector(`[data-edit-image="${CSS.escape(path)}"]`) ||
+    canvas?.querySelector(`[data-edit-image="${path}"]`)
+  if (target) {
+    const img = target.querySelector('img')
+    if (img) img.src = url
+    target.dataset.editImageUrl = url
+  }
+  if (path.includes('backgroundImage')) {
+    const hero = canvas?.querySelector('.hpi-hero')
+    if (hero) hero.style.setProperty('--hpi-hero-image', `url('${url}')`)
+    const bgBtn = canvas?.querySelector('[data-edit-image="story.hero.backgroundImage"]')
+    if (bgBtn) bgBtn.dataset.editImageUrl = url
+  }
+}
+
+function openImageModal(composeView, imageEl) {
+  const modal = composeView.querySelector('[data-image-modal]')
+  if (!modal || !imageEl) return
+  modal.hidden = false
+  modal._targetImage = imageEl
+  modal._targetPath = imageEl.dataset.editImage || ''
+  const url = currentImageUrl(imageEl)
+  const urlInput = modal.querySelector('[data-image-modal-url]')
+  if (urlInput) urlInput.value = url
+  setImageModalPreview(modal, url)
+  urlInput?.focus()
+}
+
+function closeImageModal(composeView) {
+  const modal = composeView.querySelector('[data-image-modal]')
+  if (!modal) return
+  modal.hidden = true
+  modal._targetImage = null
+  modal._targetPath = ''
+  const fileInput = modal.querySelector('[data-image-modal-file]')
+  if (fileInput) fileInput.value = ''
+}
+
+function saveImageModal(composeView) {
+  const modal = composeView.querySelector('[data-image-modal]')
+  if (!modal?._targetPath) return
+  const url = modal.querySelector('[data-image-modal-url]')?.value.trim() || ''
+  if (!url) {
+    ctx.toast('请填写图片链接，或先上传本地图片', true)
+    return
+  }
+  applyVisualImage(composeView, modal._targetPath, url)
+  closeImageModal(composeView)
+  ctx.toast('图片已更新')
+}
+
 export function bindProductLibraryAdmin(helpers) {
   ctx = { ...ctx, ...helpers }
   const listView = document.querySelector('[data-products-list-view]')
@@ -503,6 +615,16 @@ export function bindProductLibraryAdmin(helpers) {
     if (event.target.closest('[data-link-modal-save]')) {
       event.preventDefault()
       saveLinkModal(composeView)
+      return
+    }
+    if (event.target.closest('[data-image-modal-close]')) {
+      event.preventDefault()
+      closeImageModal(composeView)
+      return
+    }
+    if (event.target.closest('[data-image-modal-save]')) {
+      event.preventDefault()
+      saveImageModal(composeView)
       return
     }
     if (event.target.closest('[data-products-compose-back]')) {
@@ -549,10 +671,7 @@ export function bindProductLibraryAdmin(helpers) {
     const imageBtn = event.target.closest('[data-edit-image]')
     if (imageBtn) {
       event.preventDefault()
-      const fileInput = composeView.querySelector('[data-product-visual-file]')
-      if (!fileInput) return
-      fileInput.dataset.targetPath = imageBtn.dataset.editImage
-      fileInput.click()
+      openImageModal(composeView, imageBtn)
       return
     }
 
@@ -567,9 +686,15 @@ export function bindProductLibraryAdmin(helpers) {
   })
 
   composeView.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && composeView.querySelector('[data-link-modal]:not([hidden])')) {
-      closeLinkModal(composeView)
-      return
+    if (event.key === 'Escape') {
+      if (composeView.querySelector('[data-image-modal]:not([hidden])')) {
+        closeImageModal(composeView)
+        return
+      }
+      if (composeView.querySelector('[data-link-modal]:not([hidden])')) {
+        closeLinkModal(composeView)
+        return
+      }
     }
     const editable = event.target.closest('[data-edit-path]')
     if (!editable) return
@@ -580,6 +705,12 @@ export function bindProductLibraryAdmin(helpers) {
   })
 
   composeView.addEventListener('input', (event) => {
+    const imageUrl = event.target.closest('[data-image-modal-url]')
+    if (imageUrl) {
+      const modal = composeView.querySelector('[data-image-modal]')
+      if (modal) setImageModalPreview(modal, imageUrl.value.trim())
+      return
+    }
     const field = event.target.closest('[data-product-field]')
     if (!field) return
     const preview = composeView.querySelector(`[data-product-preview-for="${field.dataset.productField}"]`)
@@ -604,6 +735,28 @@ export function bindProductLibraryAdmin(helpers) {
   composeView.addEventListener('change', async (event) => {
     if (event.target.closest('[data-link-type]')) return
 
+    const modalFile = event.target.closest('[data-image-modal-file]')
+    if (modalFile) {
+      const file = modalFile.files?.[0]
+      const modal = composeView.querySelector('[data-image-modal]')
+      if (!file || !modal?._targetPath) return
+      modalFile.disabled = true
+      try {
+        const url = await uploadImageFile(file)
+        const urlInput = modal.querySelector('[data-image-modal-url]')
+        if (urlInput) urlInput.value = url
+        setImageModalPreview(modal, url)
+        applyVisualImage(composeView, modal._targetPath, url)
+        ctx.toast('图片已上传，可点确定关闭，或继续改链接')
+      } catch (error) {
+        ctx.toast(error.message, true)
+      } finally {
+        modalFile.disabled = false
+        modalFile.value = ''
+      }
+      return
+    }
+
     const visualFile = event.target.closest('[data-product-visual-file]')
     if (visualFile) {
       const file = visualFile.files?.[0]
@@ -612,19 +765,7 @@ export function bindProductLibraryAdmin(helpers) {
       visualFile.disabled = true
       try {
         const url = await uploadImageFile(file)
-        const canvas = composeView.querySelector('[data-product-visual]')
-        const target = canvas?.querySelector(`[data-edit-image="${CSS.escape(path)}"]`) || canvas?.querySelector(`[data-edit-image="${path}"]`)
-        if (target) {
-          const img = target.querySelector('img')
-          if (img) img.src = url
-          target.dataset.editImageUrl = url
-        }
-        if (path.includes('backgroundImage')) {
-          const hero = canvas?.querySelector('.hpi-hero')
-          if (hero) hero.style.setProperty('--hpi-hero-image', `url('${url}')`)
-          const bgBtn = canvas?.querySelector('[data-edit-image="story.hero.backgroundImage"]')
-          if (bgBtn) bgBtn.dataset.editImageUrl = url
-        }
+        applyVisualImage(composeView, path, url)
         ctx.toast('图片已上传')
       } catch (error) {
         ctx.toast(error.message, true)
