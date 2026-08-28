@@ -128,10 +128,10 @@ function previewProduct(item) {
 function renderBasicsBar(item) {
   const linked = new Set(item.linkedHardwareIds || [])
   return `
-    <details class="admin-vedit-basics" open>
+    <details class="admin-vedit-basics">
       <summary>
         <strong>基础设置</strong>
-        <span>名称、标识、分类、封面与列表字段（页面上看不见的配置）</span>
+        <span>名称、标识、分类、封面与列表字段（需要时再展开）</span>
       </summary>
       <div class="admin-vedit-basics__body">
         <input type="hidden" data-product-field="id" value="${esc(item.id || '')}" />
