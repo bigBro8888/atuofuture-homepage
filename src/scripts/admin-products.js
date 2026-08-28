@@ -246,7 +246,7 @@ function renderProductCompose(item) {
         </div>
       </div>
     </div>`
-}}
+}
 
 function setNested(target, path, value) {
   const keys = path.split('.')
