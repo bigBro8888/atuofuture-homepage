@@ -8,7 +8,7 @@ function esc(str = '') {
     .replace(/"/g, '&quot;')
 }
 
-function textNode(path, value, { editable = false, tag = 'span', className = '', multiline = false } = {}) {
+function textNode(path, value, { editable = false, tag = 'span', className = '', multiline = false, placeholder = '' } = {}) {
   const safe = esc(value || '')
   if (!editable) {
     if (tag === 'span' && !className) return safe
@@ -19,11 +19,13 @@ function textNode(path, value, { editable = false, tag = 'span', className = '',
     `data-edit-path="${esc(path)}"`,
     `spellcheck="false"`,
     multiline ? `data-edit-multiline="true"` : '',
+    placeholder ? `data-placeholder="${esc(placeholder)}"` : '',
     className ? `class="${className}"` : '',
   ]
     .filter(Boolean)
     .join(' ')
-  return `<${tag} ${attrs}>${safe || '&nbsp;'}</${tag}>`
+  const body = safe || (placeholder ? '' : '&nbsp;')
+  return `<${tag} ${attrs}>${body}</${tag}>`
 }
 
 function imgNode(path, src, { editable = false, width, height, alt = '', loading = '' } = {}) {
@@ -187,8 +189,30 @@ export function renderProductCases(story, { editable = false } = {}) {
                 })}
               </figure>
               <div class="hpi-cases__copy">
-                ${textNode(`story.cases.items.${index}.title`, item.title || '', { editable, tag: 'h3', className: 'hpi-cases__name' })}
-                ${textNode(`story.cases.items.${index}.desc`, item.desc || '', { editable, tag: 'p', className: 'hpi-cases__desc', multiline: true })}
+                ${
+                  editable
+                    ? `<div class="hpi-cases__field">
+                  <span class="hpi-cases__field-label">案例标题</span>
+                  ${textNode(`story.cases.items.${index}.title`, item.title || '', {
+                    editable,
+                    tag: 'h3',
+                    className: 'hpi-cases__name',
+                    placeholder: '填写案例标题',
+                  })}
+                </div>
+                <div class="hpi-cases__field">
+                  <span class="hpi-cases__field-label">案例介绍</span>
+                  ${textNode(`story.cases.items.${index}.desc`, item.desc || '', {
+                    editable,
+                    tag: 'p',
+                    className: 'hpi-cases__desc',
+                    multiline: true,
+                    placeholder: '填写案例介绍',
+                  })}
+                </div>`
+                    : `${textNode(`story.cases.items.${index}.title`, item.title || '', { editable, tag: 'h3', className: 'hpi-cases__name' })}
+                ${textNode(`story.cases.items.${index}.desc`, item.desc || '', { editable, tag: 'p', className: 'hpi-cases__desc', multiline: true })}`
+                }
               </div>
             </article>`)
             .join('')}

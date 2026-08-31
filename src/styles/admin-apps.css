@@ -889,6 +889,35 @@ body.admin-modal-open { overflow: hidden; }
   outline: 2px solid #2c7cff;
   background: rgba(44, 124, 255, 0.12);
 }
+.hpi--editable [contenteditable="true"][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  font-weight: 400;
+  pointer-events: none;
+}
+.hpi--editable .hpi-cases__name,
+.hpi--editable .hpi-cases__desc {
+  min-height: 2.2em;
+  padding: 10px 12px;
+  border: 1px dashed #c9d5e6;
+  border-radius: 8px;
+  background: #f8fafc;
+  outline: none;
+  box-sizing: border-box;
+}
+.hpi--editable .hpi-cases__desc {
+  min-height: 5.2em;
+}
+.hpi--editable .hpi-cases__name:hover,
+.hpi--editable .hpi-cases__desc:hover {
+  border-color: rgba(44, 124, 255, 0.55);
+  background: rgba(44, 124, 255, 0.06);
+}
+.hpi--editable .hpi-cases__name:focus,
+.hpi--editable .hpi-cases__desc:focus {
+  border-color: #2c7cff;
+  background: rgba(44, 124, 255, 0.1);
+}
 .hpi-edit-img {
   position: relative;
   display: block;

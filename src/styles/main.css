@@ -16986,9 +16986,21 @@ button.hpi-hero__link {
 }
 .hpi-cases__copy {
   max-width: none;
+  display: grid;
+  gap: 10px;
+}
+.hpi-cases__field {
+  display: grid;
+  gap: 6px;
+}
+.hpi-cases__field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8b95a8;
+  letter-spacing: .02em;
 }
 .hpi-cases__name {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: clamp(18px, 1.4vw, 22px);
   line-height: 1.35;
   color: #081A38;
