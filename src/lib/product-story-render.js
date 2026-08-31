@@ -101,8 +101,8 @@ export function renderProductValue(story, { editable = false } = {}) {
       <div class="hwc-shell hpi-value__shell">
         ${imgNode('story.value.diagramImage', diagram, {
           editable,
-          width: 1440,
-          height: 810,
+          width: 1760,
+          height: 900,
           alt: value.title || '功能架构图',
           loading: 'lazy',
         })}

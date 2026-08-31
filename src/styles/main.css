@@ -16764,7 +16764,14 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 }
 
 /* ========== Hardware product intro (enterprise narrative) ========== */
-.hpi { background: #fff; color: #081A38; }
+.hpi {
+  background: #fff;
+  color: #081A38;
+  /* 对齐西门子一类企业站：宽内容轨 + 窄边距，避免两侧大空白 */
+  --hpi-col: min(1680px, calc(100% - 40px));
+  --hpi-col-wide: min(1760px, calc(100% - 32px));
+}
+.hpi .hwc-shell { width: var(--hpi-col); }
 .hpi-pad { padding: 110px 0 64px; }
 .hpi-crumb, .hpi-hero__crumb { margin: 0 0 18px; font-size: 13px; color: rgba(255,255,255,.72); }
 .hpi-hero__crumb a { color: rgba(255,255,255,.72); text-decoration: none; }
@@ -16786,19 +16793,19 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 }
 .hpi-hero__grid {
   position: relative; z-index: 1;
-  display: grid; grid-template-columns: 1.05fr .95fr; gap: 32px;
-  align-items: center; padding: 120px 0 72px; width: min(1440px, calc(100% - 64px));
+  display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px;
+  align-items: center; padding: 120px 0 72px; width: var(--hpi-col);
 }
 .hpi-hero__copy h1 {
-  margin: 0 0 18px; max-width: 10em;
+  margin: 0 0 18px; max-width: 12em;
   font-size: clamp(40px, 5vw, 64px); line-height: 1.12; letter-spacing: -.03em; color: #fff;
 }
 .hpi-hero__headline {
-  margin: 0 0 16px; max-width: 18em;
+  margin: 0 0 16px; max-width: 22em;
   font-size: clamp(20px, 2.2vw, 28px); font-weight: 600; line-height: 1.45; color: #fff;
 }
 .hpi-hero__desc {
-  margin: 0 0 28px; max-width: 28em;
+  margin: 0 0 28px; max-width: 36em;
   font-size: 16px; line-height: 1.75; color: rgba(255,255,255,.82);
 }
 .hpi-hero__link {
@@ -16820,21 +16827,26 @@ button.hpi-hero__link {
   display: flex; justify-content: flex-end; align-items: center;
 }
 .hpi-hero__device img {
-  width: min(100%, 480px); height: auto;
+  width: min(100%, 580px); height: auto;
   filter: drop-shadow(0 28px 48px rgba(0,0,0,.35));
 }
 
-.hpi-value { padding: 72px 0 64px; background: #fff; }
+.hpi-value { padding: 56px 0 48px; background: #fff; }
+.hpi-value .hwc-shell,
+.hpi-value__shell {
+  width: var(--hpi-col-wide);
+}
 .hpi-value__shell {
   display: grid;
-  justify-items: center;
+  justify-items: stretch;
 }
 .hpi-value__shell > img,
 .hpi-value__shell > .hpi-edit-img {
   display: block;
-  width: min(100%, 1200px);
+  width: 100%;
+  max-width: none;
   height: auto;
-  margin: 0 auto;
+  margin: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -16846,8 +16858,8 @@ button.hpi-hero__link {
   height: auto;
 }
 .hpi-value__shell > .hpi-edit-img--empty {
-  width: min(100%, 1200px);
-  min-height: 320px;
+  width: 100%;
+  min-height: 360px;
   border: 1px dashed #c9d5e6;
   border-radius: 12px;
   background: #f4f7fb;
@@ -16962,7 +16974,7 @@ button.hpi-hero__link {
   font-size: clamp(26px, 3vw, 36px); color: #081A38;
 }
 .hpi-system__stack {
-  max-width: 920px; margin: 0 auto; display: grid; gap: 14px;
+  max-width: none; margin: 0; display: grid; gap: 16px;
 }
 .hpi-system__layer {
   border: 1px solid #E4E9F0; background: #F8FAFC; padding: 22px 24px;
@@ -16974,7 +16986,7 @@ button.hpi-hero__link {
 }
 .hpi-system__layer--mid img,
 .hpi-system__layer--mid .hpi-edit-img {
-  width: min(560px, 92%);
+  width: min(720px, 70%);
   max-width: 100%;
   height: auto;
 }
@@ -17013,7 +17025,7 @@ button.hpi-hero__link {
     url('/images/solutions/cta.jpg') center / cover no-repeat;
   opacity: .9;
 }
-.hpi-close__inner { position: relative; z-index: 1; max-width: 720px; }
+.hpi-close__inner { position: relative; z-index: 1; max-width: 880px; }
 .hpi-close__inner h2 {
   margin: 0 0 16px; font-size: clamp(28px, 3.2vw, 40px); color: #fff;
 }
@@ -17043,7 +17055,11 @@ button.hpi-hero__link {
 }
 @media (max-width: 720px) {
   .hpi-hero { min-height: 0; }
-  .hpi-hero__grid { padding: 100px 0 48px; width: min(1440px, calc(100% - 32px)); }
+  .hpi-hero__grid { padding: 100px 0 48px; width: min(1680px, calc(100% - 24px)); }
+  .hpi {
+    --hpi-col: min(1680px, calc(100% - 24px));
+    --hpi-col-wide: min(1760px, calc(100% - 16px));
+  }
   .hpi-hero__copy h1 { font-size: 34px; }
   .hpi-how__stages { grid-template-columns: 1fr; }
   .hpi-value, .hpi-scenes, .hpi-system, .hpi-close { padding-top: 72px; padding-bottom: 64px; }

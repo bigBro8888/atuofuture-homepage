@@ -4,7 +4,7 @@ import { renderProductStory } from '../lib/product-story-render.js'
 const IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'story.hero.backgroundImage', label: '首屏背景图', size: '1920×1080', tip: '横向全宽背景，建议 JPG/WebP' },
   { test: (path) => path === 'story.hero.deviceImage', label: '首屏设备图', size: '800×640', tip: '右侧产品主图，透明底 PNG 更佳' },
-  { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '功能架构图', size: '1440×810', tip: '整段单图，含标题与说明文字一并设计进图内' },
+  { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '功能架构图', size: '1760×900', tip: '整段单图铺满内容宽，标题与说明设计进图内' },
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
   { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '应用场景大图', size: '1200×700', tip: '场景氛围图，横向构图' },
   { test: (path) => /story\.scenarios\.items\.\d+\.deviceImage/.test(path), label: '应用场景设备图', size: '640×480', tip: '场景旁设备图' },
