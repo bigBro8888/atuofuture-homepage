@@ -1,7 +1,5 @@
 /** 企业级产品介绍页叙事数据（非商城详情） */
 
-import { HARDWARE_PRODUCTS } from './hardware-catalog.js'
-
 /** 各产品在业务系统中的角色定位 */
 export const PRODUCT_ROLES = {
   'control-screen': {
