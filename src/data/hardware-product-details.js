@@ -136,24 +136,39 @@ const CONTROL_SCREEN_STORY = {
         subtitle: '一键进入会议模式',
         desc: '自动联动灯光、空调、窗帘、大屏与音视频设备，支持会前准备、会中控制和会后复位，让会议空间随会议流程自动切换。',
         sceneImage: '/images/agents/meeting.jpg',
+        logoImage: '',
         icon: 'groups',
-        tags: ['一键会议', '设备联动', '会后复位'],
+        tags: [
+          { label: '一键会议', icon: 'touch_app', logoImage: '' },
+          { label: '设备联动', icon: 'link', logoImage: '' },
+          { label: '会后复位', icon: 'restart_alt', logoImage: '' },
+        ],
       },
       {
         title: '办公空间',
         subtitle: '公共空间统一控制',
         desc: '集中管理照明、空调、新风、窗帘及公共设备，结合时段、环境与空间使用状态自动调节，让办公区域保持舒适、高效运行。',
         sceneImage: '/images/agents/space.jpg',
+        logoImage: '',
         icon: 'apartment',
-        tags: ['环境调节', '公共设备', '自动运行'],
+        tags: [
+          { label: '环境调节', icon: 'eco', logoImage: '' },
+          { label: '公共设备', icon: 'deployed_code', logoImage: '' },
+          { label: '自动运行', icon: 'monitoring', logoImage: '' },
+        ],
       },
       {
         title: '展厅与接待空间',
         subtitle: '场景化接待与展示联动',
         desc: '联动欢迎大屏、灯光、音响和展项内容，可快速切换欢迎、讲解、参观等模式，让展示内容与空间氛围同步变化。',
         sceneImage: '/images/agents/exhibition.jpg',
+        logoImage: '',
         icon: 'diamond',
-        tags: ['欢迎模式', '场景切换', '内容联动'],
+        tags: [
+          { label: '欢迎模式', icon: 'login', logoImage: '' },
+          { label: '场景切换', icon: 'play_circle', logoImage: '' },
+          { label: '内容联动', icon: 'desktop_windows', logoImage: '' },
+        ],
       },
     ],
   },
@@ -251,20 +266,92 @@ export function buildProductStory(product) {
         const title = typeof s === 'string' ? s : s.title
         const defaults = isSpace
           ? [
-              { subtitle: '一键进入会议模式', tags: ['一键会议', '设备联动', '会后复位'], icon: 'groups' },
-              { subtitle: '公共空间统一控制', tags: ['环境调节', '公共设备', '自动运行'], icon: 'apartment' },
-              { subtitle: '场景化接待与展示联动', tags: ['欢迎模式', '场景切换', '内容联动'], icon: 'diamond' },
+              {
+                subtitle: '一键进入会议模式',
+                icon: 'groups',
+                tags: [
+                  { label: '一键会议', icon: 'touch_app', logoImage: '' },
+                  { label: '设备联动', icon: 'link', logoImage: '' },
+                  { label: '会后复位', icon: 'restart_alt', logoImage: '' },
+                ],
+              },
+              {
+                subtitle: '公共空间统一控制',
+                icon: 'apartment',
+                tags: [
+                  { label: '环境调节', icon: 'eco', logoImage: '' },
+                  { label: '公共设备', icon: 'deployed_code', logoImage: '' },
+                  { label: '自动运行', icon: 'monitoring', logoImage: '' },
+                ],
+              },
+              {
+                subtitle: '场景化接待与展示联动',
+                icon: 'diamond',
+                tags: [
+                  { label: '欢迎模式', icon: 'login', logoImage: '' },
+                  { label: '场景切换', icon: 'play_circle', logoImage: '' },
+                  { label: '内容联动', icon: 'desktop_windows', logoImage: '' },
+                ],
+              },
             ]
           : isRetail
             ? [
-                { subtitle: '内容下发与终端刷新', tags: ['改价更新', '门店陈列', '状态回传'], icon: 'storefront' },
-                { subtitle: '多店统一运营', tags: ['统一管理', '批量更新', '可视化'], icon: 'apartment' },
-                { subtitle: '资产与价签协同', tags: ['资产盘点', '价签联动', '可追踪'], icon: 'inventory_2' },
+                {
+                  subtitle: '内容下发与终端刷新',
+                  icon: 'storefront',
+                  tags: [
+                    { label: '改价更新', icon: 'sync', logoImage: '' },
+                    { label: '门店陈列', icon: 'store', logoImage: '' },
+                    { label: '状态回传', icon: 'cloud_done', logoImage: '' },
+                  ],
+                },
+                {
+                  subtitle: '多店统一运营',
+                  icon: 'apartment',
+                  tags: [
+                    { label: '统一管理', icon: 'hub', logoImage: '' },
+                    { label: '批量更新', icon: 'dynamic_feed', logoImage: '' },
+                    { label: '可视化', icon: 'monitoring', logoImage: '' },
+                  ],
+                },
+                {
+                  subtitle: '资产与价签协同',
+                  icon: 'inventory_2',
+                  tags: [
+                    { label: '资产盘点', icon: 'inventory', logoImage: '' },
+                    { label: '价签联动', icon: 'sell', logoImage: '' },
+                    { label: '可追踪', icon: 'timeline', logoImage: '' },
+                  ],
+                },
               ]
             : [
-                { subtitle: '内容呈现与交互', tags: ['内容展示', '现场交互', '氛围联动'], icon: 'desktop_windows' },
-                { subtitle: '空间陈列更新', tags: ['快速更换', '统一入口', '状态同步'], icon: 'view_quilt' },
-                { subtitle: '品牌体验触点', tags: ['品牌呈现', '接待联动', '可扩展'], icon: 'diamond' },
+                {
+                  subtitle: '内容呈现与交互',
+                  icon: 'desktop_windows',
+                  tags: [
+                    { label: '内容展示', icon: 'slideshow', logoImage: '' },
+                    { label: '现场交互', icon: 'touch_app', logoImage: '' },
+                    { label: '氛围联动', icon: 'blur_on', logoImage: '' },
+                  ],
+                },
+                {
+                  subtitle: '空间陈列更新',
+                  icon: 'view_quilt',
+                  tags: [
+                    { label: '快速更换', icon: 'sync', logoImage: '' },
+                    { label: '统一入口', icon: 'login', logoImage: '' },
+                    { label: '状态同步', icon: 'cloud_sync', logoImage: '' },
+                  ],
+                },
+                {
+                  subtitle: '品牌体验触点',
+                  icon: 'diamond',
+                  tags: [
+                    { label: '品牌呈现', icon: 'branding_watermark', logoImage: '' },
+                    { label: '接待联动', icon: 'diversity_3', logoImage: '' },
+                    { label: '可扩展', icon: 'extension', logoImage: '' },
+                  ],
+                },
               ]
         const preset = defaults[i] || defaults[0]
         return {
@@ -277,6 +364,7 @@ export function buildProductStory(product) {
               : i === 1
                 ? '/images/agents/space.jpg'
                 : '/images/solutions/campus.jpg',
+          logoImage: '',
           icon: preset.icon,
           tags: preset.tags,
         }

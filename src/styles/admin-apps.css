@@ -942,33 +942,33 @@ body.admin-modal-open { overflow: hidden; }
 .hpi--editable .hpi-scenes__name,
 .hpi--editable .hpi-scenes__subtitle,
 .hpi--editable .hpi-scenes__desc,
-.hpi--editable .hpi-scenes__tag {
-  min-height: 1.8em;
-  padding: 8px 10px;
+.hpi--editable .hpi-scenes__tag-label {
+  min-height: 1.6em;
+  padding: 6px 8px;
   border: 1px dashed #c9d5e6;
   border-radius: 8px;
   background: #f8fafc;
   outline: none;
   box-sizing: border-box;
 }
-.hpi--editable .hpi-scenes__desc { min-height: 4.8em; }
-.hpi--editable .hpi-scenes__tag {
-  min-width: 88px;
-  justify-content: flex-start;
-}
+.hpi--editable .hpi-scenes__desc { min-height: 4.2em; }
 .hpi--editable .hpi-scenes__name:hover,
 .hpi--editable .hpi-scenes__subtitle:hover,
 .hpi--editable .hpi-scenes__desc:hover,
-.hpi--editable .hpi-scenes__tag:hover {
+.hpi--editable .hpi-scenes__tag-label:hover {
   border-color: rgba(44, 124, 255, 0.55);
   background: rgba(44, 124, 255, 0.06);
 }
 .hpi--editable .hpi-scenes__name:focus,
 .hpi--editable .hpi-scenes__subtitle:focus,
 .hpi--editable .hpi-scenes__desc:focus,
-.hpi--editable .hpi-scenes__tag:focus {
+.hpi--editable .hpi-scenes__tag-label:focus {
   border-color: #2c7cff;
   background: rgba(44, 124, 255, 0.1);
+}
+.hpi--editable .hpi-scenes__logo .hpi-edit-img:hover .hpi-edit-img__tip,
+.hpi--editable .hpi-scenes__logo .hpi-edit-img__tip.is-visible {
+  opacity: 1;
 }
 .hpi-edit-img__tip {
   position: absolute;

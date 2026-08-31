@@ -6,7 +6,9 @@ const IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'story.hero.deviceImage', label: '首屏设备图', size: '800×640', tip: '右侧产品主图，透明底 PNG 更佳' },
   { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '功能架构图', size: '1760×900', tip: '整段单图铺满内容宽，标题与说明设计进图内' },
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
-  { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '场景介绍配图', size: '800×560', tip: '卡片左侧场景图，横向构图' },
+  { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '场景介绍配图', size: '480×640', tip: '卡片左侧竖向场景图' },
+  { test: (path) => /story\.scenarios\.items\.\d+\.logoImage/.test(path), label: '场景主图标', size: '128×128', tip: '标题前圆形小 logo，透明底 PNG 更佳' },
+  { test: (path) => /story\.scenarios\.items\.\d+\.tags\.\d+\.logoImage/.test(path), label: '能力标签图标', size: '64×64', tip: '底部标签左侧小图标' },
   { test: (path) => /story\.cases\.items\.\d+\.image/.test(path), label: '实际案例图', size: '560×360', tip: '三列卡片顶图，横向构图' },
   { test: (path) => path === 'coverImage', label: '列表封面图', size: '1200×900', tip: '商品列表与封面用图' },
 ]
@@ -88,7 +90,14 @@ function emptyProduct() {
       hero: { title: '', headline: '', description: '', ctaLabel: '查看它如何工作', ctaHref: '#hpi-how', backgroundImage: '', deviceImage: '' },
       value: { diagramImage: '' },
       howItWorks: { title: '', stages: [{}, {}, {}, {}] },
-      scenarios: { title: '场景介绍', items: [{ tags: ['', '', ''] }, { tags: ['', '', ''] }, { tags: ['', '', ''] }] },
+      scenarios: {
+        title: '场景介绍',
+        items: [
+          { tags: [{}, {}, {}] },
+          { tags: [{}, {}, {}] },
+          { tags: [{}, {}, {}] },
+        ],
+      },
       cases: { title: '实际案例', items: [{}, {}, {}] },
       closing: { title: '', desc: '', primaryLabel: '预约方案演示', softLinks: [{ label: '查看技术资料' }, { label: '获取产品文档' }] },
     },
@@ -375,13 +384,20 @@ function collectProductFromCompose() {
     ensureArray(item.story.scenarios, 'items', 3)
     item.story.scenarios.items = (item.story.scenarios.items || []).map((scene) => {
       const next = scene && typeof scene === 'object' ? { ...scene } : {}
-      const rawTags = next.tags
-      if (rawTags && typeof rawTags === 'object' && !Array.isArray(rawTags)) {
-        next.tags = Array.from({ length: 3 }, (_, i) => String(rawTags[i] ?? rawTags[String(i)] ?? '').trim())
-      } else {
-        const tags = Array.isArray(rawTags) ? rawTags : []
-        next.tags = Array.from({ length: 3 }, (_, i) => String(tags[i] || '').trim())
-      }
+      ensureArray(next, 'tags', 3)
+      next.tags = (next.tags || []).map((tag) => {
+        if (typeof tag === 'string') return { label: tag, icon: '', logoImage: '' }
+        if (tag && typeof tag === 'object') {
+          return {
+            label: String(tag.label || '').trim(),
+            icon: String(tag.icon || '').trim(),
+            logoImage: String(tag.logoImage || '').trim(),
+          }
+        }
+        return { label: '', icon: '', logoImage: '' }
+      })
+      while (next.tags.length < 3) next.tags.push({ label: '', icon: '', logoImage: '' })
+      next.tags = next.tags.slice(0, 3)
       return next
     })
   }
