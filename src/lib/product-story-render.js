@@ -37,13 +37,6 @@ function imgNode(path, src, { editable = false, width, height, alt = '', loading
   return `<button type="button" class="hpi-edit-img" data-edit-image="${esc(path)}" data-edit-image-url="${esc(url)}" title="点击更换图片">${img}<span class="hpi-edit-img__tip">更换图片</span></button>`
 }
 
-function chipList(path, items, { editable = false, empty = 3 } = {}) {
-  const list = Array.isArray(items) && items.length ? items : Array.from({ length: empty }, () => '')
-  return list
-    .map((item, index) => textNode(`${path}.${index}`, item, { editable, tag: 'span' }))
-    .join('')
-}
-
 /** 可配置跳转/锚点的链接（可视化编辑时点开弹窗） */
 function linkNode({ className = '', href = '', label = '', labelPath, hrefPath, editable = false, arrow = true } = {}) {
   const safeHref = esc(href || '#')
@@ -169,43 +162,37 @@ export function renderProductScenarios(story, { editable = false } = {}) {
     </section>`
 }
 
-export function renderProductSystem(story, { editable = false } = {}) {
-  const sys = story.system
-  if (!sys && !editable) return ''
-  const system = sys || {}
+export function renderProductCases(story, { editable = false } = {}) {
+  const block = story.cases
+  if (!block && !editable) return ''
+  const cases = block || {}
+  const items = [...(cases.items || []), {}, {}, {}].slice(0, 3)
+  const hasContent = items.some((item) => item.image || item.title || item.desc)
+  if (!hasContent && !editable) return ''
   return `
-    <section class="hpi-system" id="hpi-system">
+    <section class="hpi-cases" id="hpi-cases">
       <div class="hwc-shell">
-        ${textNode('story.system.title', system.title || '', { editable, tag: 'h2', className: 'hpi-system__title' })}
-        <div class="hpi-system__stack">
-          <div class="hpi-system__layer hpi-system__layer--upper">
-            ${textNode('story.system.upperLabel', system.upperLabel || '', { editable, tag: 'p', className: 'hpi-system__label' })}
-            <div class="hpi-system__chips">
-              ${chipList('story.system.upperItems', system.upperItems, { editable, empty: Math.max(3, (system.upperItems || []).length || 3) })}
-            </div>
-          </div>
-          <div class="hpi-system__layer hpi-system__layer--mid">
-            ${textNode('story.system.middleLabel', system.middleLabel || '', { editable, tag: 'p', className: 'hpi-system__label' })}
-            ${imgNode('story.system.middleImage', system.middleImage, { editable, width: 280, height: 200 })}
-          </div>
-          <div class="hpi-system__layer hpi-system__layer--lower">
-            <div class="hpi-system__chips">
-              ${chipList('story.system.lowerItems', system.lowerItems, { editable, empty: Math.max(3, (system.lowerItems || []).length || 3) })}
-            </div>
-          </div>
+        ${textNode('story.cases.title', cases.title || (editable ? '实际案例' : ''), { editable, tag: 'h2', className: 'hpi-cases__title' })}
+        <div class="hpi-cases__list">
+          ${items
+            .map((item, index) => `
+            <article class="hpi-cases__item">
+              <div class="hpi-cases__copy">
+                ${textNode(`story.cases.items.${index}.title`, item.title || '', { editable, tag: 'h3', className: 'hpi-cases__name' })}
+                ${textNode(`story.cases.items.${index}.desc`, item.desc || '', { editable, tag: 'p', className: 'hpi-cases__desc', multiline: true })}
+              </div>
+              <figure class="hpi-cases__media">
+                ${imgNode(`story.cases.items.${index}.image`, item.image, {
+                  editable,
+                  width: 1680,
+                  height: 900,
+                  alt: item.title || '实际案例',
+                  loading: 'lazy',
+                })}
+              </figure>
+            </article>`)
+            .join('')}
         </div>
-        ${
-          system.aspaceHref || editable
-            ? `<p class="hpi-system__link">${linkNode({
-                className: '',
-                href: system.aspaceHref || '/solutions/',
-                label: system.aspaceLabel || '了解 ASpace 总体解决方案',
-                labelPath: 'story.system.aspaceLabel',
-                hrefPath: 'story.system.aspaceHref',
-                editable,
-              })}</p>`
-            : ''
-        }
       </div>
     </section>`
 }
@@ -243,7 +230,7 @@ export function renderProductStory(product, story, line, { editable = false } = 
       ${renderProductValue(resolved, opts)}
       ${renderProductHow(resolved, opts)}
       ${renderProductScenarios(resolved, opts)}
-      ${renderProductSystem(resolved, opts)}
+      ${renderProductCases(resolved, opts)}
       ${renderProductClosing(resolved, opts)}
     </article>`
 }

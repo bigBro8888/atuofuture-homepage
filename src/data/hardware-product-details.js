@@ -1,6 +1,6 @@
 /** 企业级产品介绍页叙事数据（非商城详情） */
 
-import { ASPACE_SOLUTION_HREF } from './hardware-catalog.js'
+import { HARDWARE_PRODUCTS } from './hardware-catalog.js'
 
 /** 各产品在业务系统中的角色定位 */
 export const PRODUCT_ROLES = {
@@ -153,15 +153,25 @@ const CONTROL_SCREEN_STORY = {
       },
     ],
   },
-  system: {
-    title: '不是单点设备，而是空间智能系统的一部分',
-    upperLabel: '空间智能体与业务应用',
-    upperItems: ['会议管理', '工位服务', '能耗管理', '设备运维', '空间预约', '物业管理'],
-    middleLabel: '中控屏 · 空间交互与执行入口',
-    middleImage: '/images/hardware/control-screen.jpg',
-    lowerItems: ['传感器', '照明', '空调', '窗帘', '音视频', '第三方设备'],
-    aspaceHref: ASPACE_SOLUTION_HREF,
-    aspaceLabel: '了解 ASpace 总体解决方案',
+  cases: {
+    title: '实际案例',
+    items: [
+      {
+        title: '会议空间落地',
+        desc: '中控屏将会议预约、场景模式与现场设备联动打通，会前一键就绪，会后自动复位，减少人工巡场与反复调试。',
+        image: '/images/agents/meeting.jpg',
+      },
+      {
+        title: '开放办公协同',
+        desc: '照明、空调与公共设备按区域策略运行，员工通过统一入口发起需求，空间按需响应并回传状态。',
+        image: '/images/agents/space.jpg',
+      },
+      {
+        title: '楼宇公区运营',
+        desc: '连接公区设备与运营系统，形成可追踪的执行闭环，支撑物业巡检、能耗管理与第三方设备接入。',
+        image: '/images/solutions/building.jpg',
+      },
+    ],
   },
   closing: {
     title: '让中控屏进入你的真实项目场景',
@@ -245,23 +255,37 @@ export function buildProductStory(product) {
         deviceImage: product.coverImage,
       })),
     },
-    system: {
-      title: '不是单点设备，而是业务系统的一部分',
-      upperLabel: isSpace ? '空间智能体与业务应用' : isRetail ? '运营与管理应用' : '内容与体验应用',
-      upperItems: isSpace
-        ? ['会议管理', '能耗管理', '设备运维', '空间预约']
-        : isRetail
-          ? ['改价运营', '门店管理', '资产盘点', '内容发布']
-          : ['内容生成', '个性化展示', '空间陈列'],
-      middleLabel: `${product.name} · ${role.role}`,
-      middleImage: product.coverImage,
-      lowerItems: isSpace
-        ? ['传感器', '照明', '空调', '网关', '第三方设备']
-        : isRetail
-          ? ['价签', '网关', '门店系统', '平台']
-          : ['终端', '内容源', '空间场景'],
-      aspaceHref: isSpace ? ASPACE_SOLUTION_HREF : '',
-      aspaceLabel: isSpace ? '了解 ASpace 总体解决方案' : '',
+    cases: {
+      title: '实际案例',
+      items: [
+        {
+          title: isRetail ? '门店改价与陈列' : isSpace ? '会议与办公落地' : '展示与体验落地',
+          desc: isRetail
+            ? `${product.name}接入门店运营流程，支持内容下发、终端刷新与状态回传，缩短改价与陈列更新周期。`
+            : isSpace
+              ? `${product.name}作为现场交互入口，把业务意图落到设备执行，形成可追踪的空间任务闭环。`
+              : `${product.name}承载内容呈现与现场交互，支撑展陈、接待与品牌体验场景。`,
+          image: isRetail
+            ? '/images/solutions/commercial.jpg'
+            : isSpace
+              ? '/images/agents/meeting.jpg'
+              : '/images/agents/exhibition.jpg',
+        },
+        {
+          title: isRetail ? '多店统一运营' : isSpace ? '开放办公协同' : '空间陈列更新',
+          desc: '以统一入口管理现场设备与任务状态，减少跨系统切换，让执行结果可回看、可复盘。',
+          image: isRetail ? product.coverImage : isSpace ? '/images/agents/space.jpg' : product.coverImage,
+        },
+        {
+          title: isRetail ? '资产与价签协同' : isSpace ? '楼宇公区运营' : '品牌体验触点',
+          desc: '面向真实项目条件接入第三方系统与设备，形成可持续扩展的落地能力。',
+          image: isRetail
+            ? '/images/solutions/hero.jpg'
+            : isSpace
+              ? '/images/solutions/building.jpg'
+              : '/images/solutions/campus.jpg',
+        },
+      ],
     },
     closing: {
       title: `让${product.name}进入你的真实项目场景`,

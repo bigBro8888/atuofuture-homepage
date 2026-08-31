@@ -945,7 +945,7 @@ body.admin-modal-open { overflow: hidden; }
 .hpi-value .hpi-edit-img--empty,
 .hpi-how .hpi-edit-img--empty,
 .hpi-scenes .hpi-edit-img--empty,
-.hpi-system .hpi-edit-img--empty {
+.hpi-cases .hpi-edit-img--empty {
   border-color: #c9d5e6;
   background: #f4f7fb;
   color: #5a6a82;
@@ -993,21 +993,6 @@ button.hpi-edit-link.hpi-hero__link {
 .admin-vedit-canvas .hpi-hero__link:hover {
   color: #00CFC3 !important;
 }
-.hpi-system__link .hpi-edit-link,
-.hpi-system__link button.hpi-edit-link {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 6px;
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-  color: #00CFC3 !important;
-  font-size: inherit;
-  font-weight: 600 !important;
-  text-decoration: none !important;
-  cursor: pointer;
-  box-shadow: none !important;
-}
 .hpi--editable .hpi-edit-link {
   outline: 1px dashed transparent;
   border-radius: 4px;
@@ -1015,9 +1000,6 @@ button.hpi-edit-link.hpi-hero__link {
 .hpi--editable .hpi-hero__link.hpi-edit-link:hover {
   outline-color: rgba(0, 207, 195, 0.85);
   background: rgba(0, 207, 195, 0.12) !important;
-}
-.hpi--editable .hpi-system__link .hpi-edit-link:hover {
-  outline-color: rgba(0, 207, 195, 0.85);
 }
 
 .admin-link-modal {

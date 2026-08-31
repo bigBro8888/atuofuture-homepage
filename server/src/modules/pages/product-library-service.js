@@ -93,15 +93,13 @@ function emptyStory(product = {}) {
         { title: '', desc: '', sceneImage: '', deviceImage: cover },
       ],
     },
-    system: {
-      title: '',
-      upperLabel: '',
-      upperItems: [],
-      middleLabel: '',
-      middleImage: cover,
-      lowerItems: [],
-      aspaceHref: '',
-      aspaceLabel: '',
+    cases: {
+      title: '实际案例',
+      items: [
+        { title: '', desc: '', image: '' },
+        { title: '', desc: '', image: '' },
+        { title: '', desc: '', image: '' },
+      ],
     },
     closing: {
       title: '',
@@ -138,6 +136,14 @@ function cleanScene(value = {}, fallback = {}) {
   }
 }
 
+function cleanCase(value = {}, fallback = {}) {
+  return {
+    title: cleanText(value.title, fallback.title || '', 80),
+    desc: cleanText(value.desc, fallback.desc || '', 400),
+    image: cleanUrl(value.image, fallback.image || ''),
+  }
+}
+
 function cleanStory(value = {}, fallback = {}) {
   const heroIn = value.hero || {}
   const heroFb = fallback.hero || {}
@@ -147,14 +153,16 @@ function cleanStory(value = {}, fallback = {}) {
   const howFb = fallback.howItWorks || {}
   const scenesIn = value.scenarios || {}
   const scenesFb = fallback.scenarios || {}
-  const sysIn = value.system || {}
-  const sysFb = fallback.system || {}
+  const casesIn = value.cases || {}
+  const casesFb = fallback.cases || {}
   const closeIn = value.closing || {}
   const closeFb = fallback.closing || {}
   const stages = padList(howIn.stages, 4, () => ({ title: '', caption: '', image: '' }))
     .map((stage, index) => cleanStage(stage, howFb.stages?.[index] || {}))
   const scenes = padList(scenesIn.items, 3, () => ({ title: '', desc: '', sceneImage: '', deviceImage: '' }))
     .map((item, index) => cleanScene(item, scenesFb.items?.[index] || {}))
+  const cases = padList(casesIn.items, 3, () => ({ title: '', desc: '', image: '' }))
+    .map((item, index) => cleanCase(item, casesFb.items?.[index] || {}))
   const softLinks = padList(closeIn.softLinks, 2, () => ({ label: '', action: 'demo' }))
     .map((link, index) => ({
       label: cleanText(link.label, closeFb.softLinks?.[index]?.label || '', 40),
@@ -185,15 +193,9 @@ function cleanStory(value = {}, fallback = {}) {
       title: cleanText(scenesIn.title, scenesFb.title || '', 80),
       items: scenes,
     },
-    system: {
-      title: cleanText(sysIn.title, sysFb.title || '', 80),
-      upperLabel: cleanText(sysIn.upperLabel, sysFb.upperLabel || '', 40),
-      upperItems: cleanLines(sysIn.upperItems ?? sysFb.upperItems, 8, 24),
-      middleLabel: cleanText(sysIn.middleLabel, sysFb.middleLabel || '', 80),
-      middleImage: cleanUrl(sysIn.middleImage, sysFb.middleImage || ''),
-      lowerItems: cleanLines(sysIn.lowerItems ?? sysFb.lowerItems, 8, 24),
-      aspaceHref: cleanHref(sysIn.aspaceHref, sysFb.aspaceHref || ''),
-      aspaceLabel: cleanText(sysIn.aspaceLabel, sysFb.aspaceLabel || '', 40),
+    cases: {
+      title: cleanText(casesIn.title, casesFb.title || '实际案例', 80),
+      items: cases,
     },
     closing: {
       title: cleanText(closeIn.title, closeFb.title || '', 80),

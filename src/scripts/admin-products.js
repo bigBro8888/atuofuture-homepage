@@ -8,7 +8,7 @@ const IMAGE_SIZE_GUIDE = [
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
   { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '应用场景大图', size: '1200×700', tip: '场景氛围图，横向构图' },
   { test: (path) => /story\.scenarios\.items\.\d+\.deviceImage/.test(path), label: '应用场景设备图', size: '640×480', tip: '场景旁设备图' },
-  { test: (path) => path === 'story.system.middleImage', label: '系统位置中层图', size: '560×400', tip: '系统架构中间层配图' },
+  { test: (path) => /story\.cases\.items\.\d+\.image/.test(path), label: '实际案例图', size: '1680×900', tip: '横向实景大图，文案在图上方' },
   { test: (path) => path === 'coverImage', label: '列表封面图', size: '1200×900', tip: '商品列表与封面用图' },
 ]
 
@@ -90,7 +90,7 @@ function emptyProduct() {
       value: { diagramImage: '' },
       howItWorks: { title: '', stages: [{}, {}, {}, {}] },
       scenarios: { title: '', items: [{}, {}, {}] },
-      system: { title: '', upperLabel: '', upperItems: [], middleLabel: '', middleImage: '', lowerItems: [], aspaceHref: '/solutions/', aspaceLabel: '了解 ASpace 总体解决方案' },
+      cases: { title: '实际案例', items: [{}, {}, {}] },
       closing: { title: '', desc: '', primaryLabel: '预约方案演示', softLinks: [{ label: '查看技术资料' }, { label: '获取产品文档' }] },
     },
   }
@@ -217,7 +217,7 @@ function renderProductCompose(item) {
                 <option value="#hpi-value">功能架构图</option>
                 <option value="#hpi-how">如何工作</option>
                 <option value="#hpi-scenes">应用场景</option>
-                <option value="#hpi-system">系统位置</option>
+                <option value="#hpi-cases">实际案例</option>
                 <option value="#hpi-close">收尾预约</option>
               </select>
             </label>
@@ -370,10 +370,7 @@ function collectProductFromCompose() {
       ''
     item.story.value = { diagramImage: diagram }
   }
-  if (item.story?.system) {
-    packIndexed(item.story.system, 'upperItems')
-    packIndexed(item.story.system, 'lowerItems')
-  }
+  if (item.story?.cases) ensureArray(item.story.cases, 'items', 3)
   if (item.story?.howItWorks) ensureArray(item.story.howItWorks, 'stages', 4)
   if (item.story?.scenarios) ensureArray(item.story.scenarios, 'items', 3)
   if (item.story?.closing) ensureArray(item.story.closing, 'softLinks', 2)
@@ -442,7 +439,7 @@ async function uploadImageFile(file) {
   return url
 }
 
-const ANCHOR_IDS = new Set(['#hpi-value', '#hpi-how', '#hpi-scenes', '#hpi-system', '#hpi-close'])
+const ANCHOR_IDS = new Set(['#hpi-value', '#hpi-how', '#hpi-scenes', '#hpi-cases', '#hpi-close'])
 
 function isAnchorHref(href) {
   const value = String(href || '').trim()
