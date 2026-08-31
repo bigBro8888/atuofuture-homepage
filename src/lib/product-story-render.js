@@ -228,8 +228,8 @@ export function renderProductScenarios(story, { editable = false } = {}) {
               <div class="hpi-scenes__media">
                 ${imgNode(`story.scenarios.items.${index}.sceneImage`, item.sceneImage, {
                   editable,
-                  width: 480,
-                  height: 640,
+                  width: 860,
+                  height: 560,
                   alt: item.title || '',
                   loading: 'lazy',
                 })}

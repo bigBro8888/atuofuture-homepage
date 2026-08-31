@@ -6,7 +6,7 @@ const IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'story.hero.deviceImage', label: '首屏设备图', size: '800×640', tip: '右侧产品主图，透明底 PNG 更佳' },
   { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '功能架构图', size: '1760×900', tip: '整段单图铺满内容宽，标题与说明设计进图内' },
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
-  { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '场景介绍配图', size: '480×640', tip: '卡片左侧竖向场景图' },
+  { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '场景介绍配图', size: '860×560', tip: '卡片左侧大图，约占一半宽度' },
   { test: (path) => /story\.scenarios\.items\.\d+\.logoImage/.test(path), label: '场景主图标', size: '128×128', tip: '标题前圆形小 logo，透明底 PNG 更佳' },
   { test: (path) => /story\.scenarios\.items\.\d+\.tags\.\d+\.logoImage/.test(path), label: '能力标签图标', size: '64×64', tip: '底部标签左侧小图标' },
   { test: (path) => /story\.cases\.items\.\d+\.image/.test(path), label: '实际案例图', size: '560×360', tip: '三列卡片顶图，横向构图' },

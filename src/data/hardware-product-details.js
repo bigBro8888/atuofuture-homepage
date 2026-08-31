@@ -134,7 +134,7 @@ const CONTROL_SCREEN_STORY = {
       {
         title: '会议空间',
         subtitle: '一键进入会议模式',
-        desc: '自动联动灯光、空调、窗帘、大屏与音视频设备，支持会前准备、会中控制和会后复位，让会议空间随会议流程自动切换。',
+        desc: '会前自动准备环境与设备，一键进入会议、投屏、休息或结束模式，减少会前准备与会后收尾操作。',
         sceneImage: '/images/agents/meeting.jpg',
         logoImage: '',
         icon: 'groups',
@@ -147,7 +147,7 @@ const CONTROL_SCREEN_STORY = {
       {
         title: '办公空间',
         subtitle: '公共空间统一控制',
-        desc: '集中管理照明、空调、新风、窗帘及公共设备，结合时段、环境与空间使用状态自动调节，让办公区域保持舒适、高效运行。',
+        desc: '统一控制区域照明、空调、窗帘与公共设备，并结合时段和占用状态，让空间按需运行。',
         sceneImage: '/images/agents/space.jpg',
         logoImage: '',
         icon: 'apartment',
@@ -160,7 +160,7 @@ const CONTROL_SCREEN_STORY = {
       {
         title: '展厅与接待空间',
         subtitle: '场景化接待与展示联动',
-        desc: '联动欢迎大屏、灯光、音响和展项内容，可快速切换欢迎、讲解、参观等模式，让展示内容与空间氛围同步变化。',
+        desc: '按接待流程切换欢迎、讲解、展示与离场场景，让大屏内容、灯光设备与空间氛围同步变化。',
         sceneImage: '/images/agents/exhibition.jpg',
         logoImage: '',
         icon: 'diamond',
