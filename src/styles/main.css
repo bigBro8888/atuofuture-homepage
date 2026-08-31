@@ -16970,30 +16970,33 @@ button.hpi-hero__link {
 
 .hpi-cases { padding: 90px 0 80px; background: #fff; }
 .hpi-cases__title {
-  margin: 0 0 48px; text-align: left;
+  margin: 0 0 40px; text-align: left;
   font-size: clamp(26px, 3vw, 36px); color: #081A38;
 }
 .hpi-cases__list {
   display: grid;
-  gap: 64px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  align-items: start;
 }
 .hpi-cases__item {
   display: grid;
-  gap: 22px;
+  gap: 16px;
+  min-width: 0;
 }
 .hpi-cases__copy {
-  max-width: 54em;
+  max-width: none;
 }
 .hpi-cases__name {
-  margin: 0 0 12px;
-  font-size: clamp(20px, 2vw, 26px);
+  margin: 0 0 10px;
+  font-size: clamp(18px, 1.4vw, 22px);
   line-height: 1.35;
   color: #081A38;
 }
 .hpi-cases__desc {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.8;
+  font-size: 14px;
+  line-height: 1.75;
   color: #4a5568;
 }
 .hpi-cases__media {
@@ -17016,17 +17019,17 @@ button.hpi-hero__link {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
 }
 .hpi-cases__media > img {
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
 }
 .hpi-cases__media > .hpi-edit-img--empty {
   width: 100%;
-  min-height: 280px;
-  aspect-ratio: 16 / 9;
+  min-height: 180px;
+  aspect-ratio: 16 / 10;
   border: 1px dashed #c9d5e6;
   background: #f4f7fb;
 }
@@ -17065,6 +17068,7 @@ button.hpi-hero__link {
 
 @media (max-width: 1100px) {
   .hpi-hero__grid, .hpi-scenes__row { grid-template-columns: 1fr; }
+  .hpi-cases__list { grid-template-columns: 1fr; gap: 36px; }
   .hpi-how__stages { grid-template-columns: 1fr 1fr; }
   .hpi-how__stages::before { display: none; }
   .hpi-hero__device { justify-content: center; }
@@ -17079,7 +17083,7 @@ button.hpi-hero__link {
   .hpi-hero__copy h1 { font-size: 34px; }
   .hpi-how__stages { grid-template-columns: 1fr; }
   .hpi-value, .hpi-scenes, .hpi-cases, .hpi-close { padding-top: 72px; padding-bottom: 64px; }
-  .hpi-cases__list { gap: 40px; }
+  .hpi-cases__list { gap: 28px; }
   .hpi-scenes__photo { min-height: 240px; }
   .hpi-scenes__row,
   .hpi-scenes__device { min-height: 240px; }

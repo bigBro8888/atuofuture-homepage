@@ -8,7 +8,7 @@ const IMAGE_SIZE_GUIDE = [
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
   { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '应用场景大图', size: '1200×700', tip: '场景氛围图，横向构图' },
   { test: (path) => /story\.scenarios\.items\.\d+\.deviceImage/.test(path), label: '应用场景设备图', size: '640×480', tip: '场景旁设备图' },
-  { test: (path) => /story\.cases\.items\.\d+\.image/.test(path), label: '实际案例图', size: '1680×900', tip: '横向实景大图，文案在图上方' },
+  { test: (path) => /story\.cases\.items\.\d+\.image/.test(path), label: '实际案例图', size: '560×360', tip: '三列卡片顶图，横向构图' },
   { test: (path) => path === 'coverImage', label: '列表封面图', size: '1200×900', tip: '商品列表与封面用图' },
 ]
 

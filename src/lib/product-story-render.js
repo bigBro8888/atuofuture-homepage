@@ -177,19 +177,19 @@ export function renderProductCases(story, { editable = false } = {}) {
           ${items
             .map((item, index) => `
             <article class="hpi-cases__item">
-              <div class="hpi-cases__copy">
-                ${textNode(`story.cases.items.${index}.title`, item.title || '', { editable, tag: 'h3', className: 'hpi-cases__name' })}
-                ${textNode(`story.cases.items.${index}.desc`, item.desc || '', { editable, tag: 'p', className: 'hpi-cases__desc', multiline: true })}
-              </div>
               <figure class="hpi-cases__media">
                 ${imgNode(`story.cases.items.${index}.image`, item.image, {
                   editable,
-                  width: 1680,
-                  height: 900,
+                  width: 560,
+                  height: 360,
                   alt: item.title || '实际案例',
                   loading: 'lazy',
                 })}
               </figure>
+              <div class="hpi-cases__copy">
+                ${textNode(`story.cases.items.${index}.title`, item.title || '', { editable, tag: 'h3', className: 'hpi-cases__name' })}
+                ${textNode(`story.cases.items.${index}.desc`, item.desc || '', { editable, tag: 'p', className: 'hpi-cases__desc', multiline: true })}
+              </div>
             </article>`)
             .join('')}
         </div>
