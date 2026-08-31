@@ -37,13 +37,6 @@ function imgNode(path, src, { editable = false, width, height, alt = '', loading
   return `<button type="button" class="hpi-edit-img" data-edit-image="${esc(path)}" data-edit-image-url="${esc(url)}" title="点击更换图片">${img}<span class="hpi-edit-img__tip">更换图片</span></button>`
 }
 
-function lineList(path, items, { editable = false, tag = 'p', empty = 3 } = {}) {
-  const list = Array.isArray(items) && items.length ? items : Array.from({ length: empty }, () => '')
-  return list
-    .map((item, index) => textNode(`${path}.${index}`, item, { editable, tag }))
-    .join('')
-}
-
 function chipList(path, items, { editable = false, empty = 3 } = {}) {
   const list = Array.isArray(items) && items.length ? items : Array.from({ length: empty }, () => '')
   return list
@@ -101,23 +94,18 @@ export function renderProductValue(story, { editable = false } = {}) {
   const v = story.value
   if (!v && !editable) return ''
   const value = v || {}
+  const diagram = value.diagramImage || value.deviceImage || ''
+  if (!diagram && !editable) return ''
   return `
     <section class="hpi-value" id="hpi-value">
-      <div class="hwc-shell">
-        ${textNode('story.value.title', value.title, { editable, tag: 'h2', className: 'hpi-value__title' })}
-        <div class="hpi-value__map">
-          <div class="hpi-value__side hpi-value__side--left">
-            ${lineList('story.value.left', value.left, { editable, empty: Math.max(3, (value.left || []).length || 3) })}
-          </div>
-          <div class="hpi-value__core">
-            ${imgNode('story.value.deviceImage', value.deviceImage, { editable, width: 360, height: 280 })}
-            <span class="hpi-value__ring" aria-hidden="true"></span>
-          </div>
-          <div class="hpi-value__side hpi-value__side--right">
-            ${lineList('story.value.right', value.right, { editable, empty: Math.max(3, (value.right || []).length || 3) })}
-          </div>
-        </div>
-        ${textNode('story.value.footer', value.footer, { editable, tag: 'p', className: 'hpi-value__footer', multiline: true })}
+      <div class="hwc-shell hpi-value__shell">
+        ${imgNode('story.value.diagramImage', diagram, {
+          editable,
+          width: 1440,
+          height: 810,
+          alt: value.title || '功能架构图',
+          loading: 'lazy',
+        })}
       </div>
     </section>`
 }

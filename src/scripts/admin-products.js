@@ -4,7 +4,7 @@ import { renderProductStory } from '../lib/product-story-render.js'
 const IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'story.hero.backgroundImage', label: '首屏背景图', size: '1920×1080', tip: '横向全宽背景，建议 JPG/WebP' },
   { test: (path) => path === 'story.hero.deviceImage', label: '首屏设备图', size: '800×640', tip: '右侧产品主图，透明底 PNG 更佳' },
-  { test: (path) => path === 'story.value.deviceImage', label: '价值区中心图', size: '640×480', tip: '中间设备图' },
+  { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '功能架构图', size: '1440×810', tip: '整段单图，含标题与说明文字一并设计进图内' },
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
   { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '应用场景大图', size: '1200×700', tip: '场景氛围图，横向构图' },
   { test: (path) => /story\.scenarios\.items\.\d+\.deviceImage/.test(path), label: '应用场景设备图', size: '640×480', tip: '场景旁设备图' },
@@ -87,7 +87,7 @@ function emptyProduct() {
     published: true,
     story: {
       hero: { title: '', headline: '', description: '', ctaLabel: '查看它如何工作', ctaHref: '#hpi-how', backgroundImage: '', deviceImage: '' },
-      value: { title: '', deviceImage: '', left: [], right: [], footer: '' },
+      value: { diagramImage: '' },
       howItWorks: { title: '', stages: [{}, {}, {}, {}] },
       scenarios: { title: '', items: [{}, {}, {}] },
       system: { title: '', upperLabel: '', upperItems: [], middleLabel: '', middleImage: '', lowerItems: [], aspaceHref: '/solutions/', aspaceLabel: '了解 ASpace 总体解决方案' },
@@ -214,7 +214,7 @@ function renderProductCompose(item) {
             <label class="admin-news-field is-wide" data-link-anchor-wrap>
               <span>锚点板块</span>
               <select data-link-anchor>
-                <option value="#hpi-value">价值说明</option>
+                <option value="#hpi-value">功能架构图</option>
                 <option value="#hpi-how">如何工作</option>
                 <option value="#hpi-scenes">应用场景</option>
                 <option value="#hpi-system">系统位置</option>
@@ -363,8 +363,12 @@ function collectProductFromCompose() {
   item.scenarios = splitLines(item.scenarios)
 
   if (item.story?.value) {
-    packIndexed(item.story.value, 'left')
-    packIndexed(item.story.value, 'right')
+    // 旧字段迁到单图：保存时只保留 diagramImage
+    const diagram =
+      item.story.value.diagramImage ||
+      item.story.value.deviceImage ||
+      ''
+    item.story.value = { diagramImage: diagram }
   }
   if (item.story?.system) {
     packIndexed(item.story.system, 'upperItems')

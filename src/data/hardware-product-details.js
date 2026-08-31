@@ -103,12 +103,7 @@ const CONTROL_SCREEN_STORY = {
     deviceImage: '/images/hardware/control-screen.jpg',
   },
   value: {
-    title: '中控屏的价值，不在于多一块屏，而在于让空间真正形成闭环。',
-    deviceImage: '/images/hardware/control-screen.jpg',
-    left: ['人员与空间服务', '空间智能体'],
-    right: ['照明、空调、窗帘与音视频设备', 'ASpace 管理平台'],
-    footer:
-      '向上连接平台与智能体，向下连接空间设备，最终把一次操作转化为可执行、可反馈、可追踪的空间任务。',
+    diagramImage: '/images/hardware/control-screen.jpg',
   },
   howItWorks: {
     title: '从人的意图，到空间的响应',
@@ -211,19 +206,7 @@ export function buildProductStory(product) {
       deviceImage: product.coverImage,
     },
     value: {
-      title: `${product.name}的价值，在于${role.role}。`,
-      deviceImage: product.coverImage,
-      left: isSpace
-        ? ['人员与空间服务', '空间智能体']
-        : isRetail
-          ? ['门店运营', '内容与改价流程']
-          : ['内容生成', '个性化体验'],
-      right: isSpace
-        ? ['现场设备与执行层', 'ASpace 管理平台']
-        : isRetail
-          ? ['货架与标签设备', '运营管理平台']
-          : ['终端显示', '空间展示场景'],
-      footer: `它在安托未来体系中承担“${role.role}”的角色，把业务意图落到可执行的设备与流程。`,
+      diagramImage: product.coverImage,
     },
     howItWorks: {
       title: isRetail ? '从内容更新，到门店呈现' : isSpace ? '从人的意图，到空间的响应' : '从内容到体验',

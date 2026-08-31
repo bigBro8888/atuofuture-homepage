@@ -74,11 +74,7 @@ function emptyStory(product = {}) {
       deviceImage: cover,
     },
     value: {
-      title: '',
-      deviceImage: cover,
-      left: [],
-      right: [],
-      footer: '',
+      diagramImage: '',
     },
     howItWorks: {
       title: '',
@@ -175,11 +171,11 @@ function cleanStory(value = {}, fallback = {}) {
       deviceImage: cleanUrl(heroIn.deviceImage, heroFb.deviceImage || ''),
     },
     value: {
-      title: cleanText(valueIn.title, valueFb.title || '', 160),
-      deviceImage: cleanUrl(valueIn.deviceImage, valueFb.deviceImage || ''),
-      left: cleanLines(valueIn.left ?? valueFb.left, 6, 40),
-      right: cleanLines(valueIn.right ?? valueFb.right, 6, 40),
-      footer: cleanText(valueIn.footer, valueFb.footer || '', 400),
+      // 兼容旧数据：原 deviceImage / 拼装文案区 → 单张功能架构图
+      diagramImage: cleanUrl(
+        valueIn.diagramImage !== undefined ? valueIn.diagramImage : valueIn.deviceImage,
+        valueFb.diagramImage || valueFb.deviceImage || '',
+      ),
     },
     howItWorks: {
       title: cleanText(howIn.title, howFb.title || '', 80),

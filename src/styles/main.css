@@ -16824,41 +16824,33 @@ button.hpi-hero__link {
   filter: drop-shadow(0 28px 48px rgba(0,0,0,.35));
 }
 
-.hpi-value { padding: 110px 0 90px; background: #fff; }
-.hpi-value__title {
-  margin: 0 auto 56px; max-width: 18em; text-align: center;
-  font-size: clamp(28px, 3.2vw, 40px); line-height: 1.35; letter-spacing: -.02em; color: #081A38;
-  font-family: "Source Han Serif SC", "Noto Serif SC", "Songti SC", Georgia, serif;
+.hpi-value { padding: 72px 0 64px; background: #fff; }
+.hpi-value__shell {
+  display: grid;
+  justify-items: center;
 }
-.hpi-value__map {
-  display: grid; grid-template-columns: 1fr auto 1fr; gap: 28px; align-items: center;
-  max-width: 1100px; margin: 0 auto 36px;
+.hpi-value__shell > img,
+.hpi-value__shell > .hpi-edit-img {
+  display: block;
+  width: min(100%, 1200px);
+  height: auto;
+  margin: 0 auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
 }
-.hpi-value__side { display: grid; gap: 28px; }
-.hpi-value__side p {
-  position: relative; margin: 0; padding: 14px 0;
-  font-size: 16px; font-weight: 600; color: #081A38;
+.hpi-value__shell > .hpi-edit-img img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
-.hpi-value__side--left { text-align: right; }
-.hpi-value__side--left p::after,
-.hpi-value__side--right p::before {
-  content: ''; position: absolute; top: 50%; width: 48px; height: 1px; background: #FF5A1F;
-}
-.hpi-value__side--left p::after { right: -40px; }
-.hpi-value__side--right p::before { left: -40px; }
-.hpi-value__core {
-  position: relative; width: min(360px, 42vw);
-  display: grid; place-items: center;
-}
-.hpi-value__core img { position: relative; z-index: 1; width: 100%; height: auto; }
-.hpi-value__ring {
-  position: absolute; inset: 8% -8%;
-  border: 1px solid rgba(255,90,31,.45); border-radius: 50%;
-  pointer-events: none;
-}
-.hpi-value__footer {
-  margin: 0 auto; max-width: 42em; text-align: center;
-  font-size: 16px; line-height: 1.8; color: #637089;
+.hpi-value__shell > .hpi-edit-img--empty {
+  width: min(100%, 1200px);
+  min-height: 320px;
+  border: 1px dashed #c9d5e6;
+  border-radius: 12px;
+  background: #f4f7fb;
 }
 
 .hpi-how { padding: 88px 0; background: #05082F; color: #fff; }
@@ -17043,9 +17035,7 @@ button.hpi-hero__link {
 .hpi-close__soft span { margin: 0 6px; color: rgba(255,255,255,.35); }
 
 @media (max-width: 1100px) {
-  .hpi-hero__grid, .hpi-value__map, .hpi-scenes__row { grid-template-columns: 1fr; }
-  .hpi-value__side--left, .hpi-value__side--right { text-align: center; }
-  .hpi-value__side--left p::after, .hpi-value__side--right p::before { display: none; }
+  .hpi-hero__grid, .hpi-scenes__row { grid-template-columns: 1fr; }
   .hpi-how__stages { grid-template-columns: 1fr 1fr; }
   .hpi-how__stages::before { display: none; }
   .hpi-hero__device { justify-content: center; }
