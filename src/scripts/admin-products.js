@@ -6,8 +6,7 @@ const IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'story.hero.deviceImage', label: '首屏设备图', size: '800×640', tip: '右侧产品主图，透明底 PNG 更佳' },
   { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '功能架构图', size: '1760×900', tip: '整段单图铺满内容宽，标题与说明设计进图内' },
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
-  { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '应用场景大图', size: '1200×700', tip: '场景氛围图，横向构图' },
-  { test: (path) => /story\.scenarios\.items\.\d+\.deviceImage/.test(path), label: '应用场景设备图', size: '640×480', tip: '场景旁设备图' },
+  { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '场景介绍配图', size: '800×560', tip: '卡片左侧场景图，横向构图' },
   { test: (path) => /story\.cases\.items\.\d+\.image/.test(path), label: '实际案例图', size: '560×360', tip: '三列卡片顶图，横向构图' },
   { test: (path) => path === 'coverImage', label: '列表封面图', size: '1200×900', tip: '商品列表与封面用图' },
 ]
@@ -89,7 +88,7 @@ function emptyProduct() {
       hero: { title: '', headline: '', description: '', ctaLabel: '查看它如何工作', ctaHref: '#hpi-how', backgroundImage: '', deviceImage: '' },
       value: { diagramImage: '' },
       howItWorks: { title: '', stages: [{}, {}, {}, {}] },
-      scenarios: { title: '', items: [{}, {}, {}] },
+      scenarios: { title: '场景介绍', items: [{ tags: ['', '', ''] }, { tags: ['', '', ''] }, { tags: ['', '', ''] }] },
       cases: { title: '实际案例', items: [{}, {}, {}] },
       closing: { title: '', desc: '', primaryLabel: '预约方案演示', softLinks: [{ label: '查看技术资料' }, { label: '获取产品文档' }] },
     },
@@ -216,7 +215,7 @@ function renderProductCompose(item) {
               <select data-link-anchor>
                 <option value="#hpi-value">功能架构图</option>
                 <option value="#hpi-how">如何工作</option>
-                <option value="#hpi-scenes">应用场景</option>
+                <option value="#hpi-scenes">场景介绍</option>
                 <option value="#hpi-cases">实际案例</option>
                 <option value="#hpi-close">收尾预约</option>
               </select>
@@ -372,7 +371,20 @@ function collectProductFromCompose() {
   }
   if (item.story?.cases) ensureArray(item.story.cases, 'items', 3)
   if (item.story?.howItWorks) ensureArray(item.story.howItWorks, 'stages', 4)
-  if (item.story?.scenarios) ensureArray(item.story.scenarios, 'items', 3)
+  if (item.story?.scenarios) {
+    ensureArray(item.story.scenarios, 'items', 3)
+    item.story.scenarios.items = (item.story.scenarios.items || []).map((scene) => {
+      const next = scene && typeof scene === 'object' ? { ...scene } : {}
+      const rawTags = next.tags
+      if (rawTags && typeof rawTags === 'object' && !Array.isArray(rawTags)) {
+        next.tags = Array.from({ length: 3 }, (_, i) => String(rawTags[i] ?? rawTags[String(i)] ?? '').trim())
+      } else {
+        const tags = Array.isArray(rawTags) ? rawTags : []
+        next.tags = Array.from({ length: 3 }, (_, i) => String(tags[i] || '').trim())
+      }
+      return next
+    })
+  }
   if (item.story?.closing) ensureArray(item.story.closing, 'softLinks', 2)
 
   return item

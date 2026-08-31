@@ -129,25 +129,31 @@ const CONTROL_SCREEN_STORY = {
     ],
   },
   scenarios: {
-    title: '一套中控能力，服务不同类型的空间',
+    title: '一套中控能力，适配多种空间',
     items: [
       {
         title: '会议空间',
-        desc: '从会前准备到会后关闭，让设备与会议流程同步。',
+        subtitle: '一键进入会议模式',
+        desc: '自动联动灯光、空调、窗帘、大屏与音视频设备，支持会前准备、会中控制和会后复位，让会议空间随会议流程自动切换。',
         sceneImage: '/images/agents/meeting.jpg',
-        deviceImage: '/images/hardware/control-screen.jpg',
+        icon: 'groups',
+        tags: ['一键会议', '设备联动', '会后复位'],
       },
       {
         title: '办公空间',
-        desc: '统一管理照明、空调与公共设备，让空间按需运行。',
+        subtitle: '公共空间统一控制',
+        desc: '集中管理照明、空调、新风、窗帘及公共设备，结合时段、环境与空间使用状态自动调节，让办公区域保持舒适、高效运行。',
         sceneImage: '/images/agents/space.jpg',
-        deviceImage: '/images/hardware/control-screen.jpg',
+        icon: 'apartment',
+        tags: ['环境调节', '公共设备', '自动运行'],
       },
       {
-        title: '楼宇公区',
-        desc: '连接公共区域设备与运营系统，形成统一管理入口。',
-        sceneImage: '/images/solutions/building.jpg',
-        deviceImage: '/images/hardware/control-screen.jpg',
+        title: '展厅与接待空间',
+        subtitle: '场景化接待与展示联动',
+        desc: '联动欢迎大屏、灯光、音响和展项内容，可快速切换欢迎、讲解、参观等模式，让展示内容与空间氛围同步变化。',
+        sceneImage: '/images/agents/exhibition.jpg',
+        icon: 'diamond',
+        tags: ['欢迎模式', '场景切换', '内容联动'],
       },
     ],
   },
@@ -240,18 +246,41 @@ export function buildProductStory(product) {
             ],
     },
     scenarios: {
-      title: `一套能力，服务${product.name}所面向的场景`,
-      items: (product.scenarios || []).slice(0, 3).map((s, i) => ({
-        title: typeof s === 'string' ? s : s.title,
-        desc: typeof s === 'string' ? role.headline : s.desc || role.headline,
-        sceneImage:
-          i === 0
-            ? '/images/solutions/building.jpg'
-            : i === 1
-              ? '/images/agents/space.jpg'
-              : '/images/solutions/campus.jpg',
-        deviceImage: product.coverImage,
-      })),
+      title: isRetail ? '一套能力，适配多种门店场景' : isSpace ? '一套中控能力，适配多种空间' : '一套能力，适配多种展示场景',
+      items: (product.scenarios || []).slice(0, 3).map((s, i) => {
+        const title = typeof s === 'string' ? s : s.title
+        const defaults = isSpace
+          ? [
+              { subtitle: '一键进入会议模式', tags: ['一键会议', '设备联动', '会后复位'], icon: 'groups' },
+              { subtitle: '公共空间统一控制', tags: ['环境调节', '公共设备', '自动运行'], icon: 'apartment' },
+              { subtitle: '场景化接待与展示联动', tags: ['欢迎模式', '场景切换', '内容联动'], icon: 'diamond' },
+            ]
+          : isRetail
+            ? [
+                { subtitle: '内容下发与终端刷新', tags: ['改价更新', '门店陈列', '状态回传'], icon: 'storefront' },
+                { subtitle: '多店统一运营', tags: ['统一管理', '批量更新', '可视化'], icon: 'apartment' },
+                { subtitle: '资产与价签协同', tags: ['资产盘点', '价签联动', '可追踪'], icon: 'inventory_2' },
+              ]
+            : [
+                { subtitle: '内容呈现与交互', tags: ['内容展示', '现场交互', '氛围联动'], icon: 'desktop_windows' },
+                { subtitle: '空间陈列更新', tags: ['快速更换', '统一入口', '状态同步'], icon: 'view_quilt' },
+                { subtitle: '品牌体验触点', tags: ['品牌呈现', '接待联动', '可扩展'], icon: 'diamond' },
+              ]
+        const preset = defaults[i] || defaults[0]
+        return {
+          title,
+          subtitle: preset.subtitle,
+          desc: typeof s === 'string' ? role.headline : s.desc || role.headline,
+          sceneImage:
+            i === 0
+              ? '/images/solutions/building.jpg'
+              : i === 1
+                ? '/images/agents/space.jpg'
+                : '/images/solutions/campus.jpg',
+          icon: preset.icon,
+          tags: preset.tags,
+        }
+      }),
     },
     cases: {
       title: '实际案例',

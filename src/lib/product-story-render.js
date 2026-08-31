@@ -137,27 +137,104 @@ export function renderProductScenarios(story, { editable = false } = {}) {
   const block = story.scenarios
   if (!block?.items?.length && !editable) return ''
   const items = [...(block?.items || []), {}, {}, {}].slice(0, 3)
+  const defaultIcons = ['groups', 'apartment', 'diamond']
   return `
     <section class="hpi-scenes" id="hpi-scenes">
       <div class="hwc-shell">
-        ${textNode('story.scenarios.title', block?.title || '', { editable, tag: 'h2', className: 'hpi-scenes__title' })}
+        ${textNode('story.scenarios.title', block?.title || (editable ? '场景介绍' : ''), {
+          editable,
+          tag: 'h2',
+          className: 'hpi-scenes__title',
+          placeholder: '场景区标题',
+        })}
         <div class="hpi-scenes__list">
           ${items
-            .map(
-              (item, index) => `
-            <article class="hpi-scenes__row">
-              <div class="hpi-scenes__photo">
-                ${imgNode(`story.scenarios.items.${index}.sceneImage`, item.sceneImage, { editable, width: 720, height: 420, alt: item.title || '', loading: 'lazy' })}
-                <div class="hpi-scenes__copy">
-                  ${textNode(`story.scenarios.items.${index}.title`, item.title || '', { editable, tag: 'h3' })}
-                  ${textNode(`story.scenarios.items.${index}.desc`, item.desc || '', { editable, tag: 'p', multiline: true })}
-                </div>
+            .map((item, index) => {
+              const tags = [...(item.tags || []), '', '', ''].slice(0, 3)
+              const icon = item.icon || defaultIcons[index] || 'category'
+              const tagNodes = tags
+                .map((tag, ti) => {
+                  if (!editable && !tag) return ''
+                  return `<li>${textNode(`story.scenarios.items.${index}.tags.${ti}`, tag || '', {
+                    editable,
+                    tag: 'span',
+                    className: 'hpi-scenes__tag',
+                    placeholder: '能力标签',
+                  })}</li>`
+                })
+                .join('')
+              return `
+            <article class="hpi-scenes__card">
+              <div class="hpi-scenes__media">
+                ${imgNode(`story.scenarios.items.${index}.sceneImage`, item.sceneImage, {
+                  editable,
+                  width: 800,
+                  height: 560,
+                  alt: item.title || '',
+                  loading: 'lazy',
+                })}
               </div>
-              <div class="hpi-scenes__device">
-                ${imgNode(`story.scenarios.items.${index}.deviceImage`, item.deviceImage, { editable, width: 320, height: 240, loading: 'lazy' })}
+              <div class="hpi-scenes__body">
+                <div class="hpi-scenes__icon" aria-hidden="true">
+                  <span class="material-symbols-outlined">${esc(icon)}</span>
+                </div>
+                ${
+                  editable
+                    ? `<div class="hpi-scenes__fields">
+                  <div class="hpi-scenes__field">
+                    <span class="hpi-scenes__field-label">场景标题</span>
+                    ${textNode(`story.scenarios.items.${index}.title`, item.title || '', {
+                      editable,
+                      tag: 'h3',
+                      className: 'hpi-scenes__name',
+                      placeholder: '填写场景标题',
+                    })}
+                  </div>
+                  <div class="hpi-scenes__field">
+                    <span class="hpi-scenes__field-label">副标题</span>
+                    ${textNode(`story.scenarios.items.${index}.subtitle`, item.subtitle || '', {
+                      editable,
+                      tag: 'p',
+                      className: 'hpi-scenes__subtitle',
+                      placeholder: '填写副标题',
+                    })}
+                  </div>
+                  <div class="hpi-scenes__field">
+                    <span class="hpi-scenes__field-label">场景介绍</span>
+                    ${textNode(`story.scenarios.items.${index}.desc`, item.desc || '', {
+                      editable,
+                      tag: 'p',
+                      className: 'hpi-scenes__desc',
+                      multiline: true,
+                      placeholder: '填写场景介绍',
+                    })}
+                  </div>
+                  <div class="hpi-scenes__field">
+                    <span class="hpi-scenes__field-label">能力标签（3个）</span>
+                    <ul class="hpi-scenes__tags">${tagNodes}</ul>
+                  </div>
+                </div>`
+                    : `${textNode(`story.scenarios.items.${index}.title`, item.title || '', {
+                        editable,
+                        tag: 'h3',
+                        className: 'hpi-scenes__name',
+                      })}
+                ${textNode(`story.scenarios.items.${index}.subtitle`, item.subtitle || '', {
+                  editable,
+                  tag: 'p',
+                  className: 'hpi-scenes__subtitle',
+                })}
+                ${textNode(`story.scenarios.items.${index}.desc`, item.desc || '', {
+                  editable,
+                  tag: 'p',
+                  className: 'hpi-scenes__desc',
+                  multiline: true,
+                })}
+                ${tagNodes ? `<ul class="hpi-scenes__tags">${tagNodes}</ul>` : ''}`
+                }
               </div>
             </article>`
-            )
+            })
             .join('')}
         </div>
       </div>
