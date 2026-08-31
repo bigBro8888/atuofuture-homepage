@@ -899,6 +899,27 @@ body.admin-modal-open { overflow: hidden; }
   cursor: pointer;
 }
 .hpi-edit-img img { display: block; width: 100%; height: auto; }
+.admin-vedit-canvas .hpi-scenes__photo > .hpi-edit-img {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+.admin-vedit-canvas .hpi-scenes__photo > .hpi-edit-img img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+.admin-vedit-canvas .hpi-scenes__device .hpi-edit-img {
+  width: min(100%, 340px) !important;
+  height: auto !important;
+  position: relative !important;
+}
+.admin-vedit-canvas .hpi-scenes__device .hpi-edit-img img {
+  width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
 .hpi-edit-img__tip {
   position: absolute;
   left: 50%;
