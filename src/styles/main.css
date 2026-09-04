@@ -17197,7 +17197,8 @@ button.hpi-hero__link {
 @media (max-width: 1100px) {
   .hpi-hero__grid { grid-template-columns: 1fr; }
   .hpi-scenes__card { grid-template-columns: 1fr; }
-  .hpi-scenes__media { min-height: 200px; aspect-ratio: 16 / 9; }
+  .hpi-scenes__media { min-height: 220px; aspect-ratio: 16 / 10; }
+  .hpi-scenes__list { gap: 24px; }
   .hpi-cases__list { grid-template-columns: 1fr; gap: 36px; }
   .hpi-how__stages { grid-template-columns: 1fr 1fr; }
   .hpi-how__stages::before { display: none; }

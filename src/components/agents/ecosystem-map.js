@@ -1,4 +1,4 @@
-import { agentsEcoTitle, agentsList } from '../../lib/cms-pages.js'
+import { AGENTS_OVERVIEW } from '../../data/agents-overview.js'
 
 function esc(str = '') {
   return String(str)
@@ -86,20 +86,19 @@ const VALUE_ITEMS = [
 ]
 
 function getAgent(selectedId) {
-  const list = agentsList()
-  return list.find((a) => a.id === selectedId) || list[0]
+  return AGENTS_OVERVIEW.find((a) => a.id === selectedId) || AGENTS_OVERVIEW[0]
 }
 
 function renderHeader() {
   return `
     <header class="ag-eco__head">
-      <h2>${esc(agentsEcoTitle())}</h2>
+      <h2>空间智能体，让业务目标在真实空间自动落地</h2>
     </header>`
 }
 
 function renderAgentButton(a, selectedId) {
   const on = a.id === selectedId
-  const copy = { title: a.name, desc: a.blurb }
+  const copy = AGENT_COPY[a.id] || { title: a.name, desc: a.blurb }
   return `
     <button
       type="button"
@@ -125,8 +124,8 @@ function renderOrbitSlot(a, selectedId, side, row) {
 }
 
 function renderAgentsOrbit(selectedId) {
-  const left = AGENT_LEFT_IDS.map((id) => agentsList().find((a) => a.id === id)).filter(Boolean)
-  const right = AGENT_RIGHT_IDS.map((id) => agentsList().find((a) => a.id === id)).filter(Boolean)
+  const left = AGENT_LEFT_IDS.map((id) => AGENTS_OVERVIEW.find((a) => a.id === id)).filter(Boolean)
+  const right = AGENT_RIGHT_IDS.map((id) => AGENTS_OVERVIEW.find((a) => a.id === id)).filter(Boolean)
   const linkIds = [...left, ...right].map((a) => a.id)
 
   return `
