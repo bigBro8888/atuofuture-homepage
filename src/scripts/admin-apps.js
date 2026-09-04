@@ -692,6 +692,7 @@ function openItemModal({ scope, kind, index, title, html }) {
 function closeItemModal() {
   const modal = document.querySelector('[data-item-modal]')
   modal.hidden = true
+  delete modal.dataset.groupIndex
   document.body.classList.remove('admin-modal-open')
   document.querySelector('[data-item-modal-body]').innerHTML = ''
   const apply = document.querySelector('[data-item-modal-apply]')
@@ -728,6 +729,12 @@ function applyItemModal() {
     state.aboutPage.draftContent = content
     closeItemModal()
     renderAboutEditor(content)
+    return
+  }
+  if (modal.dataset.scope === 'hardware-nav') {
+    const content = collectSimpleContent()
+    closeItemModal()
+    refreshHardwareNavEditor(content)
     return
   }
   if (modal.dataset.scope === 'news') {
@@ -1250,13 +1257,35 @@ function renderSpaceMatrixEditor(spaceMatrixRows = [], items = []) {
         </div>`
 }
 
+function hardwareNavThumb(product, items = []) {
+  const item = items.find((row) => row.id === product.id) || {}
+  return product.imageUrl || item.imageUrl || (product.id ? `/images/hardware/thumb-${product.id}.png` : '')
+}
+
+function hardwareNavName(product, items = []) {
+  const item = items.find((row) => row.id === product.id) || {}
+  return product.label || item.title || product.id || '未命名'
+}
+
+function hardwareNavProductFields(groupIndex, productIndex, product, items = []) {
+  const prefix = `navGroups.${groupIndex}.products.${productIndex}`
+  const name = hardwareNavName(product, items)
+  const image = hardwareNavThumb(product, items)
+  const href = product.href || (product.id ? `/hardware/product/?id=${encodeURIComponent(product.id)}` : '/hardware/product/')
+  return `
+    ${homeField(`${prefix}.id`, '产品 ID', product.id || '', { help: '对应商品库 id，如 control-screen' })}
+    ${homeField(`${prefix}.label`, '显示名', name)}
+    ${homeField(`${prefix}.href`, '指向链接', href, { wide: true })}
+    ${homeField(`${prefix}.imageUrl`, '缩略图', image, { image: true, wide: true, size: '240×240' })}`
+}
+
 function renderHardwareNavEditor(navGroups, items = []) {
   return `
       <fieldset data-simple-section="nav">
         <legend>顶栏下拉菜单</legend>
-        <p class="admin-form-section__hint">只影响全站顶栏「智能硬件」下拉菜单，不在硬件频道首页展示。每项可改显示名、缩略图和跳转链接，保存并发布后官网同步。</p>
+        <p class="admin-form-section__hint">只影响全站顶栏「智能硬件」下拉。先看产品图，点「编辑」再改名称、缩略图和跳转链接；保存并发布后官网同步。</p>
         <div class="admin-nav-groups">${navGroups.map((group, groupIndex) => `
-          <article class="admin-nav-col">
+          <article class="admin-nav-col" data-nav-col="${groupIndex}">
             <header class="admin-nav-col__head">
               <span class="admin-nav-col__icon" aria-hidden="true"><span class="material-symbols-outlined">${escapeHtml(group.icon || 'category')}</span></span>
               <div class="admin-nav-col__meta">
@@ -1267,23 +1296,75 @@ function renderHardwareNavEditor(navGroups, items = []) {
             </header>
             <div class="admin-nav-col__list">
               ${(group.products || []).map((product, productIndex) => {
-                const item = items.find((row) => row.id === product.id) || {}
-                const name = product.label || item.title || product.id
-                const image = product.imageUrl || `/images/hardware/thumb-${product.id}.png`
-                const href = product.href || `/hardware/product/?id=${encodeURIComponent(product.id || '')}`
-                const prefix = `navGroups.${groupIndex}.products.${productIndex}`
+                const name = hardwareNavName(product, items)
+                const image = hardwareNavThumb(product, items)
                 return `
-                <div class="admin-nav-prod" data-nav-prod>
-                  <input type="hidden" data-home-field="${prefix}.id" value="${escapeHtml(product.id || '')}" />
-                  ${homeField(`${prefix}.label`, '显示名', name)}
-                  ${homeField(`${prefix}.href`, '指向链接', href)}
-                  ${homeField(`${prefix}.imageUrl`, '缩略图', image, { image: true, size: '240×240' })}
+                <div class="admin-nav-prod" data-nav-prod data-nav-group="${groupIndex}" data-nav-index="${productIndex}">
+                  ${image
+                    ? `<img class="admin-nav-prod__thumb" src="${escapeHtml(image)}" alt="" />`
+                    : '<span class="admin-nav-prod__thumb is-empty" aria-hidden="true"></span>'}
+                  <strong class="admin-nav-prod__name">${escapeHtml(name)}</strong>
+                  <span class="admin-slide-tools">
+                    <button type="button" data-nav-edit>编辑</button>
+                    <button type="button" data-nav-remove>删除</button>
+                  </span>
                 </div>`
-              }).join('')}
+              }).join('') || '<p class="admin-form-section__hint">此类暂无产品。</p>'}
             </div>
+            <button type="button" class="admin-add-slide" data-nav-add="${groupIndex}">+ 添加产品</button>
           </article>`).join('')}
         </div>
       </fieldset>`
+}
+
+function refreshHardwareNavEditor(content) {
+  state.simplePage = state.simplePage || {}
+  state.simplePage.draftContent = content
+  state.simpleSection = 'nav'
+  renderSimpleEditor('hardware', content)
+}
+
+function openHardwareNavModal(groupIndex, productIndex) {
+  const content = collectSimpleContent()
+  state.simplePage.draftContent = content
+  const product = content.navGroups?.[groupIndex]?.products?.[productIndex]
+  if (!product) return
+  const items = Array.isArray(content.items) ? content.items : []
+  const modal = document.querySelector('[data-item-modal]')
+  openItemModal({
+    scope: 'hardware-nav',
+    kind: 'nav',
+    index: productIndex,
+    title: `编辑 ${hardwareNavName(product, items)}`,
+    html: hardwareNavProductFields(groupIndex, productIndex, product, items),
+  })
+  modal.dataset.groupIndex = String(groupIndex)
+}
+
+function addHardwareNavProduct(groupIndex) {
+  const content = collectSimpleContent()
+  const group = content.navGroups?.[groupIndex]
+  if (!group) return
+  group.products = Array.isArray(group.products) ? group.products : []
+  group.products.push({
+    id: '',
+    label: '新产品',
+    href: '/hardware/product/',
+    imageUrl: '',
+  })
+  refreshHardwareNavEditor(content)
+  openHardwareNavModal(groupIndex, group.products.length - 1)
+}
+
+function removeHardwareNavProduct(groupIndex, productIndex) {
+  const content = collectSimpleContent()
+  const products = content.navGroups?.[groupIndex]?.products
+  const product = products?.[productIndex]
+  if (!product) return
+  const name = hardwareNavName(product, content.items || [])
+  if (!window.confirm(`确定删除「${name}」？删除后需保存并发布才会同步到官网。`)) return
+  products.splice(productIndex, 1)
+  refreshHardwareNavEditor(content)
 }
 
 function renderSimpleItemFields(entry, index, key) {
@@ -1369,8 +1450,11 @@ function renderSimpleEditor(key, content) {
 }
 
 function collectSimpleContent() {
-  const content = { items: [], navGroups: [], spaceMatrixRows: [] }
-  document.querySelectorAll('[data-simple-editor] [data-home-field]').forEach((field) => {
+  const content = structuredClone(state.simplePage?.draftContent || { items: [], navGroups: [], spaceMatrixRows: [] })
+  content.items = Array.isArray(content.items) ? content.items : []
+  content.navGroups = Array.isArray(content.navGroups) ? content.navGroups : []
+  content.spaceMatrixRows = Array.isArray(content.spaceMatrixRows) ? content.spaceMatrixRows : []
+  document.querySelectorAll('[data-simple-editor] [data-home-field], [data-item-modal]:not([hidden]) [data-home-field]').forEach((field) => {
     const path = field.dataset.homeField
     const value = field.value
     const match = /^items\.(\d+)\.(\w+)$/.exec(path)
@@ -2479,9 +2563,30 @@ document.querySelector('[data-site-editor]').addEventListener('change', async (e
 document.querySelector('[data-simple-form]').addEventListener('submit', (event) => event.preventDefault())
 document.querySelector('[data-simple-editor]').addEventListener('click', (event) => {
   const jump = event.target.closest('[data-simple-goto]')
-  if (!jump) return
-  event.preventDefault()
-  showSimpleSection(jump.dataset.simpleGoto)
+  if (jump) {
+    event.preventDefault()
+    showSimpleSection(jump.dataset.simpleGoto)
+    return
+  }
+  const navEdit = event.target.closest('[data-nav-edit]')
+  if (navEdit) {
+    event.preventDefault()
+    const card = navEdit.closest('[data-nav-prod]')
+    if (card) openHardwareNavModal(Number(card.dataset.navGroup), Number(card.dataset.navIndex))
+    return
+  }
+  const navRemove = event.target.closest('[data-nav-remove]')
+  if (navRemove) {
+    event.preventDefault()
+    const card = navRemove.closest('[data-nav-prod]')
+    if (card) removeHardwareNavProduct(Number(card.dataset.navGroup), Number(card.dataset.navIndex))
+    return
+  }
+  const navAdd = event.target.closest('[data-nav-add]')
+  if (navAdd) {
+    event.preventDefault()
+    addHardwareNavProduct(Number(navAdd.dataset.navAdd))
+  }
 })
 document.querySelector('[data-simple-save]').addEventListener('click', async (event) => {
   const button = event.currentTarget

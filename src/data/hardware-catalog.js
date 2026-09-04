@@ -471,8 +471,9 @@ function megaSourceGroups() {
   if (!Array.isArray(navGroupOverride) || !navGroupOverride.length) return HARDWARE_MEGA_GROUPS
   return HARDWARE_MEGA_GROUPS.map((base) => {
     const extra = navGroupOverride.find((group) => group.id === base.id) || {}
-    const savedProducts = Array.isArray(extra.products) ? extra.products : []
-    const products = (savedProducts.length ? savedProducts : base.products).map((entry) => {
+    const hasSavedProducts = Array.isArray(extra.products)
+    const sourceProducts = hasSavedProducts ? extra.products : base.products
+    const products = sourceProducts.map((entry) => {
       const id = entry.id
       const fallback = base.products.find((item) => item.id === id)
       return {
@@ -486,7 +487,7 @@ function megaSourceGroups() {
       id: base.id,
       title: extra.title || base.title,
       icon: extra.icon || base.icon,
-      products: products.length ? products : base.products,
+      products: hasSavedProducts ? products : (products.length ? products : base.products),
     }
   })
 }
