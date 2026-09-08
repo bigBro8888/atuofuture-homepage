@@ -205,8 +205,22 @@ function renderMobileNav(activeId, root) {
   }).join('')
 }
 
+function renderAppDownloadHeader(root) {
+  return `
+    <header class="site-header site-header--download-only w-full fixed top-0 left-0 right-0 z-50" id="site-header">
+      <div class="site-header__inner max-w-max-width mx-auto px-margin-desktop">
+        <a href="${root}" class="site-header__logo" aria-label="安托未来首页">
+          <img src="${root}assets/artink-logo-light.png" alt="安托未来" class="site-header__logo-img" />
+        </a>
+        <p class="site-header__page-title">APP下载页</p>
+      </div>
+    </header>
+  `
+}
+
 export function renderSiteNav(activeId) {
   const root = getRootPrefix()
+  if (activeId === 'app-download') return renderAppDownloadHeader(root)
   return `
     <header class="site-header w-full fixed top-0 left-0 right-0 z-50" id="site-header">
       <div class="site-header__inner max-w-max-width mx-auto px-margin-desktop">
@@ -315,12 +329,13 @@ export function initSiteNav() {
     if (!current) return
     current.outerHTML = html
     const header = document.getElementById('site-header')
-    if (!header) return
+    if (!header || activeId === 'app-download') return
     initMegaMenu(header)
     initMobileAccordion(header)
   }
 
   paint()
+  if ((document.body.dataset.page || '') === 'app-download') return
   void Promise.all([loadSimplePageContent('hardware'), loadProductLibraryContent()])
     .then(([content, library]) => {
       applyHardwareSimpleCms(content)
