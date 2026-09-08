@@ -1,5 +1,5 @@
 import { SITE_NAV_ITEMS } from '../data/site-nav.js'
-import { SHOW_APP_DOWNLOAD, SITE_CTA, APP_DOWNLOAD_PATH } from '../data/site-links.js'
+import { SHOW_APP_DOWNLOAD, SITE_CTA, APP_DOWNLOAD_PATH, OFFICIAL_SITE_URL } from '../data/site-links.js'
 import { applyHardwareSimpleCms, applyProductLibraryCms, resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
 import { loadProductLibraryContent, loadSimplePageContent } from '../services/site-settings-api.js'
 import { SOLUTIONS } from '../data/solutions.js'
@@ -209,7 +209,7 @@ function renderAppDownloadHeader(root) {
   return `
     <header class="site-header site-header--download-only w-full fixed top-0 left-0 right-0 z-50" id="site-header">
       <div class="site-header__inner max-w-max-width mx-auto px-margin-desktop">
-        <a href="${root}" class="site-header__logo" aria-label="安托未来首页">
+        <a href="${OFFICIAL_SITE_URL}" class="site-header__logo" aria-label="安托未来官网">
           <img src="${root}assets/artink-logo-light.png" alt="安托未来" class="site-header__logo-img" />
         </a>
         <p class="site-header__page-title">APP下载页</p>
