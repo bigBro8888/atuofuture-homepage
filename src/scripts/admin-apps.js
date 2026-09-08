@@ -240,6 +240,7 @@ const featureIconOptions = [
   ['auto_awesome', 'AI 创作'],
   ['sync', '一键同步'],
   ['photo_library', '相册管理'],
+  ['cast', '随心投屏'],
 ]
 
 const featureAccentOptions = [
