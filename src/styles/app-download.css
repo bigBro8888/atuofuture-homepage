@@ -310,22 +310,18 @@
   font-weight: 800;
   letter-spacing: -.04em;
 }
-.download-feature-card > .material-symbols-outlined {
+.download-feature-grid h3 {
   position: relative;
   z-index: 1;
-  display: grid;
-  width: 58px;
-  height: 58px;
-  place-items: center;
-  border: 1px solid rgba(var(--feature-accent), .17);
-  border-radius: 18px;
-  color: rgb(var(--feature-accent));
-  background: linear-gradient(145deg, rgba(var(--feature-accent), .16), rgba(var(--feature-accent), .06));
-  box-shadow: 0 12px 28px rgba(var(--feature-accent), .15);
-  font-size: 26px;
+  margin: 8px 0 18px;
+  max-width: 11em;
+  color: #12213e;
+  font-size: clamp(24px, 1.9vw, 30px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.03em;
 }
-.download-feature-grid h3 { margin: 34px 0 12px; color: #12213e; font-size: 18px; letter-spacing: -.015em; }
-.download-feature-grid p { margin: 0; color: #68758a; font-size: 12px; line-height: 1.85; }
+.download-feature-grid p { margin: 0; color: #68758a; font-size: 13px; line-height: 1.8; }
 .download-feature-card:first-child {
   border-color: rgba(125, 180, 255, .22);
   background:
@@ -335,12 +331,6 @@
 }
 .download-feature-card:first-child::after { background: rgba(74, 171, 255, .18); }
 .download-feature-card:first-child .download-feature-card__number { color: rgba(255, 255, 255, .25); }
-.download-feature-card:first-child > .material-symbols-outlined {
-  color: #fff;
-  border-color: rgba(255, 255, 255, .2);
-  background: rgba(255, 255, 255, .12);
-  box-shadow: 0 14px 30px rgba(var(--feature-accent), .3);
-}
 .download-feature-card:first-child h3 { color: #fff; }
 .download-feature-card:first-child p { color: rgba(229, 240, 255, .76); }
 

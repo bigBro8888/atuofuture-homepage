@@ -324,9 +324,10 @@ async function init() {
         featureAccents.forEach((accent) => card.classList.remove(`download-feature-card--${accent}`))
         const accent = featureAccents.includes(item.accent) ? item.accent : featureAccents[index]
         card.classList.add(`download-feature-card--${accent}`)
-        card.querySelector('.material-symbols-outlined').textContent = item.icon
-        card.querySelector('h3').textContent = item.title
-        card.querySelector('p').textContent = item.description
+        const title = card.querySelector('h3')
+        const desc = card.querySelector('p')
+        if (title) title.textContent = item.title
+        if (desc) desc.textContent = item.description
       })
     }
   } catch (error) {
