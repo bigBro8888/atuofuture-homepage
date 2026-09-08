@@ -224,6 +224,12 @@ function startIOSDownload(event) {
 function bindInteractions() {
   document.querySelectorAll('[data-android-download]').forEach((element) => element.addEventListener('click', startAndroidDownload))
   document.querySelectorAll('[data-ios-download]').forEach((element) => element.addEventListener('click', startIOSDownload))
+  document.querySelectorAll('[data-scroll-top]').forEach((element) => {
+    element.addEventListener('click', (event) => {
+      event.preventDefault()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+  })
   primary.addEventListener('click', (event) => {
     if (activePlatform === 'android') startAndroidDownload(event)
     if (activePlatform === 'ios') startIOSDownload(event)
