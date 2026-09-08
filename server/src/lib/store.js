@@ -5,13 +5,13 @@ import bcrypt from 'bcryptjs'
 import { config } from '../config.js'
 
 export const defaultAppFeatures = {
-  title: '四大核心能力，重塑办公体验',
-  subtitle: '全场景覆盖，让空间更懂你的需求',
+  title: '四大产品亮点，让电子相册更好用',
+  subtitle: '从内容整理到设备投屏，手机就能掌控每一块电子纸屏幕',
   items: [
-    { icon: 'settings_remote', title: 'Space Control', description: '一键调节灯光、空调与遮阳系统，打造舒适的个性化空间环境。', accent: 'blue' },
-    { icon: 'calendar_month', title: 'Meeting Service', description: '智能会议室预约，实时查看空间状态，告别会议资源冲突。', accent: 'cyan' },
-    { icon: 'confirmation_number', title: 'Message & Ticket', description: '快速发起报修与服务申请，实时追踪进度，问题响应更及时。', accent: 'violet' },
-    { icon: 'smart_toy', title: 'AI Assistant', description: '学习用户习惯，主动提供空间调节建议与日程管理服务。', accent: 'amber' },
+    { icon: 'photo_library', title: '相册管理', description: '手机端集中整理照片与作品，按主题归档，随时挑选要展示的内容。', accent: 'blue' },
+    { icon: 'sync', title: '一键同步', description: '选中图片即可推送到电子相册，多设备内容同步更新，换画更省心。', accent: 'cyan' },
+    { icon: 'cast', title: '随心投屏', description: '远程切换画框画面与展示方式，家里办公室一块屏，想换就换。', accent: 'violet' },
+    { icon: 'auto_awesome', title: 'AI 创作', description: 'AI 辅助美化与生成展示画面，快速做出有氛围的电子相册内容。', accent: 'amber' },
   ],
 }
 
