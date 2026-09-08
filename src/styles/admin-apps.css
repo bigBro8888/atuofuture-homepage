@@ -140,10 +140,38 @@ textarea { resize: vertical; }
 .admin-form-section legend { padding: 0 9px; color: #172033; font-size: 12px; font-weight: 700; }
 .admin-form-section__hint { margin: 0 0 16px; color: #98a2b3; font-size: 10px; }
 .admin-feature-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
-.admin-feature-card { padding: 15px; border: 1px solid #e7ecf3; border-radius: 12px; background: #fff; }
+.admin-feature-card {
+  --admin-feature-accent: #1769ff;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--admin-feature-accent) 24%, #e7ecf3);
+  border-radius: 14px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--admin-feature-accent) 5%, #fff), #fff 48%);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--admin-feature-accent) 7%, transparent);
+  transition: border-color .2s, box-shadow .2s;
+}
+.admin-feature-card[data-feature-accent-value="cyan"] { --admin-feature-accent: #0da6b7; }
+.admin-feature-card[data-feature-accent-value="violet"] { --admin-feature-accent: #6f53d6; }
+.admin-feature-card[data-feature-accent-value="amber"] { --admin-feature-accent: #e28b1e; }
 .admin-feature-card header { display: flex; align-items: center; gap: 9px; margin-bottom: 13px; }
 .admin-feature-card header b { font-size: 11px; }
-.admin-feature-card header .material-symbols-outlined { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: #1769ff; background: #edf4ff; font-size: 17px; }
+.admin-feature-card header i {
+  width: 9px;
+  height: 9px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--admin-feature-accent);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--admin-feature-accent) 12%, transparent);
+}
+.admin-feature-card header .material-symbols-outlined {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  color: var(--admin-feature-accent);
+  background: color-mix(in srgb, var(--admin-feature-accent) 10%, #fff);
+  font-size: 18px;
+}
 .admin-feature-card label { display: block; margin-bottom: 11px; }
 .admin-feature-card label:last-child { margin-bottom: 0; }
 .admin-feature-card label > span { display: block; margin-bottom: 6px; font-size: 10px; font-weight: 600; }

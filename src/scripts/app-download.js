@@ -311,9 +311,13 @@ async function init() {
     if (config.features) {
       if (config.features.title) setText('[data-features-title]', config.features.title)
       if (config.features.subtitle) setText('[data-features-subtitle]', config.features.subtitle)
+      const featureAccents = ['blue', 'cyan', 'violet', 'amber']
       document.querySelectorAll('[data-feature-item]').forEach((card, index) => {
         const item = config.features.items?.[index]
         if (!item) return
+        featureAccents.forEach((accent) => card.classList.remove(`download-feature-card--${accent}`))
+        const accent = featureAccents.includes(item.accent) ? item.accent : featureAccents[index]
+        card.classList.add(`download-feature-card--${accent}`)
         card.querySelector('.material-symbols-outlined').textContent = item.icon
         card.querySelector('h3').textContent = item.title
         card.querySelector('p').textContent = item.description

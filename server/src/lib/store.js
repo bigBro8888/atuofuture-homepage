@@ -8,15 +8,16 @@ export const defaultAppFeatures = {
   title: '四大核心能力，重塑办公体验',
   subtitle: '全场景覆盖，让空间更懂你的需求',
   items: [
-    { icon: 'settings_remote', title: 'Space Control', description: '一键调节灯光、空调与遮阳系统，打造舒适的个性化空间环境。' },
-    { icon: 'calendar_month', title: 'Meeting Service', description: '智能会议室预约，实时查看空间状态，告别会议资源冲突。' },
-    { icon: 'confirmation_number', title: 'Message & Ticket', description: '快速发起报修与服务申请，实时追踪进度，问题响应更及时。' },
-    { icon: 'smart_toy', title: 'AI Assistant', description: '学习用户习惯，主动提供空间调节建议与日程管理服务。' },
+    { icon: 'settings_remote', title: 'Space Control', description: '一键调节灯光、空调与遮阳系统，打造舒适的个性化空间环境。', accent: 'blue' },
+    { icon: 'calendar_month', title: 'Meeting Service', description: '智能会议室预约，实时查看空间状态，告别会议资源冲突。', accent: 'cyan' },
+    { icon: 'confirmation_number', title: 'Message & Ticket', description: '快速发起报修与服务申请，实时追踪进度，问题响应更及时。', accent: 'violet' },
+    { icon: 'smart_toy', title: 'AI Assistant', description: '学习用户习惯，主动提供空间调节建议与日程管理服务。', accent: 'amber' },
   ],
 }
 
 export function normalizeAppFeatures(value = {}) {
   const clean = (input, fallback, max) => String(input ?? fallback ?? '').trim().slice(0, max) || fallback
+  const accents = new Set(['blue', 'cyan', 'violet', 'amber'])
   const source = Array.isArray(value.items) ? value.items : []
   return {
     title: clean(value.title, defaultAppFeatures.title, 120),
@@ -27,6 +28,7 @@ export function normalizeAppFeatures(value = {}) {
         icon: clean(item.icon, fallback.icon, 40),
         title: clean(item.title, fallback.title, 80),
         description: clean(item.description, fallback.description, 300),
+        accent: accents.has(item.accent) ? item.accent : fallback.accent,
       }
     }),
   }

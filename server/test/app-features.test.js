@@ -32,6 +32,7 @@ test('publishes download page feature cards and button labels edited in the admi
 
   const { app: current } = await (await fetch(`${baseUrl}/api/admin/app`, { headers: { Cookie: cookie } })).json()
   assert.equal(current.features.items.length, 4)
+  assert.equal(current.features.items[0].accent, 'blue')
 
   const updateResponse = await fetch(`${baseUrl}/api/admin/app`, {
     method: 'PUT',
@@ -44,9 +45,9 @@ test('publishes download page feature cards and button labels edited in the admi
         title: '四项能力，重新定义办公',
         subtitle: '按需组合，覆盖全场景',
         items: [
-          { icon: 'lightbulb', title: '灯光控制', description: '一键调节办公区照明。' },
-          {},
-          { icon: 'bolt', title: '能耗管理', description: '分项计量与节能策略。' },
+          { icon: 'lightbulb', title: '灯光控制', description: '一键调节办公区照明。', accent: 'cyan' },
+          { accent: 'invalid-color' },
+          { icon: 'bolt', title: '能耗管理', description: '分项计量与节能策略。', accent: 'violet' },
           {},
         ],
       },
@@ -57,7 +58,11 @@ test('publishes download page feature cards and button labels edited in the admi
   const publicConfig = await (await fetch(`${baseUrl}/api/public/apps/artink`)).json()
   assert.equal(publicConfig.features.title, '四项能力，重新定义办公')
   assert.equal(publicConfig.features.items[0].icon, 'lightbulb')
+  assert.equal(publicConfig.features.items[0].accent, 'cyan')
+  assert.equal(publicConfig.features.items[1].accent, 'cyan')
   assert.equal(publicConfig.features.items[2].title, '能耗管理')
+  assert.equal(publicConfig.features.items[2].accent, 'violet')
+  assert.equal(publicConfig.features.items[3].accent, 'amber')
   assert.equal(publicConfig.features.items[1].title, current.features.items[1].title)
   assert.equal(publicConfig.buttons.androidLabel, '安卓版 {version}')
   assert.equal(publicConfig.buttons.switchToAndroid, '换到安卓版')

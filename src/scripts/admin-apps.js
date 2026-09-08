@@ -242,6 +242,13 @@ const featureIconOptions = [
   ['photo_library', '相册管理'],
 ]
 
+const featureAccentOptions = [
+  ['blue', '深海蓝'],
+  ['cyan', '科技青'],
+  ['violet', '智能紫'],
+  ['amber', '活力橙'],
+]
+
 function renderFeatureCards(features) {
   const host = document.querySelector('[data-feature-cards]')
   host.innerHTML = features.items.map((item, index) => {
@@ -249,9 +256,14 @@ function renderFeatureCards(features) {
     const options = (known ? featureIconOptions : [...featureIconOptions, [item.icon, item.icon]])
       .map(([value, label]) => `<option value="${value}"${value === item.icon ? ' selected' : ''}>${label}</option>`)
       .join('')
-    return `<article class="admin-feature-card">
-      <header><span class="material-symbols-outlined" data-feature-preview="${index}">${item.icon}</span><b>卡片 ${index + 1}</b></header>
+    const accent = featureAccentOptions.some(([value]) => value === item.accent) ? item.accent : featureAccentOptions[index][0]
+    const accentOptions = featureAccentOptions
+      .map(([value, label]) => `<option value="${value}"${value === accent ? ' selected' : ''}>${label}</option>`)
+      .join('')
+    return `<article class="admin-feature-card" data-feature-card="${index}" data-feature-accent-value="${accent}">
+      <header><span class="material-symbols-outlined" data-feature-preview="${index}">${item.icon}</span><b>卡片 ${index + 1}</b><i aria-hidden="true"></i></header>
       <label><span>图标</span><select name="features.items.${index}.icon" data-feature-icon="${index}">${options}</select></label>
+      <label><span>强调色</span><select name="features.items.${index}.accent" data-feature-accent="${index}">${accentOptions}</select></label>
       <label><span>标题</span><input name="features.items.${index}.title" maxlength="80" /></label>
       <label><span>描述</span><textarea name="features.items.${index}.description" rows="3" maxlength="300"></textarea></label>
     </article>`
@@ -1997,9 +2009,15 @@ document.querySelector('[data-config-outline]')?.addEventListener('click', (even
 })
 
 document.querySelector('[data-feature-cards]').addEventListener('change', (event) => {
-  const select = event.target.closest('[data-feature-icon]')
-  if (!select) return
-  document.querySelector(`[data-feature-preview="${select.dataset.featureIcon}"]`).textContent = select.value
+  const iconSelect = event.target.closest('[data-feature-icon]')
+  if (iconSelect) {
+    document.querySelector(`[data-feature-preview="${iconSelect.dataset.featureIcon}"]`).textContent = iconSelect.value
+    return
+  }
+  const accentSelect = event.target.closest('[data-feature-accent]')
+  if (!accentSelect) return
+  const card = document.querySelector(`[data-feature-card="${accentSelect.dataset.featureAccent}"]`)
+  if (card) card.dataset.featureAccentValue = accentSelect.value
 })
 
 document.querySelector('[name="desktopBannerUrl"]').addEventListener('input', (event) => {

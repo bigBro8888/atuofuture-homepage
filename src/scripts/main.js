@@ -753,8 +753,8 @@ function bootstrap() {
     void loadAndApplyAboutContent()
   }
 
-  initNavScroll('header, .site-header')
   initSiteNav()
+  initNavScroll('.site-header, header')
   initSiteFooter()
   void loadAndApplySiteSettings()
   initMobileDrawer()
