@@ -1,6 +1,7 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 import { bindNewsRichEditor, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
 import { bindProductLibraryAdmin, closeProductCompose, loadProductLibrary, productLibraryOptions } from './admin-products.js'
+import { bindAppDownloadVisualAdmin, collectAppDownloadVisualContent, renderAppDownloadVisualEditor } from './admin-app-download.js'
 import { bindHardwareVisualAdmin, collectHardwareVisualContent, renderHardwareVisualEditor } from './admin-hardware.js'
 import { bindSolutionsVisualAdmin, collectSolutionsVisualContent, renderSolutionsVisualEditor } from './admin-solutions.js'
 import { bindAgentsVisualAdmin, collectAgentsVisualContent, renderAgentsVisualEditor } from './admin-agents.js'
@@ -48,8 +49,7 @@ const titles = {
   'content-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
   'page-news': ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
   'page-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
-  'page-ai-token': ['AI Token', '路径 /ai-token/ · 首屏标题'],
-  config: ['App 下载页', '路径 /app-download/ · 按区块逐项编辑，点左侧大纲切换'],
+  config: ['App 下载页', '路径 /app-download/ · 可视化编辑下载页'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
   analytics: ['下载统计', '查看匿名点击趋势和终端分布'],
   users: ['账号权限', '按职责管理后台访问权限'],
@@ -295,22 +295,7 @@ async function loadConfig() {
   try {
     const { app } = await api('/app')
     state.app = app
-    const form = document.querySelector('[data-config-form]')
-    renderFeatureCards(app.features)
-    form.elements['features.title'].value = app.features.title || ''
-    form.elements['features.subtitle'].value = app.features.subtitle || ''
-    for (const key of ['androidLabel', 'iosLabel', 'switchToAndroid', 'switchToIos', 'switchToAndroidTag', 'switchToIosTag']) {
-      form.elements[`buttons.${key}`].value = app.buttons[key] || ''
-    }
-    for (const name of ['name', 'description', 'iconUrl', 'downloadTitle', 'downloadSubtitle', 'downloadDescription', 'desktopBannerUrl', 'heroImageUrl', 'androidDownloadUrl', 'iosStoreUrl', 'privacyUrl', 'termsUrl']) {
-      form.elements[name].value = app[name] || ''
-    }
-    form.elements.heroImageFile.value = ''
-    form.elements.desktopBannerFile.value = ''
-    showHeroImagePreview(app.heroImageUrl)
-    showDesktopBannerPreview(app.desktopBannerUrl)
-    form.elements.published.checked = Boolean(app.published)
-    showConfigSection(state.configSection || 'basic')
+    renderAppDownloadVisualEditor(app)
   } catch (error) { toast(error.message, true) }
 }
 
@@ -1954,77 +1939,16 @@ window.addEventListener('hashchange', () => {
 })
 document.querySelector('[data-mobile-menu]').addEventListener('click', () => document.querySelector('.admin-sidebar').classList.toggle('is-open'))
 
-document.querySelector('[name="heroImageUrl"]').addEventListener('input', (event) => {
-  showHeroImagePreview(event.currentTarget.value.trim())
-})
-document.querySelector('[name="heroImageFile"]').addEventListener('change', (event) => {
-  const file = event.currentTarget.files[0]
-  if (file) showHeroImagePreview(URL.createObjectURL(file))
-})
-document.querySelector('[data-config-outline]')?.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-config-goto]')
-  if (!button) return
-  showConfigSection(button.dataset.configGoto)
-})
-
-document.querySelector('[data-feature-cards]').addEventListener('change', (event) => {
-  const iconSelect = event.target.closest('[data-feature-icon]')
-  if (iconSelect) {
-    document.querySelector(`[data-feature-preview="${iconSelect.dataset.featureIcon}"]`).textContent = iconSelect.value
-    return
-  }
-  const accentSelect = event.target.closest('[data-feature-accent]')
-  if (!accentSelect) return
-  const card = document.querySelector(`[data-feature-card="${accentSelect.dataset.featureAccent}"]`)
-  if (card) card.dataset.featureAccentValue = accentSelect.value
-})
-
-document.querySelector('[name="desktopBannerUrl"]').addEventListener('input', (event) => {
-  showDesktopBannerPreview(event.currentTarget.value.trim())
-})
-document.querySelector('[name="desktopBannerFile"]').addEventListener('change', (event) => {
-  const file = event.currentTarget.files[0]
-  if (file) showDesktopBannerPreview(URL.createObjectURL(file))
-})
-
 document.querySelector('[data-config-form]').addEventListener('submit', async (event) => {
   event.preventDefault()
   const form = event.currentTarget
-  const imageFile = form.elements.heroImageFile.files[0]
-  const desktopBannerFile = form.elements.desktopBannerFile.files[0]
-  const body = {}
-  const features = { items: [{}, {}, {}, {}] }
-  const buttons = {}
-  for (const [key, value] of new FormData(form).entries()) {
-    const card = key.match(/^features\.items\.(\d+)\.(\w+)$/)
-    if (card) features.items[Number(card[1])][card[2]] = value
-    else if (key.startsWith('features.')) features[key.slice('features.'.length)] = value
-    else if (key.startsWith('buttons.')) buttons[key.slice('buttons.'.length)] = value
-    else body[key] = value
-  }
-  delete body.heroImageFile
-  delete body.desktopBannerFile
-  body.features = features
-  body.buttons = buttons
-  body.published = form.elements.published.checked
+  const body = collectAppDownloadVisualContent(state.app || {})
   const submit = form.querySelector('button[type="submit"]')
   submit.disabled = true
   try {
-    if (imageFile) {
-      const imageData = new FormData()
-      imageData.append('image', imageFile)
-      const uploaded = await api('/app/hero-image', { method: 'POST', body: imageData })
-      body.heroImageUrl = uploaded.url
-      form.elements.heroImageUrl.value = uploaded.url
-    }
-    if (desktopBannerFile) {
-      const imageData = new FormData()
-      imageData.append('image', desktopBannerFile)
-      const uploaded = await api('/app/hero-image', { method: 'POST', body: imageData })
-      body.desktopBannerUrl = uploaded.url
-      form.elements.desktopBannerUrl.value = uploaded.url
-    }
-    await api('/app', { method: 'PUT', body: JSON.stringify(body) })
+    const { app } = await api('/app', { method: 'PUT', body: JSON.stringify(body) })
+    state.app = app || body
+    renderAppDownloadVisualEditor(state.app)
     toast('App 下载页配置已保存并生效')
     loadOverview()
   } catch (error) {
@@ -2557,6 +2481,12 @@ document.querySelector('[data-item-modal]').addEventListener('change', async (ev
 
 api('/me').then(({ user }) => showAdmin(user)).catch(showLogin)
 bindProductLibraryAdmin({ api, toast, escapeHtml, dateTime, state })
+bindAppDownloadVisualAdmin({
+  api,
+  toast,
+  escapeHtml,
+  state,
+})
 bindHardwareVisualAdmin({
   api,
   toast,
