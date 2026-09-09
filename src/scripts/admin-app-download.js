@@ -81,6 +81,7 @@ function renderBasics(app) {
           ${field('name', 'App 名称', app.name || '')}
           ${field('iconUrl', 'App 图标链接', app.iconUrl || '', { wide: true })}
           ${field('description', '产品介绍', app.description || '', { type: 'textarea', wide: true, rows: 2 })}
+          ${field('heroImageUrl', '移动端展示图（仅手机端显示）', app.heroImageUrl || '', { wide: true })}
           ${field('androidDownloadUrl', 'Android 下载链接', app.androidDownloadUrl || '', { wide: true })}
           ${field('iosStoreUrl', 'iOS App Store 链接', app.iosStoreUrl || '', { wide: true })}
           ${field('privacyUrl', '隐私政策链接', app.privacyUrl || '')}

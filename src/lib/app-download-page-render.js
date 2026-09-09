@@ -1,6 +1,6 @@
 /** App 下载页渲染（后台可视化预览；前台仍用静态 HTML + 水合） */
 
-import { esc, textNode, imgNode } from './vedit-nodes.js'
+import { esc, textNode } from './vedit-nodes.js'
 
 const ACCENTS = ['blue', 'cyan', 'violet', 'amber']
 
@@ -12,7 +12,6 @@ export function renderAppDownloadPage(app = {}, { editable = false } = {}) {
   const features = app.features || { title: '', subtitle: '', items: [] }
   const items = Array.isArray(features.items) ? features.items : []
   const banner = app.desktopBannerUrl || '/images/app-download/back.png'
-  const heroImage = app.heroImageUrl || ''
   const name = app.name || 'AI投屏'
 
   return `
@@ -38,21 +37,6 @@ export function renderAppDownloadPage(app = {}, { editable = false } = {}) {
           <span class="dl-vedit-store">App Store</span>
           <span class="dl-vedit-store dl-vedit-store--android">安卓下载</span>
         </div>
-      </div>
-      <div class="dl-vedit-hero__phone">
-        ${
-          editable
-            ? imgNode('heroImageUrl', heroImage, {
-                editable: true,
-                width: 375,
-                height: 667,
-                alt: '手机展示图',
-                className: 'dl-vedit-phone-img',
-              })
-            : heroImage
-              ? `<img src="${esc(heroImage)}" alt="手机展示图" width="375" height="667" />`
-              : '<div class="dl-vedit-phone-empty">暂无展示图</div>'
-        }
       </div>
     </div>
   </section>
