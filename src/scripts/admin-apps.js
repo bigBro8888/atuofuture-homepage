@@ -2,6 +2,8 @@ import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 import { bindNewsRichEditor, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
 import { bindProductLibraryAdmin, closeProductCompose, loadProductLibrary, productLibraryOptions } from './admin-products.js'
 import { bindHardwareVisualAdmin, collectHardwareVisualContent, renderHardwareVisualEditor } from './admin-hardware.js'
+import { bindSolutionsVisualAdmin, collectSolutionsVisualContent, renderSolutionsVisualEditor } from './admin-solutions.js'
+import { bindAgentsVisualAdmin, collectAgentsVisualContent, renderAgentsVisualEditor } from './admin-agents.js'
 import { bindAboutVisualAdmin, collectAboutVisualContent, renderAboutVisualEditor } from './admin-about.js'
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 
@@ -1342,12 +1344,20 @@ function renderSimpleEditor(key, content) {
   if (preview && item) preview.href = item.path === '全站共用' ? '/' : item.path
   const headHint = document.querySelector('[data-simple-form] .admin-card__head p')
   if (headHint) {
-    headHint.innerHTML = key === 'hardware'
-      ? `路径 <code data-simple-path>${item?.path || '/hardware/'}</code> · 可视化编辑频道页，点预览上的文字和图片直接改，发布后前台同步。`
+    headHint.innerHTML = ['hardware', 'solutions', 'agents'].includes(key)
+      ? `路径 <code data-simple-path>${item?.path || `/${key}/`}</code> · 可视化编辑频道页，点预览上的文字和图片直接改，发布后前台同步。`
       : `路径 <code data-simple-path>${item?.path || `/${key}/`}</code> · 可改首屏，也可改下方产品/方案/智能体列表，发布后前台同步。`
   }
   if (key === 'hardware') {
     renderHardwareVisualEditor(content)
+    return
+  }
+  if (key === 'solutions') {
+    renderSolutionsVisualEditor(content)
+    return
+  }
+  if (key === 'agents') {
+    renderAgentsVisualEditor(content)
     return
   }
   const items = Array.isArray(content.items) ? content.items : []
@@ -1404,6 +1414,12 @@ function renderSimpleEditor(key, content) {
 function collectSimpleContent() {
   if (state.simpleKey === 'hardware') {
     return collectHardwareVisualContent(state.simplePage?.draftContent)
+  }
+  if (state.simpleKey === 'solutions') {
+    return collectSolutionsVisualContent(state.simplePage?.draftContent)
+  }
+  if (state.simpleKey === 'agents') {
+    return collectAgentsVisualContent(state.simplePage?.draftContent)
   }
   const content = structuredClone(state.simplePage?.draftContent || { items: [], navGroups: [], spaceMatrixRows: [] })
   content.items = Array.isArray(content.items) ? content.items : []
@@ -2548,6 +2564,18 @@ bindHardwareVisualAdmin({
   homeField,
   productLibraryOptions,
   renderHardwareNavEditor,
+  state,
+})
+bindSolutionsVisualAdmin({
+  api,
+  toast,
+  escapeHtml,
+  state,
+})
+bindAgentsVisualAdmin({
+  api,
+  toast,
+  escapeHtml,
   state,
 })
 bindAboutVisualAdmin({
