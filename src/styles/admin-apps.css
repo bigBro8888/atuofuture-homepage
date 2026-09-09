@@ -1036,6 +1036,133 @@ body.admin-hardware-fullscreen {
 body.admin-about-fullscreen {
   overflow: hidden;
 }
+.admin-vedit--home .admin-vedit-canvas {
+  overflow: visible;
+  max-height: none;
+}
+.admin-vedit--home.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  background: #edf2f8;
+}
+.admin-vedit--home.is-fullscreen .admin-vedit-basics,
+.admin-vedit--home.is-fullscreen .admin-vedit-toolbar {
+  display: none;
+}
+.admin-vedit--home.is-fullscreen .admin-vedit-canvas {
+  flex: 1;
+  overflow: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.admin-vedit--home.is-fullscreen .admin-vedit-fullscreen-bar {
+  display: flex;
+}
+body.admin-home-fullscreen {
+  overflow: hidden;
+}
+.admin-vedit--home .home-vedit-hero {
+  height: auto;
+  min-height: 0;
+}
+.admin-vedit--home .home-vedit-hero__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.admin-vedit--home .home-vedit-hero__slide {
+  position: relative;
+  height: var(--sm-hero-height, 600px);
+  min-height: 420px;
+  display: block !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+.admin-vedit--home .home-vedit-hero__slide .sm-hero__media {
+  position: absolute;
+  inset: 0;
+}
+.admin-vedit--home .home-vedit-agents {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.admin-vedit--home .home-vedit-agent-card {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0b1220;
+  color: #fff;
+}
+.admin-vedit--home .home-vedit-agent-card .sm-agent-banner {
+  margin: 0;
+  position: relative;
+  aspect-ratio: 21 / 9;
+  background: #111827;
+}
+.admin-vedit--home .home-vedit-agent-card .sm-agent-banner img,
+.admin-vedit--home .home-vedit-agent-card .hpi-edit-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.admin-vedit--home .home-vedit-agent-card figcaption {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+}
+.admin-vedit--home .home-vedit-agent-card__name {
+  margin: 0;
+  padding: 10px 14px 12px;
+  font-size: 14px;
+  background: #111827;
+}
+.admin-vedit--home .home-vedit-sol-grid,
+.admin-vedit--home .home-vedit-news-grid,
+.admin-vedit--home .home-vedit-pitch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+.admin-vedit--home .home-vedit-pitch-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.admin-vedit--home .sm-sol-card,
+.admin-vedit--home .sm-news-card,
+.admin-vedit--home .sm-pitch__tile {
+  position: relative;
+}
+.admin-vedit--home .sm-mini-banner__media,
+.admin-vedit--home .sm-sol-card__media,
+.admin-vedit--home .sm-news-card__media,
+.admin-vedit--home .sm-hero__media {
+  position: relative;
+}
+.admin-vedit--home .hpi-edit-bg {
+  z-index: 3;
+}
+@media (max-width: 1100px) {
+  .admin-vedit--home .home-vedit-agents,
+  .admin-vedit--home .home-vedit-sol-grid,
+  .admin-vedit--home .home-vedit-news-grid,
+  .admin-vedit--home .home-vedit-pitch-grid {
+    grid-template-columns: 1fr;
+  }
+}
 body.admin-appdl-fullscreen {
   overflow: hidden;
 }
