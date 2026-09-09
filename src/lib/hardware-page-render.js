@@ -50,7 +50,7 @@ function renderHero(hero, { editable }) {
           ${textNode('title', hero.title || '', { editable, tag: 'h1', placeholder: '首屏主标题' })}
           ${textNode('subtitle', hero.subtitle || '', { editable, tag: 'p', multiline: true, placeholder: '首屏说明' })}
           <div class="hwc-hero__actions">
-            <a class="hwc-btn hwc-btn--cyan hwc-btn--hero" href="#hwc-space"${editable ? ' tabindex="-1"' : ''}>
+            <a class="hwc-btn hwc-btn--cyan hwc-btn--hero" href="${editable ? '#' : '/hardware/products/'}"${editable ? ' tabindex="-1"' : ''}>
               ${textNode('primaryCtaLabel', hero.primaryCtaLabel || '浏览全部产品', { editable, tag: 'span', placeholder: '主按钮文案' })}
             </a>
             <button type="button" class="hwc-btn hwc-btn--outline-dark"${editable ? '' : ' data-demo-modal-open'}>

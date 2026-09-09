@@ -12,6 +12,7 @@ export default defineConfig({
         aiToken: resolve(__dirname, 'ai-token/index.html'),
         hardware: resolve(__dirname, 'hardware/index.html'),
         hardwareProduct: resolve(__dirname, 'hardware/product/index.html'),
+        hardwareProducts: resolve(__dirname, 'hardware/products/index.html'),
         agentDetail: resolve(__dirname, 'agent-detail/index.html'),
         order: resolve(__dirname, 'order/index.html'),
         about: resolve(__dirname, 'about/index.html'),
