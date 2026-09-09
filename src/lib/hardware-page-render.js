@@ -50,7 +50,9 @@ function renderHero(hero, { editable }) {
           ${textNode('title', hero.title || '', { editable, tag: 'h1', placeholder: '首屏主标题' })}
           ${textNode('subtitle', hero.subtitle || '', { editable, tag: 'p', multiline: true, placeholder: '首屏说明' })}
           <div class="hwc-hero__actions">
-            <a class="hwc-btn hwc-btn--cyan hwc-btn--hero" href="#hwc-space"${editable ? ' tabindex="-1"' : ''}>浏览全部产品</a>
+            <a class="hwc-btn hwc-btn--cyan hwc-btn--hero" href="#hwc-space"${editable ? ' tabindex="-1"' : ''}>
+              ${textNode('primaryCtaLabel', hero.primaryCtaLabel || '浏览全部产品', { editable, tag: 'span', placeholder: '主按钮文案' })}
+            </a>
             <button type="button" class="hwc-btn hwc-btn--outline-dark"${editable ? '' : ' data-demo-modal-open'}>
               ${textNode('ctaLabel', hero.ctaLabel || '获取选型建议', { editable, tag: 'span', placeholder: '按钮文案' })}
             </button>
@@ -210,13 +212,42 @@ export function renderHardwarePage(model, { editable = false } = {}) {
                   : `<p>${esc(flagship.fullDescription || '')}</p>`
               }
               <ul class="hwx-flagship__points">
-                ${(flagship.capabilities || []).map((c) => `<li>${esc(c)}</li>`).join('')}
+                ${(flagship.capabilities || []).map((c, i) => {
+                  const canEditCap = editable && flagshipIndex >= 0
+                  return `<li>${
+                    canEditCap
+                      ? textNode(itemPath(flagshipIndex, `capabilities.${i}`), c, {
+                          editable: true,
+                          tag: 'span',
+                          placeholder: '能力点',
+                        })
+                      : esc(c)
+                  }</li>`
+                }).join('')}
               </ul>
               <div class="hwx-flagship__actions">
-                <a class="hwc-btn hwc-btn--orange" href="${editable ? '#' : productHref(flagship)}"${editable ? ' tabindex="-1"' : ''}>${esc(flagship.detailCtaLabel || '查看产品详情')}</a>
+                <a class="hwc-btn hwc-btn--orange" href="${editable ? '#' : productHref(flagship)}"${editable ? ' tabindex="-1"' : ''}>
+                  ${
+                    editable && flagshipIndex >= 0
+                      ? textNode(itemPath(flagshipIndex, 'detailCtaLabel'), flagship.detailCtaLabel || '查看产品详情', {
+                          editable: true,
+                          tag: 'span',
+                          placeholder: '详情按钮',
+                        })
+                      : esc(flagship.detailCtaLabel || '查看产品详情')
+                  }
+                </a>
                 ${
-                  flagship.solutionHref
-                    ? `<a class="hwc-text-link" href="${editable ? '#' : esc(flagship.solutionHref)}"${editable ? ' tabindex="-1"' : ''}>${esc(flagship.solutionLabel || '了解 ASpace 总体方案')}</a>`
+                  flagship.solutionHref || (editable && flagshipIndex >= 0)
+                    ? `<a class="hwc-text-link" href="${editable ? '#' : esc(flagship.solutionHref || '#')}"${editable ? ' tabindex="-1"' : ''}>${
+                        editable && flagshipIndex >= 0
+                          ? textNode(itemPath(flagshipIndex, 'solutionLabel'), flagship.solutionLabel || '了解 ASpace 总体方案', {
+                              editable: true,
+                              tag: 'span',
+                              placeholder: '方案链接文案',
+                            })
+                          : esc(flagship.solutionLabel || '了解 ASpace 总体方案')
+                      }</a>`
                     : ''
                 }
               </div>
@@ -270,14 +301,40 @@ export function renderHardwarePage(model, { editable = false } = {}) {
                 <div class="hwx-retail__meta">
                   <div>
                     <span>核心特性</span>
-                    <p>${esc((p.capabilities || []).join(' · '))}</p>
+                    ${
+                      canEdit
+                        ? textNode(itemPath(itemIndex, 'capabilities'), (p.capabilities || []).join(' · '), {
+                            editable: true,
+                            tag: 'p',
+                            placeholder: '用 · 分隔，如：远程改价 · 低功耗',
+                          })
+                        : `<p>${esc((p.capabilities || []).join(' · '))}</p>`
+                    }
                   </div>
                   <div>
                     <span>适用场景</span>
-                    <p>${esc((p.scenarios || []).join(' · '))}</p>
+                    ${
+                      canEdit
+                        ? textNode(itemPath(itemIndex, 'scenarios'), (p.scenarios || []).join(' · '), {
+                            editable: true,
+                            tag: 'p',
+                            placeholder: '用 · 分隔，如：门店 · 货架',
+                          })
+                        : `<p>${esc((p.scenarios || []).join(' · '))}</p>`
+                    }
                   </div>
                 </div>
-                <a class="hwc-text-link" href="${editable ? '#' : esc(productHref(p))}"${editable ? ' tabindex="-1"' : ''}>${esc(listingDetailLabel(p))} →</a>
+                <a class="hwc-text-link" href="${editable ? '#' : esc(productHref(p))}"${editable ? ' tabindex="-1"' : ''}>
+                  ${
+                    canEdit
+                      ? `${textNode(itemPath(itemIndex, 'detailCtaLabel'), listingDetailLabel(p), {
+                          editable: true,
+                          tag: 'span',
+                          placeholder: '查看详情',
+                        })} →`
+                      : `${esc(listingDetailLabel(p))} →`
+                  }
+                </a>
               </div>
             </article>`
               })
@@ -313,7 +370,15 @@ export function renderHardwarePage(model, { editable = false } = {}) {
                       })
                     : `<small>${esc(p.use || p.shortDescription || '')}</small>`
                 }
-                <em>查看详情</em>
+                ${
+                  canEdit
+                    ? textNode(itemPath(itemIndex, 'detailCtaLabel'), p.detailCtaLabel || '查看详情', {
+                        editable: true,
+                        tag: 'em',
+                        placeholder: '查看详情',
+                      })
+                    : `<em>${esc(p.detailCtaLabel || '查看详情')}</em>`
+                }
               </span>
             </a>`
               })

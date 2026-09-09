@@ -406,6 +406,13 @@ export function applyHardwareSimpleCms(content) {
     if (hit.tag) product.tag = hit.tag
     if (hit.fullDescription) product.fullDescription = hit.fullDescription
     if (Array.isArray(hit.capabilities) && hit.capabilities.length) product.capabilities = hit.capabilities
+    else if (typeof hit.capabilities === 'string' && hit.capabilities.trim()) {
+      product.capabilities = hit.capabilities.split(/\s*[·•|\n]\s*/).map((s) => s.trim()).filter(Boolean)
+    }
+    if (Array.isArray(hit.scenarios) && hit.scenarios.length) product.scenarios = hit.scenarios
+    else if (typeof hit.scenarios === 'string' && hit.scenarios.trim()) {
+      product.scenarios = hit.scenarios.split(/\s*[·•|\n]\s*/).map((s) => s.trim()).filter(Boolean)
+    }
     if (hit.detailCtaLabel) product.detailCtaLabel = hit.detailCtaLabel
     if (hit.solutionLabel != null) product.solutionLabel = hit.solutionLabel
     if (hit.solutionHref != null) product.solutionHref = hit.solutionHref

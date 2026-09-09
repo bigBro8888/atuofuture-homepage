@@ -260,12 +260,35 @@ export function collectHardwareVisualContent(baseContent) {
     })
   }
 
-  content.items = content.items.filter(Boolean)
+  content.items = content.items.filter(Boolean).map((item) => {
+    if (!item || typeof item !== 'object') return item
+    const next = { ...item }
+    if (next.capabilities != null) next.capabilities = normalizeCollectedList(next.capabilities)
+    if (next.scenarios != null) next.scenarios = normalizeCollectedList(next.scenarios)
+    return next
+  })
   content.navGroups = content.navGroups.filter(Boolean).map((group) => ({
     ...group,
     products: Array.isArray(group.products) ? group.products.filter(Boolean) : [],
   }))
   return content
+}
+
+function normalizeCollectedList(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || '').trim()).filter(Boolean)
+  }
+  if (value && typeof value === 'object') {
+    return Object.keys(value)
+      .filter((key) => /^\d+$/.test(key))
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => String(value[key] || '').trim())
+      .filter(Boolean)
+  }
+  return String(value || '')
+    .split(/\s*[·•|\n]\s*/)
+    .map((item) => item.trim())
+    .filter(Boolean)
 }
 
 function currentImageUrl(imageEl) {
@@ -400,6 +423,11 @@ export function bindHardwareVisualAdmin(helpers) {
     if (imageEl && editor.contains(imageEl)) {
       event.preventDefault()
       openImageModal(imageEl)
+      return
+    }
+    const canvas = event.target.closest('[data-hardware-visual]')
+    if (canvas && event.target.closest('a, button')) {
+      event.preventDefault()
     }
   })
 

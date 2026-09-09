@@ -14,6 +14,45 @@ function viewProduct(product) {
   return presentHardwareProduct(product) || product
 }
 
+function normalizeListField(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || '').trim()).filter(Boolean)
+  }
+  if (value && typeof value === 'object') {
+    return Object.keys(value)
+      .filter((key) => /^\d+$/.test(key))
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => String(value[key] || '').trim())
+      .filter(Boolean)
+  }
+  return String(value || '')
+    .split(/\s*[·•|\n]\s*/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function overlaySimpleItem(product, items, resolveItemIndex) {
+  if (!product) return null
+  const index = resolveItemIndex(product.id || product.slug)
+  if (index < 0) return product
+  const hit = items[index] || {}
+  const capabilities = normalizeListField(hit.capabilities)
+  const scenarios = normalizeListField(hit.scenarios)
+  return {
+    ...product,
+    name: hit.title || product.name,
+    shortDescription: hit.summary || product.shortDescription,
+    coverImage: hit.imageUrl || product.coverImage,
+    fullDescription: hit.fullDescription || product.fullDescription,
+    tag: hit.tag || product.tag,
+    capabilities: capabilities.length ? capabilities : product.capabilities,
+    scenarios: scenarios.length ? scenarios : product.scenarios,
+    detailCtaLabel: hit.detailCtaLabel || product.detailCtaLabel,
+    solutionLabel: hit.solutionLabel != null && hit.solutionLabel !== '' ? hit.solutionLabel : product.solutionLabel,
+    solutionHref: hit.solutionHref != null ? hit.solutionHref : product.solutionHref,
+  }
+}
+
 function productHref(product) {
   return getProductDetailHref(product)
 }
@@ -41,9 +80,9 @@ const CONSUMER_META = [
 export function buildHardwarePageModel(simpleContent = {}) {
   const items = Array.isArray(simpleContent.items) ? simpleContent.items : []
   const resolveItemIndex = (idOrSlug) => items.findIndex((item) => item.id === idOrSlug || item.slug === idOrSlug)
-  const resolveProduct = (id) => viewProduct(getProductBySlug(id))
+  const resolveProduct = (id) => overlaySimpleItem(viewProduct(getProductBySlug(id)), items, resolveItemIndex)
 
-  const flagship = viewProduct(getProductBySlug('control-screen'))
+  const flagship = overlaySimpleItem(viewProduct(getProductBySlug('control-screen')), items, resolveItemIndex)
   const matrixRows = resolveHardwareSpaceMatrixRows()
 
   const retailCards = RETAIL_META.map((item) => {
@@ -68,6 +107,7 @@ export function buildHardwarePageModel(simpleContent = {}) {
       subtitle: simpleContent.subtitle || '',
       bannerUrl: simpleContent.bannerUrl || '',
       ctaLabel: simpleContent.ctaLabel || '',
+      primaryCtaLabel: simpleContent.primaryCtaLabel || '',
     },
     sections: {
       ...DEFAULT_HARDWARE_SECTIONS,

@@ -1076,6 +1076,11 @@ body.admin-hardware-fullscreen {
 .hwc--editable .hwx-scene {
   pointer-events: auto;
 }
+.hwc--editable a.hwc-btn,
+.hwc--editable a.hwc-text-link,
+.hwc--editable .hwx-scene {
+  cursor: text;
+}
 .admin-news-compose:has(.admin-vedit) .admin-news-compose__body {
   padding: 16px 12px 40px;
   background: #edf2f8;
