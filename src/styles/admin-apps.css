@@ -1068,6 +1068,117 @@ body.admin-about-fullscreen {
 body.admin-home-fullscreen {
   overflow: hidden;
 }
+.home-basics-lead {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f3f7fc;
+  color: #4b5b73;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.home-basics-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.home-basics-block {
+  border: 1px solid #e4ebf5;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+.home-basics-block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f7f9fc;
+  border-bottom: 1px solid #e8eef7;
+}
+.home-basics-block__head > div:first-child {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+.home-basics-block__head em {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: #e8eef8;
+  color: #3b82f6;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+}
+.home-basics-block__head strong {
+  display: block;
+  font-size: 14px;
+  color: #172033;
+}
+.home-basics-block__head small {
+  display: block;
+  margin-top: 2px;
+  color: #7b8aa0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.home-basics-block__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+.home-basics-item {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.9fr) minmax(220px, 1.4fr) auto;
+  gap: 10px 14px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid #eef2f8;
+  border-radius: 10px;
+  background: #fbfcfe;
+}
+.home-basics-item__meta b {
+  display: block;
+  font-size: 13px;
+  color: #172033;
+}
+.home-basics-item__meta small {
+  display: block;
+  margin-top: 4px;
+  color: #7b8aa0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.home-basics-item__fields {
+  display: grid;
+  gap: 8px;
+}
+.home-basics-item__fields label {
+  margin: 0;
+}
+.home-basics-item__fields label > span {
+  font-size: 12px;
+  color: #5b6b82;
+}
+.home-basics-item__tools {
+  justify-self: end;
+  white-space: nowrap;
+}
+@media (max-width: 1100px) {
+  .home-basics-item {
+    grid-template-columns: 1fr;
+  }
+  .home-basics-item__tools {
+    justify-self: start;
+  }
+}
 .admin-vedit--home .home-vedit-hero {
   height: auto;
   min-height: 0;

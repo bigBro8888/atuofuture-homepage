@@ -105,6 +105,37 @@ function listTools(kind, index, length, { min = 1 } = {}) {
     <button type="button" data-home-list-remove="${kind}" data-item-index="${index}" ${length <= min ? 'disabled' : ''}>删除</button>`
 }
 
+function sectionBlock(no, title, desc, addKind, rowsHtml) {
+  return `
+    <div class="home-basics-block">
+      <div class="home-basics-block__head">
+        <div>
+          <em>${no}</em>
+          <div>
+            <strong>${title}</strong>
+            <small>${desc}</small>
+          </div>
+        </div>
+        ${addKind ? `<button type="button" class="admin-add-slide" data-home-list-add="${addKind}">+ 新增</button>` : ''}
+      </div>
+      <div class="home-basics-block__body">
+        ${rowsHtml || '<p class="admin-form-section__hint">暂无条目。</p>'}
+      </div>
+    </div>`
+}
+
+function itemRow({ title, subtitle = '', fieldsHtml = '', tools = '' }) {
+  return `
+    <div class="home-basics-item">
+      <div class="home-basics-item__meta">
+        <b>${esc(title)}</b>
+        ${subtitle ? `<small>${esc(subtitle)}</small>` : ''}
+      </div>
+      ${fieldsHtml ? `<div class="home-basics-item__fields">${fieldsHtml}</div>` : ''}
+      ${tools ? `<div class="home-basics-item__tools admin-slide-tools">${tools}</div>` : ''}
+    </div>`
+}
+
 function renderBasics(content) {
   const slides = content.heroSlides || []
   const banner = content.banner || {}
@@ -113,166 +144,118 @@ function renderBasics(content) {
   const news = content.news?.items || []
   const pitch = content.pitch?.items || []
 
+  const heroRows =
+    slides
+      .map((item, index) =>
+        itemRow({
+          title: `第 ${index + 1} 屏`,
+          subtitle: item.title || '未填写标题',
+          fieldsHtml: field(`heroSlides.${index}.actionHref`, '按钮点了跳到', item.actionHref || '', {
+            wide: true,
+            help: '例：/agents/ 或 #upgrade',
+          }),
+          tools: listTools('hero', index, slides.length, { min: 1 }),
+        })
+      )
+      .join('') || ''
+
+  const bannerRows = itemRow({
+    title: '咨询推广条',
+    subtitle: banner.title || '首屏下方那条横条',
+    fieldsHtml: field('banner.ctaUrl', '右侧按钮跳到', banner.ctaUrl || '', {
+      wide: true,
+      help: '例：/agents/；填 #demo 打开预约演示弹窗',
+    }),
+  })
+
+  const agentRows =
+    agents
+      .map((item, index) =>
+        itemRow({
+          title: item.name || `智能体 ${index + 1}`,
+          subtitle: item.sceneTitle || '名称与配图请在下方预览里改',
+          fieldsHtml: `<input type="hidden" data-home-field="agents.items.${index}.id" value="${esc(item.id || '')}" />`,
+          tools: listTools('agents', index, agents.length, { min: 1 }),
+        })
+      )
+      .join('') || ''
+
+  const solutionRows = [
+    itemRow({
+      title: '区块「查看全部」按钮',
+      subtitle: '方案区右上角更多入口',
+      fieldsHtml: field('solutions.moreUrl', '跳转到', content.solutions?.moreUrl || '', { wide: true }),
+    }),
+    ...solutions.map((item, index) =>
+      itemRow({
+        title: item.title || `方案 ${index + 1}`,
+        subtitle: '卡片点「了解更多」去哪',
+        fieldsHtml: field(`solutions.items.${index}.linkUrl`, '详情页链接', item.linkUrl || '', { wide: true }),
+        tools: listTools('solutions', index, solutions.length, { min: 1 }),
+      })
+    ),
+  ].join('')
+
+  const newsRows = [
+    itemRow({
+      title: '区块「进入新闻中心」',
+      subtitle: '新闻区底部入口',
+      fieldsHtml: field('news.moreUrl', '跳转到', content.news?.moreUrl || '', { wide: true }),
+    }),
+    ...news.map((item, index) =>
+      itemRow({
+        title: item.title || `新闻 ${index + 1}`,
+        subtitle: '这张卡点进去看哪篇',
+        fieldsHtml: field(`news.items.${index}.linkUrl`, '详情页链接', item.linkUrl || '', { wide: true }),
+        tools: listTools('news', index, news.length, { min: 1 }),
+      })
+    ),
+  ].join('')
+
+  const pitchRows = pitch
+    .map((item, index) =>
+      itemRow({
+        title: item.kicker || item.title || `宫格 ${index + 1}`,
+        subtitle: '底部「探索安托未来」宫格',
+        fieldsHtml: `
+          ${field(`pitch.items.${index}.href`, '点击跳到', item.href || '', {
+            help: '普通路径；若勾选预约演示可填 #',
+          })}
+          ${field(`pitch.items.${index}.variant`, '卡片样式', item.variant || 'photo', {
+            type: 'select',
+            options: [
+              ['photo', '图片卡'],
+              ['wave', '深蓝波纹'],
+              ['mint', '绿色纯色'],
+            ],
+          })}
+          ${field(`pitch.items.${index}.openDemo`, '点击打开预约演示弹窗', item.openDemo, { type: 'checkbox' })}`,
+        tools: listTools('pitch', index, pitch.length, { min: 1 }),
+      })
+    )
+    .join('')
+
   return `
     <details class="admin-vedit-basics">
       <summary>
-        <strong>基础设置</strong>
-        <span>按钮链接 · 标签 · 增删排序 · 宫格样式</span>
+        <strong>链接与条目</strong>
+        <span>只管跳转、增删排序；文案和图片请在下方预览里点选</span>
       </summary>
       <div class="admin-vedit-basics__body">
-        <div class="admin-form-grid">
-          ${field('banner.ctaUrl', '推广条跳转链接', banner.ctaUrl || '', {
-            wide: true,
-            help: '普通路径如 /agents/；填 #demo 则打开预约演示弹窗',
-          })}
-          ${field('solutions.moreUrl', '方案「更多」链接', content.solutions?.moreUrl || '')}
-          ${field('news.moreUrl', '新闻「更多」链接', content.news?.moreUrl || '')}
-          ${slides
-            .map(
-              (slide, index) =>
-                field(`heroSlides.${index}.actionHref`, `第 ${index + 1} 屏按钮链接`, slide.actionHref || '', {
-                  wide: true,
-                })
-            )
-            .join('')}
-          ${solutions
-            .map(
-              (item, index) => `
-              ${field(`solutions.items.${index}.linkUrl`, `方案「${item.title || index + 1}」详情链接`, item.linkUrl || '')}
-              ${field(`solutions.items.${index}.tags`, `方案「${item.title || index + 1}」标签（逗号分隔）`, (item.tags || []).join('，'), {
-                wide: true,
-              })}`
-            )
-            .join('')}
-          ${news
-            .map(
-              (item, index) =>
-                field(`news.items.${index}.linkUrl`, `新闻「${item.title || index + 1}」详情链接`, item.linkUrl || '', {
-                  wide: true,
-                })
-            )
-            .join('')}
-          ${agents
-            .map(
-              (item, index) =>
-                field(`agents.items.${index}.id`, `智能体「${item.name || index + 1}」内部编号`, item.id || '', {
-                  help: '一般不用改，用于切换定位',
-                })
-            )
-            .join('')}
-          ${pitch
-            .map(
-              (item, index) => `
-              ${field(`pitch.items.${index}.href`, `宫格「${item.kicker || index + 1}」跳转链接`, item.href || '', {
-                help: '普通路径；或填 #demo（也可勾选下方开关）',
-              })}
-              ${field(`pitch.items.${index}.variant`, `宫格「${item.kicker || index + 1}」样式`, item.variant || 'photo', {
-                type: 'select',
-                options: [
-                  ['photo', '图片卡'],
-                  ['wave', '深蓝波纹'],
-                  ['mint', '绿色纯色'],
-                ],
-              })}
-              ${field(`pitch.items.${index}.openDemo`, `宫格「${item.kicker || index + 1}」打开预约演示`, item.openDemo, {
-                type: 'checkbox',
-              })}`
-            )
-            .join('')}
-        </div>
-
-        <p class="admin-form-section__hint" style="margin-top:12px">新闻三卡也可在「内容中心 → 新闻」勾选「推送到首页」。</p>
-
-        <div class="admin-about-lists">
-          <div class="admin-about-list-block">
-            <div class="admin-about-list-block__head">
-              <strong>首屏轮播</strong>
-              <button type="button" class="admin-add-slide" data-home-list-add="hero">+ 新增</button>
-            </div>
-            <div class="admin-home-list">
-              ${slides
-                .map(
-                  (item, index) => `
-                <div class="admin-home-list__row">
-                  <span>第 ${index + 1} 屏：${esc(item.title || '未填写')}</span>
-                  <span class="admin-slide-tools">${listTools('hero', index, slides.length, { min: 1 })}</span>
-                </div>`
-                )
-                .join('') || '<p class="admin-form-section__hint">暂无轮播屏。</p>'}
-            </div>
-          </div>
-
-          <div class="admin-about-list-block">
-            <div class="admin-about-list-block__head">
-              <strong>空间智能体</strong>
-              <button type="button" class="admin-add-slide" data-home-list-add="agents">+ 新增</button>
-            </div>
-            <div class="admin-home-list">
-              ${agents
-                .map(
-                  (item, index) => `
-                <div class="admin-home-list__row">
-                  <span>${esc(item.name || `智能体 ${index + 1}`)}</span>
-                  <span class="admin-slide-tools">${listTools('agents', index, agents.length, { min: 1 })}</span>
-                </div>`
-                )
-                .join('') || '<p class="admin-form-section__hint">暂无智能体。</p>'}
-            </div>
-          </div>
-
-          <div class="admin-about-list-block">
-            <div class="admin-about-list-block__head">
-              <strong>产品与方案</strong>
-              <button type="button" class="admin-add-slide" data-home-list-add="solutions">+ 新增</button>
-            </div>
-            <div class="admin-home-list">
-              ${solutions
-                .map(
-                  (item, index) => `
-                <div class="admin-home-list__row">
-                  <span>${esc(item.title || `方案 ${index + 1}`)}</span>
-                  <span class="admin-slide-tools">${listTools('solutions', index, solutions.length, { min: 1 })}</span>
-                </div>`
-                )
-                .join('') || '<p class="admin-form-section__hint">暂无方案卡。</p>'}
-            </div>
-          </div>
-
-          <div class="admin-about-list-block">
-            <div class="admin-about-list-block__head">
-              <strong>新闻动态</strong>
-              <button type="button" class="admin-add-slide" data-home-list-add="news">+ 新增</button>
-            </div>
-            <div class="admin-home-list">
-              ${news
-                .map(
-                  (item, index) => `
-                <div class="admin-home-list__row">
-                  <span>${esc(item.title || `新闻 ${index + 1}`)}</span>
-                  <span class="admin-slide-tools">${listTools('news', index, news.length, { min: 1 })}</span>
-                </div>`
-                )
-                .join('') || '<p class="admin-form-section__hint">暂无新闻卡。</p>'}
-            </div>
-          </div>
-
-          <div class="admin-about-list-block">
-            <div class="admin-about-list-block__head">
-              <strong>探索宫格</strong>
-              <button type="button" class="admin-add-slide" data-home-list-add="pitch">+ 新增</button>
-            </div>
-            <div class="admin-home-list">
-              ${pitch
-                .map(
-                  (item, index) => `
-                <div class="admin-home-list__row">
-                  <span>${esc(item.kicker || item.title || `宫格 ${index + 1}`)}</span>
-                  <span class="admin-slide-tools">${listTools('pitch', index, pitch.length, { min: 1 })}</span>
-                </div>`
-                )
-                .join('') || '<p class="admin-form-section__hint">暂无宫格。</p>'}
-            </div>
-          </div>
+        <p class="home-basics-lead">按首页从上到下分组。改标题/配图 → 滚到下方预览直接点；改「点了去哪」和增减条目 → 在这里。</p>
+        <div class="home-basics-sections">
+          ${sectionBlock('01', '首屏轮播', '大图轮播每一屏的按钮跳转，以及增删屏', 'hero', heroRows)}
+          ${sectionBlock('02', '中部推广条', '轮播下面那条咨询横条的按钮跳转', '', bannerRows)}
+          ${sectionBlock('03', '空间智能体', '只在这里增删排序；名称与图片去下方预览改', 'agents', agentRows)}
+          ${sectionBlock('04', '产品与方案', '方案卡详情链接，以及「查看全部」入口', 'solutions', solutionRows)}
+          ${sectionBlock(
+            '05',
+            '新闻动态',
+            '新闻卡详情链接；也可在内容中心勾选「推送到首页」',
+            'news',
+            newsRows
+          )}
+          ${sectionBlock('06', '探索安托未来', '底部宫格的跳转、样式、是否打开预约弹窗', 'pitch', pitchRows)}
         </div>
       </div>
     </details>`
@@ -323,7 +306,7 @@ export function renderHomeVisualEditor(content) {
     <div class="admin-vedit admin-vedit--home">
       ${renderBasics(content)}
       <div class="admin-vedit-toolbar">
-        <p class="admin-vedit-hint">点文字直接改，点图片换图。链接、增删排序在上方基础设置。</p>
+        <p class="admin-vedit-hint">点文字改文案，点图片换图。按钮「跳到哪」、增删条目：点上方「链接与条目」。</p>
         <button type="button" class="admin-vedit-fullscreen-btn" data-home-fullscreen>
           <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
           全屏编辑
