@@ -58,37 +58,46 @@ function syncCatalogFromContent(content) {
 function renderBasics(content) {
   const items = Array.isArray(content.items) ? content.items : []
   const options = ctx.productLibraryOptions()
+  const optionHtml = (selected) =>
+    (options || [])
+      .map(([value, label]) => `<option value="${esc(value)}"${String(selected) === String(value) ? ' selected' : ''}>${esc(label)}</option>`)
+      .join('')
   return `
-    <details class="admin-vedit-basics" open>
+    <details class="admin-vedit-basics">
       <summary>
         <strong>基础设置</strong>
-        <span>顶栏下拉菜单、商品详情关联（页面预览外的配置）</span>
+        <span>顶栏下拉菜单 · 详情页跳转（一般不用改）</span>
       </summary>
       <div class="admin-vedit-basics__body">
         ${ctx.renderHardwareNavEditor(content.navGroups || [], items)}
-        <fieldset style="margin-top:18px">
-          <legend>商品详情关联</legend>
-          <p class="admin-form-section__hint">列表卡片点「查看详情」时跳转到哪条商品详情。详情正文请到「内容中心 → 商品详情」可视化编辑。</p>
-          <div class="admin-home-list">
+        <div class="admin-hw-links">
+          <div class="admin-hw-links__head">
+            <strong>详情页跳转</strong>
+            <p>用户在频道页点「查看详情」时，打开哪一篇商品详情。正文请到「内容中心 → 商品详情」编辑；多数情况留空即可自动匹配。</p>
+          </div>
+          <div class="admin-hw-links__table" role="table">
+            <div class="admin-hw-links__row is-head" role="row">
+              <span>频道产品</span>
+              <span>跳转到商品详情</span>
+            </div>
             ${items
               .map(
                 (entry, index) => `
-              <div class="admin-item-row admin-simple-item">
+              <div class="admin-hw-links__row" role="row">
                 <input type="hidden" data-home-field="items.${index}.id" value="${esc(entry.id || '')}" />
                 <input type="hidden" data-home-field="items.${index}.group" value="${esc(entry.group || '')}" />
-                <div class="admin-simple-item__fields" style="grid-template-columns:1fr 1fr">
-                  <label class="admin-news-field"><span>产品</span><input type="text" value="${esc(entry.title || entry.id)}" disabled /></label>
-                  ${ctx.homeField(`items.${index}.detailId`, '关联商品详情', entry.detailId || '', {
-                    type: 'select',
-                    options,
-                    help: '可留空，前台将按关联规则自动匹配',
-                  })}
-                </div>
+                <span class="admin-hw-links__name">${esc(entry.title || entry.id || '未命名')}</span>
+                <label class="admin-hw-links__select">
+                  <select data-home-field="items.${index}.detailId">
+                    <option value="">自动匹配（推荐）</option>
+                    ${optionHtml(entry.detailId || '')}
+                  </select>
+                </label>
               </div>`
               )
-              .join('') || '<p class="admin-form-section__hint">暂无商品条目。</p>'}
+              .join('') || '<p class="admin-form-section__hint">暂无产品。</p>'}
           </div>
-        </fieldset>
+        </div>
       </div>
     </details>`
 }
@@ -140,8 +149,21 @@ export function renderHardwareVisualEditor(content) {
   editor.innerHTML = `
     <div class="admin-vedit admin-vedit--hardware">
       ${renderBasics(content)}
-      <div class="admin-vedit-hint">下方即智能硬件频道页预览：点文字直接改；点图片可换图。顶栏下拉与详情关联在上方「基础设置」。改完点「发布到前台」。</div>
+      <div class="admin-vedit-toolbar">
+        <p class="admin-vedit-hint">点文字直接改，点图片换图。需要更大编辑区时点右侧全屏。</p>
+        <button type="button" class="admin-vedit-fullscreen-btn" data-hardware-fullscreen>
+          <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
+          全屏编辑
+        </button>
+      </div>
       <div class="admin-vedit-canvas" data-hardware-visual>
+        <div class="admin-vedit-fullscreen-bar" hidden>
+          <strong>智能硬件 · 全屏编辑</strong>
+          <button type="button" data-hardware-fullscreen-exit>
+            <span class="material-symbols-outlined" aria-hidden="true">fullscreen_exit</span>
+            退出全屏
+          </button>
+        </div>
         ${renderHardwarePage(model, { editable: true })}
       </div>
       ${imageModalHtml()}
@@ -337,6 +359,16 @@ function saveImageModal() {
   ctx.toast(url ? '图片已更新' : '已清除图片')
 }
 
+function setHardwareFullscreen(on) {
+  const wrap = document.querySelector('.admin-vedit--hardware')
+  const canvas = document.querySelector('[data-hardware-visual]')
+  const bar = canvas?.querySelector('.admin-vedit-fullscreen-bar')
+  if (!wrap || !canvas) return
+  wrap.classList.toggle('is-fullscreen', on)
+  document.body.classList.toggle('admin-hardware-fullscreen', on)
+  if (bar) bar.hidden = !on
+}
+
 export function bindHardwareVisualAdmin(helpers) {
   ctx = { ...ctx, ...helpers }
   const editor = document.querySelector('[data-simple-editor]')
@@ -344,6 +376,16 @@ export function bindHardwareVisualAdmin(helpers) {
 
   editor.addEventListener('click', async (event) => {
     if (ctx.state?.simpleKey !== 'hardware') return
+    if (event.target.closest('[data-hardware-fullscreen]')) {
+      event.preventDefault()
+      setHardwareFullscreen(true)
+      return
+    }
+    if (event.target.closest('[data-hardware-fullscreen-exit]')) {
+      event.preventDefault()
+      setHardwareFullscreen(false)
+      return
+    }
     if (event.target.closest('[data-hardware-image-modal-close]')) {
       event.preventDefault()
       closeImageModal()
@@ -359,6 +401,12 @@ export function bindHardwareVisualAdmin(helpers) {
       event.preventDefault()
       openImageModal(imageEl)
     }
+  })
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return
+    if (!document.body.classList.contains('admin-hardware-fullscreen')) return
+    setHardwareFullscreen(false)
   })
 
   editor.addEventListener('change', async (event) => {

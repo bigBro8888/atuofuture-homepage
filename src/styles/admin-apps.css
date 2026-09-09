@@ -925,8 +925,141 @@ body.admin-modal-open { overflow: hidden; }
 .admin-vedit-canvas .hpi-hero { min-height: 520px; }
 .admin-vedit-canvas .hpi-hero__grid { padding-top: 72px; padding-bottom: 48px; }
 .admin-vedit--hardware .admin-vedit-canvas {
+  overflow: visible;
+  max-height: none;
+}
+.admin-vedit-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.admin-vedit-toolbar .admin-vedit-hint {
+  flex: 1;
+  margin: 0;
+}
+.admin-vedit-fullscreen-btn,
+.admin-vedit-fullscreen-bar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #c9d6ea;
+  border-radius: 10px;
+  background: #fff;
+  color: #1d3a66;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-vedit-fullscreen-btn .material-symbols-outlined,
+.admin-vedit-fullscreen-bar .material-symbols-outlined {
+  font-size: 18px;
+}
+.admin-vedit-fullscreen-btn:hover,
+.admin-vedit-fullscreen-bar button:hover {
+  border-color: #2c7cff;
+  color: #0b57d0;
+}
+.admin-vedit-fullscreen-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #d7e0ee;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+}
+.admin-vedit--hardware.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  background: #edf2f8;
+}
+.admin-vedit--hardware.is-fullscreen .admin-vedit-basics,
+.admin-vedit--hardware.is-fullscreen .admin-vedit-toolbar {
+  display: none;
+}
+.admin-vedit--hardware.is-fullscreen .admin-vedit-canvas {
+  flex: 1;
   overflow: auto;
-  max-height: calc(100vh - 220px);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.admin-vedit--hardware.is-fullscreen .admin-vedit-fullscreen-bar {
+  display: flex;
+}
+body.admin-hardware-fullscreen {
+  overflow: hidden;
+}
+.admin-hw-links {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e8eef7;
+}
+.admin-hw-links__head strong {
+  display: block;
+  font-size: 14px;
+  color: #172033;
+}
+.admin-hw-links__head p {
+  margin: 6px 0 12px;
+  color: #7b8aa0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.admin-hw-links__table {
+  display: grid;
+  gap: 0;
+  border: 1px solid #e2e9f4;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.admin-hw-links__row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(180px, 1.2fr);
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-top: 1px solid #eef2f8;
+}
+.admin-hw-links__row.is-head {
+  border-top: 0;
+  background: #f5f8fc;
+  color: #6b7c93;
+  font-size: 12px;
+  font-weight: 600;
+}
+.admin-hw-links__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a2b45;
+}
+.admin-hw-links__select {
+  margin: 0;
+  display: block;
+}
+.admin-hw-links__select select {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid #d5dfec;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
 }
 .admin-vedit--hardware .hwc-hero { position: relative; }
 .admin-vedit--hardware .hpi-edit-bg {
