@@ -1,13 +1,18 @@
 import { AGENTS_OVERVIEW } from '../data/agents-overview.js'
-import { renderAgentsChannel } from '../lib/agents-channel-render.js'
+import { bindAgentsChannelPreview, renderAgentsChannel } from '../lib/agents-channel-render.js'
 
 const IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'bannerUrl', label: '首屏 Banner', size: '1920×1080', tip: '横向全宽背景' },
-  { test: (path) => /items\.\d+\.imageUrl/.test(path), label: '智能体场景图', size: '960×600', tip: '任务故事与卡片用图' },
+  { test: (path) => /items\.\d+\.imageUrl/.test(path), label: '智能体场景图', size: '960×600', tip: '任务故事场景图' },
   { test: () => true, label: '图片', size: '1200×800', tip: '按前台比例裁切即可' },
 ]
 
+const BASE_BY_ID = Object.fromEntries(
+  AGENTS_OVERVIEW.map((agent) => [agent.id, structuredClone(agent)])
+)
+
 let ctx = { escapeHtml: (v) => String(v ?? ''), toast: () => {}, api: null, state: null }
+let previewCtl = null
 
 function resolveImageSizeGuide(path = '') {
   return IMAGE_SIZE_GUIDE.find((item) => item.test(path)) || IMAGE_SIZE_GUIDE[IMAGE_SIZE_GUIDE.length - 1]
@@ -32,18 +37,41 @@ function readEditableText(el) {
   return (el.innerText || '').replace(/\u00a0/g, ' ').trim()
 }
 
-function buildModel(content) {
-  const items = Array.isArray(content.items) ? content.items : []
-  const resolveItemIndex = (id) => items.findIndex((item) => item.id === id || item.group === id)
-  const agents = AGENTS_OVERVIEW.map((agent) => {
-    const hit = items.find((item) => item.id === agent.id)
+/** 把草稿写回 AGENTS_OVERVIEW，供生态图 / 任务故事同构渲染 */
+function applyCmsToOverview(content) {
+  const items = Array.isArray(content?.items) ? content.items : []
+  for (const agent of AGENTS_OVERVIEW) {
+    const base = BASE_BY_ID[agent.id]
+    if (base) Object.assign(agent, structuredClone(base))
+    const hit = items.find((item) => item.id === agent.id || item.group === agent.id)
+    if (!hit) continue
+    if (hit.title) agent.name = hit.title
+    if (hit.summary) agent.blurb = hit.summary
+    if (hit.imageUrl) agent.sceneImage = hit.imageUrl
+  }
+}
+
+function ensureItems(content) {
+  content.items = Array.isArray(content.items) ? content.items : []
+  const byId = new Map(content.items.map((item) => [item.id || item.group, item]))
+  content.items = Object.keys(BASE_BY_ID).map((id) => {
+    const base = BASE_BY_ID[id]
+    const hit = byId.get(id) || {}
     return {
-      ...agent,
-      name: hit?.title || agent.name,
-      blurb: hit?.summary || agent.blurb,
-      sceneImage: hit?.imageUrl || agent.sceneImage,
+      id,
+      group: hit.group || id,
+      title: hit.title || base.name || '',
+      summary: hit.summary || base.blurb || '',
+      imageUrl: hit.imageUrl || base.sceneImage || '',
     }
   })
+  return content
+}
+
+function buildModel(content) {
+  applyCmsToOverview(content)
+  const items = Array.isArray(content.items) ? content.items : []
+  const resolveItemIndex = (id) => items.findIndex((item) => item.id === id || item.group === id)
   return {
     hero: {
       title: content.title || '',
@@ -51,8 +79,15 @@ function buildModel(content) {
       bannerUrl: content.bannerUrl || '',
       ctaLabel: content.ctaLabel || '',
     },
-    agents,
+    agents: AGENTS_OVERVIEW.map((agent) => ({
+      id: agent.id,
+      name: agent.name,
+      blurb: agent.blurb,
+      sceneImage: agent.sceneImage,
+    })),
     resolveItemIndex,
+    selectedAgent: AGENTS_OVERVIEW[0]?.id || 'space',
+    selectedIndustry: 'building',
   }
 }
 
@@ -93,24 +128,36 @@ function imageModalHtml() {
       </div>`
 }
 
+function mountPreview() {
+  previewCtl?.destroy?.()
+  const canvas = document.querySelector('[data-agents-visual]')
+  const channel = canvas?.querySelector('[data-ag-channel]')
+  if (!channel) {
+    previewCtl = null
+    return
+  }
+  previewCtl = bindAgentsChannelPreview(channel)
+}
+
 export function renderAgentsVisualEditor(content) {
   const editor = document.querySelector('[data-simple-editor]')
   if (!editor) return
   editor.classList.add('admin-news-editor')
-  const model = buildModel(content || {})
+  const safe = ensureItems(structuredClone(content || { items: [] }))
+  const model = buildModel(safe)
   editor.innerHTML = `
     <div class="admin-vedit admin-vedit--agents">
       <details class="admin-vedit-basics">
         <summary>
-          <strong>说明</strong>
-          <span>本页改频道首屏与八大智能体卡片；详情页在「内容中心 → 空间智能体」</span>
+          <strong>编辑说明</strong>
+          <span>预览与前台同结构；首屏与底部卡片可点改，详情正文在内容中心</span>
         </summary>
         <div class="admin-vedit-basics__body">
-          <p class="admin-form-section__hint">生态图、任务故事等交互区仍用前台页面展示；这里改的名称/简介/场景图会同步到前台频道。</p>
+          <p class="admin-form-section__hint">上方预览与线上一致：首屏、生态图、任务故事、行业组合、底部 CTA。可改首屏文案/Banner，以及页底「八大智能体」名称、简介、场景图。生态图点选、任务故事切换可在预览里试用。</p>
         </div>
       </details>
       <div class="admin-vedit-toolbar">
-        <p class="admin-vedit-hint">点文字直接改，点图片换图。需要更大编辑区时点右侧全屏。</p>
+        <p class="admin-vedit-hint">点首屏文字/Banner 直接改；八大智能体字段在预览底部。详情页请到「内容中心 → 空间智能体」。</p>
         <button type="button" class="admin-vedit-fullscreen-btn" data-agents-fullscreen>
           <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
           全屏编辑
@@ -128,11 +175,11 @@ export function renderAgentsVisualEditor(content) {
       </div>
       ${imageModalHtml()}
     </div>`
+  mountPreview()
 }
 
 export function collectAgentsVisualContent(baseContent) {
-  const content = structuredClone(baseContent || { items: [] })
-  content.items = Array.isArray(content.items) ? content.items : []
+  const content = ensureItems(structuredClone(baseContent || { items: [] }))
   const root = document.querySelector('[data-simple-editor]')
   if (!root) return content
   root.querySelectorAll('[data-edit-path]').forEach((el) => {
@@ -144,7 +191,13 @@ export function collectAgentsVisualContent(baseContent) {
     const url = el.dataset.editImageUrl != null ? el.dataset.editImageUrl : el.querySelector('img')?.getAttribute('src') || ''
     setNested(content, path, url || '')
   })
-  content.items = content.items.filter(Boolean)
+  content.items = (content.items || []).filter(Boolean).map((item) => ({
+    id: item.id || '',
+    group: item.group || item.id || '',
+    title: item.title || '',
+    summary: item.summary || '',
+    imageUrl: item.imageUrl || '',
+  }))
   return content
 }
 
@@ -198,6 +251,20 @@ function applyVisualImage(path, url) {
     const heroImg = canvas.querySelector('.ag-hero__bg img')
     if (heroImg && safeUrl) heroImg.src = safeUrl
   }
+  const itemMatch = /^items\.(\d+)\.imageUrl$/.exec(path)
+  if (itemMatch) {
+    const index = Number(itemMatch[1])
+    const content = ctx.state?.simplePage?.draftContent
+    const agentId = content?.items?.[index]?.id
+    if (agentId) {
+      const agent = AGENTS_OVERVIEW.find((row) => row.id === agentId)
+      if (agent && safeUrl) agent.sceneImage = safeUrl
+      if (previewCtl?.selectedAgent === agentId) {
+        const scene = canvas.querySelector('[data-ag-scene-img]')
+        if (scene && safeUrl) scene.src = safeUrl
+      }
+    }
+  }
 }
 
 function openImageModal(imageEl) {
@@ -240,6 +307,14 @@ function setFullscreen(on) {
   wrap.classList.toggle('is-fullscreen', on)
   document.body.classList.toggle('admin-agents-fullscreen', on)
   if (bar) bar.hidden = !on
+  requestAnimationFrame(() => {
+    const channel = canvas.querySelector('[data-ag-channel]')
+    if (channel) {
+      import('../components/agents/ecosystem-map.js').then(({ layoutAgentOrbitLinks }) => {
+        layoutAgentOrbitLinks(channel)
+      })
+    }
+  })
 }
 
 export function bindAgentsVisualAdmin(helpers) {
@@ -275,7 +350,13 @@ export function bindAgentsVisualAdmin(helpers) {
       openImageModal(imageEl)
       return
     }
-    if (event.target.closest('[data-agents-visual] a, [data-agents-visual] button') && !event.target.closest('[data-edit-image]')) {
+    // 允许生态图 / 任务故事 / 行业切换；拦截其它跳转
+    if (
+      event.target.closest('[data-ag-select], [data-ag-industry], [data-ag-jump-story], [data-edit-path], [data-edit-image]')
+    ) {
+      return
+    }
+    if (event.target.closest('[data-agents-visual] a, [data-agents-visual] button')) {
       event.preventDefault()
     }
   })

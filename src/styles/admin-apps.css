@@ -1254,6 +1254,14 @@ body.admin-agents-fullscreen {
   right: 16px;
   z-index: 5;
 }
+.admin-vedit--agents .ag-edit-strip {
+  padding: 32px 0 48px;
+  background: #f5f7fb;
+  border-top: 1px solid #e5ebf5;
+}
+.admin-vedit--agents .ag-edit-strip .ag-section-head h2 {
+  font-size: 22px;
+}
 .sol-scene__edit-hint {
   margin: 8px 0 0;
   font-size: 13px;
