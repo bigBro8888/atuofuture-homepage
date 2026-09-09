@@ -8,42 +8,6 @@ function esc(str = '') {
     .replace(/"/g, '&quot;')
 }
 
-/** 八大智能体展示文案（对齐设计稿） */
-const AGENT_COPY = {
-  space: {
-    title: '空间服务智能体',
-    desc: '空调照明、工单与信息发布统一调度',
-  },
-  energy: {
-    title: '能源能耗智能体',
-    desc: '分项计量与有无人节能分析',
-  },
-  meeting: {
-    title: '会议智能体',
-    desc: '预约签到、中控与音视频联动',
-  },
-  exhibition: {
-    title: '展厅智能体',
-    desc: '大屏、孪生、讲解与展项状态',
-  },
-  visitor: {
-    title: '访客接待智能体',
-    desc: '邀约登记、通行与接待编排',
-  },
-  opc: {
-    title: '商业空间运营智能体',
-    desc: '空间发布、带看、签约与运营协同',
-  },
-  hospitality: {
-    title: '酒店公寓智能体',
-    desc: '分房、门锁、客房与费用管理',
-  },
-  asset: {
-    title: '资产管理智能体',
-    desc: '盘点、领用借还与生命周期',
-  },
-}
-
 /** 左右环绕中心的智能体顺序 */
 const AGENT_LEFT_IDS = ['space', 'meeting', 'visitor', 'hospitality']
 const AGENT_RIGHT_IDS = ['energy', 'exhibition', 'opc', 'asset']
@@ -98,7 +62,6 @@ function renderHeader() {
 
 function renderAgentButton(a, selectedId) {
   const on = a.id === selectedId
-  const copy = AGENT_COPY[a.id] || { title: a.name, desc: a.blurb }
   return `
     <button
       type="button"
@@ -110,8 +73,8 @@ function renderAgentButton(a, selectedId) {
         <span class="material-symbols-outlined">${esc(a.icon)}</span>
       </span>
       <span class="ag-eco__agent-copy">
-        <strong>${esc(copy.title)}</strong>
-        <small>${esc(copy.desc)}</small>
+        <strong>${esc(a.name || '')}</strong>
+        <small>${esc(a.blurb || '')}</small>
       </span>
     </button>`
 }
