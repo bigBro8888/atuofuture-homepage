@@ -1,6 +1,7 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 import { bindNewsRichEditor, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
 import { bindProductLibraryAdmin, closeProductCompose, loadProductLibrary, productLibraryOptions } from './admin-products.js'
+import { bindHardwareVisualAdmin, collectHardwareVisualContent, renderHardwareVisualEditor } from './admin-hardware.js'
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 
 const API = '/api/admin'
@@ -36,7 +37,7 @@ const titles = {
   about: ['关于我们', '路径 /about/ · 与线上六个区块一一对应'],
   'page-solutions': ['行业解决方案', '路径 /solutions/ · 首屏与列表；详情请到内容中心编辑'],
   'page-agents': ['空间智能体', '路径 /agents/ · 首屏与矩阵；详情请到内容中心编辑'],
-  'page-hardware': ['智能硬件', '路径 /hardware/ · 首屏、列表，以及关联内容中心的商品详情'],
+  'page-hardware': ['智能硬件', '路径 /hardware/ · 可视化编辑频道页；详情正文在内容中心'],
   content: ['内容中心', '新闻、行业解决方案、空间智能体、商品详情集中管理'],
   'content-news': ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
   'content-solutions': ['内容中心 · 行业解决方案', '路径 /solutions/?id= · 编辑方案详情'],
@@ -1294,8 +1295,8 @@ function hardwareNavProductFields(groupIndex, productIndex, product, items = [])
 
 function renderHardwareNavEditor(navGroups, items = []) {
   return `
-      <fieldset data-simple-section="nav">
-        <legend>顶栏下拉菜单</legend>
+      <div class="admin-hw-nav-basics">
+        <h4 style="margin:0 0 8px;font-size:14px">顶栏下拉菜单</h4>
         <p class="admin-form-section__hint">只影响全站顶栏「智能硬件」下拉。先看产品图，点「编辑」再改名称、缩略图和跳转链接；保存并发布后官网同步。</p>
         <div class="admin-nav-groups">${navGroups.map((group, groupIndex) => `
           <article class="admin-nav-col" data-nav-col="${groupIndex}">
@@ -1327,7 +1328,7 @@ function renderHardwareNavEditor(navGroups, items = []) {
             <button type="button" class="admin-add-slide" data-nav-add="${groupIndex}">+ 添加产品</button>
           </article>`).join('')}
         </div>
-      </fieldset>`
+      </div>`
 }
 
 function refreshHardwareNavEditor(content) {
@@ -1409,6 +1410,16 @@ function renderSimpleEditor(key, content) {
   document.querySelector('[data-simple-path]').textContent = item?.path || `/${key}/`
   const preview = document.querySelector('[data-simple-preview]')
   if (preview && item) preview.href = item.path === '全站共用' ? '/' : item.path
+  const headHint = document.querySelector('[data-simple-form] .admin-card__head p')
+  if (headHint) {
+    headHint.innerHTML = key === 'hardware'
+      ? `路径 <code data-simple-path>${item?.path || '/hardware/'}</code> · 可视化编辑频道页，点预览上的文字和图片直接改，发布后前台同步。`
+      : `路径 <code data-simple-path>${item?.path || `/${key}/`}</code> · 可改首屏，也可改下方产品/方案/智能体列表，发布后前台同步。`
+  }
+  if (key === 'hardware') {
+    renderHardwareVisualEditor(content)
+    return
+  }
   const items = Array.isArray(content.items) ? content.items : []
   const outline = simpleOutline(key, items)
   if (!outline.some((entry) => entry.id === state.simpleSection)) state.simpleSection = 'hero'
@@ -1419,19 +1430,17 @@ function renderSimpleEditor(key, content) {
   }
   const navGroups = Array.isArray(content.navGroups) ? content.navGroups : []
   const spaceMatrixRows = Array.isArray(content.spaceMatrixRows) ? content.spaceMatrixRows : []
-  const navSection = key === 'hardware' ? renderHardwareNavEditor(navGroups, items) : ''
+  const navSection = ''
   const listSections = outline.filter((entry) => entry.id !== 'hero' && entry.id !== 'nav').map((entry) => {
     const rows = items
       .map((row, index) => ({ row, index }))
       .filter(({ row }) => (row.group || row.id) === entry.id)
-    const matrixEditor = key === 'hardware' && entry.id === 'space'
-      ? renderSpaceMatrixEditor(spaceMatrixRows, items)
-      : ''
+    const matrixEditor = ''
     return `
       <fieldset data-simple-section="${entry.id}">
         <legend>${escapeHtml(sectionLegend[entry.id] || entry.title)}</legend>
         ${matrixEditor}
-        <p class="admin-form-section__hint">${key === 'hardware' ? '列表展示可改名称和图片。详情页请到「内容中心 → 商品详情」编辑，然后在下面关联。' : '频道列表可改名称、简介和图片。完整详情请到「内容中心」编辑。'}</p>
+        <p class="admin-form-section__hint">频道列表可改名称、简介和图片。完整详情请到「内容中心」编辑。</p>
         <div class="admin-home-list">${rows.map(({ row, index }) => renderSimpleItemFields(row, index, key)).join('') || '<p class="admin-form-section__hint">此类暂无条目。</p>'}</div>
       </fieldset>`
   }).join('')
@@ -1463,6 +1472,9 @@ function renderSimpleEditor(key, content) {
 }
 
 function collectSimpleContent() {
+  if (state.simpleKey === 'hardware') {
+    return collectHardwareVisualContent(state.simplePage?.draftContent)
+  }
   const content = structuredClone(state.simplePage?.draftContent || { items: [], navGroups: [], spaceMatrixRows: [] })
   content.items = Array.isArray(content.items) ? content.items : []
   content.navGroups = Array.isArray(content.navGroups) ? content.navGroups : []
@@ -2773,6 +2785,15 @@ document.querySelector('[data-item-modal]').addEventListener('change', async (ev
 
 api('/me').then(({ user }) => showAdmin(user)).catch(showLogin)
 bindProductLibraryAdmin({ api, toast, escapeHtml, dateTime, state })
+bindHardwareVisualAdmin({
+  api,
+  toast,
+  escapeHtml,
+  homeField,
+  productLibraryOptions,
+  renderHardwareNavEditor,
+  state,
+})
 bindContentCenter({
   api,
   toast,

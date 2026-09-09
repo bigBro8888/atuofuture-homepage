@@ -924,6 +924,25 @@ body.admin-modal-open { overflow: hidden; }
 .admin-vedit-canvas .hwc-shell { width: min(1440px, calc(100% - 48px)); margin-inline: auto; }
 .admin-vedit-canvas .hpi-hero { min-height: 520px; }
 .admin-vedit-canvas .hpi-hero__grid { padding-top: 72px; padding-bottom: 48px; }
+.admin-vedit--hardware .admin-vedit-canvas {
+  overflow: auto;
+  max-height: calc(100vh - 220px);
+}
+.admin-vedit--hardware .hwc-hero { position: relative; }
+.admin-vedit--hardware .hpi-edit-bg {
+  position: absolute;
+  z-index: 5;
+  top: 16px;
+  right: 16px;
+}
+.hwc--editable [contenteditable="true"][data-placeholder]:empty::before {
+  color: #9aa8bc;
+  content: attr(data-placeholder);
+}
+.hwc--editable .hwx-matrix__card,
+.hwc--editable .hwx-scene {
+  pointer-events: auto;
+}
 .admin-news-compose:has(.admin-vedit) .admin-news-compose__body {
   padding: 16px 12px 40px;
   background: #edf2f8;

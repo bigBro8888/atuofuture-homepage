@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { db } from '../../lib/store.js'
 import { HARDWARE_MEGA_GROUPS, HARDWARE_PRODUCTS, HARDWARE_SPACE_MATRIX_ROWS } from '../../../../src/data/hardware-catalog.js'
+import { DEFAULT_HARDWARE_SECTIONS } from '../../../../src/lib/hardware-page-render.js'
 import { SOLUTIONS } from '../../../../src/data/solutions.js'
 import { AGENTS_OVERVIEW } from '../../../../src/data/agents-overview.js'
 
@@ -203,6 +204,19 @@ function cleanNavGroups(value) {
   })
 }
 
+function cleanHardwareSections(value = {}) {
+  const out = {}
+  for (const [key, fallback] of Object.entries(DEFAULT_HARDWARE_SECTIONS)) {
+    const extra = value[key] || {}
+    out[key] = {}
+    for (const field of Object.keys(fallback)) {
+      const max = field === 'subtitle' ? 400 : 120
+      out[key][field] = cleanText(extra[field], fallback[field], max)
+    }
+  }
+  return out
+}
+
 export function validateSimplePage(key, value = {}) {
   const fallback = defaultSimplePages[key]
   if (!fallback) throw new Error('未知页面')
@@ -217,6 +231,7 @@ export function validateSimplePage(key, value = {}) {
   if (key === 'hardware') {
     page.navGroups = cleanNavGroups(value.navGroups)
     page.spaceMatrixRows = cleanSpaceMatrixRows(value.spaceMatrixRows)
+    page.sections = cleanHardwareSections(value.sections)
   }
   return page
 }

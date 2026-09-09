@@ -8,287 +8,99 @@ import {
   presentHardwareProduct,
   resolveHardwareSpaceMatrixRows,
 } from '../data/hardware-catalog.js'
+import { DEFAULT_HARDWARE_SECTIONS, renderHardwarePage } from '../lib/hardware-page-render.js'
 
-function esc(str = '') {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+function viewProduct(product) {
+  return presentHardwareProduct(product) || product
 }
 
 function productHref(product) {
   return getProductDetailHref(product)
 }
 
-function viewProduct(product) {
-  return presentHardwareProduct(product) || product
-}
+const RETAIL_META = [
+  { id: 'eink-price-tag', use: '低功耗电子纸价签，服务门店货架信息的远程更新与统一管理。' },
+  { id: 'lcd-price-tag', use: '彩色 LCD 价签，适合高对比、促销与品牌专柜展示场景。' },
+  { id: 'cold-tag', use: '面向冷链与低温货架的标签方案，适配生鲜与仓储环境。' },
+  { id: 'aap', use: '资产盘点与标签管理硬件能力，支撑盘点、巡检与台账闭环。' },
+]
 
-function renderHero() {
-  const title = cmsHero?.title || '连接空间、商品与真实业务'
-  const subtitle = cmsHero?.subtitle || '安托未来以空间智能、电子纸与边缘连接能力，构建覆盖企业空间、新零售与智能终端的硬件产品体系。'
-  const banner = cmsHero?.bannerUrl || '/images/hardware/hero-bg-3840.png'
-  const cta = cmsHero?.ctaLabel || '获取选型建议'
-  return `
-    <section class="hwc-hero">
-      <div class="hwc-hero__bg" aria-hidden="true">
-        <img src="${esc(banner)}" alt="" width="3840" height="1054" decoding="async" fetchpriority="high" />
-      </div>
-      <div class="hwc-shell hwc-hero__content">
-        <div class="hwc-hero__copy">
-          <h1>${esc(title)}</h1>
-          <p>${esc(subtitle)}</p>
-          <div class="hwc-hero__actions">
-            <a class="hwc-btn hwc-btn--cyan hwc-btn--hero" href="#hwc-space">浏览全部产品</a>
-            <button type="button" class="hwc-btn hwc-btn--outline-dark" data-demo-modal-open>${esc(cta)}</button>
-          </div>
-        </div>
-      </div>
-    </section>`
-}
+const CONSUMER_META = [
+  {
+    id: 'eink-phone-case',
+    scene: '/images/hardware/scene-eink-phone-case.jpg',
+    use: '把可刷新的电子纸带入个人设备，让通知、图文与个性表达常显可见。',
+  },
+  {
+    id: 'eink-frame',
+    scene: '/images/hardware/scene-eink-frame.jpg',
+    use: '以低功耗电子纸呈现画作与影像，进入家居与办公的数字陈列场景。',
+  },
+]
 
-function renderMatrixRow(row, { compact = false } = {}) {
-  const matrix = (row.products || [])
-    .map((item) => {
-      const p = viewProduct(getProductBySlug(item.id))
-      if (!p) return null
-      return { ...p, displayName: item.label || p.name }
-    })
-    .filter(Boolean)
-  if (!matrix.length) return ''
+export function buildHardwarePageModel(simpleContent = {}) {
+  const items = Array.isArray(simpleContent.items) ? simpleContent.items : []
+  const resolveItemIndex = (idOrSlug) => items.findIndex((item) => item.id === idOrSlug || item.slug === idOrSlug)
+  const resolveProduct = (id) => viewProduct(getProductBySlug(id))
 
-  const head =
-    row.title || row.subtitle
-      ? `
-          <div class="hwx-matrix__head">
-            ${row.title ? `<h3>${esc(row.title)}</h3>` : ''}
-            ${row.subtitle ? `<p>${esc(row.subtitle)}</p>` : ''}
-          </div>`
-      : compact
-        ? ''
-        : ''
-
-  return `
-        <div class="hwx-matrix${compact ? ' hwx-matrix--compact' : ''}">
-          ${head}
-          <div class="hwx-matrix__grid">
-            ${matrix
-              .map(
-                (p) => `
-              <a class="hwx-matrix__card" href="${productHref(p)}">
-                <span class="hwx-matrix__media">
-                  <img src="${esc(p.coverImage)}" alt="${esc(p.displayName)}" width="640" height="480" loading="lazy" />
-                </span>
-                <span class="hwx-matrix__body">
-                  <strong>${esc(p.displayName)}</strong>
-                  <small>${esc(p.shortDescription)}</small>
-                  <span class="hwx-matrix__link">查看详情</span>
-                </span>
-              </a>`
-              )
-              .join('')}
-          </div>
-        </div>`
-}
-
-function renderSpaceSection() {
   const flagship = viewProduct(getProductBySlug('control-screen'))
   const matrixRows = resolveHardwareSpaceMatrixRows()
 
-  return `
-    <section class="hwx-space" id="hwc-space">
-      <div class="hwc-shell">
-        <header class="hwx-head">
-          <p class="hwx-kicker">空间智能</p>
-          <h2>空间智能硬件</h2>
-          <p>以中控屏为交互入口，连接感知、边缘、控制与信息终端，形成可部署的空间智能闭环。</p>
-        </header>
+  const retailCards = RETAIL_META.map((item) => {
+    const p = resolveProduct(item.id)
+    if (!p) return null
+    const idx = resolveItemIndex(item.id)
+    const summary = idx >= 0 ? items[idx].summary : ''
+    return { ...p, use: summary || item.use }
+  }).filter(Boolean)
 
-        ${
-          flagship
-            ? (() => {
-                const actions = listingActions(flagship)
-                return `
-        <article class="hwx-flagship">
-          <div class="hwx-flagship__media">
-            <img src="${esc(flagship.coverImage)}" alt="${esc(flagship.name)}" width="1200" height="900" loading="lazy" />
-          </div>
-          <div class="hwx-flagship__copy">
-            <p class="hwx-flagship__tag">${esc(actions.tag || '旗舰产品')}</p>
-            <h3>${esc(flagship.name)}</h3>
-            <p class="hwx-flagship__lead">${esc(flagship.shortDescription)}</p>
-            <p>${esc(flagship.fullDescription || '')}</p>
-            <ul class="hwx-flagship__points">
-              ${(flagship.capabilities || [])
-                .map((c) => `<li>${esc(c)}</li>`)
-                .join('')}
-            </ul>
-            <div class="hwx-flagship__actions">
-              <a class="hwc-btn hwc-btn--orange" href="${esc(actions.detailHref)}">${esc(actions.detailLabel)}</a>
-              ${
-                actions.solutionHref
-                  ? `<a class="hwc-text-link" href="${esc(actions.solutionHref)}">${esc(actions.solutionLabel || '了解 ASpace 总体方案')}</a>`
-                  : ''
-              }
-            </div>
-          </div>
-        </article>`
-              })()
-            : ''
+  const consumerCards = CONSUMER_META.map((item) => {
+    const p = resolveProduct(item.id)
+    if (!p) return null
+    const idx = resolveItemIndex(item.id)
+    const summary = idx >= 0 ? items[idx].summary : ''
+    return { ...p, scene: item.scene, use: summary || item.use }
+  }).filter(Boolean)
+
+  return {
+    hero: {
+      title: simpleContent.title || '',
+      subtitle: simpleContent.subtitle || '',
+      bannerUrl: simpleContent.bannerUrl || '',
+      ctaLabel: simpleContent.ctaLabel || '',
+    },
+    sections: {
+      ...DEFAULT_HARDWARE_SECTIONS,
+      ...(simpleContent.sections || {}),
+    },
+    flagship: flagship
+      ? {
+          ...flagship,
+          detailCtaLabel: listingActions(flagship).detailLabel,
+          solutionHref: listingActions(flagship).solutionHref,
+          solutionLabel: listingActions(flagship).solutionLabel,
+          tag: listingActions(flagship).tag || flagship.tag,
         }
-
-        ${matrixRows.map((row, index) => renderMatrixRow(row, { compact: index > 0 })).join('')}
-      </div>
-    </section>`
+      : null,
+    matrixRows,
+    retailCards,
+    consumerCards,
+    resolveProduct,
+    resolveItemIndex,
+    productHref,
+    listingDetailLabel: (p) => listingActions(p).detailLabel,
+  }
 }
-
-function renderRetailSection() {
-  const cards = [
-    {
-      id: 'eink-price-tag',
-      use: '低功耗电子纸价签，服务门店货架信息的远程更新与统一管理。',
-    },
-    {
-      id: 'lcd-price-tag',
-      use: '彩色 LCD 价签，适合高对比、促销与品牌专柜展示场景。',
-    },
-    {
-      id: 'cold-tag',
-      use: '面向冷链与低温货架的标签方案，适配生鲜与仓储环境。',
-    },
-    {
-      id: 'aap',
-      use: '资产盘点与标签管理硬件能力，支撑盘点、巡检与台账闭环。',
-    },
-  ]
-    .map((item) => {
-      const p = viewProduct(getProductBySlug(item.id))
-      return p ? { ...p, use: item.use } : null
-    })
-    .filter(Boolean)
-
-  return `
-    <section class="hwx-retail" id="hwc-retail">
-      <div class="hwc-shell">
-        <header class="hwx-head hwx-head--light">
-          <p class="hwx-kicker">新零售与行业电子纸</p>
-          <h2>以电子纸连接商品、资产与行业数据</h2>
-          <p>覆盖门店价签、冷链标签与资产盘点，帮助业务侧更快完成信息同步与现场执行。</p>
-        </header>
-        <div class="hwx-retail__grid">
-          ${cards
-            .map(
-              (p) => `
-            <article class="hwx-retail__card">
-              <div class="hwx-retail__media">
-                <img src="${esc(p.coverImage)}" alt="${esc(p.name)}" width="1200" height="900" loading="lazy" />
-              </div>
-              <div class="hwx-retail__body">
-                <h3>${esc(p.name)}</h3>
-                <p class="hwx-retail__use">${esc(p.use)}</p>
-                <div class="hwx-retail__meta">
-                  <div>
-                    <span>核心特性</span>
-                    <p>${esc((p.capabilities || []).join(' · '))}</p>
-                  </div>
-                  <div>
-                    <span>适用场景</span>
-                    <p>${esc((p.scenarios || []).join(' · '))}</p>
-                  </div>
-                </div>
-                <a class="hwc-text-link" href="${esc(productHref(p))}">${esc(listingActions(p).detailLabel)} →</a>
-              </div>
-            </article>`
-            )
-            .join('')}
-        </div>
-      </div>
-    </section>`
-}
-
-function renderConsumerSection() {
-  const cards = [
-    {
-      id: 'eink-phone-case',
-      scene: '/images/hardware/scene-eink-phone-case.jpg',
-      use: '把可刷新的电子纸带入个人设备，让通知、图文与个性表达常显可见。',
-    },
-    {
-      id: 'eink-frame',
-      scene: '/images/hardware/scene-eink-frame.jpg',
-      use: '以低功耗电子纸呈现画作与影像，进入家居与办公的数字陈列场景。',
-    },
-  ]
-    .map((item) => {
-      const p = viewProduct(getProductBySlug(item.id))
-      return p ? { ...p, scene: item.scene, use: item.use } : null
-    })
-    .filter(Boolean)
-
-  return `
-    <section class="hwx-consumer" id="hwc-consumer">
-      <div class="hwc-shell">
-        <header class="hwx-head">
-          <p class="hwx-kicker">3C 数码</p>
-          <h2>电子纸进入个人设备与数字生活</h2>
-          <p>面向消费与陈列场景，以大幅场景卡呈现产品形态与使用氛围。</p>
-        </header>
-        <div class="hwx-consumer__grid">
-          ${cards
-            .map(
-              (p) => `
-            <a class="hwx-scene" href="${productHref(p)}">
-              <img src="${esc(p.scene)}" alt="${esc(p.name)}" width="1536" height="1024" loading="lazy" />
-              <span class="hwx-scene__shade" aria-hidden="true"></span>
-              <span class="hwx-scene__copy">
-                <strong>${esc(p.name)}</strong>
-                <small>${esc(p.use)}</small>
-                <em>查看详情</em>
-              </span>
-            </a>`
-            )
-            .join('')}
-        </div>
-      </div>
-    </section>`
-}
-
-function renderCta() {
-  return `
-    <section class="hwc-cta">
-      <div class="hwc-shell hwc-cta__inner">
-        <div>
-          <h2>获取适合项目的硬件选型建议</h2>
-          <p>告诉我们空间类型、部署规模与接入需求，安托未来将协助完成硬件选型与联调方案。</p>
-        </div>
-        <div class="hwc-cta__actions">
-          <button type="button" class="hwc-btn hwc-btn--cyan" data-demo-modal-open>获取选型建议</button>
-          <button type="button" class="hwc-text-link hwc-cta__link" data-demo-modal-open>预约方案演示</button>
-        </div>
-      </div>
-    </section>`
-}
-
-let cmsHero = null
 
 export async function initHardwareStore() {
   const root = document.getElementById('hardware-root')
   if (!root) return
   const [simple, library] = await Promise.all([loadSimplePageContent('hardware'), loadProductLibraryContent()])
-  cmsHero = simple
   applyHardwareSimpleCms(simple)
   applyProductLibraryCms(library)
 
-  root.innerHTML = `
-    <div class="hwc-first">
-      ${renderHero()}
-    </div>
-    ${renderSpaceSection()}
-    ${renderRetailSection()}
-    ${renderConsumerSection()}
-    ${renderCta()}
-  `
+  const model = buildHardwarePageModel(simple || {})
+  root.innerHTML = renderHardwarePage(model, { editable: false })
 
   const hash = window.location.hash.replace(/^#/, '')
   const legacyMap = {
