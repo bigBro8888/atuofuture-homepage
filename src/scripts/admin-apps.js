@@ -2,6 +2,7 @@ import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
 import { bindNewsRichEditor, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
 import { bindProductLibraryAdmin, closeProductCompose, loadProductLibrary, productLibraryOptions } from './admin-products.js'
 import { bindHardwareVisualAdmin, collectHardwareVisualContent, renderHardwareVisualEditor } from './admin-hardware.js'
+import { bindAboutVisualAdmin, collectAboutVisualContent, renderAboutVisualEditor } from './admin-about.js'
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 
 const API = '/api/admin'
@@ -1032,82 +1033,11 @@ function aboutItemRows(kind, items) {
 }
 
 function renderAboutEditor(content) {
-  const editor = document.querySelector('[data-about-editor]')
-  if (!ABOUT_OUTLINE.some((item) => item.id === state.aboutSection) || state.aboutSection === 'duties') state.aboutSection = state.aboutSection === 'duties' ? 'join' : 'hero'
-  editor.innerHTML = `
-    <aside class="admin-home-outline">
-      <p>与线上 /about/ 从上到下一一对应，点一项只打开这一块</p>
-      ${ABOUT_OUTLINE.map((item) => `
-        <button type="button" class="admin-home-outline__item${item.id === state.aboutSection ? ' is-active' : ''}" data-about-goto="${item.id}">
-          <em>${item.no}</em>
-          <span><b>${item.title}</b><small>${item.desc}</small></span>
-        </button>`).join('')}
-    </aside>
-    <div class="admin-home-stage">
-      <fieldset data-about-section="hero">
-        <legend>01 首屏</legend>
-        <p class="admin-form-section__hint">前台最上方：左边标题和按钮，右边一张铺满的大图。</p>
-        <div class="admin-form-grid">${aboutSectionFields('hero', content)}</div>
-      </fieldset>
-      <fieldset data-about-section="story">
-        <legend>02 公司介绍</legend>
-        <p class="admin-form-section__hint">前台第二屏：左边照片，右边小标、标题和两段正文。</p>
-        <div class="admin-form-grid">${aboutSectionFields('story', content)}</div>
-      </fieldset>
-      <fieldset data-about-section="values">
-        <legend>03 使命、价值观与愿景</legend>
-        <p class="admin-form-section__hint">前台时间轴三列。大号 01 / 02 / 03 是版式，下面三条只改名称和一句话。</p>
-        <div class="admin-form-grid">${aboutSectionFields('values', content)}</div>
-        ${aboutItemRows('values', content.values?.items)}
-      </fieldset>
-      <fieldset data-about-section="partners">
-        <legend>04 客户 Logo 墙</legend>
-        <p class="admin-form-section__hint">版式与线上一致：上方小标、标题、说明；下面浅底透明灰标单行滚动，左右淡出。请上传透明底 PNG，不要白底卡片。</p>
-        <div class="admin-partners-layout">
-          ${aboutSectionFields('partners', content)}
-          <div class="admin-partners-layout__wall">
-            <b>浅底滚动 Logo</b>
-            ${aboutPartnersPreview(content.partners?.items)}
-            ${aboutItemRows('partners', content.partners?.items)}
-            <button type="button" class="admin-add-slide" data-about-partner-add>+ 新增客户 Logo</button>
-          </div>
-        </div>
-      </fieldset>
-      <fieldset data-about-section="join">
-        <legend>05 加入我们</legend>
-        <p class="admin-form-section__hint">前台左图右文：左侧轮播、右侧招揽；下方是招聘需求文件和职位列表。</p>
-        <div class="admin-form-grid">${aboutSectionFields('join', content)}</div>
-        <p class="admin-about-split">左侧轮播图</p>
-        ${aboutItemRows('joinSlides', content.join?.slides)}
-        <button type="button" class="admin-add-slide" data-about-list-add="joinSlides">+ 新增轮播图</button>
-        <p class="admin-about-split">右侧招揽要点</p>
-        ${aboutItemRows('join', content.join?.items)}
-        <button type="button" class="admin-add-slide" data-about-list-add="join">+ 新增要点</button>
-        <p class="admin-about-split">招聘列表</p>
-        ${aboutItemRows('joinJobs', content.join?.jobs)}
-        <button type="button" class="admin-add-slide" data-about-list-add="joinJobs">+ 新增职位</button>
-      </fieldset>
-      <fieldset data-about-section="contact">
-        <legend>06 联系我们</legend>
-        <p class="admin-form-section__hint">版式与线上一致：顶栏左标题右说明，下面一块左深蓝「加入我们」、右三行邮箱 / 电话 / 地址。不再放投递简历。</p>
-        ${aboutSectionFields('contact', content)}
-      </fieldset>
-    </div>
-  `
-  showAboutSection(state.aboutSection)
+  renderAboutVisualEditor(content)
 }
 
 function collectAboutContent() {
-  const content = structuredClone(state.aboutPage.draftContent)
-  document.querySelectorAll('[data-about-field]').forEach((field) => {
-    setHomeValue(content, field.dataset.aboutField, field.value.trim())
-  })
-  delete content.duties
-  if (content.contact) {
-    delete content.contact.joinLabel
-    delete content.contact.joinHref
-  }
-  return content
+  return collectAboutVisualContent(state.aboutPage?.draftContent || {})
 }
 
 function updateAboutStatus(page) {
@@ -2229,181 +2159,7 @@ document.querySelector('[data-home-publish]').addEventListener('click', async (e
   }
 })
 
-document.querySelector('[data-about-editor]').addEventListener('input', (event) => {
-  const field = event.target.closest('[data-about-field]')
-  if (!field) return
-  const preview = document.querySelector(`[data-about-preview-for="${field.dataset.aboutField}"]`)
-  if (preview) {
-    preview.src = field.value.trim()
-    preview.hidden = !field.value.trim()
-  }
-  const fileLink = document.querySelector(`[data-about-file-for="${field.dataset.aboutField}"]`)
-  if (fileLink) {
-    const url = field.value.trim()
-    fileLink.href = url || '#'
-    fileLink.hidden = !url
-  }
-})
-
 document.querySelector('[data-about-form]').addEventListener('submit', (event) => event.preventDefault())
-document.querySelector('[data-about-form]').addEventListener('click', (event) => {
-  const jump = event.target.closest('[data-about-goto]')
-  if (jump) {
-    event.preventDefault()
-    showAboutSection(jump.dataset.aboutGoto)
-    return
-  }
-  const partnerAdd = event.target.closest('[data-about-partner-add]')
-  if (partnerAdd) {
-    event.preventDefault()
-    const content = collectAboutContent()
-    content.partners.items = content.partners.items || []
-    if (content.partners.items.length >= 16) {
-      toast('最多 16 个客户 Logo', true)
-      return
-    }
-    content.partners.items.push({ name: '新客户', logoUrl: '' })
-    state.aboutPage.draftContent = content
-    renderAboutEditor(content)
-    showAboutSection('partners')
-    return
-  }
-  const partnerRemove = event.target.closest('[data-about-partner-remove]')
-  if (partnerRemove) {
-    event.preventDefault()
-    const index = Number(partnerRemove.dataset.aboutPartnerRemove)
-    const content = collectAboutContent()
-    if ((content.partners?.items || []).length <= 4) return
-    content.partners.items.splice(index, 1)
-    state.aboutPage.draftContent = content
-    renderAboutEditor(content)
-    showAboutSection('partners')
-    return
-  }
-  const partnerMove = event.target.closest('[data-about-partner-move]')
-  if (partnerMove) {
-    event.preventDefault()
-    const index = Number(partnerMove.dataset.itemIndex)
-    const offset = Number(partnerMove.dataset.aboutPartnerMove)
-    const content = collectAboutContent()
-    const next = index + offset
-    if (!content.partners?.items?.[index] || next < 0 || next >= content.partners.items.length) return
-    const [item] = content.partners.items.splice(index, 1)
-    content.partners.items.splice(next, 0, item)
-    state.aboutPage.draftContent = content
-    renderAboutEditor(content)
-    showAboutSection('partners')
-    return
-  }
-  const listAdd = event.target.closest('[data-about-list-add]')
-  if (listAdd) {
-    event.preventDefault()
-    const kind = listAdd.dataset.aboutListAdd
-    const content = collectAboutContent()
-    const list = aboutList(content, kind)
-    const limits = { joinSlides: 8, join: 8, joinJobs: 24 }
-    const max = limits[kind] || 8
-    if (list.length >= max) {
-      const messages = { joinSlides: '最多 8 张轮播图', join: '最多 8 条招揽要点', joinJobs: '最多 24 个职位' }
-      toast(messages[kind] || '数量已满', true)
-      return
-    }
-    if (kind === 'joinSlides') list.push({ imageUrl: '', caption: '' })
-    else if (kind === 'joinJobs') list.push({ title: '新职位', dept: '研发', location: '杭州', type: '社招', summary: '', applyHref: 'mailto:service@atuofuture.com' })
-    else list.push({ step: String(list.length + 1).padStart(2, '0'), title: '新要点', body: '' })
-    state.aboutPage.draftContent = content
-    renderAboutEditor(content)
-    showAboutSection('join')
-    return
-  }
-  const listRemove = event.target.closest('[data-about-list-remove]')
-  if (listRemove) {
-    event.preventDefault()
-    const kind = listRemove.dataset.aboutListRemove
-    const index = Number(listRemove.dataset.itemIndex)
-    const content = collectAboutContent()
-    const list = aboutList(content, kind)
-    const min = kind === 'joinSlides' ? 1 : kind === 'join' ? 3 : 0
-    if (list.length <= min) return
-    list.splice(index, 1)
-    state.aboutPage.draftContent = content
-    renderAboutEditor(content)
-    showAboutSection('join')
-    return
-  }
-  const listMove = event.target.closest('[data-about-list-move]')
-  if (listMove) {
-    event.preventDefault()
-    const kind = listMove.dataset.aboutList
-    const index = Number(listMove.dataset.itemIndex)
-    const offset = Number(listMove.dataset.aboutListMove)
-    const content = collectAboutContent()
-    const list = aboutList(content, kind)
-    const next = index + offset
-    if (!list[index] || next < 0 || next >= list.length) return
-    const [item] = list.splice(index, 1)
-    list.splice(next, 0, item)
-    state.aboutPage.draftContent = content
-    renderAboutEditor(content)
-    showAboutSection('join')
-    return
-  }
-  const itemEdit = event.target.closest('[data-about-item-edit]')
-  if (itemEdit) {
-    event.preventDefault()
-    const kind = itemEdit.dataset.aboutItemEdit
-    const index = Number(itemEdit.dataset.itemIndex)
-    const content = collectAboutContent()
-    state.aboutPage.draftContent = content
-    const item = aboutList(content, kind)?.[index]
-    if (!item) return
-    openItemModal({ scope: 'about', kind, index, title: `编辑${item.title || item.caption || item.name || '条目'}`, html: aboutItemFields(kind, index, item) })
-  }
-})
-
-document.querySelector('[data-about-editor]').addEventListener('change', async (event) => {
-  const fileUpload = event.target.closest('[data-about-file-upload-for]')
-  if (fileUpload) {
-    const file = fileUpload.files?.[0]
-    if (!file) return
-    const path = fileUpload.dataset.aboutFileUploadFor
-    fileUpload.disabled = true
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const { url } = await api('/pages/media/file', { method: 'POST', body: formData })
-      const field = document.querySelector(`[data-about-field="${path}"]`)
-      field.value = url
-      field.dispatchEvent(new Event('input', { bubbles: true }))
-      toast('招聘文件已上传，请继续保存草稿')
-    } catch (error) {
-      toast(error.message, true)
-    } finally {
-      fileUpload.disabled = false
-      fileUpload.value = ''
-    }
-    return
-  }
-  const upload = event.target.closest('[data-about-upload-for]')
-  const file = upload?.files?.[0]
-  if (!upload || !file) return
-  const path = upload.dataset.aboutUploadFor
-  upload.disabled = true
-  try {
-    const formData = new FormData()
-    formData.append('image', file)
-    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
-    const field = document.querySelector(`[data-about-field="${path}"]`)
-    field.value = url
-    field.dispatchEvent(new Event('input', { bubbles: true }))
-    toast('图片上传成功，请继续保存草稿')
-  } catch (error) {
-    toast(error.message, true)
-  } finally {
-    upload.disabled = false
-    upload.value = ''
-  }
-})
 
 document.querySelector('[data-about-save]').addEventListener('click', async (event) => {
   const button = event.currentTarget
@@ -2792,6 +2548,12 @@ bindHardwareVisualAdmin({
   homeField,
   productLibraryOptions,
   renderHardwareNavEditor,
+  state,
+})
+bindAboutVisualAdmin({
+  api,
+  toast,
+  escapeHtml,
   state,
 })
 bindContentCenter({
