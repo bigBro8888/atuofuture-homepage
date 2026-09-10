@@ -1792,10 +1792,85 @@ body.admin-agents-fullscreen {
 .hpi-value .hpi-edit-img--empty,
 .hpi-how .hpi-edit-img--empty,
 .hpi-scenes .hpi-edit-img--empty,
-.hpi-cases .hpi-edit-img--empty {
+.hpi-cases .hpi-edit-img--empty,
+.hpi-album .hpi-edit-img--empty {
   border-color: #c9d5e6;
   background: #f4f7fb;
   color: #5a6a82;
+}
+.hpi--editable .hpi-album__caption {
+  min-height: 1.5em;
+  padding: 6px 8px;
+  border-radius: 8px;
+  outline: 1px dashed transparent;
+}
+.hpi--editable .hpi-album__caption:hover {
+  outline-color: #c9d5e6;
+  background: #fff;
+}
+.hpi--editable .hpi-album__caption:focus {
+  outline: 2px solid #8eb6ff;
+  background: #fff;
+}
+.hpi-album__field {
+  display: grid;
+  gap: 6px;
+}
+.hpi-album__field-label {
+  font-size: 11px;
+  color: #7b8aa0;
+}
+.hpi-album__remove {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.72);
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.hpi-album__remove:hover {
+  background: #d92d20;
+}
+.hpi-album__add {
+  display: grid;
+  place-content: center;
+  gap: 6px;
+  min-height: 180px;
+  padding: 20px;
+  border: 1px dashed #b7c7de;
+  border-radius: 14px;
+  background: #fff;
+  color: #1769ff;
+  text-align: center;
+  cursor: pointer;
+}
+.hpi-album__add:hover {
+  border-color: #1769ff;
+  background: #f5f9ff;
+}
+.hpi-album__add:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.hpi-album__add .material-symbols-outlined {
+  font-size: 28px;
+}
+.hpi-album__add strong {
+  display: block;
+  font-size: 14px;
+}
+.hpi-album__add small {
+  display: block;
+  color: #7b8aa0;
+  font-size: 12px;
+  font-weight: 400;
 }
 .hpi-edit-img__tip.is-visible { opacity: 1; position: static; transform: none; }
 .hpi-hero--no-device .hpi-hero__grid { grid-template-columns: 1fr; }

@@ -282,6 +282,67 @@ export function renderProductCases(story, { editable = false } = {}) {
     </section>`
 }
 
+export function renderProductAlbum(story, { editable = false } = {}) {
+  const block = story.album || {}
+  const items = Array.isArray(block.items) ? block.items.slice(0, 12) : []
+  const visible = items.filter((item) => item && item.url)
+  if (!visible.length && !editable) return ''
+  const list = editable ? items : visible
+  return `
+    <section class="hpi-album" id="hpi-album">
+      <div class="hwc-shell">
+        ${textNode('story.album.title', block.title || (editable ? '产品相册' : ''), { editable, tag: 'h2', className: 'hpi-album__title' })}
+        <div class="hpi-album__grid">
+          ${list
+            .map(
+              (item, index) => `
+            <figure class="hpi-album__item" data-album-index="${index}">
+              ${
+                editable
+                  ? `<button type="button" class="hpi-album__remove" data-album-remove="${index}" title="删除这张照片" aria-label="删除这张照片">×</button>`
+                  : ''
+              }
+              <div class="hpi-album__media">
+                ${imgNode(`story.album.items.${index}.url`, item.url || '', {
+                  editable,
+                  width: 800,
+                  height: 600,
+                  alt: item.caption || '产品实拍',
+                  loading: 'lazy',
+                })}
+              </div>
+              ${
+                editable
+                  ? `<div class="hpi-album__field">
+                <span class="hpi-album__field-label">图片说明（可选）</span>
+                ${textNode(`story.album.items.${index}.caption`, item.caption || '', {
+                  editable,
+                  tag: 'figcaption',
+                  className: 'hpi-album__caption',
+                  placeholder: '例如：正面实拍 / 安装现场',
+                })}
+              </div>`
+                  : item.caption
+                    ? `<figcaption class="hpi-album__caption">${esc(item.caption)}</figcaption>`
+                    : ''
+              }
+            </figure>`
+            )
+            .join('')}
+          ${
+            editable
+              ? `<button type="button" class="hpi-album__add" data-album-add${list.length >= 12 ? ' disabled' : ''}>
+            <span class="material-symbols-outlined" aria-hidden="true">add_photo_alternate</span>
+            <strong>添加实拍照片</strong>
+            <small>最多 12 张 · 建议 1200×900</small>
+          </button>`
+              : ''
+          }
+        </div>
+      </div>
+    </section>`
+}
+
 export function renderProductClosing(story, { editable = false } = {}) {
   const c = story.closing
   if (!c && !editable) return ''
@@ -316,6 +377,7 @@ export function renderProductStory(product, story, line, { editable = false } = 
       ${renderProductHow(resolved, opts)}
       ${renderProductScenarios(resolved, opts)}
       ${renderProductCases(resolved, opts)}
+      ${renderProductAlbum(resolved, opts)}
       ${renderProductClosing(resolved, opts)}
     </article>`
 }

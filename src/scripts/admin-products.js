@@ -10,6 +10,7 @@ const IMAGE_SIZE_GUIDE = [
   { test: (path) => /story\.scenarios\.items\.\d+\.logoImage/.test(path), label: '场景主图标', size: '128×128', tip: '标题前圆形小 logo，透明底 PNG 更佳' },
   { test: (path) => /story\.scenarios\.items\.\d+\.tags\.\d+\.logoImage/.test(path), label: '能力标签图标', size: '64×64', tip: '底部标签左侧小图标' },
   { test: (path) => /story\.cases\.items\.\d+\.image/.test(path), label: '实际案例图', size: '560×360', tip: '三列卡片顶图，横向构图' },
+  { test: (path) => /story\.album\.items\.\d+\.url/.test(path), label: '产品相册实拍', size: '1200×900', tip: '产品真实照片，横向构图更佳' },
   { test: (path) => path === 'coverImage', label: '列表封面图', size: '1200×900', tip: '商品列表与封面用图' },
 ]
 
@@ -100,6 +101,7 @@ function emptyProduct() {
         ],
       },
       cases: { title: '实际案例', items: [{}, {}, {}] },
+      album: { title: '产品相册', items: [] },
       closing: { title: '', desc: '', primaryLabel: '预约方案演示', softLinks: [{ label: '查看技术资料' }, { label: '获取产品文档' }] },
     },
   }
@@ -231,6 +233,7 @@ function renderProductCompose(item) {
                 <option value="#hpi-how">如何工作</option>
                 <option value="#hpi-scenes">场景介绍</option>
                 <option value="#hpi-cases">实际案例</option>
+                <option value="#hpi-album">产品相册</option>
                 <option value="#hpi-close">收尾预约</option>
               </select>
             </label>
@@ -325,6 +328,28 @@ function ensureArray(parent, key, length) {
   parent[key] = Array.from({ length }, () => ({}))
 }
 
+function normalizeAlbumItems(item) {
+  if (!item.story) item.story = {}
+  const album = item.story.album && typeof item.story.album === 'object' ? item.story.album : {}
+  const raw = album.items
+  let items = []
+  if (Array.isArray(raw)) {
+    items = raw
+  } else if (raw && typeof raw === 'object') {
+    items = Object.keys(raw)
+      .filter((key) => /^\d+$/.test(key))
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => raw[key] || {})
+  }
+  item.story.album = {
+    title: album.title || '产品相册',
+    items: items.slice(0, 12).map((entry) => ({
+      url: String(entry?.url || '').trim(),
+      caption: String(entry?.caption || '').trim(),
+    })),
+  }
+}
+
 function collectProductFromCompose() {
   const root = document.querySelector('[data-products-compose-view]')
   const item = emptyProduct()
@@ -384,6 +409,7 @@ function collectProductFromCompose() {
     item.story.value = { diagramImage: diagram }
   }
   if (item.story?.cases) ensureArray(item.story.cases, 'items', 3)
+  normalizeAlbumItems(item)
   if (item.story?.howItWorks) ensureArray(item.story.howItWorks, 'stages', 4)
   if (item.story?.scenarios) {
     ensureArray(item.story.scenarios, 'items', 3)
@@ -472,7 +498,7 @@ async function uploadImageFile(file) {
   return url
 }
 
-const ANCHOR_IDS = new Set(['#hpi-value', '#hpi-how', '#hpi-scenes', '#hpi-cases', '#hpi-close'])
+const ANCHOR_IDS = new Set(['#hpi-value', '#hpi-how', '#hpi-scenes', '#hpi-cases', '#hpi-album', '#hpi-close'])
 
 function isAnchorHref(href) {
   const value = String(href || '').trim()
@@ -738,6 +764,28 @@ export function bindProductLibraryAdmin(helpers) {
     if (event.target.closest('[data-products-compose-back]')) {
       event.preventDefault()
       closeProductCompose()
+      return
+    }
+    if (event.target.closest('[data-album-add]')) {
+      event.preventDefault()
+      const article = collectProductFromCompose()
+      normalizeAlbumItems(article)
+      if ((article.story.album.items || []).length >= 12) {
+        ctx.toast('最多上传 12 张实拍照片', true)
+        return
+      }
+      article.story.album.items.push({ url: '', caption: '' })
+      renderProductCompose(article)
+      return
+    }
+    const albumRemove = event.target.closest('[data-album-remove]')
+    if (albumRemove) {
+      event.preventDefault()
+      const index = Number(albumRemove.dataset.albumRemove)
+      const article = collectProductFromCompose()
+      normalizeAlbumItems(article)
+      article.story.album.items.splice(index, 1)
+      renderProductCompose(article)
       return
     }
     if (event.target.closest('[data-products-compose-publish]')) {

@@ -192,6 +192,10 @@ const CONTROL_SCREEN_STORY = {
       },
     ],
   },
+  album: {
+    title: '产品相册',
+    items: [],
+  },
   closing: {
     title: '让中控屏进入你的真实项目场景',
     desc: '根据空间类型、设备条件与系统接口，共同确定适合的接入与实施方案。',
@@ -401,6 +405,10 @@ export function buildProductStory(product) {
               : '/images/solutions/campus.jpg',
         },
       ],
+    },
+    album: {
+      title: '产品相册',
+      items: [],
     },
     closing: {
       title: `让${product.name}进入你的真实项目场景`,

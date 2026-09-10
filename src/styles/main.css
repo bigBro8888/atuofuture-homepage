@@ -17162,6 +17162,55 @@ button.hpi-hero__link {
   background: #f4f7fb;
 }
 
+.hpi-album {
+  padding: 72px 0 88px;
+  background: #f5f7fb;
+}
+.hpi-album__title {
+  margin: 0 0 28px;
+  font-size: 28px;
+  color: var(--hwc-text, #172033);
+}
+.hpi-album__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+.hpi-album__item {
+  position: relative;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.hpi-album__media {
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #e8eef7;
+}
+.hpi-album__media > img,
+.hpi-album__media > .hpi-edit-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.hpi-album__media > img,
+.hpi-album__media > .hpi-edit-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hpi-album__media > .hpi-edit-img--empty {
+  min-height: 100%;
+}
+.hpi-album__caption {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--hwc-muted, #667085);
+}
+
 .hpi-close {
   position: relative; padding: 110px 0 96px; overflow: hidden;
   background: #05082F; color: #fff; text-align: center;
@@ -17200,6 +17249,7 @@ button.hpi-hero__link {
   .hpi-scenes__media { min-height: 220px; aspect-ratio: 16 / 10; }
   .hpi-scenes__list { gap: 24px; }
   .hpi-cases__list { grid-template-columns: 1fr; gap: 36px; }
+  .hpi-album__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hpi-how__stages { grid-template-columns: 1fr 1fr; }
   .hpi-how__stages::before { display: none; }
   .hpi-hero__device { justify-content: center; }
@@ -17213,8 +17263,10 @@ button.hpi-hero__link {
   }
   .hpi-hero__copy h1 { font-size: 34px; }
   .hpi-how__stages { grid-template-columns: 1fr; }
-  .hpi-value, .hpi-scenes, .hpi-cases, .hpi-close { padding-top: 72px; padding-bottom: 64px; }
+  .hpi-value, .hpi-scenes, .hpi-cases, .hpi-album, .hpi-close { padding-top: 72px; padding-bottom: 64px; }
   .hpi-cases__list { gap: 28px; }
+  .hpi-album__grid { grid-template-columns: 1fr; gap: 16px; }
+  .hpi-album__title { font-size: 24px; margin-bottom: 20px; }
   .hpi-scenes__body { padding: 20px 18px 18px; }
   .hpi-scenes__card { border-radius: 12px; }
   .hpi-scenes__tags {
