@@ -386,7 +386,16 @@ export const HARDWARE_MEGA_GROUPS = [
 
 let navGroupOverride = null
 let spaceMatrixRowsOverride = null
+let spaceMatrixRuleOverride = null
 let productLibraryItems = []
+
+export const DEFAULT_SPACE_MATRIX_RULE = {
+  mode: 'manual',
+  limit: 10,
+  line: 'space',
+  excludeIds: ['control-screen'],
+  selectedIds: HARDWARE_SPACE_MATRIX_ROWS.flatMap((row) => (row.products || []).map((item) => item.id)),
+}
 
 export function applyHardwareSimpleCms(content) {
   if (!content) return
@@ -396,6 +405,7 @@ export function applyHardwareSimpleCms(content) {
   if (Array.isArray(content.spaceMatrixRows) && content.spaceMatrixRows.length) {
     spaceMatrixRowsOverride = content.spaceMatrixRows
   }
+  spaceMatrixRuleOverride = content.spaceMatrixRule || null
   for (const product of HARDWARE_PRODUCTS) {
     const hit = (content.items || []).find((item) => item.id === product.slug || item.id === product.id)
     if (!hit) continue
@@ -434,6 +444,77 @@ export function getProductLibraryItem(idOrSlug) {
   return productLibraryItems.find((item) => item.id === idOrSlug || item.slug === idOrSlug) || null
 }
 
+export function libraryItemAsHardwareProduct(item) {
+  if (!item) return null
+  return {
+    id: item.slug || item.id,
+    slug: item.slug || item.id,
+    name: item.name || '未命名产品',
+    shortDescription: item.shortDescription || '',
+    fullDescription: item.fullDescription || '',
+    coverImage: item.coverImage || '',
+    tag: item.tag || '',
+    capabilities: item.capabilities || [],
+    scenarios: item.scenarios || [],
+    detailCtaLabel: item.detailCtaLabel || '查看产品详情',
+    solutionLabel: item.solutionLabel || '',
+    solutionHref: item.solutionHref || '',
+    productLine: item.hardwareLine || 'space',
+    published: item.published !== false,
+    detailId: item.slug || item.id,
+  }
+}
+
+function matrixExcludeSet(rule) {
+  return new Set([...(rule?.excludeIds || ['control-screen']), 'control-screen'])
+}
+
+function matrixPool(rule = {}) {
+  const line = rule.line || 'space'
+  const exclude = matrixExcludeSet(rule)
+  return getProductLibraryItems().filter((item) => {
+    if (!item || item.published === false) return false
+    if ((item.hardwareLine || 'space') !== line) return false
+    const id = item.slug || item.id
+    if (exclude.has(item.id) || exclude.has(item.slug) || exclude.has(id)) return false
+    if (String(item.tag || '').includes('旗舰')) return false
+    return true
+  })
+}
+
+function sortLibraryByRelease(items) {
+  return [...items].sort((a, b) => {
+    const ta = Date.parse(a.releasedAt || '') || 0
+    const tb = Date.parse(b.releasedAt || '') || 0
+    if (tb !== ta) return tb - ta
+    return String(b.id || '').localeCompare(String(a.id || ''))
+  })
+}
+
+export function resolveSpaceMatrixProductIds(ruleInput) {
+  const rule = { ...DEFAULT_SPACE_MATRIX_RULE, ...(ruleInput || {}) }
+  const pool = matrixPool(rule)
+  if (rule.mode === 'auto') {
+    const ids = sortLibraryByRelease(pool)
+      .slice(0, rule.limit || 10)
+      .map((item) => item.slug || item.id)
+    return ids.length ? ids : [...(DEFAULT_SPACE_MATRIX_RULE.selectedIds || [])]
+  }
+  const selected = Array.isArray(rule.selectedIds) ? rule.selectedIds : []
+  const all = getProductLibraryItems()
+  const ids = selected
+    .map((id) => {
+      const hit = all.find((item) => item.id === id || item.slug === id) || pool.find((item) => item.id === id || item.slug === id)
+      return hit ? hit.slug || hit.id : id
+    })
+    .filter(Boolean)
+  return ids.length ? ids : [...(DEFAULT_SPACE_MATRIX_RULE.selectedIds || [])]
+}
+
+export function getSpaceMatrixRule() {
+  return { ...DEFAULT_SPACE_MATRIX_RULE, ...(spaceMatrixRuleOverride || {}) }
+}
+
 export function resolveLibraryProductForHardware(product) {
   if (!product) return null
   if (product.detailId) {
@@ -447,6 +528,25 @@ export function resolveLibraryProductForHardware(product) {
 }
 
 function matrixSourceRows() {
+  const rule = getSpaceMatrixRule()
+  const hasLibrary = getProductLibraryItems().length > 0
+  const useRule = hasLibrary && (rule.mode === 'auto' || rule.mode === 'manual')
+  const baseTitle = HARDWARE_SPACE_MATRIX_ROWS[0] || { title: '空间智能配套硬件', subtitle: '' }
+  const savedTitle = Array.isArray(spaceMatrixRowsOverride) ? spaceMatrixRowsOverride[0] || {} : {}
+
+  if (useRule) {
+    const productIds = resolveSpaceMatrixProductIds(rule)
+    return [
+      {
+        id: 'row1',
+        title: savedTitle.title ?? baseTitle.title,
+        subtitle: savedTitle.subtitle ?? baseTitle.subtitle,
+        products: productIds.map((id) => ({ id, label: '' })),
+        fromRule: true,
+      },
+    ]
+  }
+
   if (!Array.isArray(spaceMatrixRowsOverride) || !spaceMatrixRowsOverride.length) {
     return HARDWARE_SPACE_MATRIX_ROWS
   }
@@ -466,6 +566,7 @@ function matrixSourceRows() {
       title: extra.title ?? base.title,
       subtitle: extra.subtitle ?? base.subtitle,
       products: products.length ? products : base.products,
+      fromRule: false,
     }
   })
 }

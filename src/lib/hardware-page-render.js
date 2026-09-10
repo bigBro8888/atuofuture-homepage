@@ -72,6 +72,7 @@ export function renderHardwarePage(model, { editable = false } = {}) {
     sections = {},
     flagship = null,
     matrixRows = [],
+    matrixFromRule = false,
     retailCards = [],
     consumerCards = [],
     resolveProduct,
@@ -92,7 +93,7 @@ export function renderHardwarePage(model, { editable = false } = {}) {
         .map((entry, productIndex) => {
           const p = resolveProduct(entry.id)
           if (!p) return null
-          const itemIndex = resolveItemIndex(entry.id)
+          const itemIndex = matrixFromRule || row.fromRule ? -1 : resolveItemIndex(entry.id)
           return { ...p, displayName: entry.label || p.name, productIndex, itemIndex }
         })
         .filter(Boolean)
@@ -104,9 +105,15 @@ export function renderHardwarePage(model, { editable = false } = {}) {
             ${textNode(`spaceMatrixRows.${rowIndex}.subtitle`, row.subtitle || '', { editable, tag: 'p', multiline: true, placeholder: '矩阵说明（可空）' })}
           </div>`
           : ''
+      const cardEditable = editable && !matrixFromRule && !row.fromRule
       return `
         <div class="hwx-matrix${rowIndex > 0 ? ' hwx-matrix--compact' : ''}">
           ${head}
+          ${
+            editable && (matrixFromRule || row.fromRule)
+              ? `<p class="hwx-matrix__rule-hint">卡片内容来自「内容中心 → 商品详情」，请在上方「配套硬件规则」里配置自动拉取或手动勾选。</p>`
+              : ''
+          }
           <div class="hwx-matrix__grid">
             ${products
               .map(
@@ -114,9 +121,9 @@ export function renderHardwarePage(model, { editable = false } = {}) {
               <a class="hwx-matrix__card" href="${editable ? '#' : productHref(p)}"${editable ? ' tabindex="-1"' : ''}>
                 <span class="hwx-matrix__media">
                   ${
-                    p.itemIndex >= 0
+                    cardEditable && p.itemIndex >= 0
                       ? imgNode(itemPath(p.itemIndex, 'imageUrl'), p.coverImage, {
-                          editable,
+                          editable: true,
                           width: 640,
                           height: 480,
                           alt: p.displayName,
@@ -126,11 +133,19 @@ export function renderHardwarePage(model, { editable = false } = {}) {
                   }
                 </span>
                 <span class="hwx-matrix__body">
-                  ${textNode(`spaceMatrixRows.${rowIndex}.products.${p.productIndex}.label`, p.displayName || '', { editable, tag: 'strong', placeholder: '产品名' })}
                   ${
-                    p.itemIndex >= 0
+                    cardEditable
+                      ? textNode(`spaceMatrixRows.${rowIndex}.products.${p.productIndex}.label`, p.displayName || '', {
+                          editable: true,
+                          tag: 'strong',
+                          placeholder: '产品名',
+                        })
+                      : `<strong>${esc(p.displayName || '')}</strong>`
+                  }
+                  ${
+                    cardEditable && p.itemIndex >= 0
                       ? textNode(itemPath(p.itemIndex, 'summary'), p.shortDescription || '', {
-                          editable,
+                          editable: true,
                           tag: 'small',
                           multiline: true,
                           placeholder: '简介',

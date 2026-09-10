@@ -59,6 +59,13 @@ export const defaultSimplePages = {
     subtitle: '安托未来以空间智能、电子纸与边缘连接能力，构建覆盖企业空间、新零售与智能终端的硬件产品体系。',
     bannerUrl: '/images/hardware/hero-bg-3840.png',
     ctaLabel: '获取选型建议',
+    spaceMatrixRule: {
+      mode: 'manual',
+      limit: 10,
+      line: 'space',
+      excludeIds: ['control-screen'],
+      selectedIds: HARDWARE_SPACE_MATRIX_ROWS.flatMap((row) => (row.products || []).map((item) => item.id)),
+    },
   },
   news: {
     title: '新闻中心',
@@ -204,6 +211,17 @@ function cleanNavGroups(value) {
   })
 }
 
+function cleanSpaceMatrixRule(value = {}, fallback = {}) {
+  const mode = value.mode === 'auto' ? 'auto' : 'manual'
+  const limit = Math.max(1, Math.min(24, Number(value.limit ?? fallback.limit ?? 10) || 10))
+  const line = ['space', 'retail', 'consumer'].includes(value.line) ? value.line : (fallback.line || 'space')
+  const excludeSource = Array.isArray(value.excludeIds) ? value.excludeIds : (fallback.excludeIds || ['control-screen'])
+  const excludeIds = [...new Set(excludeSource.map((id) => String(id || '').trim()).filter(Boolean))].slice(0, 24)
+  const selectedSource = Array.isArray(value.selectedIds) ? value.selectedIds : (fallback.selectedIds || [])
+  const selectedIds = [...new Set(selectedSource.map((id) => String(id || '').trim()).filter(Boolean))].slice(0, 24)
+  return { mode, limit, line, excludeIds, selectedIds }
+}
+
 function cleanHardwareSections(value = {}) {
   const out = {}
   for (const [key, fallback] of Object.entries(DEFAULT_HARDWARE_SECTIONS)) {
@@ -231,6 +249,7 @@ export function validateSimplePage(key, value = {}) {
   if (key === 'hardware') {
     page.navGroups = cleanNavGroups(value.navGroups)
     page.spaceMatrixRows = cleanSpaceMatrixRows(value.spaceMatrixRows)
+    page.spaceMatrixRule = cleanSpaceMatrixRule(value.spaceMatrixRule, fallback.spaceMatrixRule || {})
     page.sections = cleanHardwareSections(value.sections)
   }
   return page

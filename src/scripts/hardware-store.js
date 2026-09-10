@@ -4,6 +4,8 @@ import {
   applyProductLibraryCms,
   getProductBySlug,
   getProductDetailHref,
+  getProductLibraryItem,
+  libraryItemAsHardwareProduct,
   listingActions,
   presentHardwareProduct,
   resolveHardwareSpaceMatrixRows,
@@ -80,10 +82,15 @@ const CONSUMER_META = [
 export function buildHardwarePageModel(simpleContent = {}) {
   const items = Array.isArray(simpleContent.items) ? simpleContent.items : []
   const resolveItemIndex = (idOrSlug) => items.findIndex((item) => item.id === idOrSlug || item.slug === idOrSlug)
-  const resolveProduct = (id) => overlaySimpleItem(viewProduct(getProductBySlug(id)), items, resolveItemIndex)
+  const resolveProduct = (id) => {
+    const fromLibrary = libraryItemAsHardwareProduct(getProductLibraryItem(id))
+    if (fromLibrary) return overlaySimpleItem(fromLibrary, items, resolveItemIndex)
+    return overlaySimpleItem(viewProduct(getProductBySlug(id)), items, resolveItemIndex)
+  }
 
   const flagship = overlaySimpleItem(viewProduct(getProductBySlug('control-screen')), items, resolveItemIndex)
   const matrixRows = resolveHardwareSpaceMatrixRows()
+  const matrixFromRule = matrixRows.some((row) => row.fromRule)
 
   const retailCards = RETAIL_META.map((item) => {
     const p = resolveProduct(item.id)
@@ -123,6 +130,7 @@ export function buildHardwarePageModel(simpleContent = {}) {
         }
       : null,
     matrixRows,
+    matrixFromRule,
     retailCards,
     consumerCards,
     resolveProduct,

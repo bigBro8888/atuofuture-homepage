@@ -301,6 +301,7 @@ function seedItem(product) {
     solutionHref: isSpace ? '/solutions/' : '',
     linkedHardwareIds: [product.id],
     published: true,
+    releasedAt: '',
     story,
   }
 }
@@ -339,6 +340,7 @@ function validateItem(value = {}, fallback = {}) {
     solutionHref: cleanHref(value.solutionHref, fallback.solutionHref || base.solutionHref || ''),
     linkedHardwareIds: [...new Set(cleanLines(value.linkedHardwareIds ?? fallback.linkedHardwareIds ?? base.linkedHardwareIds, 24, 40))],
     published: value.published === undefined ? fallback.published !== false : Boolean(value.published),
+    releasedAt: cleanText(value.releasedAt, fallback.releasedAt || base.releasedAt || '', 40),
     story: cleanStory(value.story || {}, storyFallback),
   }
 }

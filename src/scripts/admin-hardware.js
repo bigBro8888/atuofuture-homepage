@@ -1,6 +1,8 @@
 import {
   applyHardwareSimpleCms,
   applyProductLibraryCms,
+  DEFAULT_SPACE_MATRIX_RULE,
+  getProductLibraryItems,
   HARDWARE_PRODUCTS,
 } from '../data/hardware-catalog.js'
 import { buildHardwarePageModel } from './hardware-store.js'
@@ -55,6 +57,61 @@ function syncCatalogFromContent(content) {
   if (library) applyProductLibraryCms(library)
 }
 
+function renderMatrixRule(content) {
+  const rule = { ...DEFAULT_SPACE_MATRIX_RULE, ...(content.spaceMatrixRule || {}) }
+  const mode = rule.mode === 'auto' ? 'auto' : 'manual'
+  const selected = new Set(rule.selectedIds || [])
+  const library = getProductLibraryItems()
+  const pool = library.filter((item) => (item.hardwareLine || 'space') === (rule.line || 'space'))
+  const cards = (pool.length ? pool : library)
+    .map((item) => {
+      const id = item.slug || item.id
+      const checked = selected.has(item.id) || selected.has(item.slug) || selected.has(id)
+      return `
+        <label class="admin-hw-pick${checked ? ' is-on' : ''}">
+          <input type="checkbox" data-home-field="spaceMatrixRule.selectedIds" value="${esc(id)}"${checked ? ' checked' : ''} />
+          <span class="admin-hw-pick__media">
+            ${item.coverImage ? `<img src="${esc(item.coverImage)}" alt="" />` : '<em></em>'}
+          </span>
+          <span class="admin-hw-pick__copy">
+            <b>${esc(item.name || id)}</b>
+            <small>${esc(item.shortDescription || item.slug || '')}</small>
+          </span>
+        </label>`
+    })
+    .join('')
+
+  return `
+    <div class="admin-hw-matrix-rule">
+      <div class="admin-hw-matrix-rule__head">
+        <strong>配套硬件展示规则</strong>
+        <p>红框「空间智能配套硬件」区从「内容中心 → 商品详情」拉取，无需再一条条改卡片。</p>
+      </div>
+      <div class="admin-hw-matrix-rule__modes">
+        <label class="admin-hw-mode${mode === 'auto' ? ' is-on' : ''}">
+          <input type="radio" name="space-matrix-mode" data-home-field="spaceMatrixRule.mode" value="auto"${mode === 'auto' ? ' checked' : ''} />
+          <span>
+            <b>规则 1 · 按上架时间自动</b>
+            <small>取已发布的空间智能商品（不含中控屏旗舰），按上架时间从新到旧，最多
+              <input data-home-field="spaceMatrixRule.limit" type="number" min="1" max="24" value="${esc(rule.limit || 10)}" />
+              个</small>
+          </span>
+        </label>
+        <label class="admin-hw-mode${mode === 'manual' ? ' is-on' : ''}">
+          <input type="radio" name="space-matrix-mode" data-home-field="spaceMatrixRule.mode" value="manual"${mode === 'manual' ? ' checked' : ''} />
+          <span>
+            <b>规则 2 · 手动勾选</b>
+            <small>从下方缩略图勾选要出现在首页配套区的商品，勾选顺序即展示顺序</small>
+          </span>
+        </label>
+      </div>
+      <input type="hidden" data-home-field="spaceMatrixRule.line" value="${esc(rule.line || 'space')}" />
+      <div class="admin-hw-pick-grid" data-hw-pick-grid ${mode === 'manual' ? '' : 'hidden'}>
+        ${cards || '<p class="admin-form-section__hint">商品库暂无已发布商品，请先到「内容中心 → 商品详情」发布。</p>'}
+      </div>
+    </div>`
+}
+
 function renderBasics(content) {
   const items = Array.isArray(content.items) ? content.items : []
   const options = ctx.productLibraryOptions()
@@ -63,12 +120,13 @@ function renderBasics(content) {
       .map(([value, label]) => `<option value="${esc(value)}"${String(selected) === String(value) ? ' selected' : ''}>${esc(label)}</option>`)
       .join('')
   return `
-    <details class="admin-vedit-basics">
+    <details class="admin-vedit-basics" open>
       <summary>
         <strong>基础设置</strong>
-        <span>顶栏下拉菜单 · 详情页跳转（一般不用改）</span>
+        <span>配套硬件规则 · 顶栏下拉 · 详情跳转</span>
       </summary>
       <div class="admin-vedit-basics__body">
+        ${renderMatrixRule(content)}
         ${ctx.renderHardwareNavEditor(content.navGroups || [], items)}
         <div class="admin-hw-links">
           <div class="admin-hw-links__head">
@@ -171,21 +229,40 @@ export function renderHardwareVisualEditor(content) {
 }
 
 export function collectHardwareVisualContent(baseContent) {
-  const content = structuredClone(baseContent || { items: [], navGroups: [], spaceMatrixRows: [], sections: {} })
+  const content = structuredClone(baseContent || { items: [], navGroups: [], spaceMatrixRows: [], sections: {}, spaceMatrixRule: {} })
   content.items = Array.isArray(content.items) ? content.items : []
   content.navGroups = Array.isArray(content.navGroups) ? content.navGroups : []
   content.spaceMatrixRows = Array.isArray(content.spaceMatrixRows) ? content.spaceMatrixRows : []
   content.sections = content.sections || {}
+  content.spaceMatrixRule = { ...DEFAULT_SPACE_MATRIX_RULE, ...(content.spaceMatrixRule || {}) }
 
   const root = document.querySelector('[data-simple-editor]')
   if (!root) return content
 
+  const selectedIds = []
   const fields = [
     ...root.querySelectorAll('[data-home-field]'),
     ...document.querySelectorAll('[data-item-modal]:not([hidden]) [data-home-field]'),
   ]
   fields.forEach((field) => {
     const path = field.dataset.homeField
+    if (path === 'spaceMatrixRule.selectedIds') {
+      if (field.type === 'checkbox' && field.checked) selectedIds.push(field.value.trim())
+      return
+    }
+    if (path === 'spaceMatrixRule.mode') {
+      if (field.type === 'radio' && !field.checked) return
+      content.spaceMatrixRule.mode = field.value === 'auto' ? 'auto' : 'manual'
+      return
+    }
+    if (path === 'spaceMatrixRule.limit') {
+      content.spaceMatrixRule.limit = Number(field.value) || 10
+      return
+    }
+    if (path === 'spaceMatrixRule.line') {
+      content.spaceMatrixRule.line = field.value || 'space'
+      return
+    }
     const value = field.value
     const match = /^items\.(\d+)\.(\w+)$/.exec(path)
     if (match) {
@@ -212,6 +289,10 @@ export function collectHardwareVisualContent(baseContent) {
     }
     setNested(content, path, value)
   })
+  content.spaceMatrixRule.selectedIds = selectedIds
+  content.spaceMatrixRule.excludeIds = content.spaceMatrixRule.excludeIds?.length
+    ? content.spaceMatrixRule.excludeIds
+    : ['control-screen']
 
   root.querySelectorAll('[data-edit-path]').forEach((el) => {
     setNested(content, el.dataset.editPath, readEditableText(el))
@@ -241,23 +322,32 @@ export function collectHardwareVisualContent(baseContent) {
       })
   }
 
-  // merge matrix labels into existing rows by index
+  // merge matrix labels/titles into existing rows by index
   const baseRows = Array.isArray(baseContent?.spaceMatrixRows) ? structuredClone(baseContent.spaceMatrixRows) : []
-  if (Array.isArray(content.spaceMatrixRows)) {
-    content.spaceMatrixRows = baseRows.map((base, index) => {
-      const extra = content.spaceMatrixRows[index] || {}
-      const products = (base.products || []).map((product, productIndex) => ({
-        ...product,
-        ...(extra.products?.[productIndex] || {}),
-        id: product.id,
+  if (Array.isArray(content.spaceMatrixRows) && content.spaceMatrixRows.length) {
+    if (!baseRows.length) {
+      content.spaceMatrixRows = content.spaceMatrixRows.map((row) => ({
+        id: row.id || 'row1',
+        title: row.title || '',
+        subtitle: row.subtitle || '',
+        products: Array.isArray(row.products) ? row.products.filter(Boolean) : [],
       }))
-      return {
-        ...base,
-        title: extra.title != null ? extra.title : base.title,
-        subtitle: extra.subtitle != null ? extra.subtitle : base.subtitle,
-        products,
-      }
-    })
+    } else {
+      content.spaceMatrixRows = baseRows.map((base, index) => {
+        const extra = content.spaceMatrixRows[index] || {}
+        const products = (base.products || []).map((product, productIndex) => ({
+          ...product,
+          ...(extra.products?.[productIndex] || {}),
+          id: product.id,
+        }))
+        return {
+          ...base,
+          title: extra.title != null ? extra.title : base.title,
+          subtitle: extra.subtitle != null ? extra.subtitle : base.subtitle,
+          products,
+        }
+      })
+    }
   }
 
   content.items = content.items.filter(Boolean).map((item) => {
@@ -439,6 +529,40 @@ export function bindHardwareVisualAdmin(helpers) {
 
   editor.addEventListener('change', async (event) => {
     if (ctx.state?.simpleKey !== 'hardware') return
+
+    const ruleField = event.target.closest('[data-home-field^="spaceMatrixRule"]')
+    if (ruleField) {
+      const content = collectHardwareVisualContent(ctx.state.simplePage?.draftContent || {})
+      ctx.state.simplePage.draftContent = content
+      const pickGrid = editor.querySelector('[data-hw-pick-grid]')
+      if (pickGrid) pickGrid.hidden = content.spaceMatrixRule?.mode !== 'manual'
+      editor.querySelectorAll('.admin-hw-mode').forEach((el) => {
+        const input = el.querySelector('input[type="radio"]')
+        el.classList.toggle('is-on', Boolean(input?.checked))
+      })
+      editor.querySelectorAll('.admin-hw-pick').forEach((el) => {
+        const input = el.querySelector('input[type="checkbox"]')
+        el.classList.toggle('is-on', Boolean(input?.checked))
+      })
+      // 规则变更后重绘预览区配套硬件卡片
+      const canvas = editor.querySelector('[data-hardware-visual]')
+      const bar = canvas?.querySelector('.admin-vedit-fullscreen-bar')
+      const fullscreen = Boolean(bar && !bar.hidden)
+      syncCatalogFromContent(content)
+      const model = buildHardwarePageModel(content)
+      if (canvas) {
+        canvas.innerHTML = `
+          <div class="admin-vedit-fullscreen-bar"${fullscreen ? '' : ' hidden'}>
+            <strong>智能硬件 · 全屏编辑</strong>
+            <button type="button" data-hardware-fullscreen-exit>
+              <span class="material-symbols-outlined" aria-hidden="true">fullscreen_exit</span>
+              退出全屏
+            </button>
+          </div>
+          ${renderHardwarePage(model, { editable: true })}`
+      }
+      return
+    }
     const fileInput = event.target.closest('[data-hardware-image-modal-file]')
     if (!fileInput?.files?.[0] || !ctx.api) return
     const modal = document.querySelector('[data-hardware-image-modal]')

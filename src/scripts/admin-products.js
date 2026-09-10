@@ -86,6 +86,7 @@ function emptyProduct() {
     solutionHref: '/solutions/',
     linkedHardwareIds: [],
     published: true,
+    releasedAt: '',
     story: {
       hero: { title: '', headline: '', description: '', ctaLabel: '查看它如何工作', ctaHref: '#hpi-how', backgroundImage: '', deviceImage: '' },
       value: { diagramImage: '' },
@@ -172,6 +173,10 @@ function renderBasicsBar(item) {
           ${productField('detailCtaLabel', '详情按钮文案', item.detailCtaLabel || '查看产品详情')}
           ${productField('solutionLabel', '方案链接文案', item.solutionLabel || '')}
           ${productField('solutionHref', '方案链接地址', item.solutionHref || '', { wide: true, placeholder: '/solutions/' })}
+          ${productField('releasedAt', '上架时间', item.releasedAt || '', {
+            placeholder: '2026-09-10',
+            help: '用于智能硬件首页「按上架时间自动」拉取，格式 YYYY-MM-DD',
+          })}
           <label class="admin-news-pin admin-form-wide">
             <input data-product-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
             <span><b>发布后前台可见</b><small>取消勾选则详情页不对外展示。</small></span>
