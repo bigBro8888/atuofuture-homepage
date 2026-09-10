@@ -739,6 +739,20 @@ body.admin-modal-open { overflow: hidden; }
 .admin-home-actions button { padding: 10px 15px; border: 1px solid #1769ff; border-radius: 9px; color: #1769ff; background: #fff; font-size: 10px; font-weight: 700; }
 .admin-home-actions button:last-child { color: #fff; background: #1769ff; }
 .admin-home-actions button:disabled { cursor: wait; opacity: .55; }
+
+/* 智能硬件 / 方案 / 智能体 共用 simple 面板：发布条固定在视口底部，避免长预览每次滚到底 */
+.admin-panel[data-panel="simple"].is-active .admin-home-form {
+  padding-bottom: 92px;
+}
+.admin-panel[data-panel="simple"].is-active .admin-home-actions {
+  position: fixed;
+  left: calc(238px + 34px);
+  right: 34px;
+  bottom: 16px;
+  z-index: 40;
+  margin-top: 0;
+  box-shadow: 0 14px 36px rgba(26, 45, 78, 0.18);
+}
 .admin-publish-warning { display: flex; gap: 9px; margin-top: 18px; padding: 12px; border-radius: 10px; color: #9a6700; background: #fff8e7; }
 .admin-publish-warning .material-symbols-outlined { font-size: 18px; }
 .admin-publish-warning p { margin: 0; font-size: 9px; line-height: 1.6; }
@@ -2173,6 +2187,11 @@ button.hpi-edit-link.hpi-hero__link {
   .admin-home-metrics { grid-template-columns: 1fr 1fr; }
   .admin-form-wide { grid-column: auto; }
   .admin-audit-item { grid-template-columns: 1fr; gap: 4px; }
+  .admin-panel[data-panel="simple"].is-active .admin-home-actions {
+    left: 16px;
+    right: 16px;
+    bottom: 12px;
+  }
 }
 @media (max-width: 480px) {
   .admin-login__card { padding: 28px 22px; }
