@@ -1449,27 +1449,21 @@ body.admin-agents-fullscreen {
   border-top: 1px solid #e8eef7;
 }
 .admin-hw-matrix-rule {
-  margin: 0 0 18px;
-  padding: 16px;
-  border: 1px solid #d9e4f5;
-  border-radius: 14px;
-  background: #f7faff;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
-.admin-hw-matrix-rule__head strong {
-  display: block;
-  font-size: 14px;
-  color: #172033;
-}
-.admin-hw-matrix-rule__head p {
-  margin: 6px 0 0;
+.admin-hw-matrix-rule__hint {
+  margin: 0 0 14px;
   color: #667085;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .admin-hw-matrix-rule__modes {
   display: grid;
   gap: 10px;
-  margin-top: 14px;
 }
 .admin-hw-mode {
   display: flex;
@@ -1512,9 +1506,12 @@ body.admin-agents-fullscreen {
 }
 .admin-hw-pick-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 10px;
   margin-top: 14px;
+  max-height: min(42vh, 420px);
+  overflow: auto;
+  padding: 2px;
 }
 .admin-hw-pick {
   position: relative;
@@ -1565,14 +1562,39 @@ body.admin-agents-fullscreen {
   line-height: 1.4;
   font-weight: 400;
 }
-.hwx-matrix__rule-hint {
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #edf4ff;
-  color: #2457c5;
-  font-size: 12px;
-  line-height: 1.5;
+.admin-hw-rule-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #c9d7ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #1769ff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-hw-rule-btn:hover {
+  border-color: #1769ff;
+  background: #f3f7ff;
+}
+.admin-vedit--hardware .hwx-matrix__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-vedit--hardware .hwx-matrix__title-row h3 {
+  margin: 0;
+}
+.admin-hw-rule-modal .admin-link-modal__panel {
+  width: min(720px, calc(100vw - 32px));
+  max-height: min(86vh, 820px);
+}
+.admin-hw-rule-modal .admin-link-modal__body {
+  overflow: auto;
 }
 .admin-hw-links__head strong {
   display: block;

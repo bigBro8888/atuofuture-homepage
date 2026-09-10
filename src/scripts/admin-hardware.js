@@ -57,7 +57,7 @@ function syncCatalogFromContent(content) {
   if (library) applyProductLibraryCms(library)
 }
 
-function renderMatrixRule(content) {
+function renderMatrixRuleBody(content) {
   const rule = { ...DEFAULT_SPACE_MATRIX_RULE, ...(content.spaceMatrixRule || {}) }
   const mode = rule.mode === 'auto' ? 'auto' : 'manual'
   const selected = new Set(rule.selectedIds || [])
@@ -83,10 +83,7 @@ function renderMatrixRule(content) {
 
   return `
     <div class="admin-hw-matrix-rule">
-      <div class="admin-hw-matrix-rule__head">
-        <strong>配套硬件展示规则</strong>
-        <p>红框「空间智能配套硬件」区从「内容中心 → 商品详情」拉取，无需再一条条改卡片。</p>
-      </div>
+      <p class="admin-hw-matrix-rule__hint">从「内容中心 → 商品详情」拉取商品到配套硬件区，无需再逐条改卡片。</p>
       <div class="admin-hw-matrix-rule__modes">
         <label class="admin-hw-mode${mode === 'auto' ? ' is-on' : ''}">
           <input type="radio" name="space-matrix-mode" data-home-field="spaceMatrixRule.mode" value="auto"${mode === 'auto' ? ' checked' : ''} />
@@ -112,6 +109,26 @@ function renderMatrixRule(content) {
     </div>`
 }
 
+function matrixRuleModalHtml(content) {
+  return `
+      <div class="admin-link-modal admin-hw-rule-modal" data-hw-matrix-rule-modal hidden>
+        <div class="admin-link-modal__backdrop" data-hw-matrix-rule-close></div>
+        <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="admin-hw-rule-modal-title">
+          <header>
+            <h3 id="admin-hw-rule-modal-title">配套硬件 · 规则设置</h3>
+            <button type="button" data-hw-matrix-rule-close aria-label="关闭">×</button>
+          </header>
+          <div class="admin-link-modal__body" data-hw-matrix-rule-body>
+            ${renderMatrixRuleBody(content)}
+          </div>
+          <footer>
+            <button type="button" data-hw-matrix-rule-close>取消</button>
+            <button type="button" class="admin-link-modal__ok" data-hw-matrix-rule-save>确定</button>
+          </footer>
+        </div>
+      </div>`
+}
+
 function renderBasics(content) {
   const items = Array.isArray(content.items) ? content.items : []
   const options = ctx.productLibraryOptions()
@@ -120,13 +137,12 @@ function renderBasics(content) {
       .map(([value, label]) => `<option value="${esc(value)}"${String(selected) === String(value) ? ' selected' : ''}>${esc(label)}</option>`)
       .join('')
   return `
-    <details class="admin-vedit-basics" open>
+    <details class="admin-vedit-basics">
       <summary>
         <strong>基础设置</strong>
-        <span>配套硬件规则 · 顶栏下拉 · 详情跳转</span>
+        <span>顶栏下拉 · 详情跳转</span>
       </summary>
       <div class="admin-vedit-basics__body">
-        ${renderMatrixRule(content)}
         ${ctx.renderHardwareNavEditor(content.navGroups || [], items)}
         <div class="admin-hw-links">
           <div class="admin-hw-links__head">
@@ -225,6 +241,7 @@ export function renderHardwareVisualEditor(content) {
         ${renderHardwarePage(model, { editable: true })}
       </div>
       ${imageModalHtml()}
+      ${matrixRuleModalHtml(content)}
     </div>`
 }
 
@@ -463,6 +480,53 @@ function closeImageModal() {
   if (fileInput) fileInput.value = ''
 }
 
+function openMatrixRuleModal() {
+  const modal = document.querySelector('[data-hw-matrix-rule-modal]')
+  const body = modal?.querySelector('[data-hw-matrix-rule-body]')
+  if (!modal || !body) return
+  syncCatalogFromContent(ctx.state?.simplePage?.draftContent || {})
+  body.innerHTML = renderMatrixRuleBody(ctx.state?.simplePage?.draftContent || {})
+  modal.hidden = false
+}
+
+function closeMatrixRuleModal() {
+  const modal = document.querySelector('[data-hw-matrix-rule-modal]')
+  const body = modal?.querySelector('[data-hw-matrix-rule-body]')
+  if (!modal) return
+  if (body) {
+    syncCatalogFromContent(ctx.state?.simplePage?.draftContent || {})
+    body.innerHTML = renderMatrixRuleBody(ctx.state?.simplePage?.draftContent || {})
+  }
+  modal.hidden = true
+}
+
+function refreshHardwareCanvas(content) {
+  const canvas = document.querySelector('[data-hardware-visual]')
+  if (!canvas) return
+  const bar = canvas.querySelector('.admin-vedit-fullscreen-bar')
+  const fullscreen = Boolean(bar && !bar.hidden)
+  syncCatalogFromContent(content)
+  const model = buildHardwarePageModel(content)
+  canvas.innerHTML = `
+    <div class="admin-vedit-fullscreen-bar"${fullscreen ? '' : ' hidden'}>
+      <strong>智能硬件 · 全屏编辑</strong>
+      <button type="button" data-hardware-fullscreen-exit>
+        <span class="material-symbols-outlined" aria-hidden="true">fullscreen_exit</span>
+        退出全屏
+      </button>
+    </div>
+    ${renderHardwarePage(model, { editable: true })}`
+}
+
+function saveMatrixRuleModal() {
+  if (!ctx.state?.simplePage) return
+  const content = collectHardwareVisualContent(ctx.state.simplePage.draftContent || {})
+  ctx.state.simplePage.draftContent = content
+  closeMatrixRuleModal()
+  refreshHardwareCanvas(content)
+  ctx.toast('配套硬件规则已更新')
+}
+
 function saveImageModal() {
   const modal = document.querySelector('[data-hardware-image-modal]')
   if (!modal?._targetPath) return
@@ -499,6 +563,21 @@ export function bindHardwareVisualAdmin(helpers) {
       setHardwareFullscreen(false)
       return
     }
+    if (event.target.closest('[data-hw-matrix-rule]')) {
+      event.preventDefault()
+      openMatrixRuleModal()
+      return
+    }
+    if (event.target.closest('[data-hw-matrix-rule-close]')) {
+      event.preventDefault()
+      closeMatrixRuleModal()
+      return
+    }
+    if (event.target.closest('[data-hw-matrix-rule-save]')) {
+      event.preventDefault()
+      saveMatrixRuleModal()
+      return
+    }
     if (event.target.closest('[data-hardware-image-modal-close]')) {
       event.preventDefault()
       closeImageModal()
@@ -523,6 +602,11 @@ export function bindHardwareVisualAdmin(helpers) {
 
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return
+    const ruleModal = document.querySelector('[data-hw-matrix-rule-modal]:not([hidden])')
+    if (ruleModal) {
+      closeMatrixRuleModal()
+      return
+    }
     if (!document.body.classList.contains('admin-hardware-fullscreen')) return
     setHardwareFullscreen(false)
   })
@@ -532,35 +616,19 @@ export function bindHardwareVisualAdmin(helpers) {
 
     const ruleField = event.target.closest('[data-home-field^="spaceMatrixRule"]')
     if (ruleField) {
-      const content = collectHardwareVisualContent(ctx.state.simplePage?.draftContent || {})
-      ctx.state.simplePage.draftContent = content
-      const pickGrid = editor.querySelector('[data-hw-pick-grid]')
-      if (pickGrid) pickGrid.hidden = content.spaceMatrixRule?.mode !== 'manual'
-      editor.querySelectorAll('.admin-hw-mode').forEach((el) => {
+      const modal = document.querySelector('[data-hw-matrix-rule-modal]')
+      if (!modal || modal.hidden) return
+      const mode = modal.querySelector('[data-home-field="spaceMatrixRule.mode"]:checked')?.value || 'manual'
+      const pickGrid = modal.querySelector('[data-hw-pick-grid]')
+      if (pickGrid) pickGrid.hidden = mode !== 'manual'
+      modal.querySelectorAll('.admin-hw-mode').forEach((el) => {
         const input = el.querySelector('input[type="radio"]')
         el.classList.toggle('is-on', Boolean(input?.checked))
       })
-      editor.querySelectorAll('.admin-hw-pick').forEach((el) => {
+      modal.querySelectorAll('.admin-hw-pick').forEach((el) => {
         const input = el.querySelector('input[type="checkbox"]')
         el.classList.toggle('is-on', Boolean(input?.checked))
       })
-      // 规则变更后重绘预览区配套硬件卡片
-      const canvas = editor.querySelector('[data-hardware-visual]')
-      const bar = canvas?.querySelector('.admin-vedit-fullscreen-bar')
-      const fullscreen = Boolean(bar && !bar.hidden)
-      syncCatalogFromContent(content)
-      const model = buildHardwarePageModel(content)
-      if (canvas) {
-        canvas.innerHTML = `
-          <div class="admin-vedit-fullscreen-bar"${fullscreen ? '' : ' hidden'}>
-            <strong>智能硬件 · 全屏编辑</strong>
-            <button type="button" data-hardware-fullscreen-exit>
-              <span class="material-symbols-outlined" aria-hidden="true">fullscreen_exit</span>
-              退出全屏
-            </button>
-          </div>
-          ${renderHardwarePage(model, { editable: true })}`
-      }
       return
     }
     const fileInput = event.target.closest('[data-hardware-image-modal-file]')

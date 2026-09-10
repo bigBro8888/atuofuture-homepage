@@ -98,22 +98,35 @@ export function renderHardwarePage(model, { editable = false } = {}) {
         })
         .filter(Boolean)
       if (!products.length) return ''
+      const titleNode = textNode(`spaceMatrixRows.${rowIndex}.title`, row.title || '', {
+        editable,
+        tag: 'h3',
+        placeholder: '矩阵标题（可空）',
+      })
+      const subtitleNode = textNode(`spaceMatrixRows.${rowIndex}.subtitle`, row.subtitle || '', {
+        editable,
+        tag: 'p',
+        multiline: true,
+        placeholder: '矩阵说明（可空）',
+      })
+      const ruleBtn =
+        editable && rowIndex === 0
+          ? `<button type="button" class="admin-hw-rule-btn" data-hw-matrix-rule>规则设置</button>`
+          : ''
       const head =
         row.title || row.subtitle || editable
           ? `<div class="hwx-matrix__head">
-            ${textNode(`spaceMatrixRows.${rowIndex}.title`, row.title || '', { editable, tag: 'h3', placeholder: '矩阵标题（可空）' })}
-            ${textNode(`spaceMatrixRows.${rowIndex}.subtitle`, row.subtitle || '', { editable, tag: 'p', multiline: true, placeholder: '矩阵说明（可空）' })}
+            <div class="hwx-matrix__title-row">
+              ${titleNode}
+              ${ruleBtn}
+            </div>
+            ${subtitleNode}
           </div>`
           : ''
       const cardEditable = editable && !matrixFromRule && !row.fromRule
       return `
         <div class="hwx-matrix${rowIndex > 0 ? ' hwx-matrix--compact' : ''}">
           ${head}
-          ${
-            editable && (matrixFromRule || row.fromRule)
-              ? `<p class="hwx-matrix__rule-hint">卡片内容来自「内容中心 → 商品详情」，请在上方「配套硬件规则」里配置自动拉取或手动勾选。</p>`
-              : ''
-          }
           <div class="hwx-matrix__grid">
             ${products
               .map(
