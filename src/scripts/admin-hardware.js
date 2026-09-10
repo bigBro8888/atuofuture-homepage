@@ -6,7 +6,11 @@ import {
   HARDWARE_PRODUCTS,
 } from '../data/hardware-catalog.js'
 import { buildHardwarePageModel } from './hardware-store.js'
-import { renderHardwarePage } from '../lib/hardware-page-render.js'
+import {
+  DEFAULT_CONSUMER_ALBUM,
+  CONSUMER_ALBUM_LAYOUT_OPTIONS,
+  renderHardwarePage,
+} from '../lib/hardware-page-render.js'
 
 const IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'bannerUrl', label: '首屏 Banner', size: '1920×528', tip: '横向全宽背景' },
@@ -129,6 +133,53 @@ function matrixRuleModalHtml(content) {
       </div>`
 }
 
+function renderConsumerAlbumBody(content) {
+  const album = { ...DEFAULT_CONSUMER_ALBUM, ...(content.consumerAlbum || {}) }
+  const layout = album.layout || 'grid-2'
+  return `
+    <div class="admin-hw-matrix-rule">
+      <p class="admin-hw-matrix-rule__hint">配置「3C 数码」图册区展示几张、怎么排。商品来自商品库中的 3C 数码产品（无则回退默认两项）。</p>
+      <label class="admin-news-field is-wide">
+        <span>展示数量</span>
+        <input data-home-field="consumerAlbum.limit" type="number" min="1" max="8" value="${esc(album.limit || 2)}" />
+        <small>1–8 张，按商品库中 3C 产品顺序截取</small>
+      </label>
+      <div class="admin-hw-matrix-rule__modes" style="margin-top:14px">
+        <strong style="font-size:13px;color:#172033">展示方式</strong>
+        ${CONSUMER_ALBUM_LAYOUT_OPTIONS.map(
+          (opt) => `
+        <label class="admin-hw-mode${layout === opt.value ? ' is-on' : ''}">
+          <input type="radio" name="consumer-album-layout" data-home-field="consumerAlbum.layout" value="${esc(opt.value)}"${layout === opt.value ? ' checked' : ''} />
+          <span>
+            <b>${esc(opt.label)}</b>
+            <small>${esc(opt.tip)}</small>
+          </span>
+        </label>`
+        ).join('')}
+      </div>
+    </div>`
+}
+
+function consumerAlbumModalHtml(content) {
+  return `
+      <div class="admin-link-modal admin-hw-rule-modal" data-hw-consumer-album-modal hidden>
+        <div class="admin-link-modal__backdrop" data-hw-consumer-album-close></div>
+        <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="admin-hw-consumer-album-title">
+          <header>
+            <h3 id="admin-hw-consumer-album-title">3C 数码 · 图册配置</h3>
+            <button type="button" data-hw-consumer-album-close aria-label="关闭">×</button>
+          </header>
+          <div class="admin-link-modal__body" data-hw-consumer-album-body>
+            ${renderConsumerAlbumBody(content)}
+          </div>
+          <footer>
+            <button type="button" data-hw-consumer-album-close>取消</button>
+            <button type="button" class="admin-link-modal__ok" data-hw-consumer-album-save>确定</button>
+          </footer>
+        </div>
+      </div>`
+}
+
 function renderBasics(content) {
   const items = Array.isArray(content.items) ? content.items : []
   const options = ctx.productLibraryOptions()
@@ -242,16 +293,18 @@ export function renderHardwareVisualEditor(content) {
       </div>
       ${imageModalHtml()}
       ${matrixRuleModalHtml(content)}
+      ${consumerAlbumModalHtml(content)}
     </div>`
 }
 
 export function collectHardwareVisualContent(baseContent) {
-  const content = structuredClone(baseContent || { items: [], navGroups: [], spaceMatrixRows: [], sections: {}, spaceMatrixRule: {} })
+  const content = structuredClone(baseContent || { items: [], navGroups: [], spaceMatrixRows: [], sections: {}, spaceMatrixRule: {}, consumerAlbum: {} })
   content.items = Array.isArray(content.items) ? content.items : []
   content.navGroups = Array.isArray(content.navGroups) ? content.navGroups : []
   content.spaceMatrixRows = Array.isArray(content.spaceMatrixRows) ? content.spaceMatrixRows : []
   content.sections = content.sections || {}
   content.spaceMatrixRule = { ...DEFAULT_SPACE_MATRIX_RULE, ...(content.spaceMatrixRule || {}) }
+  content.consumerAlbum = { ...DEFAULT_CONSUMER_ALBUM, ...(content.consumerAlbum || {}) }
 
   const root = document.querySelector('[data-simple-editor]')
   if (!root) return content
@@ -278,6 +331,15 @@ export function collectHardwareVisualContent(baseContent) {
     }
     if (path === 'spaceMatrixRule.line') {
       content.spaceMatrixRule.line = field.value || 'space'
+      return
+    }
+    if (path === 'consumerAlbum.limit') {
+      content.consumerAlbum.limit = Math.max(1, Math.min(8, Number(field.value) || 2))
+      return
+    }
+    if (path === 'consumerAlbum.layout') {
+      if (field.type === 'radio' && !field.checked) return
+      content.consumerAlbum.layout = field.value || 'grid-2'
       return
     }
     const value = field.value
@@ -527,6 +589,35 @@ function saveMatrixRuleModal() {
   ctx.toast('配套硬件规则已更新')
 }
 
+function openConsumerAlbumModal() {
+  const modal = document.querySelector('[data-hw-consumer-album-modal]')
+  const body = modal?.querySelector('[data-hw-consumer-album-body]')
+  if (!modal || !body) return
+  syncCatalogFromContent(ctx.state?.simplePage?.draftContent || {})
+  body.innerHTML = renderConsumerAlbumBody(ctx.state?.simplePage?.draftContent || {})
+  modal.hidden = false
+}
+
+function closeConsumerAlbumModal() {
+  const modal = document.querySelector('[data-hw-consumer-album-modal]')
+  const body = modal?.querySelector('[data-hw-consumer-album-body]')
+  if (!modal) return
+  if (body) {
+    syncCatalogFromContent(ctx.state?.simplePage?.draftContent || {})
+    body.innerHTML = renderConsumerAlbumBody(ctx.state?.simplePage?.draftContent || {})
+  }
+  modal.hidden = true
+}
+
+function saveConsumerAlbumModal() {
+  if (!ctx.state?.simplePage) return
+  const content = collectHardwareVisualContent(ctx.state.simplePage.draftContent || {})
+  ctx.state.simplePage.draftContent = content
+  closeConsumerAlbumModal()
+  refreshHardwareCanvas(content)
+  ctx.toast('图册配置已更新')
+}
+
 function saveImageModal() {
   const modal = document.querySelector('[data-hardware-image-modal]')
   if (!modal?._targetPath) return
@@ -578,6 +669,21 @@ export function bindHardwareVisualAdmin(helpers) {
       saveMatrixRuleModal()
       return
     }
+    if (event.target.closest('[data-hw-consumer-album]')) {
+      event.preventDefault()
+      openConsumerAlbumModal()
+      return
+    }
+    if (event.target.closest('[data-hw-consumer-album-close]')) {
+      event.preventDefault()
+      closeConsumerAlbumModal()
+      return
+    }
+    if (event.target.closest('[data-hw-consumer-album-save]')) {
+      event.preventDefault()
+      saveConsumerAlbumModal()
+      return
+    }
     if (event.target.closest('[data-hardware-image-modal-close]')) {
       event.preventDefault()
       closeImageModal()
@@ -602,6 +708,11 @@ export function bindHardwareVisualAdmin(helpers) {
 
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return
+    const albumModal = document.querySelector('[data-hw-consumer-album-modal]:not([hidden])')
+    if (albumModal) {
+      closeConsumerAlbumModal()
+      return
+    }
     const ruleModal = document.querySelector('[data-hw-matrix-rule-modal]:not([hidden])')
     if (ruleModal) {
       closeMatrixRuleModal()
@@ -613,6 +724,17 @@ export function bindHardwareVisualAdmin(helpers) {
 
   editor.addEventListener('change', async (event) => {
     if (ctx.state?.simpleKey !== 'hardware') return
+
+    const albumField = event.target.closest('[data-home-field^="consumerAlbum"]')
+    if (albumField) {
+      const modal = document.querySelector('[data-hw-consumer-album-modal]')
+      if (!modal || modal.hidden) return
+      modal.querySelectorAll('.admin-hw-mode').forEach((el) => {
+        const input = el.querySelector('input[type="radio"]')
+        el.classList.toggle('is-on', Boolean(input?.checked))
+      })
+      return
+    }
 
     const ruleField = event.target.closest('[data-home-field^="spaceMatrixRule"]')
     if (ruleField) {

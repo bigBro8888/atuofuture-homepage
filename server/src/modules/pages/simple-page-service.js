@@ -66,6 +66,10 @@ export const defaultSimplePages = {
       excludeIds: ['control-screen'],
       selectedIds: HARDWARE_SPACE_MATRIX_ROWS.flatMap((row) => (row.products || []).map((item) => item.id)),
     },
+    consumerAlbum: {
+      limit: 2,
+      layout: 'grid-2',
+    },
   },
   news: {
     title: '新闻中心',
@@ -222,6 +226,16 @@ function cleanSpaceMatrixRule(value = {}, fallback = {}) {
   return { mode, limit, line, excludeIds, selectedIds }
 }
 
+const CONSUMER_ALBUM_LAYOUTS = new Set(['grid-2', 'grid-3', 'grid-4', 'stack'])
+
+function cleanConsumerAlbum(value = {}, fallback = {}) {
+  const limit = Math.max(1, Math.min(8, Number(value.limit ?? fallback.limit ?? 2) || 2))
+  const layout = CONSUMER_ALBUM_LAYOUTS.has(value.layout)
+    ? value.layout
+    : (CONSUMER_ALBUM_LAYOUTS.has(fallback.layout) ? fallback.layout : 'grid-2')
+  return { limit, layout }
+}
+
 function cleanHardwareSections(value = {}) {
   const out = {}
   for (const [key, fallback] of Object.entries(DEFAULT_HARDWARE_SECTIONS)) {
@@ -250,6 +264,7 @@ export function validateSimplePage(key, value = {}) {
     page.navGroups = cleanNavGroups(value.navGroups)
     page.spaceMatrixRows = cleanSpaceMatrixRows(value.spaceMatrixRows)
     page.spaceMatrixRule = cleanSpaceMatrixRule(value.spaceMatrixRule, fallback.spaceMatrixRule || {})
+    page.consumerAlbum = cleanConsumerAlbum(value.consumerAlbum, fallback.consumerAlbum || {})
     page.sections = cleanHardwareSections(value.sections)
   }
   return page

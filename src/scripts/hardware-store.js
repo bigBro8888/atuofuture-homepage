@@ -5,12 +5,13 @@ import {
   getProductBySlug,
   getProductDetailHref,
   getProductLibraryItem,
+  getProductLibraryItems,
   libraryItemAsHardwareProduct,
   listingActions,
   presentHardwareProduct,
   resolveHardwareSpaceMatrixRows,
 } from '../data/hardware-catalog.js'
-import { DEFAULT_HARDWARE_SECTIONS, renderHardwarePage } from '../lib/hardware-page-render.js'
+import { DEFAULT_HARDWARE_SECTIONS, DEFAULT_CONSUMER_ALBUM, renderHardwarePage } from '../lib/hardware-page-render.js'
 
 function viewProduct(product) {
   return presentHardwareProduct(product) || product
@@ -100,13 +101,34 @@ export function buildHardwarePageModel(simpleContent = {}) {
     return { ...p, use: summary || item.use }
   }).filter(Boolean)
 
-  const consumerCards = CONSUMER_META.map((item) => {
-    const p = resolveProduct(item.id)
-    if (!p) return null
-    const idx = resolveItemIndex(item.id)
-    const summary = idx >= 0 ? items[idx].summary : ''
-    return { ...p, scene: item.scene, use: summary || item.use }
-  }).filter(Boolean)
+  const consumerAlbum = { ...DEFAULT_CONSUMER_ALBUM, ...(simpleContent.consumerAlbum || {}) }
+  const limit = Math.max(1, Math.min(8, Number(consumerAlbum.limit) || 2))
+  const metaById = new Map(CONSUMER_META.map((item) => [item.id, item]))
+  const libraryConsumer = getProductLibraryItems().filter(
+    (item) => item && item.published !== false && (item.hardwareLine || '') === 'consumer',
+  )
+  const consumerSource = libraryConsumer.length
+    ? libraryConsumer.map((item) => {
+        const id = item.slug || item.id
+        const meta = metaById.get(id) || metaById.get(item.id)
+        const p = resolveProduct(id)
+        if (!p) return null
+        const idx = resolveItemIndex(id)
+        const summary = idx >= 0 ? items[idx].summary : ''
+        return {
+          ...p,
+          scene: meta?.scene || item.coverImage || p.coverImage || '',
+          use: summary || meta?.use || p.shortDescription || '',
+        }
+      })
+    : CONSUMER_META.map((item) => {
+        const p = resolveProduct(item.id)
+        if (!p) return null
+        const idx = resolveItemIndex(item.id)
+        const summary = idx >= 0 ? items[idx].summary : ''
+        return { ...p, scene: item.scene, use: summary || item.use }
+      })
+  const consumerCards = consumerSource.filter(Boolean).slice(0, limit)
 
   return {
     hero: {
@@ -133,6 +155,7 @@ export function buildHardwarePageModel(simpleContent = {}) {
     matrixFromRule,
     retailCards,
     consumerCards,
+    consumerAlbum,
     resolveProduct,
     resolveItemIndex,
     productHref,

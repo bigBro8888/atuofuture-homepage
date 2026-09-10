@@ -26,6 +26,18 @@ export const DEFAULT_HARDWARE_SECTIONS = {
   },
 }
 
+export const DEFAULT_CONSUMER_ALBUM = {
+  limit: 2,
+  layout: 'grid-2',
+}
+
+export const CONSUMER_ALBUM_LAYOUT_OPTIONS = [
+  { value: 'grid-2', label: '两列大图', tip: '当前默认，适合旗舰场景卡' },
+  { value: 'grid-3', label: '三列卡片', tip: '一屏展示更多产品' },
+  { value: 'grid-4', label: '四列缩略图', tip: '图册浏览感更强' },
+  { value: 'stack', label: '单列堆叠', tip: '上下排列，适合移动端强调' },
+]
+
 function sectionOf(sections, key) {
   return { ...DEFAULT_HARDWARE_SECTIONS[key], ...(sections?.[key] || {}) }
 }
@@ -75,6 +87,7 @@ export function renderHardwarePage(model, { editable = false } = {}) {
     matrixFromRule = false,
     retailCards = [],
     consumerCards = [],
+    consumerAlbum = DEFAULT_CONSUMER_ALBUM,
     resolveProduct,
     resolveItemIndex = () => -1,
     productHref = () => '#',
@@ -85,6 +98,8 @@ export function renderHardwarePage(model, { editable = false } = {}) {
   const retail = sectionOf(sections, 'retail')
   const consumer = sectionOf(sections, 'consumer')
   const cta = sectionOf(sections, 'cta')
+  const album = { ...DEFAULT_CONSUMER_ALBUM, ...(consumerAlbum || {}) }
+  const albumLayout = ['grid-2', 'grid-3', 'grid-4', 'stack'].includes(album.layout) ? album.layout : 'grid-2'
   const flagshipIndex = flagship ? resolveItemIndex(flagship.id || flagship.slug) : -1
 
   const matrixHtml = matrixRows
@@ -372,12 +387,19 @@ export function renderHardwarePage(model, { editable = false } = {}) {
       </section>
       <section class="hwx-consumer" id="hwc-consumer">
         <div class="hwc-shell">
-          <header class="hwx-head">
-            ${textNode('sections.consumer.kicker', consumer.kicker, { editable, tag: 'p', className: 'hwx-kicker', placeholder: '分区眉题' })}
-            ${textNode('sections.consumer.title', consumer.title, { editable, tag: 'h2', placeholder: '分区标题' })}
-            ${textNode('sections.consumer.subtitle', consumer.subtitle, { editable, tag: 'p', multiline: true, placeholder: '分区说明' })}
-          </header>
-          <div class="hwx-consumer__grid">
+          <div class="hwx-head-row">
+            <header class="hwx-head">
+              ${textNode('sections.consumer.kicker', consumer.kicker, { editable, tag: 'p', className: 'hwx-kicker', placeholder: '分区眉题' })}
+              ${textNode('sections.consumer.title', consumer.title, { editable, tag: 'h2', placeholder: '分区标题' })}
+              ${textNode('sections.consumer.subtitle', consumer.subtitle, { editable, tag: 'p', multiline: true, placeholder: '分区说明' })}
+            </header>
+            ${
+              editable
+                ? `<button type="button" class="admin-hw-rule-btn" data-hw-consumer-album>图册配置</button>`
+                : ''
+            }
+          </div>
+          <div class="hwx-consumer__grid hwx-consumer__grid--${esc(albumLayout)}">
             ${consumerCards
               .map((p) => {
                 const itemIndex = resolveItemIndex(p.id || p.slug)

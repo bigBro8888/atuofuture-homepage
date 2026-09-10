@@ -1589,6 +1589,21 @@ body.admin-agents-fullscreen {
 .admin-vedit--hardware .hwx-matrix__title-row h3 {
   margin: 0;
 }
+.admin-vedit--hardware .hwx-head-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.admin-vedit--hardware .hwx-head-row .hwx-head {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 0;
+}
+.admin-vedit--hardware .hwx-head-row .admin-hw-rule-btn {
+  margin-top: 28px;
+}
 .admin-hw-rule-modal .admin-link-modal__panel {
   width: min(720px, calc(100vw - 32px));
   max-height: min(86vh, 820px);
