@@ -127,7 +127,6 @@ function renderProductList(content) {
     <div class="admin-news-toolbar">
       <p class="admin-form-section__hint" style="margin:0">点「编辑」进入可视化详情页，直接在预览上改文案和图片。</p>
       <div class="admin-news-toolbar__actions">
-        <button type="button" class="admin-add-slide" data-product-category-add>+ 新建分类</button>
         <button type="button" class="admin-add-slide" data-product-add>+ 新建产品</button>
       </div>
     </div>
@@ -162,9 +161,13 @@ function previewProduct(item) {
 
 function categoryOptions(lineId) {
   const categories = ctx.state.productLibrary?.draftContent?.categories || []
-  const filtered = lineId ? categories.filter((item) => !item.lineId || item.lineId === lineId) : categories
+  const filtered = lineId
+    ? categories.filter((item) => !item.lineId || item.lineId === lineId)
+    : categories
   const options = [['', '未分类']]
-  filtered.forEach((item) => options.push([item.id, item.name]))
+  // 三类业务分类对空间智能商品始终可见；其它产品线也能选（lineId 为空时）
+  const source = filtered.length ? filtered : categories
+  source.forEach((item) => options.push([item.id, item.name]))
   return options
 }
 
@@ -757,32 +760,6 @@ export function bindProductLibraryAdmin(helpers) {
     if (event.target.closest('[data-product-add]')) {
       event.preventDefault()
       openProductCompose(-1)
-      return
-    }
-    if (event.target.closest('[data-product-category-add]')) {
-      event.preventDefault()
-      const name = window.prompt('请输入新分类名称（例如：环境控制）')
-      if (!name || !name.trim()) return
-      const trimmed = name.trim()
-      const draft = ctx.state.productLibrary?.draftContent || {}
-      const categories = [...(draft.categories || [])]
-      if (categories.some((item) => item.name === trimmed)) {
-        ctx.toast('分类已存在', true)
-        return
-      }
-      const baseId = trimmed.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || `cat-${Date.now().toString(36)}`
-      let id = baseId
-      let suffix = 1
-      while (categories.some((item) => item.id === id)) {
-        id = `${baseId}-${suffix}`.slice(0, 40)
-        suffix += 1
-      }
-      categories.push({ id, name: trimmed, lineId: '' })
-      try {
-        await persistProductLibrary({ ...draft, categories }, '分类已创建并发布')
-      } catch (error) {
-        ctx.toast(error.message, true)
-      }
       return
     }
     const edit = event.target.closest('[data-product-edit]')

@@ -1,11 +1,46 @@
 import { randomUUID } from 'node:crypto'
 import { db } from '../../lib/store.js'
-import { HARDWARE_PRODUCTS, HARDWARE_CATEGORIES } from '../../../../src/data/hardware-catalog.js'
+import { HARDWARE_PRODUCTS } from '../../../../src/data/hardware-catalog.js'
 import { buildProductStory } from '../../../../src/data/hardware-product-details.js'
 
 export const PRODUCT_LIBRARY_PAGE_KEY = 'product-library'
 
 const LINE_IDS = new Set(['space', 'retail', 'consumer'])
+
+/** 全部商品页 / 后台商品分类（按业务分类表） */
+export const PRODUCT_LIBRARY_CATEGORIES = [
+  { id: 'control-interaction', name: '控制与交互', lineId: 'space' },
+  { id: 'sense-iot', name: '感知、执行与物联', lineId: 'space' },
+  { id: 'space-business', name: '空间与业务终端', lineId: 'space' },
+]
+
+/** 静态目录商品 → 新分类 */
+const PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID = {
+  'control-screen': 'control-interaction',
+  gateway: 'control-interaction',
+  'switch-control': 'control-interaction',
+  'e-table-sign': 'control-interaction',
+  'desk-screen': 'control-interaction',
+  'smart-hvac': 'control-interaction',
+  'smart-lighting': 'sense-iot',
+  sensor: 'sense-iot',
+  'energy-meter': 'sense-iot',
+  'eink-frame': 'sense-iot',
+  'smart-meeting': 'space-business',
+  'office-device': 'space-business',
+  aap: 'space-business',
+}
+
+/** 旧分类 id → 新分类 */
+const LEGACY_CATEGORY_TO_LIBRARY = {
+  'space-terminal': 'control-interaction',
+  'env-control': 'control-interaction',
+  'edge-access': 'control-interaction',
+  'sense-meter': 'sense-iot',
+  'meeting-office': 'space-business',
+  'asset-inventory': 'space-business',
+  'consumer-devices': 'sense-iot',
+}
 
 function cleanText(value, fallback = '', max = 2000) {
   return String(value ?? fallback ?? '').trim().slice(0, max)
@@ -344,7 +379,7 @@ function seedItem(product) {
     name: product.name,
     tag: product.id === 'control-screen' ? '旗舰产品' : '',
     hardwareLine: product.productLine || 'space',
-    category: product.category || '',
+    category: resolveSeedCategory(product),
     coverImage: product.coverImage || '',
     shortDescription: product.shortDescription || '',
     fullDescription: product.fullDescription || '',
@@ -360,8 +395,15 @@ function seedItem(product) {
   }
 }
 
+function resolveSeedCategory(product) {
+  const id = product.id || product.slug
+  if (PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID[id]) return PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID[id]
+  if (PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID[product.slug]) return PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID[product.slug]
+  return LEGACY_CATEGORY_TO_LIBRARY[product.category] || ''
+}
+
 function defaultCategories() {
-  return HARDWARE_CATEGORIES.map((item) => ({
+  return PRODUCT_LIBRARY_CATEGORIES.map((item) => ({
     id: item.id,
     name: item.name,
     lineId: item.lineId || '',
@@ -378,28 +420,28 @@ export function defaultProductLibraryContent() {
   }
 }
 
-function validateCategory(value = {}, fallback = {}) {
-  const id = cleanCategoryId(value.id || value.name, fallback.id || '')
-  if (!id) return null
-  const lineId = LINE_IDS.has(value.lineId) ? value.lineId : cleanText(fallback.lineId || '', '', 20)
-  return {
-    id,
-    name: cleanText(value.name, fallback.name || id, 40),
-    lineId: LINE_IDS.has(lineId) ? lineId : '',
-  }
+function allowedCategoryIds() {
+  return new Set(defaultCategories().map((item) => item.id))
+}
+
+function normalizeLibraryCategory(value, id, slug, fallback = {}) {
+  const allowed = allowedCategoryIds()
+  const raw = cleanCategoryId(value, '')
+  if (allowed.has(raw)) return raw
+  if (LEGACY_CATEGORY_TO_LIBRARY[raw]) return LEGACY_CATEGORY_TO_LIBRARY[raw]
+  const fb = cleanCategoryId(fallback.category || '', '')
+  if (allowed.has(fb)) return fb
+  if (LEGACY_CATEGORY_TO_LIBRARY[fb]) return LEGACY_CATEGORY_TO_LIBRARY[fb]
+  return PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID[id]
+    || PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID[slug]
+    || ''
 }
 
 function validateCategories(value, fallback) {
-  const source = Array.isArray(value) ? value : (Array.isArray(fallback) ? fallback : [])
-  const used = new Set()
-  const list = []
-  source.slice(0, 40).forEach((item, index) => {
-    const next = validateCategory(item || {}, Array.isArray(fallback) ? fallback[index] || {} : {})
-    if (!next || used.has(next.id)) return
-    used.add(next.id)
-    list.push(next)
-  })
-  return list
+  // 商品库固定使用业务分类表中的三类；忽略历史杂项分类
+  void value
+  void fallback
+  return defaultCategories()
 }
 
 function validateItem(value = {}, fallback = {}) {
@@ -417,7 +459,7 @@ function validateItem(value = {}, fallback = {}) {
     name,
     tag: cleanText(value.tag, fallback.tag || base.tag || '', 20),
     hardwareLine,
-    category: cleanCategoryId(value.category, fallback.category || base.category || ''),
+    category: normalizeLibraryCategory(value.category, id, slug, fallback.category ? fallback : base),
     coverImage: cleanUrl(value.coverImage, fallback.coverImage || base.coverImage || ''),
     shortDescription: cleanText(value.shortDescription, fallback.shortDescription || base.shortDescription || '', 240),
     fullDescription: cleanText(value.fullDescription, fallback.fullDescription || base.fullDescription || '', 600),
