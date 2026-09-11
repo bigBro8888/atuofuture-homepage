@@ -11,12 +11,6 @@ function cleanText(value, fallback = '', max = 2000) {
   return String(value ?? fallback ?? '').trim().slice(0, max)
 }
 
-function cleanSlug(value, fallback = '') {
-  const text = String(value ?? fallback ?? '').trim().toLowerCase()
-  const slug = text.replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
-  return slug.slice(0, 60) || `p-${randomUUID().slice(0, 8)}`
-}
-
 function cleanCategoryId(value, fallback = '') {
   const text = String(value ?? fallback ?? '').trim().toLowerCase()
   const id = text.replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
