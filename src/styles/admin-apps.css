@@ -1808,34 +1808,41 @@ body.admin-agents-fullscreen {
 .hpi-how .hpi-edit-img--empty,
 .hpi-scenes .hpi-edit-img--empty,
 .hpi-cases .hpi-edit-img--empty,
-.hpi-album .hpi-edit-img--empty {
+.hpi-album .hpi-edit-img--empty,
+.hpi-detail .hpi-edit-img--empty {
   border-color: #c9d5e6;
   background: #f4f7fb;
   color: #5a6a82;
 }
-.hpi--editable .hpi-album__caption {
+.hpi--editable .hpi-album__caption,
+.hpi--editable .hpi-detail__caption {
   min-height: 1.5em;
   padding: 6px 8px;
   border-radius: 8px;
   outline: 1px dashed transparent;
 }
-.hpi--editable .hpi-album__caption:hover {
+.hpi--editable .hpi-album__caption:hover,
+.hpi--editable .hpi-detail__caption:hover {
   outline-color: #c9d5e6;
   background: #fff;
 }
-.hpi--editable .hpi-album__caption:focus {
+.hpi--editable .hpi-album__caption:focus,
+.hpi--editable .hpi-detail__caption:focus {
   outline: 2px solid #8eb6ff;
   background: #fff;
 }
-.hpi-album__field {
+.hpi-album__field,
+.hpi-detail__field {
   display: grid;
   gap: 6px;
 }
-.hpi-album__field-label {
+.hpi-album__field-label,
+.hpi-detail__field-label {
   font-size: 11px;
   color: #7b8aa0;
 }
-.hpi-album__remove {
+.hpi-album__remove,
+.hpi-detail__remove {
   position: absolute;
   z-index: 2;
   top: 8px;
@@ -1850,10 +1857,12 @@ body.admin-agents-fullscreen {
   line-height: 1;
   cursor: pointer;
 }
-.hpi-album__remove:hover {
+.hpi-album__remove:hover,
+.hpi-detail__remove:hover {
   background: #d92d20;
 }
-.hpi-album__add {
+.hpi-album__add,
+.hpi-detail__add {
   display: grid;
   place-content: center;
   gap: 6px;
@@ -1866,26 +1875,34 @@ body.admin-agents-fullscreen {
   text-align: center;
   cursor: pointer;
 }
-.hpi-album__add:hover {
+.hpi-album__add:hover,
+.hpi-detail__add:hover {
   border-color: #1769ff;
   background: #f5f9ff;
 }
-.hpi-album__add:disabled {
+.hpi-album__add:disabled,
+.hpi-detail__add:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-.hpi-album__add .material-symbols-outlined {
+.hpi-album__add .material-symbols-outlined,
+.hpi-detail__add .material-symbols-outlined {
   font-size: 28px;
 }
-.hpi-album__add strong {
+.hpi-album__add strong,
+.hpi-detail__add strong {
   display: block;
   font-size: 14px;
 }
-.hpi-album__add small {
+.hpi-album__add small,
+.hpi-detail__add small {
   display: block;
   color: #7b8aa0;
   font-size: 12px;
   font-weight: 400;
+}
+.hpi-detail__add {
+  min-height: 140px;
 }
 .hpi-edit-img__tip.is-visible { opacity: 1; position: static; transform: none; }
 .hpi-hero--no-device .hpi-hero__grid { grid-template-columns: 1fr; }

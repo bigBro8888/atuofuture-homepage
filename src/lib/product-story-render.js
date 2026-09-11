@@ -59,31 +59,7 @@ export function renderProductValue(story, { editable = false } = {}) {
 }
 
 export function renderProductHow(story, { editable = false } = {}) {
-  const how = story.howItWorks
-  if (!how?.stages?.length && !editable) return ''
-  const stages = [...(how?.stages || []), {}, {}, {}, {}].slice(0, 4)
-  return `
-    <section class="hpi-how" id="hpi-how">
-      <div class="hwc-shell">
-        ${textNode('story.howItWorks.title', how?.title || '', { editable, tag: 'h2', className: 'hpi-how__title' })}
-        <ol class="hpi-how__stages">
-          ${stages
-            .map(
-              (stage, i) => `
-            <li>
-              <figure>
-                ${imgNode(`story.howItWorks.stages.${i}.image`, stage.image, { editable, width: 280, height: 180, alt: stage.title || '', loading: 'lazy' })}
-                <figcaption>
-                  <strong>${i + 1}. ${textNode(`story.howItWorks.stages.${i}.title`, stage.title || '', { editable, tag: 'span' })}</strong>
-                  ${textNode(`story.howItWorks.stages.${i}.caption`, stage.caption || '', { editable, tag: 'span' })}
-                </figcaption>
-              </figure>
-            </li>`
-            )
-            .join('')}
-        </ol>
-      </div>
-    </section>`
+  return ''
 }
 
 function sceneLogoNode(path, logoImage, iconFallback, { editable = false, size = 'lg' } = {}) {
@@ -128,101 +104,7 @@ function normalizeSceneTags(rawTags = [], fallbackTags = []) {
 }
 
 export function renderProductScenarios(story, { editable = false } = {}) {
-  const block = story.scenarios
-  if (!block?.items?.length && !editable) return ''
-  const items = [...(block?.items || []), {}, {}, {}].slice(0, 3)
-  const defaultIcons = ['groups', 'apartment', 'diamond']
-  const defaultTagIcons = [
-    ['touch_app', 'link', 'restart_alt'],
-    ['eco', 'deployed_code', 'monitoring'],
-    ['login', 'play_circle', 'desktop_windows'],
-  ]
-  return `
-    <section class="hpi-scenes" id="hpi-scenes">
-      <div class="hwc-shell">
-        ${textNode('story.scenarios.title', block?.title || (editable ? '场景介绍' : ''), {
-          editable,
-          tag: 'h2',
-          className: 'hpi-scenes__title',
-          placeholder: '场景区标题',
-        })}
-        <div class="hpi-scenes__list">
-          ${items
-            .map((item, index) => {
-              const icon = item.icon || defaultIcons[index] || 'category'
-              const tags = normalizeSceneTags(
-                item.tags,
-                (defaultTagIcons[index] || []).map((sym) => ({ label: '', icon: sym, logoImage: '' })),
-              ).map((tag, ti) => ({
-                ...tag,
-                icon: tag.icon || defaultTagIcons[index]?.[ti] || 'circle',
-              }))
-              const tagNodes = tags
-                .map((tag, ti) => {
-                  if (!editable && !tag.label && !tag.logoImage) return ''
-                  return `<li class="hpi-scenes__tag">
-                    ${sceneLogoNode(
-                      `story.scenarios.items.${index}.tags.${ti}.logoImage`,
-                      tag.logoImage,
-                      tag.icon,
-                      { editable, size: 'sm' },
-                    )}
-                    ${textNode(`story.scenarios.items.${index}.tags.${ti}.label`, tag.label || '', {
-                      editable,
-                      tag: 'span',
-                      className: 'hpi-scenes__tag-label',
-                      placeholder: '能力标签',
-                    })}
-                  </li>`
-                })
-                .join('')
-              return `
-            <article class="hpi-scenes__card">
-              <div class="hpi-scenes__media">
-                ${imgNode(`story.scenarios.items.${index}.sceneImage`, item.sceneImage, {
-                  editable,
-                  width: 860,
-                  height: 560,
-                  alt: item.title || '',
-                  loading: 'lazy',
-                })}
-              </div>
-              <div class="hpi-scenes__body">
-                <div class="hpi-scenes__head">
-                  ${sceneLogoNode(
-                    `story.scenarios.items.${index}.logoImage`,
-                    item.logoImage,
-                    icon,
-                    { editable, size: 'lg' },
-                  )}
-                  ${textNode(`story.scenarios.items.${index}.title`, item.title || '', {
-                    editable,
-                    tag: 'h3',
-                    className: 'hpi-scenes__name',
-                    placeholder: '场景标题',
-                  })}
-                </div>
-                ${textNode(`story.scenarios.items.${index}.subtitle`, item.subtitle || '', {
-                  editable,
-                  tag: 'p',
-                  className: 'hpi-scenes__subtitle',
-                  placeholder: '副标题',
-                })}
-                ${textNode(`story.scenarios.items.${index}.desc`, item.desc || '', {
-                  editable,
-                  tag: 'p',
-                  className: 'hpi-scenes__desc',
-                  multiline: true,
-                  placeholder: '场景介绍',
-                })}
-                ${tagNodes ? `<ul class="hpi-scenes__tags">${tagNodes}</ul>` : ''}
-              </div>
-            </article>`
-            })
-            .join('')}
-        </div>
-      </div>
-    </section>`
+  return ''
 }
 
 export function renderProductCases(story, { editable = false } = {}) {
@@ -367,6 +249,81 @@ export function renderProductClosing(story, { editable = false } = {}) {
     </section>`
 }
 
+export function renderProductDetailImages(story, { editable = false } = {}) {
+  const block = story.detailImages || {}
+  const items = Array.isArray(block.items) ? block.items.slice(0, 12) : []
+  const visible = items.filter((item) => item && item.url)
+  if (!visible.length && !editable) return ''
+  const list = editable ? items : visible
+  return `
+    <section class="hpi-detail" id="hpi-detail">
+      <div class="hwc-shell">
+        <div class="hpi-detail__head">
+          ${textNode('story.detailImages.title', block.title || (editable ? '商品详情' : ''), {
+            editable,
+            tag: 'h2',
+            className: 'hpi-detail__title',
+            placeholder: '板块标题',
+          })}
+          ${textNode('story.detailImages.subtitle', block.subtitle || '', {
+            editable,
+            tag: 'p',
+            className: 'hpi-detail__subtitle',
+            multiline: true,
+            placeholder: '一句话说明（可选）',
+          })}
+        </div>
+        <div class="hpi-detail__list">
+          ${list
+            .map(
+              (item, index) => `
+            <figure class="hpi-detail__item" data-detail-index="${index}">
+              ${
+                editable
+                  ? `<button type="button" class="hpi-detail__remove" data-detail-remove="${index}" title="删除这张图" aria-label="删除这张图">×</button>`
+                  : ''
+              }
+              <div class="hpi-detail__media">
+                ${imgNode(`story.detailImages.items.${index}.url`, item.url || '', {
+                  editable,
+                  width: 1600,
+                  height: 1000,
+                  alt: item.caption || '商品详情图',
+                  loading: 'lazy',
+                })}
+              </div>
+              ${
+                editable
+                  ? `<div class="hpi-detail__field">
+                <span class="hpi-detail__field-label">图片说明（可选）</span>
+                ${textNode(`story.detailImages.items.${index}.caption`, item.caption || '', {
+                  editable,
+                  tag: 'figcaption',
+                  className: 'hpi-detail__caption',
+                  placeholder: '例如：产品细节 / 接口特写',
+                })}
+              </div>`
+                  : item.caption
+                    ? `<figcaption class="hpi-detail__caption">${esc(item.caption)}</figcaption>`
+                    : ''
+              }
+            </figure>`
+            )
+            .join('')}
+          ${
+            editable
+              ? `<button type="button" class="hpi-detail__add" data-detail-add${list.length >= 12 ? ' disabled' : ''}>
+            <span class="material-symbols-outlined" aria-hidden="true">add_photo_alternate</span>
+            <strong>添加详情图</strong>
+            <small>最多 12 张 · 建议 1600×1000</small>
+          </button>`
+              : ''
+          }
+        </div>
+      </div>
+    </section>`
+}
+
 export function renderProductStory(product, story, line, { editable = false } = {}) {
   const resolved = story || {}
   const opts = { editable }
@@ -374,8 +331,7 @@ export function renderProductStory(product, story, line, { editable = false } = 
     <article class="hpi${editable ? ' hpi--editable' : ''}">
       ${renderProductHero(resolved, product, line, opts)}
       ${renderProductValue(resolved, opts)}
-      ${renderProductHow(resolved, opts)}
-      ${renderProductScenarios(resolved, opts)}
+      ${renderProductDetailImages(resolved, opts)}
       ${renderProductCases(resolved, opts)}
       ${renderProductAlbum(resolved, opts)}
       ${renderProductClosing(resolved, opts)}

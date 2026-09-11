@@ -196,6 +196,11 @@ const CONTROL_SCREEN_STORY = {
     title: '产品相册',
     items: [],
   },
+  detailImages: {
+    title: '商品详情',
+    subtitle: '',
+    items: [],
+  },
   closing: {
     title: '让中控屏进入你的真实项目场景',
     desc: '根据空间类型、设备条件与系统接口，共同确定适合的接入与实施方案。',
@@ -408,6 +413,11 @@ export function buildProductStory(product) {
     },
     album: {
       title: '产品相册',
+      items: [],
+    },
+    detailImages: {
+      title: '商品详情',
+      subtitle: '',
       items: [],
     },
     closing: {

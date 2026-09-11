@@ -85,6 +85,11 @@ function emptyStory(product = {}) {
         { title: '', caption: '', image: '' },
       ],
     },
+    detailImages: {
+      title: '商品详情',
+      subtitle: '',
+      items: [],
+    },
     scenarios: {
       title: '场景介绍',
       items: [
@@ -228,6 +233,19 @@ function cleanAlbum(value = {}, fallback = {}) {
   }
 }
 
+function cleanDetailImages(value = {}, fallback = {}) {
+  const source = Array.isArray(value.items) ? value.items : (Array.isArray(fallback.items) ? fallback.items : [])
+  const items = source
+    .slice(0, 12)
+    .map((item, index) => cleanAlbumItem(item || {}, fallback.items?.[index] || {}))
+    .filter((item) => item.url)
+  return {
+    title: cleanText(value.title, fallback.title || '商品详情', 80),
+    subtitle: cleanText(value.subtitle, fallback.subtitle || '', 160),
+    items,
+  }
+}
+
 function cleanStory(value = {}, fallback = {}) {
   const heroIn = value.hero || {}
   const heroFb = fallback.hero || {}
@@ -241,6 +259,8 @@ function cleanStory(value = {}, fallback = {}) {
   const casesFb = fallback.cases || {}
   const albumIn = value.album || {}
   const albumFb = fallback.album || {}
+  const detailIn = value.detailImages || {}
+  const detailFb = fallback.detailImages || {}
   const closeIn = value.closing || {}
   const closeFb = fallback.closing || {}
   const stages = padList(howIn.stages, 4, () => ({ title: '', caption: '', image: '' }))
@@ -295,6 +315,7 @@ function cleanStory(value = {}, fallback = {}) {
       items: cases,
     },
     album: cleanAlbum(albumIn, albumFb),
+    detailImages: cleanDetailImages(detailIn, detailFb),
     closing: {
       title: cleanText(closeIn.title, closeFb.title || '', 80),
       desc: cleanText(closeIn.desc, closeFb.desc || '', 240),

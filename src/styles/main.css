@@ -17238,6 +17238,68 @@ button.hpi-hero__link {
   color: var(--hwc-muted, #667085);
 }
 
+.hpi-detail {
+  padding: 72px 0 88px;
+  background: #fff;
+}
+.hpi-detail__head {
+  max-width: 720px;
+  margin: 0 auto 36px;
+  text-align: center;
+}
+.hpi-detail__title {
+  margin: 0 0 12px;
+  font-size: clamp(24px, 2.6vw, 32px);
+  color: var(--hwc-text, #172033);
+}
+.hpi-detail__subtitle {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--hwc-muted, #667085);
+}
+.hpi-detail__list {
+  display: grid;
+  gap: 28px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+.hpi-detail__item {
+  position: relative;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.hpi-detail__media {
+  margin: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f0f3f8;
+  box-shadow: 0 8px 32px rgba(23, 48, 92, 0.08);
+}
+.hpi-detail__media > img,
+.hpi-detail__media > .hpi-edit-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.hpi-detail__media > img,
+.hpi-detail__media > .hpi-edit-img img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.hpi-detail__media > .hpi-edit-img--empty {
+  min-height: 320px;
+}
+.hpi-detail__caption {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--hwc-muted, #667085);
+}
+
 .hpi-close {
   position: relative; padding: 110px 0 96px; overflow: hidden;
   background: #05082F; color: #fff; text-align: center;
@@ -17290,10 +17352,14 @@ button.hpi-hero__link {
   }
   .hpi-hero__copy h1 { font-size: 34px; }
   .hpi-how__stages { grid-template-columns: 1fr; }
-  .hpi-value, .hpi-scenes, .hpi-cases, .hpi-album, .hpi-close { padding-top: 72px; padding-bottom: 64px; }
+  .hpi-value, .hpi-scenes, .hpi-cases, .hpi-album, .hpi-detail, .hpi-close { padding-top: 72px; padding-bottom: 64px; }
   .hpi-cases__list { gap: 28px; }
   .hpi-album__grid { grid-template-columns: 1fr; gap: 16px; }
   .hpi-album__title { font-size: 24px; margin-bottom: 20px; }
+  .hpi-detail__head { margin-bottom: 24px; }
+  .hpi-detail__list { gap: 20px; }
+  .hpi-detail__media { border-radius: 12px; }
+  .hpi-detail__media > .hpi-edit-img--empty { min-height: 220px; }
   .hpi-scenes__body { padding: 20px 18px 18px; }
   .hpi-scenes__card { border-radius: 12px; }
   .hpi-scenes__tags {
