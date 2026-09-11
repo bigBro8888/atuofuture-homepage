@@ -1,4 +1,4 @@
-import { applyProductLibraryCms, getLine, getProductLibraryItems } from '../data/hardware-catalog.js'
+import { applyProductLibraryCms, getLine, getProductLibraryItems, getProductLibraryCategories } from '../data/hardware-catalog.js'
 import { loadProductLibraryContent } from '../services/site-settings-api.js'
 
 function esc(str = '') {
@@ -42,7 +42,23 @@ function renderCard(item) {
     </a>`
 }
 
-function renderPage(items) {
+function renderTabs(categories, activeId) {
+  const tabs = [{ id: '', name: '全部' }, ...categories]
+  if (tabs.length <= 1) return ''
+  return `
+    <nav class="hwp__tabs" aria-label="商品分类">
+      ${tabs
+        .map(
+          (tab) => `
+        <button type="button" class="hwp__tab${tab.id === activeId ? ' is-active' : ''}" data-hwp-tab="${esc(tab.id)}">
+          ${esc(tab.name)}
+        </button>`,
+        )
+        .join('')}
+    </nav>`
+}
+
+function renderPage(items, categories, activeId) {
   const count = items.length
   return `
     <section class="hwp">
@@ -52,6 +68,7 @@ function renderPage(items) {
           <h1>全部产品</h1>
           <p class="hwp__lead">来自内容中心已发布的商品详情，共 ${count} 款。</p>
         </header>
+        ${renderTabs(categories, activeId)}
         ${
           count
             ? `<div class="hwp__grid">${items.map(renderCard).join('')}</div>`
@@ -61,12 +78,26 @@ function renderPage(items) {
     </section>`
 }
 
+function filterItems(items, categoryId) {
+  if (!categoryId) return items
+  return items.filter((item) => (item.category || '') === categoryId)
+}
+
 export async function initHardwareProductsPage() {
   const root = document.getElementById('hardware-products-root')
   if (!root) return
   const library = await loadProductLibraryContent()
   applyProductLibraryCms(library)
   const items = getProductLibraryItems()
+  const categories = getProductLibraryCategories()
+  let activeId = ''
   document.title = '全部产品 | 智能硬件 | 安托未来'
-  root.innerHTML = renderPage(items)
+  root.innerHTML = renderPage(items, categories, activeId)
+  root.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-hwp-tab]')
+    if (!tab) return
+    event.preventDefault()
+    activeId = tab.dataset.hwpTab || ''
+    root.innerHTML = renderPage(filterItems(items, activeId), categories, activeId)
+  })
 }

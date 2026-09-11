@@ -78,6 +78,7 @@ function emptyProduct() {
     name: '',
     tag: '',
     hardwareLine: 'space',
+    category: '',
     coverImage: '',
     shortDescription: '',
     fullDescription: '',
@@ -118,6 +119,7 @@ function updateProductStatus(page) {
 
 function renderProductList(content) {
   const items = [...(content.items || [])]
+  const categories = [...(content.categories || [])]
   const editor = document.querySelector('[data-products-editor]')
   if (!editor) return
   editor.classList.add('admin-news-editor')
@@ -125,22 +127,26 @@ function renderProductList(content) {
     <div class="admin-news-toolbar">
       <p class="admin-form-section__hint" style="margin:0">点「编辑」进入可视化详情页，直接在预览上改文案和图片。</p>
       <div class="admin-news-toolbar__actions">
+        <button type="button" class="admin-add-slide" data-product-category-add>+ 新建分类</button>
         <button type="button" class="admin-add-slide" data-product-add>+ 新建产品</button>
       </div>
     </div>
-    <div class="admin-home-list" data-products-list>${items.map((item, index) => `
+    <div class="admin-home-list" data-products-list>${items.map((item, index) => {
+      const category = categories.find((c) => c.id === item.category)
+      return `
       <div class="admin-item-row" data-product-index="${index}">
         ${item.coverImage ? `<img class="admin-simple-item__thumb" src="${esc(item.coverImage)}" alt="" />` : '<span class="admin-simple-item__thumb is-empty"></span>'}
         <div>
           <strong>${esc(item.name || '未命名产品')}</strong>
-          <small>${esc(item.slug || '')}${item.tag ? ` · ${esc(item.tag)}` : ''} · ${(item.linkedHardwareIds || []).length} 个硬件关联${item.published === false ? ' · 未发布' : ''}</small>
+          <small>${esc(item.slug || '')}${item.tag ? ` · ${esc(item.tag)}` : ''}${category ? ` · ${esc(category.name)}` : ''} · ${(item.linkedHardwareIds || []).length} 个硬件关联${item.published === false ? ' · 未发布' : ''}</small>
         </div>
         <span class="admin-slide-tools">
           <a href="/hardware/product/?id=${encodeURIComponent(item.slug || item.id)}" target="_blank">预览</a>
           <button type="button" data-product-edit="${index}">编辑</button>
           <button type="button" data-product-remove="${index}">删除</button>
         </span>
-      </div>`).join('') || '<p class="admin-form-section__hint">还没有产品，先点上面的新建。</p>'}</div>`
+      </div>`
+    }).join('') || '<p class="admin-form-section__hint">还没有产品，先点上面的新建。</p>'}</div>`
 }
 
 function previewProduct(item) {
@@ -152,6 +158,14 @@ function previewProduct(item) {
     coverImage: item.coverImage || '',
     shortDescription: item.shortDescription || '',
   }
+}
+
+function categoryOptions(lineId) {
+  const categories = ctx.state.productLibrary?.draftContent?.categories || []
+  const filtered = lineId ? categories.filter((item) => !item.lineId || item.lineId === lineId) : categories
+  const options = [['', '未分类']]
+  filtered.forEach((item) => options.push([item.id, item.name]))
+  return options
 }
 
 function renderBasicsBar(item) {
@@ -169,6 +183,7 @@ function renderBasicsBar(item) {
           ${productField('slug', '详情页标识', item.slug, { placeholder: 'control-screen', help: '出现在 /hardware/product/?id= 后面' })}
           ${productField('tag', '列表标签', item.tag, { placeholder: '旗舰产品' })}
           ${productField('hardwareLine', '所属产品线', item.hardwareLine || 'space', { type: 'select', options: LINE_OPTIONS })}
+          ${productField('category', '商品分类', item.category || '', { type: 'select', options: categoryOptions(item.hardwareLine || 'space') })}
           ${productField('coverImage', '列表封面图', item.coverImage, { image: true, wide: true, size: '1200×900' })}
           ${productField('shortDescription', '一句话简介（列表用）', item.shortDescription, { type: 'textarea', wide: true, rows: 2 })}
           ${productField('fullDescription', '详细介绍（列表用）', item.fullDescription, { type: 'textarea', wide: true, rows: 2 })}
@@ -744,6 +759,32 @@ export function bindProductLibraryAdmin(helpers) {
       openProductCompose(-1)
       return
     }
+    if (event.target.closest('[data-product-category-add]')) {
+      event.preventDefault()
+      const name = window.prompt('请输入新分类名称（例如：环境控制）')
+      if (!name || !name.trim()) return
+      const trimmed = name.trim()
+      const draft = ctx.state.productLibrary?.draftContent || {}
+      const categories = [...(draft.categories || [])]
+      if (categories.some((item) => item.name === trimmed)) {
+        ctx.toast('分类已存在', true)
+        return
+      }
+      const baseId = trimmed.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || `cat-${Date.now().toString(36)}`
+      let id = baseId
+      let suffix = 1
+      while (categories.some((item) => item.id === id)) {
+        id = `${baseId}-${suffix}`.slice(0, 40)
+        suffix += 1
+      }
+      categories.push({ id, name: trimmed, lineId: '' })
+      try {
+        await persistProductLibrary({ ...draft, categories }, '分类已创建并发布')
+      } catch (error) {
+        ctx.toast(error.message, true)
+      }
+      return
+    }
     const edit = event.target.closest('[data-product-edit]')
     if (edit) {
       event.preventDefault()
@@ -758,7 +799,7 @@ export function bindProductLibraryAdmin(helpers) {
       const items = [...(ctx.state.productLibrary?.draftContent?.items || [])]
       items.splice(index, 1)
       try {
-        await persistProductLibrary({ items }, '产品已删除并发布')
+        await persistProductLibrary({ ...ctx.state.productLibrary?.draftContent, items }, '产品已删除并发布')
       } catch (error) {
         ctx.toast(error.message, true)
       }
@@ -854,7 +895,7 @@ export function bindProductLibraryAdmin(helpers) {
         if (!article.id) article.id = article.slug
         if (index >= 0 && items[index]) items[index] = { ...items[index], ...article }
         else items.unshift(article)
-        await persistProductLibrary({ items }, '产品详情已发布')
+        await persistProductLibrary({ ...ctx.state.productLibrary?.draftContent, items }, '产品详情已发布')
         closeProductCompose()
       } catch (error) {
         ctx.toast(error.message, true)

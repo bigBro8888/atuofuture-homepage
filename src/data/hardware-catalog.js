@@ -388,6 +388,7 @@ let navGroupOverride = null
 let spaceMatrixRowsOverride = null
 let spaceMatrixRuleOverride = null
 let productLibraryItems = []
+let productLibraryCategories = []
 
 export const DEFAULT_SPACE_MATRIX_RULE = {
   mode: 'manual',
@@ -433,10 +434,17 @@ export function applyProductLibraryCms(content) {
   productLibraryItems = Array.isArray(content?.items)
     ? content.items.filter((item) => item && item.published !== false)
     : []
+  productLibraryCategories = Array.isArray(content?.categories)
+    ? content.categories.filter((item) => item && item.id && item.name)
+    : []
 }
 
 export function getProductLibraryItems() {
   return productLibraryItems
+}
+
+export function getProductLibraryCategories() {
+  return productLibraryCategories
 }
 
 export function getProductLibraryItem(idOrSlug) {

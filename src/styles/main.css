@@ -17414,6 +17414,32 @@ button.hpi-hero__link {
   line-height: 1.6;
   color: var(--hwp-muted);
 }
+.hwp__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 28px;
+}
+.hwp__tab {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #fff;
+  color: var(--hwp-ink);
+  font-size: 14px;
+  line-height: 1;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.hwp__tab:hover {
+  border-color: #0b7f82;
+  color: #0b7f82;
+}
+.hwp__tab.is-active {
+  background: #0b7f82;
+  border-color: #0b7f82;
+  color: #fff;
+}
 .hwp__grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { db } from '../../lib/store.js'
-import { HARDWARE_PRODUCTS } from '../../../../src/data/hardware-catalog.js'
+import { HARDWARE_PRODUCTS, HARDWARE_CATEGORIES } from '../../../../src/data/hardware-catalog.js'
 import { buildProductStory } from '../../../../src/data/hardware-product-details.js'
 
 export const PRODUCT_LIBRARY_PAGE_KEY = 'product-library'
@@ -9,6 +9,18 @@ const LINE_IDS = new Set(['space', 'retail', 'consumer'])
 
 function cleanText(value, fallback = '', max = 2000) {
   return String(value ?? fallback ?? '').trim().slice(0, max)
+}
+
+function cleanSlug(value, fallback = '') {
+  const text = String(value ?? fallback ?? '').trim().toLowerCase()
+  const slug = text.replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+  return slug.slice(0, 60) || `p-${randomUUID().slice(0, 8)}`
+}
+
+function cleanCategoryId(value, fallback = '') {
+  const text = String(value ?? fallback ?? '').trim().toLowerCase()
+  const id = text.replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+  return id.slice(0, 40)
 }
 
 function cleanUrl(value, fallback = '') {
@@ -338,6 +350,7 @@ function seedItem(product) {
     name: product.name,
     tag: product.id === 'control-screen' ? '旗舰产品' : '',
     hardwareLine: product.productLine || 'space',
+    category: product.category || '',
     coverImage: product.coverImage || '',
     shortDescription: product.shortDescription || '',
     fullDescription: product.fullDescription || '',
@@ -353,13 +366,46 @@ function seedItem(product) {
   }
 }
 
+function defaultCategories() {
+  return HARDWARE_CATEGORIES.map((item) => ({
+    id: item.id,
+    name: item.name,
+    lineId: item.lineId || '',
+  }))
+}
+
 export function defaultProductLibraryContent() {
   return {
+    categories: defaultCategories(),
     items: HARDWARE_PRODUCTS
       .filter((item) => item.published !== false)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .map(seedItem),
   }
+}
+
+function validateCategory(value = {}, fallback = {}) {
+  const id = cleanCategoryId(value.id || value.name, fallback.id || '')
+  if (!id) return null
+  const lineId = LINE_IDS.has(value.lineId) ? value.lineId : cleanText(fallback.lineId || '', '', 20)
+  return {
+    id,
+    name: cleanText(value.name, fallback.name || id, 40),
+    lineId: LINE_IDS.has(lineId) ? lineId : '',
+  }
+}
+
+function validateCategories(value, fallback) {
+  const source = Array.isArray(value) ? value : (Array.isArray(fallback) ? fallback : [])
+  const used = new Set()
+  const list = []
+  source.slice(0, 40).forEach((item, index) => {
+    const next = validateCategory(item || {}, Array.isArray(fallback) ? fallback[index] || {} : {})
+    if (!next || used.has(next.id)) return
+    used.add(next.id)
+    list.push(next)
+  })
+  return list
 }
 
 function validateItem(value = {}, fallback = {}) {
@@ -377,6 +423,7 @@ function validateItem(value = {}, fallback = {}) {
     name,
     tag: cleanText(value.tag, fallback.tag || base.tag || '', 20),
     hardwareLine,
+    category: cleanCategoryId(value.category, fallback.category || base.category || ''),
     coverImage: cleanUrl(value.coverImage, fallback.coverImage || base.coverImage || ''),
     shortDescription: cleanText(value.shortDescription, fallback.shortDescription || base.shortDescription || '', 240),
     fullDescription: cleanText(value.fullDescription, fallback.fullDescription || base.fullDescription || '', 600),
@@ -394,6 +441,7 @@ function validateItem(value = {}, fallback = {}) {
 
 export function validateProductLibraryContent(value = {}) {
   const fallback = defaultProductLibraryContent()
+  const categories = validateCategories(value.categories, fallback.categories)
   const source = Array.isArray(value.items) ? value.items : fallback.items
   const usedSlugs = new Set()
   const items = source.slice(0, 80).map((item, index) => {
@@ -403,7 +451,7 @@ export function validateProductLibraryContent(value = {}) {
     usedSlugs.add(slug)
     return { ...next, slug }
   })
-  return { items }
+  return { categories, items }
 }
 
 export function presentProductLibrary(page) {
@@ -438,6 +486,7 @@ export function getProductLibraryConfig() {
 export function publicProductLibraryContent(page) {
   const content = validateProductLibraryContent(page?.publishedContent || {})
   return {
+    categories: content.categories,
     items: content.items.filter((item) => item.published !== false),
   }
 }
