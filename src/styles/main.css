@@ -16806,7 +16806,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 
 .hpi-hero {
   position: relative;
-  min-height: min(92vh, 820px);
+  min-height: min(61vh, 548px);
   display: flex; align-items: center;
   overflow: hidden;
   background:
@@ -16821,7 +16821,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .hpi-hero__grid {
   position: relative; z-index: 1;
   display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px;
-  align-items: center; padding: 120px 0 72px; width: var(--hpi-col);
+  align-items: center; padding: 80px 0 48px; width: var(--hpi-col);
 }
 .hpi-hero__copy h1 {
   margin: 0 0 18px; max-width: 12em;
@@ -17283,7 +17283,7 @@ button.hpi-hero__link {
 }
 @media (max-width: 720px) {
   .hpi-hero { min-height: 0; }
-  .hpi-hero__grid { padding: 100px 0 48px; width: min(1680px, calc(100% - 24px)); }
+  .hpi-hero__grid { padding: 72px 0 36px; width: min(1680px, calc(100% - 24px)); }
   .hpi {
     --hpi-col: min(1680px, calc(100% - 24px));
     --hpi-col-wide: min(1760px, calc(100% - 16px));
