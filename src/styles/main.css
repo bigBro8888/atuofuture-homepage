@@ -293,10 +293,58 @@
     left: 50%;
     width: min(1240px, calc(100vw - 32px));
     transform: translate(-50%, 4px);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(15, 40, 80, 0.08);
+    border-radius: 8px;
+    background: #f4f6f8;
+    box-shadow: 0 22px 56px rgba(8, 18, 40, 0.22);
   }
 
   .site-nav-item.is-open .site-mega--hardware {
     transform: translate(-50%, 0);
+  }
+
+  .site-mega__hardware {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) minmax(0, 1.1fr);
+    gap: 0;
+    padding: 22px 18px 20px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .site-mega__hardware-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 14px 22px 16px;
+    border: 0;
+    border-top: 1px solid rgba(15, 40, 80, 0.1);
+    border-radius: 0;
+    background: #eef1f4;
+    box-shadow: none;
+  }
+
+  .site-mega__all-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 22px;
+    border-radius: 2px;
+    background: #00d5c7;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: filter 0.18s ease;
+  }
+
+  .site-mega__all-btn:hover {
+    filter: brightness(1.05);
   }
 
   .site-mega--visual {
@@ -385,17 +433,6 @@
     height: 36px;
     border-radius: 6px;
     background: #1a1a4a center / cover no-repeat;
-  }
-
-  .site-mega__hardware {
-    display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) minmax(0, 1.1fr);
-    gap: 0;
-    padding: 22px 18px 20px;
-    border: 1px solid rgba(15, 40, 80, 0.08);
-    border-radius: 8px;
-    background: #f4f6f8;
-    box-shadow: 0 22px 56px rgba(8, 18, 40, 0.22);
   }
 
   .site-mega-col {
@@ -550,6 +587,25 @@
   .site-mobile-nav-link--child small {
     font-size: 12px;
     color: rgba(255, 255, 255, 0.58);
+  }
+
+  .site-mobile-nav-link--cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 8px 12px 4px;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 2px;
+    background: #00d5c7;
+    color: #04101f;
+    text-decoration: none;
+  }
+
+  .site-mobile-nav-link--cta strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
   }
 
   .site-mobile-nav-link--all {

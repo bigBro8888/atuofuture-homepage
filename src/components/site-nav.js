@@ -99,12 +99,15 @@ function renderHardwareMega(root) {
           )
           .join('')}
       </div>
+      <div class="site-mega__hardware-foot">
+        <a class="site-mega__all-btn" href="${root}hardware/products/">浏览全部产品</a>
+      </div>
     </div>
   `
 }
 
 function renderHardwareMobile(root) {
-  return resolveHardwareMegaGroups()
+  return `${resolveHardwareMegaGroups()
     .map(
       (group) => `
             <p class="site-mobile-nav-group">${group.title}</p>
@@ -117,7 +120,10 @@ function renderHardwareMobile(root) {
               )
               .join('')}`
     )
-    .join('')
+    .join('')}
+            <a class="site-mobile-nav-link site-mobile-nav-link--cta" href="${root}hardware/products/">
+              <strong>浏览全部产品</strong>
+            </a>`
 }
 
 function renderMegaChildren(item, root) {
