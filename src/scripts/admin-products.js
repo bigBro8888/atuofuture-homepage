@@ -174,44 +174,86 @@ function categoryOptions(lineId) {
 function renderBasicsBar(item) {
   const linked = new Set(item.linkedHardwareIds || [])
   return `
-    <details class="admin-vedit-basics">
+    <details class="admin-vedit-basics" open>
       <summary>
         <strong>基础设置</strong>
-        <span>名称、标识、分类、封面与列表字段（需要时再展开）</span>
+        <span>名称、分类、封面；日常改商品主要填这里</span>
       </summary>
       <div class="admin-vedit-basics__body">
         <input type="hidden" data-product-field="id" value="${esc(item.id || '')}" />
         <div class="admin-form-grid">
-          ${productField('name', '产品名称', item.name, { wide: true, placeholder: '例如 中控屏' })}
-          ${productField('slug', '详情页标识', item.slug, { placeholder: 'control-screen', help: '出现在 /hardware/product/?id= 后面' })}
-          ${productField('tag', '列表标签', item.tag, { placeholder: '旗舰产品' })}
+          ${productField('name', '产品名称', item.name, { wide: true, placeholder: '例如 智能门锁' })}
           ${productField('hardwareLine', '所属产品线', item.hardwareLine || 'space', { type: 'select', options: LINE_OPTIONS })}
           ${productField('category', '商品分类', item.category || '', { type: 'select', options: categoryOptions(item.hardwareLine || 'space') })}
-          ${productField('coverImage', '列表封面图', item.coverImage, { image: true, wide: true, size: '1200×900' })}
-          ${productField('shortDescription', '一句话简介（列表用）', item.shortDescription, { type: 'textarea', wide: true, rows: 2 })}
-          ${productField('fullDescription', '详细介绍（列表用）', item.fullDescription, { type: 'textarea', wide: true, rows: 2 })}
-          ${productField('capabilities', '能力卖点（列表用）', lines(item.capabilities), { type: 'textarea', wide: true, rows: 2, placeholder: '每行一条' })}
-          ${productField('scenarios', '适用场景（列表用）', lines(item.scenarios), { type: 'textarea', wide: true, rows: 2, placeholder: '每行一条' })}
-          ${productField('detailCtaLabel', '详情按钮文案', item.detailCtaLabel || '查看产品详情')}
-          ${productField('solutionLabel', '方案链接文案', item.solutionLabel || '')}
-          ${productField('solutionHref', '方案链接地址', item.solutionHref || '', { wide: true, placeholder: '/solutions/' })}
+          ${productField('coverImage', '列表封面图', item.coverImage, {
+            image: true,
+            wide: true,
+            size: '1200×900',
+            help: '出现在「全部产品」列表卡片上',
+          })}
+          ${productField('shortDescription', '列表简介', item.shortDescription, {
+            type: 'textarea',
+            wide: true,
+            rows: 2,
+            placeholder: '一句话说明这个产品是干什么的',
+            help: '出现在「全部产品」卡片标题下方；不填则卡片无简介',
+          })}
           ${productField('releasedAt', '上架时间', item.releasedAt || '', {
             placeholder: '2026-09-10',
-            help: '用于智能硬件首页「按上架时间自动」拉取，格式 YYYY-MM-DD',
+            help: '仅智能硬件首页「按上架时间自动」展示时用到，格式 YYYY-MM-DD',
           })}
           <label class="admin-news-pin admin-form-wide">
             <input data-product-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
-            <span><b>发布后前台可见</b><small>取消勾选则详情页不对外展示。</small></span>
+            <span><b>发布后前台可见</b><small>取消勾选则详情页与全部产品列表都不展示。</small></span>
           </label>
         </div>
-        <div class="admin-product-links">
-          <p class="admin-form-section__hint">关联智能硬件：勾选后，硬件列表里对应产品会默认跳到本详情页。</p>
-          ${HARDWARE_PRODUCTS.map((product) => `
-            <label>
-              <input type="checkbox" data-product-link="${esc(product.id)}"${linked.has(product.id) ? ' checked' : ''} />
-              <span><b>${esc(product.name)}</b><small>${esc(product.id)}</small></span>
-            </label>`).join('')}
-        </div>
+
+        <details class="admin-vedit-advanced">
+          <summary>高级设置（一般不用改）</summary>
+          <div class="admin-form-grid" style="margin-top:12px">
+            ${productField('slug', '详情页网址标识', item.slug, {
+              placeholder: 'smart-door-lock',
+              help: '出现在地址栏 /hardware/product/?id= 后面；新建时建议用英文短横线，发布后尽量不要改',
+            })}
+            ${productField('tag', '首页角标（可选）', item.tag, {
+              placeholder: '旗舰产品',
+              help: '仅智能硬件首页「旗舰」位会显示；普通商品请留空',
+            })}
+            ${productField('fullDescription', '首页长介绍（可选）', item.fullDescription, {
+              type: 'textarea',
+              wide: true,
+              rows: 2,
+              help: '仅智能硬件首页旗舰/零售区块用；详情页正文请在下方预览里直接改',
+            })}
+            ${productField('capabilities', '首页能力点（可选）', lines(item.capabilities), {
+              type: 'textarea',
+              wide: true,
+              rows: 2,
+              placeholder: '每行一条',
+              help: '仅智能硬件首页旗舰位展示；详情页能力请在下方预览里改',
+            })}
+            ${productField('scenarios', '适用场景（可选）', lines(item.scenarios), {
+              type: 'textarea',
+              wide: true,
+              rows: 2,
+              placeholder: '每行一条',
+              help: '备用字段，当前前台详情页不直接展示',
+            })}
+            ${productField('detailCtaLabel', '首页「查看详情」文案', item.detailCtaLabel || '查看产品详情', {
+              help: '智能硬件首页卡片按钮文字',
+            })}
+            ${productField('solutionLabel', '方案链接文案', item.solutionLabel || '')}
+            ${productField('solutionHref', '方案链接地址', item.solutionHref || '', { wide: true, placeholder: '/solutions/' })}
+          </div>
+          <div class="admin-product-links">
+            <p class="admin-form-section__hint">关联静态硬件目录：勾选后，硬件首页对应产品会跳到本详情页。</p>
+            ${HARDWARE_PRODUCTS.map((product) => `
+              <label>
+                <input type="checkbox" data-product-link="${esc(product.id)}"${linked.has(product.id) ? ' checked' : ''} />
+                <span><b>${esc(product.name)}</b><small>${esc(product.id)}</small></span>
+              </label>`).join('')}
+          </div>
+        </details>
       </div>
     </details>`
 }
@@ -225,7 +267,7 @@ function renderProductCompose(item) {
   body.innerHTML = `
     <div class="admin-vedit">
       ${renderBasicsBar(item)}
-      <div class="admin-vedit-hint">下方即详情页预览：点文字直接改；点图片可填链接或上传本地；点跳转链接弹出设置。改完点右上角「发布上线」。</div>
+      <div class="admin-vedit-hint">详情页正文请在下方预览里直接改（点文字/图片即可）。上方基础设置只管名称、分类和列表封面。</div>
       <div class="admin-vedit-canvas" data-product-visual>
         ${renderProductStory(product, story, line, { editable: true })}
       </div>
@@ -749,6 +791,17 @@ function saveImageModal(composeView) {
   ctx.toast(url ? '图片已更新' : '已清除图片')
 }
 
+function slugifyProductName(name) {
+  const raw = String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+  return raw.slice(0, 60) || `product-${Date.now().toString(36)}`
+}
+
 export function bindProductLibraryAdmin(helpers) {
   ctx = { ...ctx, ...helpers }
   const listView = document.querySelector('[data-products-list-view]')
@@ -862,8 +915,7 @@ export function bindProductLibraryAdmin(helpers) {
         return
       }
       if (!article.slug.trim()) {
-        ctx.toast('请填写详情页标识', true)
-        return
+        article.slug = slugifyProductName(article.name)
       }
       button.disabled = true
       try {

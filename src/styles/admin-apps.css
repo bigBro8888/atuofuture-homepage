@@ -920,6 +920,27 @@ body.admin-modal-open { overflow: hidden; }
 .admin-vedit-basics > summary strong { font-size: 14px; color: #172033; }
 .admin-vedit-basics > summary span { font-size: 12px; color: #7b8aa0; }
 .admin-vedit-basics__body { padding: 8px 18px 18px; border-top: 1px solid #e8eef7; }
+.admin-vedit-advanced {
+  margin-top: 16px;
+  border: 1px dashed #d5deeb;
+  border-radius: 12px;
+  background: #fafcff;
+  padding: 0 14px 14px;
+}
+.admin-vedit-advanced > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5a6b84;
+}
+.admin-vedit-advanced > summary::-webkit-details-marker { display: none; }
+.admin-vedit-advanced > summary::before {
+  content: '▸ ';
+  color: #1769ff;
+}
+.admin-vedit-advanced[open] > summary::before { content: '▾ '; }
 .admin-vedit-hint {
   margin: 0;
   padding: 10px 14px;
