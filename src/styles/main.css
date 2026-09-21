@@ -146,7 +146,7 @@
   .site-header__logo-img {
     display: block;
     width: auto;
-    height: 28px;
+    height: 22px;
     max-width: none;
     object-fit: contain;
     object-position: left center;
@@ -184,7 +184,7 @@
 
   @media (max-width: 1280px) {
     .site-header__logo-img {
-      height: 26px;
+      height: 20px;
     }
     .site-nav-link {
       padding: 0 6px;
@@ -10153,7 +10153,7 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   }
 
   .site-header__logo-img {
-    height: 26px;
+    height: 20px;
     max-width: none;
   }
 
@@ -10382,7 +10382,7 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   }
 
   .site-header__logo-img {
-    height: 24px;
+    height: 18px;
     max-width: none;
   }
 
