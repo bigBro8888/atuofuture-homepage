@@ -77,22 +77,22 @@ function renderPortal() {
             <button class="aso-org" type="button" data-org-toggle aria-expanded="false">
               <span data-org-name>王力集团</span>${icon('expand_more')}
             </button>
-            <button class="aso-icon-btn" type="button" data-notice-toggle aria-label="通知">
+            <button class="aso-icon-btn" type="button" data-notice-toggle aria-label="通知" aria-expanded="false">
               ${icon('notifications')}<b>2</b>
             </button>
-            <button class="aso-avatar" type="button" data-account-toggle aria-label="账号菜单">张</button>
+            <button class="aso-avatar" type="button" data-account-toggle aria-label="账号菜单" aria-expanded="false">张</button>
           </div>
-          <div class="aso-popover aso-org-menu" data-org-menu hidden>
+          <div class="aso-popover aso-org-menu" data-org-menu aria-hidden="true">
             <p>切换组织 / 项目</p>
             <button type="button" data-org="王力集团" data-project="王力集团总部项目"><b>王力集团</b><small>总部项目</small></button>
             <button type="button" data-org="华东体验中心" data-project="上海展示项目"><b>华东体验中心</b><small>上海展示项目</small></button>
           </div>
-          <div class="aso-popover aso-notice-menu" data-notice-menu hidden>
+          <div class="aso-popover aso-notice-menu" data-notice-menu aria-hidden="true">
             <p>最新通知</p>
             <button type="button">中控屏离线告警<small>10 分钟前</small></button>
             <button type="button">AI画报权限已开通<small>昨天</small></button>
           </div>
-          <div class="aso-popover aso-account-menu" data-account-menu hidden>
+          <div class="aso-popover aso-account-menu" data-account-menu aria-hidden="true">
             <p>张三 · 客户普通用户</p>
             <button type="button">个人信息</button>
             <button type="button">账号与安全</button>
@@ -222,7 +222,7 @@ function renderPortal() {
         </div>
       </section>
 
-      <div class="aso-toast" role="status" data-aso-toast hidden></div>
+      <div class="aso-toast" role="status" data-aso-toast aria-hidden="true"></div>
     </div>`
 }
 
@@ -230,15 +230,28 @@ function showToast(message) {
   const toast = document.querySelector('[data-aso-toast]')
   if (!toast) return
   toast.textContent = message
-  toast.hidden = false
+  toast.classList.add('is-visible')
+  toast.setAttribute('aria-hidden', 'false')
   window.clearTimeout(showToast.timer)
-  showToast.timer = window.setTimeout(() => { toast.hidden = true }, 2600)
+  showToast.timer = window.setTimeout(() => {
+    toast.classList.remove('is-visible')
+    toast.setAttribute('aria-hidden', 'true')
+  }, 2600)
 }
 
 function closePopovers(except) {
   document.querySelectorAll('.aso-popover').forEach((popover) => {
-    if (popover !== except) popover.hidden = true
+    if (popover === except) return
+    popover.classList.remove('is-open')
+    popover.setAttribute('aria-hidden', 'true')
   })
+}
+
+function setPopover(menu, trigger, open) {
+  closePopovers(menu)
+  menu.classList.toggle('is-open', open)
+  menu.setAttribute('aria-hidden', String(!open))
+  trigger?.setAttribute('aria-expanded', String(open))
 }
 
 export function initAspaceOne() {
@@ -256,10 +269,9 @@ export function initAspaceOne() {
     const accountToggle = event.target.closest('[data-account-toggle]')
     if (orgToggle || noticeToggle || accountToggle) {
       const menu = orgToggle ? orgMenu : noticeToggle ? noticeMenu : accountMenu
-      const nextHidden = !menu.hidden
-      closePopovers(menu)
-      menu.hidden = nextHidden
-      orgToggle?.setAttribute('aria-expanded', String(!nextHidden))
+      const trigger = orgToggle || noticeToggle || accountToggle
+      const willOpen = !menu.classList.contains('is-open')
+      setPopover(menu, trigger, willOpen)
       return
     }
 
@@ -267,7 +279,7 @@ export function initAspaceOne() {
     if (org) {
       root.querySelector('[data-org-name]').textContent = org.dataset.org
       root.querySelectorAll('.aso-app__copy p').forEach((p) => { p.textContent = org.dataset.project })
-      orgMenu.hidden = true
+      setPopover(orgMenu, root.querySelector('[data-org-toggle]'), false)
       showToast(`已切换到 ${org.dataset.org} · ${org.dataset.project}`)
       return
     }
@@ -317,6 +329,34 @@ export function initAspaceOne() {
     docList.innerHTML = docRows(activeCategory, keyword)
     root.querySelector('.aso-docs')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   })
+
+  const navLinks = [...root.querySelectorAll('.aso-subnav__links a')]
+  const setActiveNav = (href) => {
+    navLinks.forEach((link) => {
+      const active = link.getAttribute('href') === href
+      link.classList.toggle('is-active', active)
+      if (active) link.setAttribute('aria-current', 'page')
+      else link.removeAttribute('aria-current')
+    })
+  }
+  navLinks.forEach((link) => {
+    link.addEventListener('click', () => setActiveNav(link.getAttribute('href')))
+  })
+  setActiveNav('#overview')
+
+  const observedSections = ['overview', 'help', 'support']
+    .map((id) => document.getElementById(id))
+    .filter(Boolean)
+  if ('IntersectionObserver' in window && observedSections.length) {
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+      if (!visible) return
+      setActiveNav(`#${visible.target.id}`)
+    }, { rootMargin: '-124px 0px -55% 0px', threshold: [0.05, 0.25, 0.6] })
+    observedSections.forEach((section) => observer.observe(section))
+  }
 
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.aso-subnav__tools, .aso-popover')) closePopovers()
