@@ -174,7 +174,41 @@
   .site-header__nav {
     flex: 1;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .site-header__actions {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .aso-hold {
+    min-height: calc(100vh - 4rem);
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 12px;
+    padding: 48px 24px 80px;
+    text-align: center;
+    color: #0b1c3a;
+  }
+  .aso-hold__kicker {
+    margin: 0;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #0b7f82;
+  }
+  .aso-hold h1 {
+    margin: 0;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+  }
+  .aso-hold p:last-child {
+    margin: 0;
+    color: #62758f;
+    font-size: 15px;
   }
 
   .site-nav-item {
@@ -187,7 +221,7 @@
     justify-content: center;
     gap: 2px;
     height: 2.5rem;
-    padding: 0 12px;
+    padding: 0 8px;
     font-family: Inter, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 15px;
     font-weight: 500;

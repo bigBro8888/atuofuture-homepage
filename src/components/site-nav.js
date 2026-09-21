@@ -236,13 +236,12 @@ export function renderSiteNav(activeId) {
         <nav class="site-header__nav hidden lg:flex items-center" aria-label="主导航">
           ${renderDesktopNav(activeId, root)}
         </nav>
-        <div class="site-header__actions hidden md:flex items-center gap-4">
+        <div class="site-header__actions hidden md:flex items-center">
           ${SHOW_APP_DOWNLOAD
             ? `<a href="${root}${APP_DOWNLOAD_PATH}" class="site-header__btn site-header__btn--ghost${activeId === 'app-download' ? ' is-current' : ''}">
             <span class="material-symbols-outlined" aria-hidden="true">download</span> ${SITE_CTA.downloadLabel}
           </a>`
             : ''}
-          <button type="button" class="site-header__btn site-header__btn--primary" data-demo-modal-open>${SITE_CTA.demoLabel}</button>
         </div>
         <button type="button" class="site-header__menu lg:hidden" id="menu-toggle" aria-label="打开菜单">
           <span class="material-symbols-outlined">menu</span>
@@ -265,7 +264,6 @@ export function renderSiteNav(activeId) {
             ${SHOW_APP_DOWNLOAD
               ? `<a href="${root}${APP_DOWNLOAD_PATH}" class="site-header__btn site-header__btn--ghost w-full${activeId === 'app-download' ? ' is-current' : ''}">${SITE_CTA.downloadLabel}</a>`
               : ''}
-            <button type="button" class="site-header__btn site-header__btn--primary w-full" data-demo-modal-open>${SITE_CTA.demoLabel}</button>
           </div>
         </div>
       </div>

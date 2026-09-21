@@ -1,20 +1,7 @@
 /** 全站顶部导航：一级 + 二级（mega menu） */
 export const SITE_NAV_ITEMS = [
   { id: 'home', label: '首页', segment: '' },
-  {
-    id: 'solutions',
-    label: '行业解决方案',
-    segment: 'solutions/',
-    mega: 'visual',
-    children: [
-      { id: 'sol-campus', label: '智慧园区', desc: '多楼栋统一运营与园区服务协同', segment: 'solutions/?id=campus' },
-      { id: 'sol-building', label: '智慧楼宇', desc: '访客、会议、能耗与运维一体联动', segment: 'solutions/?id=building' },
-      { id: 'sol-school', label: '智慧学校', desc: '教室、通行、能耗与信息发布', segment: 'solutions/?id=school' },
-      { id: 'sol-hotel', label: '智慧酒店', desc: '客房中控、门锁与能耗服务', segment: 'solutions/?id=hotel' },
-      { id: 'sol-apartment', label: '智慧公寓', desc: '分房、授权、水电与费用管理', segment: 'solutions/?id=apartment' },
-      { id: 'sol-commercial', label: '商业资产', desc: '招商获客、带看签约与资产运营', segment: 'solutions/?id=commercial' },
-    ],
-  },
+  { id: 'aspace-one', label: 'Aspace One', segment: 'aspace-one/' },
   {
     id: 'agents',
     label: '空间智能体',
@@ -43,6 +30,20 @@ export const SITE_NAV_ITEMS = [
     ],
   },
   { id: 'news', label: '新闻中心', segment: 'news/' },
+  {
+    id: 'solutions',
+    label: '行业解决方案',
+    segment: 'solutions/',
+    mega: 'visual',
+    children: [
+      { id: 'sol-campus', label: '智慧园区', desc: '多楼栋统一运营与园区服务协同', segment: 'solutions/?id=campus' },
+      { id: 'sol-building', label: '智慧楼宇', desc: '访客、会议、能耗与运维一体联动', segment: 'solutions/?id=building' },
+      { id: 'sol-school', label: '智慧学校', desc: '教室、通行、能耗与信息发布', segment: 'solutions/?id=school' },
+      { id: 'sol-hotel', label: '智慧酒店', desc: '客房中控、门锁与能耗服务', segment: 'solutions/?id=hotel' },
+      { id: 'sol-apartment', label: '智慧公寓', desc: '分房、授权、水电与费用管理', segment: 'solutions/?id=apartment' },
+      { id: 'sol-commercial', label: '商业资产', desc: '招商获客、带看签约与资产运营', segment: 'solutions/?id=commercial' },
+    ],
+  },
   {
     id: 'about',
     label: '关于我们',
