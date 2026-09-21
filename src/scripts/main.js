@@ -13,6 +13,7 @@ import { initNewsPage } from './news-page.js'
 import { initNewsDetailPage } from './news-detail.js'
 import { initAiTokenStore } from './ai-token-store.js'
 import { initOrder } from './order.js'
+import { initAspaceOne } from './aspace-one.js'
 import { loadAndApplyHomeContent } from './home-content.js'
 import { loadAndApplyAboutContent } from './about-page.js'
 import { loadAndApplySiteSettings } from '../services/site-settings-api.js'
@@ -772,7 +773,11 @@ function bootstrap() {
     initOrder()
   }
 
-  initScrollReveal()
+  if (page === 'aspace-one') {
+    initAspaceOne()
+  }
+
+  if (page !== 'aspace-one') initScrollReveal()
   initBackToTop()
 
   if (page === 'agents') {
