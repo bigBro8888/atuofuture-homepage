@@ -6,13 +6,13 @@ const apps = [
 ]
 
 const docs = [
-  { title: 'Aspace One 快速入门指南', category: '全部文档', date: '2026-09-12' },
-  { title: '能源能耗数据接入说明', category: '能源能耗', date: '2026-09-10' },
-  { title: 'AI画报使用手册', category: 'AI画报', date: '2026-09-08' },
-  { title: '电子相册发布流程', category: '电子相册', date: '2026-09-06' },
-  { title: '中控屏配置操作指南', category: '中控屏管理', date: '2026-09-03' },
-  { title: '设备管理平台 API 文档', category: '会议与空间', date: '2026-08-28' },
-  { title: '项目实施规范', category: '项目服务', date: '2026-08-20' },
+  { title: 'Aspace One 快速入门指南', category: '全部文档', date: '2026-09-12', featured: true, keywords: '权限申请 账号绑定 入门' },
+  { title: '能源能耗数据接入说明', category: '能源能耗', date: '2026-09-10', featured: true, keywords: '能耗数据接入 网关 采集' },
+  { title: 'AI画报使用手册', category: 'AI画报', date: '2026-09-08', keywords: '模板 发布' },
+  { title: '电子相册发布流程', category: '电子相册', date: '2026-09-06', keywords: '电子相册发布 多屏同步' },
+  { title: '中控屏配置操作指南', category: '中控屏管理', date: '2026-09-03', keywords: '中控屏配置 设备绑定' },
+  { title: '设备管理平台 API 文档', category: '会议与空间', date: '2026-08-28', keywords: '接口 对接' },
+  { title: '项目实施规范', category: '项目服务', date: '2026-08-20', keywords: '权限申请 交付 验收' },
 ]
 
 const showcase = [
@@ -46,6 +46,37 @@ const showcase = [
     place: '办公楼层 · 杭州园区项目',
     alt: '办公楼层公共区域场景',
   },
+]
+
+const docCategories = [
+  ['description', '全部文档'],
+  ['bar_chart', '能源能耗'],
+  ['image', 'AI画报'],
+  ['photo_library', '电子相册'],
+  ['desktop_windows', '中控屏管理'],
+  ['groups', '会议与空间'],
+  ['folder', '项目服务'],
+]
+
+const hotSearches = ['中控屏配置', '权限申请', '能耗数据接入', '电子相册发布']
+
+const featuredDocs = [
+  { title: 'Aspace One 快速入门指南', date: '2026-09-12', badge: '新手必读', tone: 'blue', art: 'lines' },
+  { title: '能源能耗数据接入说明', date: '2026-09-10', badge: '热门文档', tone: 'teal', art: 'chart' },
+]
+
+const updates = [
+  ['2026-09-18', '设备管理平台 v3.2 正式发布', '新增设备批量配置能力，优化告警通知机制。'],
+  ['2026-09-10', 'AI画报新增模板库', '新增多套行业模板，支持企业文化发布。'],
+  ['2026-09-03', '电子相册发布流程优化', '支持定时发布与多屏同步。'],
+]
+
+const supportCards = [
+  ['monitor_heart', '系统状态查询', '查看各产品服务状态'],
+  ['manage_accounts', '账号与权限', '账号绑定、权限申请'],
+  ['support', '提交服务工单', '遇到问题？提交工单', true],
+  ['contact_page', '联系客户经理', '获取一对一服务支持'],
+  ['rate_review', '功能建议', '告诉我们您的想法'],
 ]
 
 const quickActions = [
@@ -92,16 +123,20 @@ function showcaseSlide(slide, index) {
 
 function docRows(category = '全部文档', keyword = '') {
   const query = keyword.trim().toLowerCase()
+  // 默认视图里精选文档已在上方卡片展示，不再重复出现在列表中。
+  const isDefaultView = category === '全部文档' && !query
   const filtered = docs.filter((item) => {
+    if (isDefaultView && item.featured) return false
     const categoryMatch = category === '全部文档' || item.category === category
-    return categoryMatch && (!query || `${item.title} ${item.category}`.toLowerCase().includes(query))
+    return categoryMatch && (!query || `${item.title} ${item.category} ${item.keywords || ''}`.toLowerCase().includes(query))
   })
   if (!filtered.length) return '<p class="aso-empty">没有找到匹配的文档。</p>'
   return filtered.map((item) => `
     <button class="aso-doc-row" type="button" data-doc="${item.title}">
-      ${icon('description')}
-      <span>${item.title}</span>
+      <i>${icon('description')}</i>
+      <span class="aso-doc-row__title">${item.title}</span>
       <time>${item.date}</time>
+      ${icon('chevron_right')}
     </button>`).join('')
 }
 
@@ -249,51 +284,77 @@ function renderPortal() {
       <section class="aso-help aso-section" id="help">
         <div class="aso-container">
           <header class="aso-help__head">
-            <div><p class="aso-eyebrow">HELP CENTER</p><h2>自助服务中心</h2></div>
-            <p>搜索知识、获取帮助，让问题更快解决</p>
-          </header>
-          <form class="aso-search" data-help-search>
-            ${icon('search')}
-            <input type="search" aria-label="搜索文档" placeholder="搜索帮助文档、问题或关键词，例如：中控屏如何配置、如何申请权限" />
-            <button type="submit">搜索</button>
-          </form>
-          <div class="aso-help__grid">
-            <div class="aso-panel aso-docs">
-              <h3>${icon('description')} 文档中心</h3>
-              <div class="aso-docs__body">
-                <div class="aso-doc-cats">
-                  ${['全部文档', '能源能耗', 'AI画报', '电子相册', '中控屏管理', '会议与空间', '项目服务'].map((item, index) => `<button class="${index === 0 ? 'is-active' : ''}" type="button" data-doc-category="${item}">${icon('chevron_right')} ${item}</button>`).join('')}
-                </div>
-                <div class="aso-doc-list" data-doc-list>${docRows()}</div>
+            <div class="aso-help__intro">
+              <p class="aso-eyebrow">HELP CENTER</p>
+              <h2>自助服务中心</h2>
+              <p class="aso-help__lead">搜索知识、获取帮助，让问题更快解决</p>
+            </div>
+            <div class="aso-help__find">
+              <form class="aso-search" data-help-search>
+                ${icon('search')}
+                <input type="search" aria-label="搜索文档" placeholder="搜索帮助文档、问题或关键词，例如：中控屏如何配置、如何申请权限" />
+                <button type="submit">搜索</button>
+              </form>
+              <div class="aso-hot">
+                <span>热门搜索：</span>
+                ${hotSearches.map((word) => `<button type="button" data-hot-search="${word}">${word}</button>`).join('')}
               </div>
             </div>
-            <div class="aso-panel aso-updates">
+            <figure class="aso-help__deco" aria-hidden="true">
+              <i class="aso-help__deco-back"></i>
+              <i class="aso-help__deco-page"><span></span><span></span><span></span></i>
+            </figure>
+          </header>
+          <div class="aso-help__grid">
+            <nav class="aso-doc-cats" aria-label="文档分类">
+              ${docCategories.map(([ico, name], index) => `<button class="${index === 0 ? 'is-active' : ''}" type="button" data-doc-category="${name}">${icon(ico)}<span>${name}</span></button>`).join('')}
+            </nav>
+            <div class="aso-docs">
+              <h3>文档中心</h3>
+              <p class="aso-docs__lead">精选指南与操作说明，快速上手 Aspace One。</p>
+              <div class="aso-docs__feature">
+                ${featuredDocs
+                  .map(
+                    (doc) => `
+                <button class="aso-doc-card aso-doc-card--${doc.tone}" type="button" data-doc="${doc.title}">
+                  <span class="aso-doc-art aso-doc-art--${doc.art}" aria-hidden="true">
+                    <i class="aso-doc-art__back"></i>
+                    <i class="aso-doc-art__page"><span></span><span></span><span></span><span></span></i>
+                  </span>
+                  <span class="aso-doc-card__copy">
+                    <em>${doc.badge}</em>
+                    <b>${doc.title}</b>
+                    <time>${doc.date}</time>
+                  </span>
+                  <i class="aso-doc-card__go">${icon('chevron_right')}</i>
+                </button>`
+                  )
+                  .join('')}
+              </div>
+              <div class="aso-doc-list" data-doc-list>${docRows()}</div>
+            </div>
+            <aside class="aso-updates">
               <header><h3>${icon('campaign')} 最新更新</h3><button type="button" data-show-all>查看更多 ${icon('arrow_forward')}</button></header>
-              <article><time>2026-09-18</time><b>设备管理平台 v3.2 正式发布</b><p>新增设备批量配置能力，优化告警通知机制。</p></article>
-              <article><time>2026-09-10</time><b>AI画报新增模板库</b><p>新增多套行业模板，支持企业文化发布。</p></article>
-              <article><time>2026-09-03</time><b>电子相册发布流程优化</b><p>支持定时发布与多屏同步。</p></article>
-            </div>
-            <div class="aso-panel aso-support" id="support">
-              <h3>${icon('headphones')} 获取帮助</h3>
-              ${[
-                ['monitor_heart', '系统状态查询', '查看各产品服务状态'],
-                ['manage_accounts', '账号与权限', '账号绑定、权限申请'],
-                ['support', '提交服务工单', '遇到问题？提交工单'],
-                ['contact_page', '联系客户经理', '获取一对一服务支持'],
-                ['rate_review', '功能建议', '告诉我们您的想法'],
-              ].map(([ico, title, desc]) => `<button type="button" data-support="${title}">${icon(ico)}<span><b>${title}</b><small>${desc}</small></span>${icon('chevron_right')}</button>`).join('')}
-            </div>
-          </div>
-          <div class="aso-help__bottom">
-            <div class="aso-panel aso-faq">
-              <h3>${icon('help')} 用户最常问</h3>
-              ${['如何新增设备接入中控屏管理？', 'AI画报支持哪些文件格式？', '忘记密码怎么办？'].map((q, i) => `<button type="button" data-faq="${i}"><i>${i + 1}</i><span>${q}</span>${icon('chevron_right')}</button><p data-faq-answer="${i}" hidden>请进入文档中心查看操作指南；如仍无法解决，可提交服务工单。</p>`).join('')}
-            </div>
-            <aside class="aso-panel aso-quote">
-              ${icon('support_agent')}
-              <p><b>问题还没有解决？</b><br/>提交服务工单，或联系当前组织的客户经理获取一对一支持。</p>
-              <button type="button" data-support="提交服务工单">提交服务工单 ${icon('arrow_forward')}</button>
+              <ol class="aso-updates__list">
+                ${updates.map(([date, title, desc]) => `<li><time>${date}</time><div><b>${title}</b><p>${desc}</p></div></li>`).join('')}
+              </ol>
             </aside>
+          </div>
+          <div class="aso-support" id="support">
+            <div class="aso-support__head">
+              ${icon('headset_mic')}
+              <div><b>获取帮助</b><small>多种方式为您提供支持</small></div>
+            </div>
+            <div class="aso-support__list">
+              ${supportCards
+                .map(
+                  ([ico, title, desc, primary]) => `
+              <button class="aso-support__card${primary ? ' is-primary' : ''}" type="button" data-support="${title}">
+                ${icon(ico)}<span><b>${title}</b><small>${desc}</small></span>${icon('chevron_right')}
+              </button>`
+                )
+                .join('')}
+            </div>
           </div>
         </div>
       </section>
@@ -425,14 +486,6 @@ export function initAspaceOne() {
       return
     }
 
-    const faq = event.target.closest('[data-faq]')
-    if (faq) {
-      const answer = root.querySelector(`[data-faq-answer="${faq.dataset.faq}"]`)
-      answer.hidden = !answer.hidden
-      faq.classList.toggle('is-open', !answer.hidden)
-      return
-    }
-
     if (event.target.closest('[data-show-all]')) showToast('完整列表将在对应模块接口接入后开放')
   })
 
@@ -446,11 +499,21 @@ export function initAspaceOne() {
     })
   })
 
-  root.querySelector('[data-help-search]')?.addEventListener('submit', (event) => {
+  const searchForm = root.querySelector('[data-help-search]')
+  searchForm?.addEventListener('submit', (event) => {
     event.preventDefault()
     const keyword = event.currentTarget.querySelector('input').value
     docList.innerHTML = docRows(activeCategory, keyword)
     root.querySelector('.aso-docs')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  })
+
+  root.querySelectorAll('[data-hot-search]').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const keyword = chip.dataset.hotSearch
+      const input = searchForm?.querySelector('input')
+      if (input) input.value = keyword
+      docList.innerHTML = docRows(activeCategory, keyword)
+    })
   })
 
   const navLinks = [...root.querySelectorAll('.aso-subnav__links a')]
