@@ -46,23 +46,15 @@ function resolveVisualItems(item) {
 }
 
 function renderVisualMega(item, root) {
-  const entries = resolveVisualItems(item)
   return `
     <div class="site-mega site-mega--visual" role="region" data-mega-panel>
       <div class="site-mega__glance">
-        ${entries
+        ${(item.children || [])
           .map(
             (child) => `
           <a class="site-mega-row" href="${buildHref(child, root)}">
-            <span class="site-mega-row__media${child.image ? '' : ' site-mega-row__media--icon'}" ${
-              child.image ? `style="background-image:url('${child.image}')"` : ''
-            } aria-hidden="true">
-              ${child.image ? '' : `<span class="material-symbols-outlined">${child.icon || 'image'}</span>`}
-            </span>
-            <span class="site-mega-row__copy">
-              <strong>${child.label}</strong>
-              ${child.desc ? `<small>${child.desc}</small>` : ''}
-            </span>
+            <strong>${child.label}</strong>
+            ${child.desc ? `<small>${child.desc}</small>` : ''}
           </a>`
           )
           .join('')}
@@ -81,17 +73,13 @@ function renderHardwareMega(root) {
             (group) => `
           <section class="site-mega-col">
             <a class="site-mega-col__head" href="${root}hardware/?line=${group.id}#hwc-browser">
-              <span class="material-symbols-outlined" aria-hidden="true">${group.icon}</span>
               <strong>${group.title}</strong>
             </a>
             <div class="site-mega-col__grid">
               ${group.products
                 .map(
                   (p) => `
-                <a class="site-mega-prod" href="${p.href || `${root}hardware/product/?id=${encodeURIComponent(p.slug)}`}">
-                  <span class="site-mega-prod__thumb" style="background-image:url('${p.coverImage}')" aria-hidden="true"></span>
-                  <span class="site-mega-prod__name">${p.name}</span>
-                </a>`
+                <a class="site-mega-prod" href="${p.href || `${root}hardware/product/?id=${encodeURIComponent(p.slug)}`}">${p.name}</a>`
                 )
                 .join('')}
             </div>
@@ -324,6 +312,7 @@ function initMegaMenu(header) {
     const id = item.dataset.navId
     if (!id || !panelFor(id)) return
     window.clearTimeout(closeTimer)
+    if (activeId === id && header.classList.contains('is-mega-open')) return
     window.clearTimeout(heightTimer)
 
     const switching = Boolean(activeId) && activeId !== id
