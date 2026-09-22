@@ -185,25 +185,52 @@ function renderPortal() {
           <h2>从这里继续工作</h2>
           <p class="aso-section__lead">快速访问你关心的任务与常用操作，掌握最新动态。</p>
           <div class="aso-work__grid">
-            <div class="aso-panel aso-resume">
-              <h3>${icon('description')} 继续上次工作</h3>
-              <div class="aso-resume__item">
-                ${icon('description')}
-                <div><b>王力大厦｜8月能源分析报告</b><small>今天 14:32 · 编辑</small></div>
-                <button class="aso-btn aso-btn--primary aso-btn--small" type="button" data-deep-link>继续查看 ${icon('arrow_forward')}</button>
+            <article class="aso-resume">
+              <figure class="aso-resume__preview" aria-hidden="true">
+                <span class="aso-resume__sheet"></span>
+                <span class="aso-resume__sheet"></span>
+                <div class="aso-resume__doc">
+                  <b>8月能源分析报告</b>
+                  <small>王力大厦</small>
+                  <div class="aso-resume__chart">
+                    ${[34, 44, 52, 66, 84, 72].map((h) => `<i style="--bar:${h}%"></i>`).join('')}
+                  </div>
+                  <div class="aso-resume__foot">
+                    <span class="aso-resume__lines"><i></i><i></i><i></i></span>
+                    <span class="aso-resume__donut"></span>
+                  </div>
+                </div>
+              </figure>
+              <div class="aso-resume__body">
+                <p class="aso-resume__kicker">${icon('description')} 继续上次工作</p>
+                <h3>王力大厦<i>|</i>8月能源分析报告</h3>
+                <p class="aso-resume__time">今天 14:32 · 编辑</p>
+                <div class="aso-resume__progress">
+                  <span class="aso-resume__bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="报告完成度"><i style="width: 60%"></i></span>
+                  <small>继续编辑你的报告，已完成约 60%</small>
+                </div>
+                <button class="aso-btn aso-btn--primary aso-resume__cta" type="button" data-deep-link>继续查看 ${icon('arrow_forward')}</button>
               </div>
-              <h3 class="aso-subtitle">${icon('build')} 常用操作</h3>
-              <div class="aso-actions">
-                ${quickActions.map(([ico, label, id]) => `<button type="button" data-action="${id}">${icon(ico)}<span>${label}</span></button>`).join('')}
-              </div>
-            </div>
-            <div class="aso-panel aso-tasks">
+            </article>
+            <article class="aso-tasks">
               <header><h3>${icon('notifications', 'is-orange')} 待处理与提醒</h3><button type="button" data-show-all>查看全部 ${icon('arrow_forward')}</button></header>
-              <button type="button" data-task><span class="aso-dot aso-dot--orange"></span><b>2 份内容等待审核</b><small>今天</small>${icon('chevron_right')}</button>
-              <button type="button" data-task><span class="aso-dot aso-dot--orange"></span><b>1 台中控屏离线</b><small>今天</small>${icon('chevron_right')}</button>
-              <button type="button" data-task><span class="aso-dot aso-dot--orange"></span><b>1 个账号绑定待完成</b><small>9月20日</small>${icon('chevron_right')}</button>
-              <button type="button" data-task><span class="aso-dot aso-dot--green"></span><b>能耗月报已生成</b><small>9月20日</small>${icon('chevron_right')}</button>
-            </div>
+              <div class="aso-tasks__list">
+                <button type="button" data-task><span class="aso-dot aso-dot--orange"></span><b>2 份内容等待审核</b><small>今天</small>${icon('chevron_right')}</button>
+                <button type="button" data-task><span class="aso-dot aso-dot--orange"></span><b>1 台中控屏离线</b><small>今天</small>${icon('chevron_right')}</button>
+                <button type="button" data-task><span class="aso-dot aso-dot--orange"></span><b>1 个账号绑定待完成</b><small>9月20日</small>${icon('chevron_right')}</button>
+                <button type="button" data-task><span class="aso-dot aso-dot--green"></span><b>能耗月报已生成</b><small>9月20日</small>${icon('chevron_right')}</button>
+              </div>
+            </article>
+          </div>
+          <div class="aso-actions">
+            ${quickActions
+              .map(
+                ([ico, label, id]) => `
+            <button class="aso-action" type="button" data-action="${id}">
+              ${icon(ico)}<span>${label}</span><i>${icon('chevron_right')}</i>
+            </button>`
+              )
+              .join('')}
           </div>
           <div class="aso-statusbar">
             <div class="aso-statusbar__head">
