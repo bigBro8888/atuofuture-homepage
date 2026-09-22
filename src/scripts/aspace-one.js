@@ -257,16 +257,19 @@ function renderPortal() {
               </div>
             </article>
           </div>
-          <div class="aso-actions">
-            ${quickActions
-              .map(
-                ([ico, label, id]) => `
-            <button class="aso-action" type="button" data-action="${id}">
-              ${icon(ico)}<span>${label}</span><i>${icon('chevron_right')}</i>
-            </button>`
-              )
-              .join('')}
-          </div>
+          <section class="aso-quick">
+            <h3>${icon('grid_view')} 快捷入口</h3>
+            <div class="aso-actions">
+              ${quickActions
+                .map(
+                  ([ico, label, id]) => `
+              <button class="aso-action" type="button" data-action="${id}">
+                ${icon(ico)}<span>${label}</span><i>${icon('chevron_right')}</i>
+              </button>`
+                )
+                .join('')}
+            </div>
+          </section>
         </div>
       </section>
 
