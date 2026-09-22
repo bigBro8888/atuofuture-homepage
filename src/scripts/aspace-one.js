@@ -15,6 +15,39 @@ const docs = [
   { title: '项目实施规范', category: '项目服务', date: '2026-08-20' },
 ]
 
+const showcase = [
+  {
+    image: '/images/aspace-one/showcase-control.jpg',
+    width: 1160,
+    height: 1220,
+    eyebrow: 'ONE PLATFORM',
+    title: '统一进入产品、项目与服务',
+    place: '中控屏 · 北京研发中心项目',
+    alt: 'Aspace One 中控屏运行界面',
+  },
+  {
+    image: '/images/aspace-one/showcase-space.jpg',
+    eyebrow: 'SPACE SERVICE',
+    title: '空间与设备统一纳管',
+    place: '开放办公区 · 王力集团总部项目',
+    alt: '开放办公区空间场景',
+  },
+  {
+    image: '/images/aspace-one/showcase-meeting.jpg',
+    eyebrow: 'MEETING & VISITOR',
+    title: '会议与访客协同调度',
+    place: '多功能会议室 · 上海展示项目',
+    alt: '多功能会议室场景',
+  },
+  {
+    image: '/images/aspace-one/showcase-building.jpg',
+    eyebrow: 'BUILDING OPS',
+    title: '楼宇全域运营与能耗洞察',
+    place: '办公楼层 · 杭州园区项目',
+    alt: '办公楼层公共区域场景',
+  },
+]
+
 const quickActions = [
   ['bar_chart', '查看今日能耗', 'energy'],
   ['add_photo_alternate', '新建AI画报', 'poster'],
@@ -43,6 +76,18 @@ function appRow(app) {
       </div>
       <button class="aso-btn aso-btn--primary aso-app__enter" type="button" data-enter-app="${app.id}">进入系统 ${icon('arrow_forward')}</button>
     </article>`
+}
+
+function showcaseSlide(slide, index) {
+  return `
+      <figure class="aso-showcase__slide" role="group" aria-roledescription="幻灯片" aria-label="${index + 1} / ${showcase.length}" aria-hidden="${index === 0 ? 'false' : 'true'}">
+        <img src="${slide.image}" alt="${slide.alt}" width="${slide.width || 1160}" height="${slide.height || 1000}" loading="${index === 0 ? 'eager' : 'lazy'}" decoding="async" />
+        <figcaption>
+          <p class="aso-eyebrow">${slide.eyebrow}</p>
+          <b>${slide.title}</b>
+          <small><span class="aso-status aso-status--live"><i></i>实时在线</span>${slide.place}</small>
+        </figcaption>
+      </figure>`
 }
 
 function docRows(category = '全部文档', keyword = '') {
@@ -112,26 +157,20 @@ function renderPortal() {
             <a class="aso-more" href="#catalog">查看全部应用 ${icon('arrow_forward')}</a>
           </div>
 
-          <aside class="aso-platform" id="catalog">
-            <div>
-              <p class="aso-eyebrow">ONE PLATFORM</p>
-              <h2>统一进入产品、项目与服务</h2>
-              <p>Aspace One 是安墨客面向企业客户的空间智能产品平台，帮助您统一访问已购买的系统、管理项目与设备，并获得持续的服务支持。</p>
-              <ul>
-                <li>${icon('person')}<span><b>统一账号</b><small>一个账号访问所有已开通产品</small></span></li>
-                <li>${icon('shield')}<span><b>权限隔离</b><small>组织和角色范围内的数据权限</small></span></li>
-                <li>${icon('layers')}<span><b>项目切换</b><small>支持多项目快速切换</small></span></li>
-                <li>${icon('support_agent')}<span><b>服务协同</b><small>产品、文档与服务统一获取</small></span></li>
-              </ul>
-              <div class="aso-platform__actions">
-                <a class="aso-btn aso-btn--primary" href="#apps">进入我的应用</a>
-                <a class="aso-btn aso-btn--outline" href="#support">查看服务支持</a>
-              </div>
+          <aside class="aso-showcase" id="catalog" data-showcase aria-roledescription="轮播" aria-label="Aspace One 平台场景">
+            <div class="aso-showcase__track" data-showcase-track>
+              ${showcase.map(showcaseSlide).join('')}
             </div>
-            <figure class="aso-platform__visual">
-              <img src="/images/aspace-one/platform-visual.jpg" alt="Aspace One 中控屏运行界面" width="1200" height="801" decoding="async" />
-              <figcaption><span class="aso-status"><i></i>实时在线</span>中控屏 · 北京研发中心项目</figcaption>
-            </figure>
+            <div class="aso-showcase__dots" role="tablist" aria-label="切换场景">
+              ${showcase
+                .map(
+                  (slide, i) => `
+              <button class="aso-showcase__dot" type="button" role="tab" data-showcase-dot="${i}" aria-selected="${i === 0 ? 'true' : 'false'}">
+                <span class="aso-sr">${slide.title}</span>
+              </button>`
+                )
+                .join('')}
+            </div>
           </aside>
         </div>
       </section>
@@ -260,6 +299,53 @@ function setPopover(menu, trigger, open) {
   trigger?.setAttribute('aria-expanded', String(open))
 }
 
+function initShowcase(shell) {
+  const track = shell?.querySelector('[data-showcase-track]')
+  if (!track) return
+  const slides = [...track.querySelectorAll('.aso-showcase__slide')]
+  const dots = [...shell.querySelectorAll('[data-showcase-dot]')]
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  let current = 0
+  let timer = 0
+
+  const goTo = (next) => {
+    current = (next + slides.length) % slides.length
+    track.style.transform = `translate3d(${-current * 100}%, 0, 0)`
+    slides.forEach((slide, i) => slide.setAttribute('aria-hidden', i === current ? 'false' : 'true'))
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('is-active', i === current)
+      dot.setAttribute('aria-selected', i === current ? 'true' : 'false')
+    })
+  }
+
+  const stop = () => {
+    window.clearInterval(timer)
+    timer = 0
+  }
+
+  const play = () => {
+    if (reduceMotion || timer || slides.length < 2) return
+    timer = window.setInterval(() => goTo(current + 1), 5200)
+  }
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      goTo(i)
+      stop()
+      play()
+    })
+  })
+
+  shell.addEventListener('mouseenter', stop)
+  shell.addEventListener('mouseleave', play)
+  shell.addEventListener('focusin', stop)
+  shell.addEventListener('focusout', play)
+  document.addEventListener('visibilitychange', () => (document.hidden ? stop() : play()))
+
+  goTo(0)
+  play()
+}
+
 export function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
@@ -363,6 +449,8 @@ export function initAspaceOne() {
     }, { rootMargin: '-124px 0px -55% 0px', threshold: [0.05, 0.25, 0.6] })
     observedSections.forEach((section) => observer.observe(section))
   }
+
+  initShowcase(root.querySelector('[data-showcase]'))
 
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.aso-subnav__tools, .aso-popover')) closePopovers()
