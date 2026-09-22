@@ -38,8 +38,8 @@ function appRow(app) {
         <small>最近使用 · ${app.time}</small>
       </div>
       <div class="aso-app__state">
-        <span class="aso-status aso-status--ok"><i></i>运行中</span>
-        ${app.warning ? `<small class="aso-warning">${app.warning}</small>` : ''}
+        <span class="aso-status"><i></i>运行中</span>
+        ${app.warning ? `<span class="aso-status aso-status--warn"><i></i>${app.warning}</span>` : ''}
       </div>
       <button class="aso-btn aso-btn--primary aso-app__enter" type="button" data-enter-app="${app.id}">进入系统 ${icon('arrow_forward')}</button>
     </article>`
@@ -128,10 +128,10 @@ function renderPortal() {
                 <a class="aso-btn aso-btn--outline" href="#support">查看服务支持</a>
               </div>
             </div>
-            <div class="aso-device" aria-hidden="true">
-              <span class="aso-device__screen"><b>Artink安墨客</b><em>让空间<br/>更智能</em><small>SMART SPACE<br/>SMART FUTURE</small></span>
-              <span class="aso-device__base"></span>
-            </div>
+            <figure class="aso-platform__visual">
+              <img src="/images/aspace-one/platform-visual.jpg" alt="Aspace One 中控屏运行界面" width="1200" height="801" decoding="async" />
+              <figcaption><span class="aso-status"><i></i>实时在线</span>中控屏 · 北京研发中心项目</figcaption>
+            </figure>
           </aside>
         </div>
       </section>
@@ -163,9 +163,15 @@ function renderPortal() {
             </div>
           </div>
           <div class="aso-statusbar">
-            <div><span class="aso-status-icon">${icon('check_circle')}</span><b>系统运行状态</b><small>所有系统运行正常，服务稳定可用。</small></div>
+            <div class="aso-statusbar__head">
+              <span class="aso-status-icon">${icon('check_circle')}</span>
+              <b>系统运行状态</b>
+              <small>所有系统运行正常，服务稳定可用。</small>
+            </div>
+            <div class="aso-statusbar__list">
+              ${['能源能耗', 'AI画报', '电子相册', '中控屏管理'].map((name) => `<span class="aso-status aso-status--chip"><i></i><b>${name}</b><small>运行正常</small></span>`).join('')}
+            </div>
             <a href="#support">查看详情 ${icon('arrow_forward')}</a>
-            ${['能源能耗', 'AI画报', '电子相册', '中控屏管理'].map((name) => `<span><i></i><b>${name}</b><small>运行正常</small></span>`).join('')}
           </div>
         </div>
       </section>
