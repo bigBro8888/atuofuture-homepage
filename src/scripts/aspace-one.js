@@ -150,11 +150,15 @@ function renderPortal() {
       <section class="aso-hero" id="overview">
         <div class="aso-container aso-hero__grid">
           <div class="aso-panel aso-apps" id="apps">
-            <p class="aso-eyebrow">GOOD TO SEE YOU</p>
-            <h1>欢迎回来，张三</h1>
-            <p class="aso-lead">高效的空间智能运营，从 Aspace One 开始</p>
+            <div class="aso-apps__head">
+              <div>
+                <p class="aso-eyebrow">GOOD TO SEE YOU</p>
+                <h1>欢迎回来，张三</h1>
+                <p class="aso-lead">高效的空间智能运营，从 Aspace One 开始</p>
+              </div>
+              <a class="aso-more" href="#catalog">查看全部应用 ${icon('arrow_forward')}</a>
+            </div>
             <div class="aso-app-list">${apps.map(appRow).join('')}</div>
-            <a class="aso-more" href="#catalog">查看全部应用 ${icon('arrow_forward')}</a>
           </div>
 
           <aside class="aso-showcase" id="catalog" data-showcase aria-roledescription="轮播" aria-label="Aspace One 平台场景">
