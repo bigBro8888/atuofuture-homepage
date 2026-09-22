@@ -267,17 +267,6 @@ function renderPortal() {
               )
               .join('')}
           </div>
-          <div class="aso-statusbar">
-            <div class="aso-statusbar__head">
-              <span class="aso-status-icon">${icon('check_circle')}</span>
-              <b>系统运行状态</b>
-              <small>所有系统运行正常，服务稳定可用。</small>
-            </div>
-            <div class="aso-statusbar__list">
-              ${['能源能耗', 'AI画报', '电子相册', '中控屏管理'].map((name) => `<span class="aso-status aso-status--chip"><i></i><b>${name}</b><small>运行正常</small></span>`).join('')}
-            </div>
-            <a href="#support">查看详情 ${icon('arrow_forward')}</a>
-          </div>
         </div>
       </section>
 
