@@ -48,7 +48,7 @@ function resolveVisualItems(item) {
 function renderVisualMega(item, root) {
   const entries = resolveVisualItems(item)
   return `
-    <div class="site-mega site-mega--visual" role="region">
+    <div class="site-mega site-mega--visual" role="region" data-mega-panel>
       <div class="site-mega__glance">
         ${entries
           .map(
@@ -74,7 +74,7 @@ function renderVisualMega(item, root) {
 function renderHardwareMega(root) {
   const groups = resolveHardwareMegaGroups()
   return `
-    <div class="site-mega site-mega--hardware" data-hardware-mega role="region">
+    <div class="site-mega site-mega--hardware" data-hardware-mega role="region" data-mega-panel>
       <div class="site-mega__hardware">
         ${groups
           .map(
@@ -132,7 +132,7 @@ function renderMegaChildren(item, root) {
   const children = item.children
   if (!children?.length) return ''
   return `
-    <div class="site-mega" role="region">
+    <div class="site-mega" role="region" data-mega-panel>
       <div class="site-mega__inner">
         ${children
           .map(
@@ -156,9 +156,8 @@ function renderDesktopNav(activeId, root) {
     if (!hasChildren) {
       return `<a class="site-nav-link${active ? ' is-active' : ''}" href="${href}"${item.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${item.label}</a>`
     }
-    const wide = item.mega === 'hardware'
     return `
-      <div class="site-nav-item${active ? ' is-active' : ''}${wide ? ' site-nav-item--wide' : ''}" data-nav-item>
+      <div class="site-nav-item${active ? ' is-active' : ''}" data-nav-item data-nav-id="${item.id}">
         <a class="site-nav-link site-nav-link--parent${active ? ' is-active' : ''}" href="${href}" aria-haspopup="true" aria-expanded="false" data-nav-trigger>
           ${item.label}
           <span class="material-symbols-outlined site-nav-chevron" aria-hidden="true">expand_more</span>
@@ -247,6 +246,10 @@ export function renderSiteNav(activeId) {
           <span class="material-symbols-outlined">menu</span>
         </button>
       </div>
+      <div class="site-nav-overlay" data-nav-overlay aria-hidden="true"></div>
+      <div class="site-mega-shell" data-mega-shell aria-hidden="true">
+        <div class="site-mega-shell__track" data-mega-track></div>
+      </div>
       <div class="site-mobile-drawer translate-x-full" id="mobile-drawer" aria-hidden="true">
         <div class="site-mobile-drawer__panel">
           <div class="site-mobile-drawer__head">
@@ -272,36 +275,126 @@ export function renderSiteNav(activeId) {
 }
 
 function initMegaMenu(header) {
-  const items = header.querySelectorAll('[data-nav-item]')
-  items.forEach((item) => {
-    const trigger = item.querySelector('[data-nav-trigger]')
-    let closeTimer = 0
+  const items = [...header.querySelectorAll('[data-nav-item]')]
+  const shell = header.querySelector('[data-mega-shell]')
+  const track = header.querySelector('[data-mega-track]')
+  const overlay = header.querySelector('[data-nav-overlay]')
+  if (!shell || !track || !overlay || !items.length) return
+  if (header.dataset.megaBound === '1') return
+  header.dataset.megaBound = '1'
 
-    const open = () => {
-      window.clearTimeout(closeTimer)
-      items.forEach((other) => {
-        if (other !== item) {
-          other.classList.remove('is-open')
-          other.querySelector('[data-nav-trigger]')?.setAttribute('aria-expanded', 'false')
-        }
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  items.forEach((item) => {
+    const id = item.dataset.navId
+    const mega = item.querySelector('[data-mega-panel]')
+    if (!id || !mega) return
+    mega.dataset.megaFor = id
+    mega.setAttribute('aria-hidden', 'true')
+    track.append(mega)
+  })
+
+  let activeId = ''
+  let closeTimer = 0
+  let heightTimer = 0
+
+  const panelFor = (id) => (id ? track.querySelector(`[data-mega-for="${id}"]`) : null)
+
+  const setShellHeight = (height, animate = true) => {
+    if (!animate || reduceMotion) {
+      shell.style.transition = 'none'
+      shell.style.height = `${height}px`
+      void shell.offsetHeight
+      shell.style.transition = ''
+      return
+    }
+    shell.style.height = `${height}px`
+  }
+
+  const measureActive = () => panelFor(activeId)?.scrollHeight || 0
+
+  const showPanel = (id) => {
+    track.querySelectorAll('[data-mega-panel]').forEach((panel) => {
+      const on = panel.dataset.megaFor === id
+      panel.classList.toggle('is-active', on)
+      panel.setAttribute('aria-hidden', on ? 'false' : 'true')
+    })
+  }
+
+  const open = (item) => {
+    const id = item.dataset.navId
+    if (!id || !panelFor(id)) return
+    window.clearTimeout(closeTimer)
+    window.clearTimeout(heightTimer)
+
+    const switching = Boolean(activeId) && activeId !== id
+    items.forEach((other) => {
+      const on = other === item
+      other.classList.toggle('is-open', on)
+      other.querySelector('[data-nav-trigger]')?.setAttribute('aria-expanded', on ? 'true' : 'false')
+    })
+
+    if (!activeId) {
+      activeId = id
+      showPanel(id)
+      header.classList.add('is-mega-open')
+      overlay.setAttribute('aria-hidden', 'false')
+      shell.setAttribute('aria-hidden', 'false')
+      setShellHeight(0, false)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setShellHeight(measureActive()))
       })
-      item.classList.add('is-open')
-      trigger?.setAttribute('aria-expanded', 'true')
+      return
     }
-    const close = () => {
-      window.clearTimeout(closeTimer)
-      closeTimer = window.setTimeout(() => {
-        item.classList.remove('is-open')
-        trigger?.setAttribute('aria-expanded', 'false')
-      }, 120)
-    }
-    item.addEventListener('mouseenter', open)
+
+    activeId = id
+    showPanel(id)
+    header.classList.add('is-mega-open')
+    overlay.setAttribute('aria-hidden', 'false')
+    shell.setAttribute('aria-hidden', 'false')
+    heightTimer = window.setTimeout(() => setShellHeight(measureActive()), switching ? 16 : 0)
+  }
+
+  const forceClose = () => {
+    window.clearTimeout(closeTimer)
+    window.clearTimeout(heightTimer)
+    items.forEach((item) => {
+      item.classList.remove('is-open')
+      item.querySelector('[data-nav-trigger]')?.setAttribute('aria-expanded', 'false')
+    })
+    setShellHeight(0)
+    overlay.setAttribute('aria-hidden', 'true')
+    shell.setAttribute('aria-hidden', 'true')
+    header.classList.remove('is-mega-open')
+    window.setTimeout(() => {
+      activeId = ''
+      showPanel('')
+    }, reduceMotion ? 0 : 280)
+  }
+
+  const close = () => {
+    window.clearTimeout(closeTimer)
+    closeTimer = window.setTimeout(forceClose, 140)
+  }
+
+  const cancelClose = () => window.clearTimeout(closeTimer)
+
+  items.forEach((item) => {
+    item.addEventListener('mouseenter', () => open(item))
     item.addEventListener('mouseleave', close)
-    item.addEventListener('focusin', open)
+    item.addEventListener('focusin', () => open(item))
     item.addEventListener('focusout', (e) => {
-      if (!item.contains(e.relatedTarget)) close()
+      if (!item.contains(e.relatedTarget) && !shell.contains(e.relatedTarget)) close()
     })
   })
+
+  shell.addEventListener('mouseenter', cancelClose)
+  shell.addEventListener('mouseleave', close)
+  overlay.addEventListener('click', forceClose)
+
+  window.addEventListener('resize', () => {
+    if (!activeId) return
+    setShellHeight(measureActive(), false)
+  }, { passive: true })
 }
 
 function initMobileAccordion(header) {
@@ -351,7 +444,13 @@ export function initSiteNav() {
       if (mega) {
         const wrap = document.createElement('div')
         wrap.innerHTML = renderHardwareMega(root).trim()
-        mega.replaceWith(wrap.firstElementChild)
+        const next = wrap.firstElementChild
+        if (next) {
+          next.dataset.megaFor = mega.dataset.megaFor || 'hardware'
+          next.setAttribute('aria-hidden', mega.getAttribute('aria-hidden') || 'true')
+          if (mega.classList.contains('is-active')) next.classList.add('is-active')
+          mega.replaceWith(next)
+        }
       }
       const mobile = header.querySelector('[data-hardware-mobile]')
       if (mobile) mobile.innerHTML = renderHardwareMobile(root)
