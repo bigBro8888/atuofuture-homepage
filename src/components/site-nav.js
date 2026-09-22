@@ -51,8 +51,8 @@ function renderVisualMega(item, root) {
       <div class="site-mega__glance">
         ${(item.children || [])
           .map(
-            (child) => `
-          <a class="site-mega-row" href="${buildHref(child, root)}">
+            (child, index) => `
+          <a class="site-mega-row" href="${buildHref(child, root)}" data-stagger style="--stagger:${index}">
             <strong>${child.label}</strong>
             ${child.desc ? `<small>${child.desc}</small>` : ''}
           </a>`
@@ -65,30 +65,30 @@ function renderVisualMega(item, root) {
 
 function renderHardwareMega(root) {
   const groups = resolveHardwareMegaGroups()
-  return `
-    <div class="site-mega site-mega--hardware" data-hardware-mega role="region" data-mega-panel>
-      <div class="site-mega__hardware">
-        ${groups
-          .map(
-            (group) => `
+  let step = 0
+  const cols = groups
+    .map(
+      (group) => `
           <section class="site-mega-col">
-            <a class="site-mega-col__head" href="${root}hardware/?line=${group.id}#hwc-browser">
+            <a class="site-mega-col__head" href="${root}hardware/?line=${group.id}#hwc-browser" data-stagger style="--stagger:${step++}">
               <strong>${group.title}</strong>
             </a>
             <div class="site-mega-col__grid">
               ${group.products
                 .map(
                   (p) => `
-                <a class="site-mega-prod" href="${p.href || `${root}hardware/product/?id=${encodeURIComponent(p.slug)}`}">${p.name}</a>`
+                <a class="site-mega-prod" href="${p.href || `${root}hardware/product/?id=${encodeURIComponent(p.slug)}`}" data-stagger style="--stagger:${step++}">${p.name}</a>`
                 )
                 .join('')}
             </div>
           </section>`
-          )
-          .join('')}
-      </div>
+    )
+    .join('')
+  return `
+    <div class="site-mega site-mega--hardware" data-hardware-mega role="region" data-mega-panel>
+      <div class="site-mega__hardware">${cols}</div>
       <div class="site-mega__hardware-foot">
-        <a class="site-mega__all-btn" href="${root}hardware/products/">浏览全部产品</a>
+        <a class="site-mega__all-btn" href="${root}hardware/products/" data-stagger="slow" style="--stagger:${step}">浏览全部产品</a>
       </div>
     </div>
   `
@@ -124,8 +124,8 @@ function renderMegaChildren(item, root) {
       <div class="site-mega__inner">
         ${children
           .map(
-            (child) => `
-          <a class="site-mega__card" href="${buildHref(child, root)}"${child.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>
+            (child, index) => `
+          <a class="site-mega__card" href="${buildHref(child, root)}"${child.external ? ' target="_blank" rel="noopener noreferrer"' : ''} data-stagger style="--stagger:${index}">
             <strong>${child.label}</strong>
             ${child.desc ? `<span>${child.desc}</span>` : ''}
           </a>`
@@ -354,10 +354,8 @@ function initMegaMenu(header) {
     overlay.setAttribute('aria-hidden', 'true')
     shell.setAttribute('aria-hidden', 'true')
     header.classList.remove('is-mega-open')
-    window.setTimeout(() => {
-      activeId = ''
-      showPanel('')
-    }, reduceMotion ? 0 : 280)
+    activeId = ''
+    showPanel('')
   }
 
   const close = () => {
