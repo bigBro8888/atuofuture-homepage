@@ -1,8 +1,54 @@
 const apps = [
-  { id: 'energy', icon: 'eco', tone: 'green', name: '能源能耗', project: '王力集团总部项目', time: '2026-09-20 14:32' },
-  { id: 'poster', icon: 'image', tone: 'violet', name: 'AI画报', project: '上海展示项目', time: '2026-09-19 10:15' },
-  { id: 'album', icon: 'photo_library', tone: 'orange', name: '电子相册', project: '杭州园区项目', time: '2026-09-18 16:20' },
-  { id: 'screen', icon: 'dashboard', tone: 'blue', name: '中控屏管理', project: '北京研发中心项目', time: '2026-09-21 09:12', warning: '1 台设备离线' },
+  {
+    id: 'energy',
+    name: '能源能耗',
+    project: '王力集团总部项目',
+    time: '2026-09-20 14:32',
+    image: '/images/aspace-one/app-energy.jpg',
+    alt: '楼宇能耗看板场景',
+  },
+  {
+    id: 'poster',
+    name: 'AI画报',
+    project: '上海展示项目',
+    time: '2026-09-19 10:15',
+    image: '/images/aspace-one/app-poster.jpg',
+    alt: 'AI画报在平板上的展示效果',
+  },
+  {
+    id: 'album',
+    name: '电子相册',
+    project: '杭州园区项目',
+    time: '2026-09-18 16:20',
+    image: '/images/aspace-one/app-album.jpg',
+    alt: '大屏电子相册多屏展示场景',
+  },
+  {
+    id: 'screen',
+    name: '中控屏管理',
+    project: '北京研发中心项目',
+    time: '2026-09-21 09:12',
+    warning: '1 台设备离线',
+    image: '/images/aspace-one/app-control.jpg',
+    alt: '会议室墙面中控屏场景',
+  },
+  {
+    id: 'resource',
+    name: '资源管理',
+    desc: '统一管理空间、设备、项目与资源台账',
+    locked: true,
+    image: '/images/aspace-one/app-resource.jpg',
+    alt: '资源管理示意插画',
+  },
+]
+
+const openedApps = apps.filter((app) => !app.locked).length
+const lockedApps = apps.length - openedApps
+
+const appFilters = [
+  ['all', '全部', apps.length],
+  ['open', '已开通', openedApps],
+  ['locked', '未开通', lockedApps],
 ]
 
 const docs = [
@@ -13,39 +59,6 @@ const docs = [
   { title: '中控屏配置操作指南', category: '中控屏管理', date: '2026-09-03', keywords: '中控屏配置 设备绑定' },
   { title: '设备管理平台 API 文档', category: '会议与空间', date: '2026-08-28', keywords: '接口 对接' },
   { title: '项目实施规范', category: '项目服务', date: '2026-08-20', keywords: '权限申请 交付 验收' },
-]
-
-const showcase = [
-  {
-    image: '/images/aspace-one/showcase-control.jpg',
-    width: 1160,
-    height: 1220,
-    eyebrow: 'ONE PLATFORM',
-    title: '统一进入产品、项目与服务',
-    place: '中控屏 · 北京研发中心项目',
-    alt: 'Aspace One 中控屏运行界面',
-  },
-  {
-    image: '/images/aspace-one/showcase-space.jpg',
-    eyebrow: 'SPACE SERVICE',
-    title: '空间与设备统一纳管',
-    place: '开放办公区 · 王力集团总部项目',
-    alt: '开放办公区空间场景',
-  },
-  {
-    image: '/images/aspace-one/showcase-meeting.jpg',
-    eyebrow: 'MEETING & VISITOR',
-    title: '会议与访客协同调度',
-    place: '多功能会议室 · 上海展示项目',
-    alt: '多功能会议室场景',
-  },
-  {
-    image: '/images/aspace-one/showcase-building.jpg',
-    eyebrow: 'BUILDING OPS',
-    title: '楼宇全域运营与能耗洞察',
-    place: '办公楼层 · 杭州园区项目',
-    alt: '办公楼层公共区域场景',
-  },
 ]
 
 const docCategories = [
@@ -92,33 +105,28 @@ function icon(name, className = '') {
   return `<span class="material-symbols-outlined ${className}" aria-hidden="true">${name}</span>`
 }
 
-function appRow(app) {
+function appCard(app, index) {
+  const locked = Boolean(app.locked)
   return `
-    <article class="aso-app" data-app="${app.id}">
-      <span class="aso-app__icon aso-app__icon--${app.tone}">${icon(app.icon)}</span>
-      <div class="aso-app__copy">
-        <h3>${app.name}</h3>
-        <p>${app.project}</p>
-        <small>最近使用 · ${app.time}</small>
-      </div>
-      <div class="aso-app__state">
-        <span class="aso-status"><i></i>运行中</span>
-        ${app.warning ? `<span class="aso-status aso-status--warn"><i></i>${app.warning}</span>` : ''}
-      </div>
-      <button class="aso-btn aso-btn--primary aso-app__enter" type="button" data-enter-app="${app.id}">进入系统 ${icon('arrow_forward')}</button>
-    </article>`
-}
-
-function showcaseSlide(slide, index) {
-  return `
-      <figure class="aso-showcase__slide" role="group" aria-roledescription="幻灯片" aria-label="${index + 1} / ${showcase.length}" aria-hidden="${index === 0 ? 'false' : 'true'}">
-        <img src="${slide.image}" alt="${slide.alt}" width="${slide.width || 1160}" height="${slide.height || 1000}" loading="${index === 0 ? 'eager' : 'lazy'}" decoding="async" />
-        <figcaption>
-          <p class="aso-eyebrow">${slide.eyebrow}</p>
-          <b>${slide.title}</b>
-          <small><span class="aso-status aso-status--live"><i></i>实时在线</span>${slide.place}</small>
-        </figcaption>
-      </figure>`
+      <article class="aso-app-card${locked ? ' is-locked' : ''}" data-app="${app.id}" data-app-state="${locked ? 'locked' : 'open'}">
+        <figure class="aso-app-card__shot">
+          <img src="${app.image}" alt="${app.alt}" width="640" height="400" loading="${index < 3 ? 'eager' : 'lazy'}" decoding="async" />
+          <span class="aso-status${locked ? ' aso-status--idle' : ''}"><i></i>${locked ? '未开通' : '运行中'}</span>
+        </figure>
+        <div class="aso-app-card__copy">
+          <h3>${app.name}</h3>
+          ${locked
+            ? `<p class="aso-app-card__desc">${app.desc}</p>`
+            : `<p data-app-project>${app.project}</p>
+          <div class="aso-app-card__meta">
+            <small>最近使用 · ${app.time}</small>
+            ${app.warning ? `<span class="aso-status aso-status--warn"><i></i>${app.warning}</span>` : ''}
+          </div>`}
+        </div>
+        ${locked
+          ? '<button class="aso-btn aso-btn--muted" type="button" disabled>暂未开通</button>'
+          : `<button class="aso-btn aso-btn--primary" type="button" data-enter-app="${app.id}">进入系统 ${icon('arrow_forward')}</button>`}
+      </article>`
 }
 
 function docRows(category = '全部文档', keyword = '') {
@@ -149,7 +157,6 @@ function renderPortal() {
           <div class="aso-subnav__links">
             <a class="is-active" href="#overview">概览</a>
             <a href="#apps">我的应用</a>
-            <a href="#catalog">业务目录</a>
             <a href="#help">文档中心</a>
             <a href="#support">服务支持</a>
           </div>
@@ -183,34 +190,27 @@ function renderPortal() {
       </nav>
 
       <section class="aso-hero" id="overview">
-        <div class="aso-container aso-hero__grid">
-          <div class="aso-panel aso-apps" id="apps">
-            <div class="aso-apps__head">
-              <div>
-                <p class="aso-eyebrow">GOOD TO SEE YOU</p>
-                <h1>欢迎回来，张三</h1>
-                <p class="aso-lead">高效的空间智能运营，从 Aspace One 开始</p>
+        <div class="aso-container aso-apps" id="apps">
+          <header class="aso-apps__head">
+            <div class="aso-apps__intro">
+              <p class="aso-eyebrow">GOOD TO SEE YOU</p>
+              <h1>欢迎回来，张三</h1>
+              <p class="aso-lead">高效的空间智能运营，从 Aspace One 开始</p>
+            </div>
+            <div class="aso-apps__tools">
+              <div class="aso-filters" role="tablist" aria-label="按开通状态筛选应用">
+                ${appFilters
+                  .map(
+                    ([id, label, count], index) => `
+                <button class="${index === 0 ? 'is-active' : ''}" type="button" role="tab" aria-selected="${index === 0 ? 'true' : 'false'}" data-app-filter="${id}">${label} <i>${count}</i></button>`
+                  )
+                  .join('')}
               </div>
-              <a class="aso-more" href="#catalog">查看全部应用 ${icon('arrow_forward')}</a>
+              <button class="aso-more" type="button" data-action="manage-apps">管理应用 ${icon('arrow_forward')}</button>
             </div>
-            <div class="aso-app-list">${apps.map(appRow).join('')}</div>
-          </div>
-
-          <aside class="aso-showcase" id="catalog" data-showcase aria-roledescription="轮播" aria-label="Aspace One 平台场景">
-            <div class="aso-showcase__track" data-showcase-track>
-              ${showcase.map(showcaseSlide).join('')}
-            </div>
-            <div class="aso-showcase__dots" role="tablist" aria-label="切换场景">
-              ${showcase
-                .map(
-                  (slide, i) => `
-              <button class="aso-showcase__dot" type="button" role="tab" data-showcase-dot="${i}" aria-selected="${i === 0 ? 'true' : 'false'}">
-                <span class="aso-sr">${slide.title}</span>
-              </button>`
-                )
-                .join('')}
-            </div>
-          </aside>
+          </header>
+          <div class="aso-app-grid" data-app-grid>${apps.map(appCard).join('')}</div>
+          <p class="aso-empty aso-app-grid__empty" data-app-empty hidden>该状态下暂时没有应用。</p>
         </div>
       </section>
 
@@ -383,51 +383,29 @@ function setPopover(menu, trigger, open) {
   trigger?.setAttribute('aria-expanded', String(open))
 }
 
-function initShowcase(shell) {
-  const track = shell?.querySelector('[data-showcase-track]')
-  if (!track) return
-  const slides = [...track.querySelectorAll('.aso-showcase__slide')]
-  const dots = [...shell.querySelectorAll('[data-showcase-dot]')]
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  let current = 0
-  let timer = 0
+function initAppFilters(root) {
+  const grid = root.querySelector('[data-app-grid]')
+  const empty = root.querySelector('[data-app-empty]')
+  const buttons = [...root.querySelectorAll('[data-app-filter]')]
+  if (!grid || !buttons.length) return
 
-  const goTo = (next) => {
-    current = (next + slides.length) % slides.length
-    track.style.transform = `translate3d(${-current * 100}%, 0, 0)`
-    slides.forEach((slide, i) => slide.setAttribute('aria-hidden', i === current ? 'false' : 'true'))
-    dots.forEach((dot, i) => {
-      dot.classList.toggle('is-active', i === current)
-      dot.setAttribute('aria-selected', i === current ? 'true' : 'false')
-    })
-  }
-
-  const stop = () => {
-    window.clearInterval(timer)
-    timer = 0
-  }
-
-  const play = () => {
-    if (reduceMotion || timer || slides.length < 2) return
-    timer = window.setInterval(() => goTo(current + 1), 5200)
-  }
-
-  dots.forEach((dot, i) => {
-    dot.addEventListener('click', () => {
-      goTo(i)
-      stop()
-      play()
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const filter = button.dataset.appFilter
+      buttons.forEach((item) => {
+        const active = item === button
+        item.classList.toggle('is-active', active)
+        item.setAttribute('aria-selected', String(active))
+      })
+      let visible = 0
+      grid.querySelectorAll('[data-app-state]').forEach((card) => {
+        const match = filter === 'all' || card.dataset.appState === filter
+        card.classList.toggle('is-hidden', !match)
+        if (match) visible += 1
+      })
+      if (empty) empty.hidden = visible > 0
     })
   })
-
-  shell.addEventListener('mouseenter', stop)
-  shell.addEventListener('mouseleave', play)
-  shell.addEventListener('focusin', stop)
-  shell.addEventListener('focusout', play)
-  document.addEventListener('visibilitychange', () => (document.hidden ? stop() : play()))
-
-  goTo(0)
-  play()
 }
 
 export function initAspaceOne() {
@@ -454,9 +432,14 @@ export function initAspaceOne() {
     const org = event.target.closest('[data-org]')
     if (org) {
       root.querySelector('[data-org-name]').textContent = org.dataset.org
-      root.querySelectorAll('.aso-app__copy p').forEach((p) => { p.textContent = org.dataset.project })
+      root.querySelectorAll('[data-app-project]').forEach((p) => { p.textContent = org.dataset.project })
       setPopover(orgMenu, root.querySelector('[data-org-toggle]'), false)
       showToast(`已切换到 ${org.dataset.org} · ${org.dataset.project}`)
+      return
+    }
+
+    if (event.target.closest('[data-action="manage-apps"]')) {
+      showToast('应用管理后台接口待接入，当前为前端流程预览')
       return
     }
 
@@ -536,7 +519,7 @@ export function initAspaceOne() {
     observedSections.forEach((section) => observer.observe(section))
   }
 
-  initShowcase(root.querySelector('[data-showcase]'))
+  initAppFilters(root)
 
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.aso-subnav__tools, .aso-popover')) closePopovers()
