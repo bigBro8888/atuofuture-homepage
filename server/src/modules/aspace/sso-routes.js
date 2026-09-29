@@ -87,5 +87,5 @@ aspaceSsoRouter.post('/poster', (request, response) => {
  * 这里只返回网关嵌入 URL（不带票据），用户在嵌入页用自己的 AAP 账号登录。
  */
 aspaceSsoRouter.post('/embed/aap', (_request, response) => {
-  response.json({ embedUrl: `${config.aapAppOrigin}/` })
+  response.json({ embedUrl: `${config.aapAppOrigin}/?embed=1` })
 })
