@@ -426,11 +426,13 @@ async function openAppEmbed(root, app) {
   shell.setAttribute('aria-hidden', 'false')
   document.body.classList.add('aso-embed-open')
   loading?.removeAttribute('hidden')
-  if (loadingText) loadingText.textContent = `正在通过统一身份进入 ${app.name}…`
+    if (loadingText) loadingText.textContent = `正在通过统一身份进入 ${app.name}…`
   if (meta) meta.textContent = `${user.org} · 统一登录中…`
   const titleEl = root.querySelector('[data-embed-title]')
   if (titleEl) titleEl.textContent = app.name
   frame.title = app.name
+  // 打开前先断开旧文档，避免白屏叠在旧状态上
+  frame.removeAttribute('src')
 
   try {
     const response = await fetch(`/api/public/aspace/sso/${app.sso}`, {
