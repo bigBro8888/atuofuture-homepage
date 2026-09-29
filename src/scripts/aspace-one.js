@@ -420,7 +420,7 @@ async function openAppEmbed(root, app) {
   const isSso = Boolean(app.sso)
   const endpoint = isSso
     ? `/api/public/aspace/sso/${app.sso}`
-    : `/api/public/aspace/embed/${app.embed}`
+    : `/api/public/aspace/sso/embed/${app.embed}`
   const hideLoading = () => {
     loading?.setAttribute('hidden', '')
     window.clearTimeout(openAppEmbed._loadingTimer)
