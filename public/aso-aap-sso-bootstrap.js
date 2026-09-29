@@ -78,77 +78,70 @@
   document.documentElement.appendChild(style)
   document.documentElement.appendChild(overlay)
 
-  fetch(BASE + '/api/auth/sso/aspace', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ ticket: ticket }),
-  })
-    .then(function (res) {
-      return res.json().then(function (data) {
-        return { ok: res.ok, data: data }
+  // 关键：本脚本是 <head> 里的同步脚本，先于应用的 module 脚本执行。
+  // 若用异步 fetch 写 localStorage，应用启动时状态仓库已创建（此刻仓库为空），
+  // 路由守卫会把我们踢回登录页，之后再写 localStorage 也不会重新水合。
+  // 因此这里用同步请求（同源，cookie 会自动带上/写入）在应用启动前把登录态写好。
+  var ok = false
+  var data = null
+  try {
+    var xhr = new XMLHttpRequest()
+    xhr.open('POST', BASE + '/api/auth/sso/aspace', false) // 同步
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.send(JSON.stringify({ ticket: ticket }))
+    if (xhr.status >= 200 && xhr.status < 300) {
+      data = JSON.parse(xhr.responseText)
+      ok = !!(data && data.success)
+    }
+  } catch (e) {
+    console.error('[aso-aap-sso]', e)
+  }
+
+  var removeOverlay = function () {
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay)
+  }
+
+  if (ok && data && data.user) {
+    try {
+      var prev = {}
+      try {
+        prev = JSON.parse(localStorage.getItem('user') || '{}') || {}
+      } catch (e) {}
+      var next = Object.assign({}, prev, {
+        userInfo: data.user,
+        token: data.token || prev.token || '',
+        tokenKey: data.tokenKey || prev.tokenKey || 'Authorization',
+        rememberMe: true,
       })
-    })
-    .then(function (result) {
-      if (!result.ok || !result.data || !result.data.success) {
-        throw new Error((result.data && (result.data.message || result.data.error)) || '统一登录失败')
+      localStorage.setItem('user', JSON.stringify(next))
+      if (Array.isArray(data.user.permissions)) {
+        localStorage.setItem('permission', JSON.stringify(data.user.permissions))
       }
-      try {
-        if (result.data.user) {
-          var prev = {}
-          try {
-            prev = JSON.parse(localStorage.getItem('user') || '{}') || {}
-          } catch (e) {}
-          var next = Object.assign({}, prev, {
-            userInfo: result.data.user,
-            token: result.data.token || prev.token || '',
-            tokenKey: result.data.tokenKey || prev.tokenKey || 'Authorization',
-            rememberMe: true,
-          })
-          localStorage.setItem('user', JSON.stringify(next))
-          if (Array.isArray(result.data.user.permissions)) {
-            localStorage.setItem('permission', JSON.stringify(result.data.user.permissions))
-          }
-          if (result.data.tenantID) {
-            localStorage.setItem('dingtalk_tenant_id', String(result.data.tenantID))
-          }
-        }
-      } catch (e) {}
-      try {
-        window.parent.postMessage({ type: 'aso-aap-sso', ok: true }, '*')
-      } catch (e) {}
-      // 票据消费前 URL 已被清成 /aso-aap/，跳到 #/ 只是同文档 hash 变化，不会刷新，
-      // 因此必须主动移除加载遮罩，否则遮罩会一直盖住已经登录好的工作台。
-      var enterHome = function () {
-        var h = window.location.hash || ''
-        if (h.indexOf('#/') !== 0 || h.indexOf('#/login') === 0) {
-          window.location.hash = '#/'
-        }
+      if (data.tenantID) {
+        localStorage.setItem('dingtalk_tenant_id', String(data.tenantID))
       }
-      enterHome()
-      var tries = 0
-      var timer = window.setInterval(function () {
-        tries += 1
-        enterHome()
-        var stillLogin = /#\/login/.test(window.location.hash)
-        if (tries >= 8 || !stillLogin) {
-          window.clearInterval(timer)
-          window.setTimeout(function () {
-            if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay)
-          }, 250)
-        }
-      }, 150)
-    })
-    .catch(function (error) {
-      console.error('[aso-aap-sso]', error)
-      try {
-        window.parent.postMessage({
-          type: 'aso-aap-sso',
-          ok: false,
-          message: error && error.message ? error.message : '统一登录失败',
-        }, '*')
-      } catch (e) {}
-      if (overlay.parentNode) overlay.parentNode.removeChild(overlay)
-      window.location.replace((BASE || '') + '/#/login')
-    })
+    } catch (e) {}
+    try {
+      window.parent.postMessage({ type: 'aso-aap-sso', ok: true }, '*')
+    } catch (e) {}
+    // localStorage 已写好，应用启动即为已登录，会直接进入工作台。
+    // 待应用渲染出来后移除遮罩（此时不再需要刷新或改 hash）。
+    if (document.readyState === 'complete') {
+      window.setTimeout(removeOverlay, 300)
+    } else {
+      window.addEventListener('load', function () {
+        window.setTimeout(removeOverlay, 300)
+      })
+    }
+    window.setTimeout(removeOverlay, 4000)
+  } else {
+    try {
+      window.parent.postMessage({
+        type: 'aso-aap-sso',
+        ok: false,
+        message: (data && (data.message || data.error)) || '统一登录失败',
+      }, '*')
+    } catch (e) {}
+    removeOverlay()
+  }
 })()
