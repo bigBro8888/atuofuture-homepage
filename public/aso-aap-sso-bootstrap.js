@@ -5,32 +5,8 @@
 ;(function () {
   var BASE = location.pathname.indexOf('/aso-aap') === 0 ? '/aso-aap' : ''
   var PARAM = 'aso_sso'
-  var url = new URL(window.location.href)
-  var ticket = url.searchParams.get(PARAM)
-  if (!ticket) {
-    var hash = window.location.hash || ''
-    var q = hash.indexOf('?')
-    if (q >= 0) {
-      var hp = new URLSearchParams(hash.slice(q + 1))
-      ticket = hp.get(PARAM)
-      if (ticket) {
-        hp.delete(PARAM)
-        hp.delete('embed')
-        var baseHash = hash.slice(0, q)
-        var next = hp.toString()
-        window.history.replaceState({}, '', window.location.pathname + window.location.search + baseHash + (next ? '?' + next : ''))
-      }
-    }
-  }
-  if (!ticket) return
 
-  url.searchParams.delete(PARAM)
-  url.searchParams.delete('embed')
-  window.history.replaceState({}, '', url.pathname + url.search + url.hash)
-  document.documentElement.classList.add('aso-embed')
-  document.body && document.body.classList.add('aso-embed')
-
-  // 把绝对路径 /api /assets 指到网关前缀，避免打到门户自身
+  // 网关前缀下始终改写绝对 /api /assets，避免打到门户自身
   if (BASE) {
     var patchUrl = function (value) {
       if (typeof value !== 'string') return value
@@ -55,6 +31,31 @@
       return open.apply(this, args)
     }
   }
+
+  var url = new URL(window.location.href)
+  var ticket = url.searchParams.get(PARAM)
+  if (!ticket) {
+    var hash = window.location.hash || ''
+    var q = hash.indexOf('?')
+    if (q >= 0) {
+      var hp = new URLSearchParams(hash.slice(q + 1))
+      ticket = hp.get(PARAM)
+      if (ticket) {
+        hp.delete(PARAM)
+        hp.delete('embed')
+        var baseHash = hash.slice(0, q)
+        var next = hp.toString()
+        window.history.replaceState({}, '', window.location.pathname + window.location.search + baseHash + (next ? '?' + next : ''))
+      }
+    }
+  }
+  if (!ticket) return
+
+  url.searchParams.delete(PARAM)
+  url.searchParams.delete('embed')
+  window.history.replaceState({}, '', url.pathname + url.search + url.hash)
+  document.documentElement.classList.add('aso-embed')
+  document.body && document.body.classList.add('aso-embed')
 
   var overlay = document.createElement('div')
   overlay.id = 'aso-aap-sso-overlay'
