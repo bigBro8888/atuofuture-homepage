@@ -417,6 +417,10 @@ async function openAppEmbed(root, app) {
   const openLink = root.querySelector('[data-embed-open]')
   if (!shell || !frame || !app?.sso) return
 
+  const hideLoading = () => {
+    loading?.setAttribute('hidden', '')
+    window.clearTimeout(openAppEmbed._loadingTimer)
+  }
   const user = currentPortalUser(root)
   shell.hidden = false
   shell.setAttribute('aria-hidden', 'false')
@@ -426,7 +430,7 @@ async function openAppEmbed(root, app) {
   if (meta) meta.textContent = `${user.org} · 统一登录中…`
   const titleEl = root.querySelector('[data-embed-title]')
   if (titleEl) titleEl.textContent = app.name
-  if (frame) frame.title = app.name
+  frame.title = app.name
 
   try {
     const response = await fetch(`/api/public/aspace/sso/${app.sso}`, {
@@ -438,11 +442,33 @@ async function openAppEmbed(root, app) {
     if (!response.ok || !data.embedUrl) {
       throw new Error(data.message || data.error || '统一登录签发失败')
     }
-    if (openLink) openLink.href = data.embedUrl
-    if (meta) meta.textContent = `${user.org} · 已统一登录`
-    frame.onload = () => loading?.setAttribute('hidden', '')
-    frame.src = data.embedUrl
+
+    let finalUrl = data.embedUrl
+    // AAP：在门户同源先换会话 Cookie，再打开无票据的嵌入地址，避免 iframe 内跳转卡死 onload
+    if (app.sso === 'aap' && data.ticket) {
+      const exchange = await fetch('/aso-aap/api/auth/sso/aspace', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ ticket: data.ticket }),
+      })
+      const exchanged = await exchange.json().catch(() => ({}))
+      if (!exchange.ok || !exchanged.success) {
+        throw new Error(exchanged.message || exchanged.error || 'AAP 统一登录换票失败')
+      }
+      const base = String(data.embedUrl).split('?')[0].replace(/\/?$/, '/')
+      finalUrl = `${base}#/`
+      if (meta) meta.textContent = `${user.org} · 已统一登录`
+    } else if (meta) {
+      meta.textContent = `${user.org} · 已统一登录`
+    }
+
+    if (openLink) openLink.href = finalUrl
+    openAppEmbed._loadingTimer = window.setTimeout(hideLoading, 10000)
+    frame.onload = hideLoading
+    frame.src = finalUrl
   } catch (error) {
+    hideLoading()
     closeAppEmbed(root)
     showToast(error instanceof Error ? error.message : `无法进入 ${app.name}，请稍后重试`)
   }
@@ -452,6 +478,8 @@ function bindAapSsoMessages(root) {
   window.addEventListener('message', (event) => {
     const data = event?.data
     if (!data || data.type !== 'aso-aap-sso') return
+    root.querySelector('[data-embed-loading]')?.setAttribute('hidden', '')
+    window.clearTimeout(openAppEmbed._loadingTimer)
     const meta = root.querySelector('[data-embed-meta]')
     const org = root.querySelector('[data-org-name]')?.textContent?.trim() || '王力集团'
     if (data.ok) {
