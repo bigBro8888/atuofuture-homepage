@@ -34,11 +34,12 @@ const apps = [
   },
   {
     id: 'resource',
-    name: '资源管理',
-    desc: '统一管理空间、设备、项目与资源台账',
-    locked: true,
+    name: 'AAP资产管理系统',
+    project: '王力集团总部项目',
+    time: '2026-09-18 11:40',
     image: '/images/aspace-one/app-resource.jpg',
-    alt: '资源管理示意插画',
+    alt: 'AAP 资产管理系统示意',
+    url: 'https://asset.atuofuture.com/',
   },
 ]
 
@@ -523,8 +524,14 @@ export function initAspaceOne() {
 
     const enterApp = event.target.closest('[data-enter-app]')
     if (enterApp) {
-      if (enterApp.dataset.enterApp === 'poster') {
+      const appId = enterApp.dataset.enterApp
+      if (appId === 'poster') {
         void openPosterEmbed(root)
+        return
+      }
+      const app = apps.find((item) => item.id === appId)
+      if (app?.url) {
+        window.open(app.url, '_blank', 'noopener,noreferrer')
         return
       }
       showToast('统一身份中转接口待接入，当前为前端流程预览')
