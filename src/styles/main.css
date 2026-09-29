@@ -180,7 +180,7 @@
   .site-header__nav {
     flex: 1;
     justify-content: center;
-    gap: 0.15rem;
+    gap: 1.5rem;
     min-width: 0;
   }
 
@@ -188,8 +188,11 @@
     .site-header__logo-img {
       height: 20px;
     }
+    .site-header__nav {
+      gap: 1rem;
+    }
     .site-nav-link {
-      padding: 0 6px;
+      padding: 0 8px;
       font-size: 14px;
     }
   }
@@ -235,9 +238,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 4px;
     height: 2.5rem;
-    padding: 0 8px;
+    padding: 0 10px;
     font-family: Inter, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-size: 15px;
     font-weight: 500;
