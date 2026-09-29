@@ -25,12 +25,12 @@ const apps = [
   },
   {
     id: 'screen',
-    name: '中控屏管理',
+    name: '会议室预约系统',
     project: '北京研发中心项目',
     time: '2026-09-21 09:12',
     warning: '1 台设备离线',
     image: '/images/aspace-one/app-control.jpg',
-    alt: '会议室墙面中控屏场景',
+    alt: '会议室预约与中控屏场景',
   },
   {
     id: 'resource',
@@ -56,7 +56,7 @@ const docs = [
   { title: '能源能耗数据接入说明', category: '能源能耗', date: '2026-09-10', featured: true, keywords: '能耗数据接入 网关 采集' },
   { title: 'AI画报使用手册', category: 'AI画报', date: '2026-09-08', keywords: '模板 发布' },
   { title: '电子相册发布流程', category: '电子相册', date: '2026-09-06', keywords: '电子相册发布 多屏同步' },
-  { title: '中控屏配置操作指南', category: '中控屏管理', date: '2026-09-03', keywords: '中控屏配置 设备绑定' },
+  { title: '会议室预约配置操作指南', category: '会议室预约系统', date: '2026-09-03', keywords: '会议室预约 中控屏配置 设备绑定' },
   { title: '设备管理平台 API 文档', category: '会议与空间', date: '2026-08-28', keywords: '接口 对接' },
   { title: '项目实施规范', category: '项目服务', date: '2026-08-20', keywords: '权限申请 交付 验收' },
 ]
@@ -66,12 +66,12 @@ const docCategories = [
   ['bar_chart', '能源能耗'],
   ['image', 'AI画报'],
   ['photo_library', '电子相册'],
-  ['desktop_windows', '中控屏管理'],
+  ['desktop_windows', '会议室预约系统'],
   ['groups', '会议与空间'],
   ['folder', '项目服务'],
 ]
 
-const hotSearches = ['中控屏配置', '权限申请', '能耗数据接入', '电子相册发布']
+const hotSearches = ['会议室预约', '权限申请', '能耗数据接入', '电子相册发布']
 
 const featuredDocs = [
   { title: 'Aspace One 快速入门指南', date: '2026-09-12', badge: '新手必读', tone: 'blue', art: 'lines' },
@@ -96,7 +96,7 @@ const quickActions = [
   ['bar_chart', '查看今日能耗', 'energy'],
   ['add_photo_alternate', '新建AI画报', 'poster'],
   ['collections', '更新电子相册', 'album'],
-  ['desktop_windows', '配置中控屏', 'screen'],
+  ['desktop_windows', '预约会议室', 'screen'],
   ['description', '导出运营报表', 'report'],
   ['person_add', '申请产品权限', 'permission'],
 ]
@@ -284,7 +284,7 @@ function renderPortal() {
             <div class="aso-help__find">
               <form class="aso-search" data-help-search>
                 ${icon('search')}
-                <input type="search" aria-label="搜索文档" placeholder="搜索帮助文档、问题或关键词，例如：中控屏如何配置、如何申请权限" />
+                <input type="search" aria-label="搜索文档" placeholder="搜索帮助文档、问题或关键词，例如：如何预约会议室、如何申请权限" />
                 <button type="submit">搜索</button>
               </form>
               <div class="aso-hot">
