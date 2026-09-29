@@ -41,7 +41,7 @@ const apps = [
     image: '/images/aspace-one/app-resource.jpg',
     alt: 'AAP 资产管理系统示意',
     url: 'https://asset.atuofuture.com/',
-    sso: 'aap',
+    embed: 'aap',
   },
 ]
 
@@ -415,8 +415,12 @@ async function openAppEmbed(root, app) {
   const loadingText = root.querySelector('[data-embed-loading-text]')
   const meta = root.querySelector('[data-embed-meta]')
   const openLink = root.querySelector('[data-embed-open]')
-  if (!shell || !frame || !app?.sso) return
+  if (!shell || !frame || !(app?.sso || app?.embed)) return
 
+  const isSso = Boolean(app.sso)
+  const endpoint = isSso
+    ? `/api/public/aspace/sso/${app.sso}`
+    : `/api/public/aspace/embed/${app.embed}`
   const hideLoading = () => {
     loading?.setAttribute('hidden', '')
     window.clearTimeout(openAppEmbed._loadingTimer)
@@ -426,8 +430,10 @@ async function openAppEmbed(root, app) {
   shell.setAttribute('aria-hidden', 'false')
   document.body.classList.add('aso-embed-open')
   loading?.removeAttribute('hidden')
-    if (loadingText) loadingText.textContent = `正在通过统一身份进入 ${app.name}…`
-  if (meta) meta.textContent = `${user.org} · 统一登录中…`
+  if (loadingText) {
+    loadingText.textContent = isSso ? `正在通过统一身份进入 ${app.name}…` : `正在打开 ${app.name}…`
+  }
+  if (meta) meta.textContent = isSso ? `${user.org} · 统一登录中…` : `${app.name} · 请用你的账号登录`
   const titleEl = root.querySelector('[data-embed-title]')
   if (titleEl) titleEl.textContent = app.name
   frame.title = app.name
@@ -435,18 +441,18 @@ async function openAppEmbed(root, app) {
   frame.removeAttribute('src')
 
   try {
-    const response = await fetch(`/api/public/aspace/sso/${app.sso}`, {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(user),
     })
     const data = await response.json().catch(() => ({}))
     if (!response.ok || !data.embedUrl) {
-      throw new Error(data.message || data.error || '统一登录签发失败')
+      throw new Error(data.message || data.error || (isSso ? '统一登录签发失败' : '打开失败'))
     }
 
     if (openLink) openLink.href = data.embedUrl
-    if (meta) meta.textContent = `${user.org} · 已统一登录`
+    if (meta) meta.textContent = isSso ? `${user.org} · 已统一登录` : `${app.name} · 请用你的账号登录`
     openAppEmbed._loadingTimer = window.setTimeout(hideLoading, 15000)
     frame.onload = hideLoading
     frame.src = data.embedUrl
@@ -559,7 +565,7 @@ export function initAspaceOne() {
     if (enterApp) {
       const appId = enterApp.dataset.enterApp
       const app = apps.find((item) => item.id === appId)
-      if (app?.sso) {
+      if (app?.sso || app?.embed) {
         void openAppEmbed(root, app)
         return
       }
