@@ -445,30 +445,11 @@ async function openAppEmbed(root, app) {
       throw new Error(data.message || data.error || '统一登录签发失败')
     }
 
-    let finalUrl = data.embedUrl
-    // AAP：在门户同源先换会话 Cookie，再打开无票据的嵌入地址，避免 iframe 内跳转卡死 onload
-    if (app.sso === 'aap' && data.ticket) {
-      const exchange = await fetch('/aso-aap/api/auth/sso/aspace', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ ticket: data.ticket }),
-      })
-      const exchanged = await exchange.json().catch(() => ({}))
-      if (!exchange.ok || !exchanged.success) {
-        throw new Error(exchanged.message || exchanged.error || 'AAP 统一登录换票失败')
-      }
-      const base = String(data.embedUrl).split('?')[0].replace(/\/?$/, '/')
-      finalUrl = `${base}#/`
-      if (meta) meta.textContent = `${user.org} · 已统一登录`
-    } else if (meta) {
-      meta.textContent = `${user.org} · 已统一登录`
-    }
-
-    if (openLink) openLink.href = finalUrl
-    openAppEmbed._loadingTimer = window.setTimeout(hideLoading, 10000)
+    if (openLink) openLink.href = data.embedUrl
+    if (meta) meta.textContent = `${user.org} · 已统一登录`
+    openAppEmbed._loadingTimer = window.setTimeout(hideLoading, 15000)
     frame.onload = hideLoading
-    frame.src = finalUrl
+    frame.src = data.embedUrl
   } catch (error) {
     hideLoading()
     closeAppEmbed(root)
