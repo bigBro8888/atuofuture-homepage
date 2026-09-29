@@ -117,7 +117,27 @@
       try {
         window.parent.postMessage({ type: 'aso-aap-sso', ok: true }, '*')
       } catch (e) {}
-      window.location.replace((BASE || '') + '/#/')
+      // 票据消费前 URL 已被清成 /aso-aap/，跳到 #/ 只是同文档 hash 变化，不会刷新，
+      // 因此必须主动移除加载遮罩，否则遮罩会一直盖住已经登录好的工作台。
+      var enterHome = function () {
+        var h = window.location.hash || ''
+        if (h.indexOf('#/') !== 0 || h.indexOf('#/login') === 0) {
+          window.location.hash = '#/'
+        }
+      }
+      enterHome()
+      var tries = 0
+      var timer = window.setInterval(function () {
+        tries += 1
+        enterHome()
+        var stillLogin = /#\/login/.test(window.location.hash)
+        if (tries >= 8 || !stillLogin) {
+          window.clearInterval(timer)
+          window.setTimeout(function () {
+            if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay)
+          }, 250)
+        }
+      }, 150)
     })
     .catch(function (error) {
       console.error('[aso-aap-sso]', error)
