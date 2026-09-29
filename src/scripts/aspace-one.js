@@ -14,6 +14,7 @@ const apps = [
     time: '2026-09-19 10:15',
     image: '/images/aspace-one/app-poster.jpg',
     alt: 'AI画报在平板上的展示效果',
+    sso: 'poster',
   },
   {
     id: 'album',
@@ -40,6 +41,7 @@ const apps = [
     image: '/images/aspace-one/app-resource.jpg',
     alt: 'AAP 资产管理系统示意',
     url: 'https://asset.atuofuture.com/',
+    sso: 'aap',
   },
 ]
 
@@ -365,9 +367,9 @@ function renderPortal() {
         <div class="aso-embed__stage">
           <div class="aso-embed__loading" data-embed-loading>
             <span class="aso-embed__spinner" aria-hidden="true"></span>
-            <p>正在通过统一身份进入 AI 画报…</p>
+            <p data-embed-loading-text>正在通过统一身份进入系统…</p>
           </div>
-          <iframe class="aso-embed__frame" data-embed-frame title="AI画报" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
+          <iframe class="aso-embed__frame" data-embed-frame title="应用嵌入" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
         </div>
       </div>
     </div>`
@@ -406,24 +408,28 @@ function closeAppEmbed(root) {
   root.querySelector('[data-embed-loading]')?.removeAttribute('hidden')
 }
 
-async function openPosterEmbed(root) {
+async function openAppEmbed(root, app) {
   const shell = root.querySelector('[data-aso-embed]')
   const frame = root.querySelector('[data-embed-frame]')
   const loading = root.querySelector('[data-embed-loading]')
+  const loadingText = root.querySelector('[data-embed-loading-text]')
   const meta = root.querySelector('[data-embed-meta]')
   const openLink = root.querySelector('[data-embed-open]')
-  if (!shell || !frame) return
+  if (!shell || !frame || !app?.sso) return
 
   const user = currentPortalUser(root)
   shell.hidden = false
   shell.setAttribute('aria-hidden', 'false')
   document.body.classList.add('aso-embed-open')
   loading?.removeAttribute('hidden')
+  if (loadingText) loadingText.textContent = `正在通过统一身份进入 ${app.name}…`
   if (meta) meta.textContent = `${user.org} · 统一登录中…`
-  root.querySelector('[data-embed-title]').textContent = 'AI画报'
+  const titleEl = root.querySelector('[data-embed-title]')
+  if (titleEl) titleEl.textContent = app.name
+  if (frame) frame.title = app.name
 
   try {
-    const response = await fetch('/api/public/aspace/sso/poster', {
+    const response = await fetch(`/api/public/aspace/sso/${app.sso}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(user),
@@ -438,7 +444,7 @@ async function openPosterEmbed(root) {
     frame.src = data.embedUrl
   } catch (error) {
     closeAppEmbed(root)
-    showToast(error instanceof Error ? error.message : '无法进入 AI 画报，请稍后重试')
+    showToast(error instanceof Error ? error.message : `无法进入 ${app.name}，请稍后重试`)
   }
 }
 
@@ -525,11 +531,11 @@ export function initAspaceOne() {
     const enterApp = event.target.closest('[data-enter-app]')
     if (enterApp) {
       const appId = enterApp.dataset.enterApp
-      if (appId === 'poster') {
-        void openPosterEmbed(root)
+      const app = apps.find((item) => item.id === appId)
+      if (app?.sso) {
+        void openAppEmbed(root, app)
         return
       }
-      const app = apps.find((item) => item.id === appId)
       if (app?.url) {
         window.open(app.url, '_blank', 'noopener,noreferrer')
         return

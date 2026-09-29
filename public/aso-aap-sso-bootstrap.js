@@ -1,0 +1,97 @@
+/**
+ * 注入到 AAP 网关页：消费门户 aso_sso 票据，写入会话后进入系统。
+ * 由 nginx sub_filter 挂到 asset 反代入口，勿在业务源站直接引用。
+ */
+;(function () {
+  var PARAM = 'aso_sso'
+  var url = new URL(window.location.href)
+  var ticket = url.searchParams.get(PARAM)
+  if (!ticket) {
+    // hash 路由场景：? 可能落在 hash 内
+    var hash = window.location.hash || ''
+    var q = hash.indexOf('?')
+    if (q >= 0) {
+      var hp = new URLSearchParams(hash.slice(q + 1))
+      ticket = hp.get(PARAM)
+      if (ticket) {
+        hp.delete(PARAM)
+        hp.delete('embed')
+        var base = hash.slice(0, q)
+        var next = hp.toString()
+        window.history.replaceState({}, '', window.location.pathname + window.location.search + base + (next ? '?' + next : ''))
+      }
+    }
+  }
+  if (!ticket) return
+
+  url.searchParams.delete(PARAM)
+  url.searchParams.delete('embed')
+  window.history.replaceState({}, '', url.pathname + url.search + url.hash)
+  document.documentElement.classList.add('aso-embed')
+  document.body && document.body.classList.add('aso-embed')
+
+  var overlay = document.createElement('div')
+  overlay.id = 'aso-aap-sso-overlay'
+  overlay.setAttribute('style', [
+    'position:fixed',
+    'inset:0',
+    'z-index:2147483646',
+    'display:flex',
+    'align-items:center',
+    'justify-content:center',
+    'flex-direction:column',
+    'gap:12px',
+    'background:#f0f2f5',
+    'font:14px/1.5 system-ui,sans-serif',
+    'color:#303133',
+  ].join(';'))
+  overlay.innerHTML = '<div style="width:36px;height:36px;border:3px solid #2d8cf0;border-bottom-color:transparent;border-radius:50%;animation:aso-spin 0.8s linear infinite"></div><p>正在通过统一身份进入 AAP…</p>'
+  var style = document.createElement('style')
+  style.textContent = '@keyframes aso-spin{to{transform:rotate(360deg)}}'
+  document.documentElement.appendChild(style)
+  document.documentElement.appendChild(overlay)
+
+  fetch('/api/auth/sso/aspace', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ ticket: ticket }),
+  })
+    .then(function (res) {
+      return res.json().then(function (data) {
+        return { ok: res.ok, data: data }
+      })
+    })
+    .then(function (result) {
+      if (!result.ok || !result.data || !result.data.success) {
+        throw new Error((result.data && (result.data.message || result.data.error)) || '统一登录失败')
+      }
+      try {
+        if (result.data.user) {
+          var prev = {}
+          try {
+            prev = JSON.parse(localStorage.getItem('user') || '{}') || {}
+          } catch (e) {}
+          var next = Object.assign({}, prev, {
+            userInfo: result.data.user,
+            token: result.data.token || prev.token || '',
+            tokenKey: result.data.tokenKey || prev.tokenKey || 'Authorization',
+            rememberMe: true,
+          })
+          localStorage.setItem('user', JSON.stringify(next))
+          if (Array.isArray(result.data.user.permissions)) {
+            localStorage.setItem('permission', JSON.stringify(result.data.user.permissions))
+          }
+          if (result.data.tenantID) {
+            localStorage.setItem('dingtalk_tenant_id', String(result.data.tenantID))
+          }
+        }
+      } catch (e) {}
+      window.location.replace('/#/')
+    })
+    .catch(function (error) {
+      console.error('[aso-aap-sso]', error)
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay)
+      window.location.replace('/#/login')
+    })
+})()

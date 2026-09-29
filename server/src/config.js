@@ -22,6 +22,12 @@ export const config = {
   posterSsoSecret: process.env.ASO_POSTER_SSO_SECRET || process.env.ASO_SSO_SECRET || '',
   posterAppOrigin: (process.env.POSTER_APP_ORIGIN || 'http://47.103.102.65:5173').replace(/\/$/, ''),
   posterSsoTtlMs: Number(process.env.POSTER_SSO_TTL_MS || 120000),
+  /** Aspace One → AAP：嵌入网关源（反代 asset.atuofuture.com），票据密钥复用 ASO_* */
+  aapAppOrigin: (process.env.AAP_APP_ORIGIN || 'http://47.103.102.65:18181').replace(/\/$/, ''),
+  aapUpstreamOrigin: (process.env.AAP_UPSTREAM_ORIGIN || 'https://asset.atuofuture.com').replace(/\/$/, ''),
+  aapSsoTenantId: String(process.env.AAP_SSO_TENANT_ID || 'bkws').trim(),
+  aapSsoUsername: String(process.env.AAP_SSO_USERNAME || '').trim(),
+  aapSsoPassword: String(process.env.AAP_SSO_PASSWORD || ''),
   oss: {
     region: process.env.OSS_REGION,
     accessKeyId: process.env.OSS_ACCESS_KEY_ID,
