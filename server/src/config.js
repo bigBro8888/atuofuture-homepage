@@ -18,6 +18,10 @@ export const config = {
   versionSourceUrl: process.env.VERSION_SOURCE_URL || 'https://file.atuofuture.com/release/version',
   releaseBaseUrl: process.env.RELEASE_BASE_URL || 'https://file.atuofuture.com/release',
   versionCacheMs: Number(process.env.VERSION_CACHE_MS || 120000),
+  /** Aspace One → AI 画报统一登录：与画报服务 ASO_SSO_SECRET 保持一致 */
+  posterSsoSecret: process.env.ASO_POSTER_SSO_SECRET || process.env.ASO_SSO_SECRET || '',
+  posterAppOrigin: (process.env.POSTER_APP_ORIGIN || 'http://47.103.102.65:5173').replace(/\/$/, ''),
+  posterSsoTtlMs: Number(process.env.POSTER_SSO_TTL_MS || 120000),
   oss: {
     region: process.env.OSS_REGION,
     accessKeyId: process.env.OSS_ACCESS_KEY_ID,

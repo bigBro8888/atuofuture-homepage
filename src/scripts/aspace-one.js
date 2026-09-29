@@ -352,6 +352,23 @@ function renderPortal() {
       </section>
 
       <div class="aso-toast" role="status" data-aso-toast aria-hidden="true"></div>
+      <div class="aso-embed" data-aso-embed hidden aria-hidden="true">
+        <header class="aso-embed__bar">
+          <button class="aso-embed__back" type="button" data-embed-close>${icon('arrow_back')}<span>返回门户</span></button>
+          <div class="aso-embed__title">
+            <b data-embed-title>AI画报</b>
+            <small data-embed-meta>统一登录中…</small>
+          </div>
+          <a class="aso-embed__open" data-embed-open href="#" target="_blank" rel="noopener noreferrer">新窗口打开 ${icon('open_in_new')}</a>
+        </header>
+        <div class="aso-embed__stage">
+          <div class="aso-embed__loading" data-embed-loading>
+            <span class="aso-embed__spinner" aria-hidden="true"></span>
+            <p>正在通过统一身份进入 AI 画报…</p>
+          </div>
+          <iframe class="aso-embed__frame" data-embed-frame title="AI画报" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
+        </div>
+      </div>
     </div>`
 }
 
@@ -366,6 +383,62 @@ function showToast(message) {
     toast.classList.remove('is-visible')
     toast.setAttribute('aria-hidden', 'true')
   }, 2600)
+}
+
+function currentPortalUser(root) {
+  const org = root.querySelector('[data-org-name]')?.textContent?.trim() || '王力集团'
+  return {
+    name: '张三',
+    org,
+    email: 'zhangsan@aspace.atuofuture.local',
+  }
+}
+
+function closeAppEmbed(root) {
+  const shell = root.querySelector('[data-aso-embed]')
+  const frame = root.querySelector('[data-embed-frame]')
+  if (!shell) return
+  shell.hidden = true
+  shell.setAttribute('aria-hidden', 'true')
+  document.body.classList.remove('aso-embed-open')
+  if (frame) frame.removeAttribute('src')
+  root.querySelector('[data-embed-loading]')?.removeAttribute('hidden')
+}
+
+async function openPosterEmbed(root) {
+  const shell = root.querySelector('[data-aso-embed]')
+  const frame = root.querySelector('[data-embed-frame]')
+  const loading = root.querySelector('[data-embed-loading]')
+  const meta = root.querySelector('[data-embed-meta]')
+  const openLink = root.querySelector('[data-embed-open]')
+  if (!shell || !frame) return
+
+  const user = currentPortalUser(root)
+  shell.hidden = false
+  shell.setAttribute('aria-hidden', 'false')
+  document.body.classList.add('aso-embed-open')
+  loading?.removeAttribute('hidden')
+  if (meta) meta.textContent = `${user.org} · 统一登录中…`
+  root.querySelector('[data-embed-title]').textContent = 'AI画报'
+
+  try {
+    const response = await fetch('/api/public/aspace/sso/poster', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(user),
+    })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok || !data.embedUrl) {
+      throw new Error(data.message || data.error || '统一登录签发失败')
+    }
+    if (openLink) openLink.href = data.embedUrl
+    if (meta) meta.textContent = `${user.org} · 已统一登录`
+    frame.onload = () => loading?.setAttribute('hidden', '')
+    frame.src = data.embedUrl
+  } catch (error) {
+    closeAppEmbed(root)
+    showToast(error instanceof Error ? error.message : '无法进入 AI 画报，请稍后重试')
+  }
 }
 
 function closePopovers(except) {
@@ -443,7 +516,22 @@ export function initAspaceOne() {
       return
     }
 
-    const enter = event.target.closest('[data-enter-app], [data-deep-link], [data-action], [data-task]')
+    if (event.target.closest('[data-embed-close]')) {
+      closeAppEmbed(root)
+      return
+    }
+
+    const enterApp = event.target.closest('[data-enter-app]')
+    if (enterApp) {
+      if (enterApp.dataset.enterApp === 'poster') {
+        void openPosterEmbed(root)
+        return
+      }
+      showToast('统一身份中转接口待接入，当前为前端流程预览')
+      return
+    }
+
+    const enter = event.target.closest('[data-deep-link], [data-action], [data-task]')
     if (enter) {
       showToast('统一身份中转接口待接入，当前为前端流程预览')
       return
@@ -520,6 +608,11 @@ export function initAspaceOne() {
   }
 
   initAppFilters(root)
+
+  root.querySelector('[data-embed-close]')?.addEventListener('click', () => closeAppEmbed(root))
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !root.querySelector('[data-aso-embed]')?.hidden) closeAppEmbed(root)
+  })
 
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.aso-subnav__tools, .aso-popover')) closePopovers()

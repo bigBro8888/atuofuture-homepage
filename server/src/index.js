@@ -6,6 +6,7 @@ import { initStore } from './lib/store.js'
 import { publicAppsRouter } from './modules/apps/public-routes.js'
 import { adminRouter } from './modules/admin/routes.js'
 import { adminPagesRouter, publicPagesRouter } from './modules/pages/routes.js'
+import { aspaceSsoRouter } from './modules/aspace/sso-routes.js'
 
 await initStore()
 
@@ -37,6 +38,7 @@ app.use('/api/public/uploads', express.static(config.uploadDir, {
 }))
 app.use('/api/public/apps', publicAppsRouter)
 app.use('/api/public/pages', publicPagesRouter)
+app.use('/api/public/aspace/sso', aspaceSsoRouter)
 app.use('/api/admin/pages', adminPagesRouter)
 app.use('/api/admin', adminRouter)
 
