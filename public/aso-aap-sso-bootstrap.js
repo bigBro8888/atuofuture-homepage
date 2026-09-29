@@ -87,10 +87,20 @@
           }
         }
       } catch (e) {}
+      try {
+        window.parent.postMessage({ type: 'aso-aap-sso', ok: true }, '*')
+      } catch (e) {}
       window.location.replace('/#/')
     })
     .catch(function (error) {
       console.error('[aso-aap-sso]', error)
+      try {
+        window.parent.postMessage({
+          type: 'aso-aap-sso',
+          ok: false,
+          message: error && error.message ? error.message : '统一登录失败',
+        }, '*')
+      } catch (e) {}
       if (overlay.parentNode) overlay.parentNode.removeChild(overlay)
       window.location.replace('/#/login')
     })

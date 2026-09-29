@@ -448,6 +448,21 @@ async function openAppEmbed(root, app) {
   }
 }
 
+function bindAapSsoMessages(root) {
+  window.addEventListener('message', (event) => {
+    const data = event?.data
+    if (!data || data.type !== 'aso-aap-sso') return
+    const meta = root.querySelector('[data-embed-meta]')
+    const org = root.querySelector('[data-org-name]')?.textContent?.trim() || '王力集团'
+    if (data.ok) {
+      if (meta) meta.textContent = `${org} · 已统一登录`
+      return
+    }
+    if (meta) meta.textContent = `${org} · 请登录 AAP`
+    if (data.message) showToast(data.message)
+  })
+}
+
 function closePopovers(except) {
   document.querySelectorAll('.aso-popover').forEach((popover) => {
     if (popover === except) return
@@ -492,6 +507,7 @@ export function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
   root.innerHTML = renderPortal()
+  bindAapSsoMessages(root)
 
   const orgMenu = root.querySelector('[data-org-menu]')
   const noticeMenu = root.querySelector('[data-notice-menu]')

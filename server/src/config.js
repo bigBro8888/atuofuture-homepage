@@ -28,6 +28,8 @@ export const config = {
   aapSsoTenantId: String(process.env.AAP_SSO_TENANT_ID || 'bkws').trim(),
   aapSsoUsername: String(process.env.AAP_SSO_USERNAME || '').trim(),
   aapSsoPassword: String(process.env.AAP_SSO_PASSWORD || ''),
+  /** 可选：直接复用已登录会话 Cookie（name=value; 可多条逗号分隔），用于暂无上游 SSO 时静默进入 */
+  aapSsoSessionCookie: String(process.env.AAP_SSO_SESSION_COOKIE || '').trim(),
   oss: {
     region: process.env.OSS_REGION,
     accessKeyId: process.env.OSS_ACCESS_KEY_ID,

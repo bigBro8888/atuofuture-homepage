@@ -99,6 +99,33 @@ async function signInAapWithServiceAccount() {
   return { data, cookies: parseSetCookieHeaders(response.headers) }
 }
 
+async function sessionFromConfiguredCookie() {
+  const raw = config.aapSsoSessionCookie
+  if (!raw) return null
+  const cookieHeader = raw
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join('; ')
+  if (!cookieHeader) return null
+
+  const response = await fetch(`${config.aapUpstreamOrigin}/api/auth/self`, {
+    method: 'GET',
+    headers: { Accept: 'application/json', Cookie: cookieHeader },
+  }).catch(() => null)
+  if (!response) return null
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok || !data?.success || !data?.data) return null
+
+  const cookies = raw.split(',').map((part) => {
+    const line = part.trim()
+    if (!line) return ''
+    return line.includes('=') ? `${line}; Path=/` : ''
+  }).filter(Boolean)
+
+  return { data, cookies }
+}
+
 function publicUserFromAap(payload, ticket) {
   const raw = payload?.data && typeof payload.data === 'object' ? payload.data : payload
   const permissions = Array.isArray(raw?.permissions)
@@ -206,10 +233,14 @@ aspaceSsoRouter.post('/aap/exchange', async (request, response) => {
       mode = 'service_account'
     }
     if (!session) {
+      session = await sessionFromConfiguredCookie()
+      mode = 'session_cookie'
+    }
+    if (!session) {
       return response.status(503).json({
         success: false,
         error: 'aap_sso_unavailable',
-        message: 'AAP 统一登录未就绪：上游无 SSO 接口且未配置服务账号',
+        message: 'AAP 统一登录未就绪：上游无 SSO 接口且未配置服务账号/会话',
       })
     }
 
