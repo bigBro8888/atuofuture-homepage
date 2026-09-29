@@ -56,17 +56,19 @@ function parseSetCookieHeaders(headers) {
 }
 
 function toGatewayCookie(setCookieLine) {
+  const path = `${config.aapGatewayPath || '/aso-aap'}`
   return String(setCookieLine)
     .split(';')
     .map((part) => part.trim())
     .filter((part) => {
       const lower = part.toLowerCase()
       if (lower.startsWith('domain=')) return false
+      if (lower.startsWith('path=')) return false
       if (lower.startsWith('samesite=')) return false
       if (lower === 'secure') return false
       return true
     })
-    .concat(['Path=/', 'SameSite=Lax'])
+    .concat([`Path=${path}`, 'SameSite=Lax'])
     .join('; ')
 }
 
@@ -95,7 +97,7 @@ async function signInAapWithServiceAccount() {
   }).catch(() => null)
   if (!response) return null
   const data = await response.json().catch(() => ({}))
-  if (!response.ok || !data?.success || !data?.data) return null
+  if (!response.ok || data?.success === false || !data?.data) return null
   return { data, cookies: parseSetCookieHeaders(response.headers) }
 }
 
@@ -128,14 +130,16 @@ async function sessionFromConfiguredCookie() {
 
 function publicUserFromAap(payload, ticket) {
   const raw = payload?.data && typeof payload.data === 'object' ? payload.data : payload
-  const permissions = Array.isArray(raw?.permissions)
-    ? raw.permissions
-    : Array.isArray(payload?.data?.permissions)
-      ? payload.data.permissions
-      : []
+  const permissions = Array.isArray(payload?.permissions)
+    ? payload.permissions
+    : Array.isArray(raw?.permissions)
+      ? raw.permissions
+      : Array.isArray(payload?.data?.permissions)
+        ? payload.data.permissions
+        : []
   return {
     ...raw,
-    name: raw?.name || raw?.username || ticket.name,
+    name: raw?.name || raw?.username || raw?.loginName || ticket.name,
     email: raw?.email || ticket.email,
     permissions,
     org: ticket.org,
@@ -198,7 +202,7 @@ aspaceSsoRouter.post('/aap', (request, response) => {
     exp: Date.now() + config.posterSsoTtlMs,
   }
   const ticket = signTicket(payload)
-  const embedUrl = new URL('/', config.aapAppOrigin)
+  const embedUrl = new URL(`${config.aapAppOrigin}/`)
   embedUrl.searchParams.set('aso_sso', ticket)
   embedUrl.searchParams.set('embed', '1')
 

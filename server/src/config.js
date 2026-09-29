@@ -22,9 +22,10 @@ export const config = {
   posterSsoSecret: process.env.ASO_POSTER_SSO_SECRET || process.env.ASO_SSO_SECRET || '',
   posterAppOrigin: (process.env.POSTER_APP_ORIGIN || 'http://47.103.102.65:5173').replace(/\/$/, ''),
   posterSsoTtlMs: Number(process.env.POSTER_SSO_TTL_MS || 120000),
-  /** Aspace One → AAP：默认同域嵌入 asset；若已放行反代网关端口可改为 http://IP:18181 */
-  aapAppOrigin: (process.env.AAP_APP_ORIGIN || 'https://asset.atuofuture.com').replace(/\/$/, ''),
+  /** Aspace One → AAP：默认走门户同端口 /aso-aap 反代（18181 外网未放行） */
+  aapAppOrigin: (process.env.AAP_APP_ORIGIN || 'http://47.103.102.65:18180/aso-aap').replace(/\/$/, ''),
   aapUpstreamOrigin: (process.env.AAP_UPSTREAM_ORIGIN || 'https://asset.atuofuture.com').replace(/\/$/, ''),
+  aapGatewayPath: String(process.env.AAP_GATEWAY_PATH || '/aso-aap').replace(/\/$/, '') || '/aso-aap',
   aapSsoTenantId: String(process.env.AAP_SSO_TENANT_ID || 'bkws').trim(),
   aapSsoUsername: String(process.env.AAP_SSO_USERNAME || '').trim(),
   aapSsoPassword: String(process.env.AAP_SSO_PASSWORD || ''),

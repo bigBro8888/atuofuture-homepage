@@ -1,13 +1,13 @@
 /**
  * 注入到 AAP 网关页：消费门户 aso_sso 票据，写入会话后进入系统。
- * 由 nginx sub_filter 挂到 asset 反代入口，勿在业务源站直接引用。
+ * 由 nginx sub_filter 挂到 /aso-aap/ 反代入口。
  */
 ;(function () {
+  var BASE = location.pathname.indexOf('/aso-aap') === 0 ? '/aso-aap' : ''
   var PARAM = 'aso_sso'
   var url = new URL(window.location.href)
   var ticket = url.searchParams.get(PARAM)
   if (!ticket) {
-    // hash 路由场景：? 可能落在 hash 内
     var hash = window.location.hash || ''
     var q = hash.indexOf('?')
     if (q >= 0) {
@@ -16,9 +16,9 @@
       if (ticket) {
         hp.delete(PARAM)
         hp.delete('embed')
-        var base = hash.slice(0, q)
+        var baseHash = hash.slice(0, q)
         var next = hp.toString()
-        window.history.replaceState({}, '', window.location.pathname + window.location.search + base + (next ? '?' + next : ''))
+        window.history.replaceState({}, '', window.location.pathname + window.location.search + baseHash + (next ? '?' + next : ''))
       }
     }
   }
@@ -29,6 +29,32 @@
   window.history.replaceState({}, '', url.pathname + url.search + url.hash)
   document.documentElement.classList.add('aso-embed')
   document.body && document.body.classList.add('aso-embed')
+
+  // 把绝对路径 /api /assets 指到网关前缀，避免打到门户自身
+  if (BASE) {
+    var patchUrl = function (value) {
+      if (typeof value !== 'string') return value
+      if (value.indexOf('/aso-aap/') === 0) return value
+      if (value.indexOf('/api/') === 0 || value === '/api') return BASE + value
+      if (value.indexOf('/assets/') === 0) return BASE + value
+      if (value.indexOf('/logo') === 0 || value.indexOf('/favicon') === 0) return BASE + value
+      return value
+    }
+    var rawFetch = window.fetch
+    window.fetch = function (input, init) {
+      if (typeof input === 'string') input = patchUrl(input)
+      else if (input && typeof Request !== 'undefined' && input instanceof Request) {
+        input = new Request(patchUrl(input.url), input)
+      }
+      return rawFetch.call(this, input, init)
+    }
+    var open = XMLHttpRequest.prototype.open
+    XMLHttpRequest.prototype.open = function () {
+      var args = Array.prototype.slice.call(arguments)
+      if (typeof args[1] === 'string') args[1] = patchUrl(args[1])
+      return open.apply(this, args)
+    }
+  }
 
   var overlay = document.createElement('div')
   overlay.id = 'aso-aap-sso-overlay'
@@ -51,7 +77,7 @@
   document.documentElement.appendChild(style)
   document.documentElement.appendChild(overlay)
 
-  fetch('/api/auth/sso/aspace', {
+  fetch(BASE + '/api/auth/sso/aspace', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -90,7 +116,7 @@
       try {
         window.parent.postMessage({ type: 'aso-aap-sso', ok: true }, '*')
       } catch (e) {}
-      window.location.replace('/#/')
+      window.location.replace((BASE || '') + '/#/')
     })
     .catch(function (error) {
       console.error('[aso-aap-sso]', error)
@@ -102,6 +128,6 @@
         }, '*')
       } catch (e) {}
       if (overlay.parentNode) overlay.parentNode.removeChild(overlay)
-      window.location.replace('/#/login')
+      window.location.replace((BASE || '') + '/#/login')
     })
 })()
