@@ -89,6 +89,7 @@ const initialData = {
   releases: [],
   pageConfigs: [],
   aspaceQuickActions: structuredClone(defaultAspaceQuickActions),
+  aspaceActivities: [],
   downloadEvents: [],
   adminUsers: [],
   auditLogs: [],

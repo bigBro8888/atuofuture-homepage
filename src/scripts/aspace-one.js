@@ -107,6 +107,7 @@ const defaultQuickActions = [
   { id: 'permission', icon: 'person_add', label: '申请产品权限', url: '' },
 ]
 let quickActions = defaultQuickActions.map((item) => ({ ...item }))
+let latestActivity = null
 
 function icon(name, className = '') {
   return `<span class="material-symbols-outlined ${className}" aria-hidden="true">${name}</span>`
@@ -136,6 +137,38 @@ function quickSettingsRowsMarkup() {
       <label>文案<input type="text" maxlength="40" value="${escapeHtml(label)}" data-quick-label required /></label>
       <label>链接<input type="text" maxlength="500" value="${escapeHtml(url)}" data-quick-link placeholder="https://…、/站内路径 或 app:应用ID" /></label>
     </div>`).join('')
+}
+
+function activityView() {
+  if (!latestActivity) {
+    return {
+      appId: 'energy',
+      appName: '能源能耗',
+      project: '王力大厦',
+      feature: '8月能源分析报告',
+      time: '今天 14:32',
+      message: '继续编辑你的报告，已完成约 60%',
+    }
+  }
+  const app = apps.find((item) => item.id === latestActivity.appId)
+  const happenedAt = new Date(latestActivity.createdAt)
+  const time = Number.isNaN(happenedAt.getTime())
+    ? '刚刚'
+    : new Intl.DateTimeFormat('zh-CN', {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(happenedAt)
+  return {
+    appId: latestActivity.appId,
+    appName: latestActivity.appName || app?.name || '应用系统',
+    project: latestActivity.project || app?.project || '',
+    feature: latestActivity.feature,
+    time,
+    message: `继续你在${latestActivity.appName || app?.name || '该系统'}中的上次操作`,
+  }
 }
 
 function appCard(app, index) {
@@ -182,6 +215,7 @@ function docRows(category = '全部文档', keyword = '') {
 }
 
 function renderPortal() {
+  const activity = activityView()
   return `
     <div class="aso-page">
       <nav class="aso-subnav" aria-label="Aspace One 导航">
@@ -258,8 +292,8 @@ function renderPortal() {
                 <span class="aso-resume__sheet"></span>
                 <span class="aso-resume__sheet"></span>
                 <div class="aso-resume__doc">
-                  <b>8月能源分析报告</b>
-                  <small>王力大厦</small>
+                  <b data-resume-feature>${escapeHtml(activity.feature)}</b>
+                  <small data-resume-project>${escapeHtml(activity.project)}</small>
                   <div class="aso-resume__chart">
                     ${[34, 44, 52, 66, 84, 72].map((h) => `<i style="--bar:${h}%"></i>`).join('')}
                   </div>
@@ -271,13 +305,13 @@ function renderPortal() {
               </figure>
               <div class="aso-resume__body">
                 <p class="aso-resume__kicker">${icon('description')} 继续上次工作</p>
-                <h3>王力大厦<i>|</i>8月能源分析报告</h3>
-                <p class="aso-resume__time">今天 14:32 · 编辑</p>
+                <h3><span data-resume-system>${escapeHtml(activity.appName)}</span><i>|</i><span data-resume-title>${escapeHtml(activity.feature)}</span></h3>
+                <p class="aso-resume__time"><span data-resume-time>${escapeHtml(activity.time)}</span> · 最近操作</p>
                 <div class="aso-resume__progress">
                   <span class="aso-resume__bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="报告完成度"><i style="width: 60%"></i></span>
-                  <small>继续编辑你的报告，已完成约 60%</small>
+                  <small data-resume-message>${escapeHtml(activity.message)}</small>
                 </div>
-                <button class="aso-btn aso-btn--primary aso-resume__cta" type="button" data-deep-link>继续查看 ${icon('arrow_forward')}</button>
+                <button class="aso-btn aso-btn--primary aso-resume__cta" type="button" data-resume-open="${escapeHtml(activity.appId)}">继续查看 ${icon('arrow_forward')}</button>
               </div>
             </article>
             <article class="aso-tasks">
@@ -498,6 +532,7 @@ async function openAppEmbed(root, app) {
   const titleEl = root.querySelector('[data-embed-title]')
   if (titleEl) titleEl.textContent = app.name
   frame.title = app.name
+  frame.dataset.appId = app.id
   // 打开前先断开旧文档，避免白屏叠在旧状态上
   frame.removeAttribute('src')
 
@@ -595,6 +630,73 @@ async function loadQuickActions() {
   } catch {
     quickActions = defaultQuickActions.map((item) => ({ ...item }))
   }
+}
+
+async function loadLatestActivity() {
+  try {
+    const response = await fetch('/api/public/aspace/activity/latest', { cache: 'no-store' })
+    const data = await response.json()
+    if (response.ok) latestActivity = data.activity || null
+  } catch {
+    latestActivity = null
+  }
+}
+
+function updateResumeCard(root) {
+  const activity = activityView()
+  const values = [
+    ['[data-resume-feature]', activity.feature],
+    ['[data-resume-project]', activity.project],
+    ['[data-resume-system]', activity.appName],
+    ['[data-resume-title]', activity.feature],
+    ['[data-resume-time]', activity.time],
+    ['[data-resume-message]', activity.message],
+  ]
+  values.forEach(([selector, value]) => {
+    const element = root.querySelector(selector)
+    if (element) element.textContent = value
+  })
+  const button = root.querySelector('[data-resume-open]')
+  if (button) button.dataset.resumeOpen = activity.appId
+}
+
+async function reportActivity(root, app, feature, deepLink = '') {
+  if (!app || !feature) return
+  try {
+    const response = await fetch('/api/public/aspace/activity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        appId: app.id,
+        appName: app.name,
+        project: app.project,
+        feature,
+        deepLink,
+      }),
+      keepalive: true,
+    })
+    const data = await response.json()
+    if (!response.ok || !data.activity) return
+    latestActivity = data.activity
+    updateResumeCard(root)
+  } catch {
+    // 操作记录失败不能阻断用户进入业务系统。
+  }
+}
+
+function bindActivityMessages(root) {
+  window.addEventListener('message', (event) => {
+    const data = event?.data
+    if (!data || data.type !== 'aspace:activity') return
+    const frame = root.querySelector('[data-embed-frame]')
+    if (!frame || event.source !== frame.contentWindow) return
+    const app = apps.find((item) => item.id === frame.dataset.appId)
+    const feature = String(data.feature || data.label || '').trim().slice(0, 100)
+    if (!app || !feature) return
+    let deepLink = String(data.deepLink || '').trim()
+    if (deepLink.startsWith('/') && event.origin && event.origin !== 'null') deepLink = `${event.origin}${deepLink}`
+    void reportActivity(root, app, feature, deepLink)
+  })
 }
 
 function setQuickSettingsOpen(root, open) {
@@ -718,9 +820,10 @@ function openQuickAction(root, action) {
 export async function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
-  await loadQuickActions()
+  await Promise.all([loadQuickActions(), loadLatestActivity()])
   root.innerHTML = renderPortal()
   bindAapSsoMessages(root)
+  bindActivityMessages(root)
 
   const orgMenu = root.querySelector('[data-org-menu]')
   const noticeMenu = root.querySelector('[data-notice-menu]')
@@ -779,6 +882,7 @@ export async function initAspaceOne() {
     if (enterApp) {
       const appId = enterApp.dataset.enterApp
       const app = apps.find((item) => item.id === appId)
+      if (app) void reportActivity(root, app, `进入${app.name}首页`)
       if (app?.href) {
         window.location.href = app.href
         return
@@ -795,7 +899,20 @@ export async function initAspaceOne() {
       return
     }
 
-    const enter = event.target.closest('[data-deep-link], [data-action], [data-task]')
+    const resume = event.target.closest('[data-resume-open]')
+    if (resume) {
+      if (latestActivity?.deepLink) {
+        window.location.href = latestActivity.deepLink
+        return
+      }
+      const appId = latestActivity?.appId || resume.dataset.resumeOpen
+      const appButton = root.querySelector(`[data-enter-app="${CSS.escape(appId)}"]`)
+      if (appButton) appButton.click()
+      else showToast('对应系统暂时无法打开')
+      return
+    }
+
+    const enter = event.target.closest('[data-action], [data-task]')
     if (enter) {
       showToast('统一身份中转接口待接入，当前为前端流程预览')
       return
