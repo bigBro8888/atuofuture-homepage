@@ -98,17 +98,44 @@ const supportCards = [
   ['rate_review', '功能建议', '告诉我们您的想法'],
 ]
 
-const quickActions = [
-  ['bar_chart', '查看今日能耗', 'energy'],
-  ['add_photo_alternate', '新建AI画报', 'poster'],
-  ['collections', '更新电子相册', 'album'],
-  ['desktop_windows', '预约会议室', 'screen'],
-  ['description', '导出运营报表', 'report'],
-  ['person_add', '申请产品权限', 'permission'],
+const defaultQuickActions = [
+  { id: 'energy', icon: 'bar_chart', label: '查看今日能耗', url: 'app:energy' },
+  { id: 'poster', icon: 'add_photo_alternate', label: '新建AI画报', url: 'app:poster' },
+  { id: 'album', icon: 'collections', label: '更新电子相册', url: 'app:album' },
+  { id: 'screen', icon: 'desktop_windows', label: '预约会议室', url: 'app:screen' },
+  { id: 'report', icon: 'description', label: '导出运营报表', url: '' },
+  { id: 'permission', icon: 'person_add', label: '申请产品权限', url: '' },
 ]
+let quickActions = defaultQuickActions.map((item) => ({ ...item }))
 
 function icon(name, className = '') {
   return `<span class="material-symbols-outlined ${className}" aria-hidden="true">${name}</span>`
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[char])
+}
+
+function quickActionsMarkup() {
+  return quickActions.map(({ icon: ico, label, id, url }) => `
+    <button class="aso-action" type="button" data-quick-action="${escapeHtml(id)}" data-quick-url="${escapeHtml(url)}">
+      ${icon(ico)}<span>${escapeHtml(label)}</span><i>${icon('chevron_right')}</i>
+    </button>`).join('')
+}
+
+function quickSettingsRowsMarkup() {
+  return quickActions.map(({ id, icon: ico, label, url }) => `
+    <div class="aso-quick-settings__row" data-quick-row="${escapeHtml(id)}">
+      <span class="aso-quick-settings__icon">${icon(ico)}</span>
+      <label>文案<input type="text" maxlength="40" value="${escapeHtml(label)}" data-quick-label required /></label>
+      <label>链接<input type="text" maxlength="500" value="${escapeHtml(url)}" data-quick-link placeholder="https://…、/站内路径 或 app:应用ID" /></label>
+    </div>`).join('')
 }
 
 function appCard(app, index) {
@@ -264,17 +291,13 @@ function renderPortal() {
             </article>
           </div>
           <section class="aso-quick">
-            <h3>${icon('grid_view')} 快捷入口</h3>
-            <div class="aso-actions">
-              ${quickActions
-                .map(
-                  ([ico, label, id]) => `
-              <button class="aso-action" type="button" data-action="${id}">
-                ${icon(ico)}<span>${label}</span><i>${icon('chevron_right')}</i>
-              </button>`
-                )
-                .join('')}
-            </div>
+            <header class="aso-quick__head">
+              <h3>${icon('grid_view')} 快捷入口</h3>
+              <button class="aso-quick__settings" type="button" data-quick-settings-open aria-label="配置快捷入口" title="配置快捷入口">
+                ${icon('settings')}
+              </button>
+            </header>
+            <div class="aso-actions" data-quick-actions>${quickActionsMarkup()}</div>
           </section>
         </div>
       </section>
@@ -358,6 +381,35 @@ function renderPortal() {
       </section>
 
       <div class="aso-toast" role="status" data-aso-toast aria-hidden="true"></div>
+      <div class="aso-quick-settings" data-quick-settings hidden aria-hidden="true">
+        <div class="aso-quick-settings__backdrop" data-quick-settings-close></div>
+        <section class="aso-quick-settings__panel" role="dialog" aria-modal="true" aria-labelledby="aso-quick-settings-title">
+          <header>
+            <div>
+              <h2 id="aso-quick-settings-title">配置快捷入口</h2>
+              <p>修改文案和链接并发布后，所有访问者都会使用这份线上配置。</p>
+            </div>
+            <button type="button" class="aso-quick-settings__close" data-quick-settings-close aria-label="关闭">${icon('close')}</button>
+          </header>
+          <form data-quick-settings-form>
+            <div class="aso-quick-settings__rows" data-quick-settings-rows>${quickSettingsRowsMarkup()}</div>
+            <p class="aso-quick-settings__hint">链接支持 HTTP(S)、站内路径（如 /app-download/），或 app:energy / app:poster / app:album / app:screen / app:resource。</p>
+            <div class="aso-quick-settings__auth" data-quick-auth hidden>
+              <strong>需要管理员身份才能发布线上配置</strong>
+              <div>
+                <label>管理员账号<input type="text" autocomplete="username" data-quick-admin-account /></label>
+                <label>密码<input type="password" autocomplete="current-password" data-quick-admin-password /></label>
+                <button type="button" data-quick-admin-login>登录并继续保存</button>
+              </div>
+            </div>
+            <p class="aso-quick-settings__message" data-quick-settings-message aria-live="polite"></p>
+            <footer>
+              <button type="button" class="aso-btn aso-btn--muted" data-quick-settings-close>取消</button>
+              <button type="submit" class="aso-btn aso-btn--primary" data-quick-save>保存线上配置</button>
+            </footer>
+          </form>
+        </section>
+      </div>
       <div class="aso-embed" data-aso-embed hidden aria-hidden="true">
         <header class="aso-embed__bar">
           <button class="aso-embed__back" type="button" data-embed-close>${icon('arrow_back')}<span>返回门户</span></button>
@@ -533,9 +585,140 @@ function initAppFilters(root) {
   })
 }
 
-export function initAspaceOne() {
+async function loadQuickActions() {
+  try {
+    const response = await fetch('/api/public/aspace/quick-actions', { cache: 'no-store' })
+    const data = await response.json()
+    if (response.ok && Array.isArray(data.actions) && data.actions.length) {
+      quickActions = data.actions.map((item) => ({ ...item }))
+    }
+  } catch {
+    quickActions = defaultQuickActions.map((item) => ({ ...item }))
+  }
+}
+
+function setQuickSettingsOpen(root, open) {
+  const modal = root.querySelector('[data-quick-settings]')
+  if (!modal) return
+  modal.hidden = !open
+  modal.setAttribute('aria-hidden', String(!open))
+  document.body.classList.toggle('aso-settings-open', open)
+  if (open) {
+    const rows = modal.querySelector('[data-quick-settings-rows]')
+    if (rows) rows.innerHTML = quickSettingsRowsMarkup()
+    modal.querySelector('[data-quick-auth]')?.setAttribute('hidden', '')
+    const message = modal.querySelector('[data-quick-settings-message]')
+    if (message) message.textContent = ''
+    window.setTimeout(() => modal.querySelector('[data-quick-label]')?.focus(), 20)
+  }
+}
+
+function collectQuickSettings(root) {
+  return [...root.querySelectorAll('[data-quick-row]')].map((row) => {
+    const current = quickActions.find((item) => item.id === row.dataset.quickRow)
+    return {
+      id: row.dataset.quickRow,
+      icon: current?.icon || '',
+      label: row.querySelector('[data-quick-label]')?.value.trim() || '',
+      url: row.querySelector('[data-quick-link]')?.value.trim() || '',
+    }
+  })
+}
+
+async function publishQuickSettings(root) {
+  const modal = root.querySelector('[data-quick-settings]')
+  const message = modal?.querySelector('[data-quick-settings-message]')
+  const saveButton = modal?.querySelector('[data-quick-save]')
+  if (!modal || !message || !saveButton) return false
+  const actions = collectQuickSettings(modal)
+  if (actions.some((item) => !item.label)) {
+    message.textContent = '快捷入口文案不能为空。'
+    return false
+  }
+  saveButton.disabled = true
+  message.textContent = '正在保存线上配置…'
+  try {
+    const response = await fetch('/api/admin/aspace/quick-actions', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actions }),
+    })
+    const data = await response.json().catch(() => ({}))
+    if (response.status === 401) {
+      modal.querySelector('[data-quick-auth]')?.removeAttribute('hidden')
+      message.textContent = '请先登录管理员账号，再发布线上配置。'
+      modal.querySelector('[data-quick-admin-account]')?.focus()
+      return false
+    }
+    if (!response.ok) throw new Error(data.message || '保存失败')
+    quickActions = data.actions.map((item) => ({ ...item }))
+    const container = root.querySelector('[data-quick-actions]')
+    if (container) container.innerHTML = quickActionsMarkup()
+    setQuickSettingsOpen(root, false)
+    showToast('快捷入口线上配置已更新')
+    return true
+  } catch (error) {
+    message.textContent = error instanceof Error ? error.message : '保存失败，请稍后重试。'
+    return false
+  } finally {
+    saveButton.disabled = false
+  }
+}
+
+async function loginQuickSettingsAdmin(root) {
+  const modal = root.querySelector('[data-quick-settings]')
+  const account = modal?.querySelector('[data-quick-admin-account]')?.value.trim() || ''
+  const password = modal?.querySelector('[data-quick-admin-password]')?.value || ''
+  const message = modal?.querySelector('[data-quick-settings-message]')
+  const button = modal?.querySelector('[data-quick-admin-login]')
+  if (!modal || !message || !button) return
+  if (!account || !password) {
+    message.textContent = '请输入管理员账号和密码。'
+    return
+  }
+  button.disabled = true
+  message.textContent = '正在验证管理员身份…'
+  try {
+    const response = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account, password }),
+    })
+    if (!response.ok) {
+      message.textContent = response.status === 429 ? '登录尝试过多，请稍后再试。' : '管理员账号或密码错误。'
+      return
+    }
+    modal.querySelector('[data-quick-auth]')?.setAttribute('hidden', '')
+    const passwordInput = modal.querySelector('[data-quick-admin-password]')
+    if (passwordInput) passwordInput.value = ''
+    await publishQuickSettings(root)
+  } catch {
+    message.textContent = '登录请求失败，请检查网络后重试。'
+  } finally {
+    button.disabled = false
+  }
+}
+
+function openQuickAction(root, action) {
+  const url = String(action?.dataset.quickUrl || '').trim()
+  if (!url) {
+    showToast('该快捷入口尚未配置链接')
+    return
+  }
+  if (url.startsWith('app:')) {
+    const appId = url.slice(4)
+    const button = root.querySelector(`[data-enter-app="${CSS.escape(appId)}"]`)
+    if (button) button.click()
+    else showToast('对应应用不存在或尚未开通')
+    return
+  }
+  window.location.href = url
+}
+
+export async function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
+  await loadQuickActions()
   root.innerHTML = renderPortal()
   bindAapSsoMessages(root)
 
@@ -544,6 +727,24 @@ export function initAspaceOne() {
   const accountMenu = root.querySelector('[data-account-menu]')
 
   root.addEventListener('click', (event) => {
+    if (event.target.closest('[data-quick-settings-open]')) {
+      setQuickSettingsOpen(root, true)
+      return
+    }
+    if (event.target.closest('[data-quick-settings-close]')) {
+      setQuickSettingsOpen(root, false)
+      return
+    }
+    if (event.target.closest('[data-quick-admin-login]')) {
+      void loginQuickSettingsAdmin(root)
+      return
+    }
+    const quickAction = event.target.closest('[data-quick-action]')
+    if (quickAction) {
+      openQuickAction(root, quickAction)
+      return
+    }
+
     const orgToggle = event.target.closest('[data-org-toggle]')
     const noticeToggle = event.target.closest('[data-notice-toggle]')
     const accountToggle = event.target.closest('[data-account-toggle]')
@@ -615,6 +816,12 @@ export function initAspaceOne() {
     if (event.target.closest('[data-show-all]')) showToast('完整列表将在对应模块接口接入后开放')
   })
 
+  root.addEventListener('submit', (event) => {
+    if (!event.target.matches('[data-quick-settings-form]')) return
+    event.preventDefault()
+    void publishQuickSettings(root)
+  })
+
   const docList = root.querySelector('[data-doc-list]')
   let activeCategory = '全部文档'
   root.querySelectorAll('[data-doc-category]').forEach((button) => {
@@ -674,7 +881,9 @@ export function initAspaceOne() {
 
   root.querySelector('[data-embed-close]')?.addEventListener('click', () => closeAppEmbed(root))
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !root.querySelector('[data-aso-embed]')?.hidden) closeAppEmbed(root)
+    if (event.key !== 'Escape') return
+    if (!root.querySelector('[data-quick-settings]')?.hidden) setQuickSettingsOpen(root, false)
+    else if (!root.querySelector('[data-aso-embed]')?.hidden) closeAppEmbed(root)
   })
 
   document.addEventListener('click', (event) => {

@@ -43,6 +43,15 @@ export const defaultAppButtons = {
   switchToIosTag: 'iOS',
 }
 
+export const defaultAspaceQuickActions = [
+  { id: 'energy', icon: 'bar_chart', label: '查看今日能耗', url: 'app:energy' },
+  { id: 'poster', icon: 'add_photo_alternate', label: '新建AI画报', url: 'app:poster' },
+  { id: 'album', icon: 'collections', label: '更新电子相册', url: 'app:album' },
+  { id: 'screen', icon: 'desktop_windows', label: '预约会议室', url: 'app:screen' },
+  { id: 'report', icon: 'description', label: '导出运营报表', url: '' },
+  { id: 'permission', icon: 'person_add', label: '申请产品权限', url: '' },
+]
+
 export function normalizeAppButtons(value = {}) {
   const clean = (input, fallback) => String(input ?? fallback ?? '').trim().slice(0, 40) || fallback
   // 角标允许清空，因此只有字段缺失时才回退到默认值。
@@ -79,6 +88,7 @@ const initialData = {
   }],
   releases: [],
   pageConfigs: [],
+  aspaceQuickActions: structuredClone(defaultAspaceQuickActions),
   downloadEvents: [],
   adminUsers: [],
   auditLogs: [],
