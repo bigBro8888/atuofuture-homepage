@@ -18,6 +18,7 @@ Thumbs.db
 *.local
 server/data/
 server/uploads/
+auth/data/
 
 credentials.json
 service-account.json

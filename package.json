@@ -9,7 +9,9 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "node --watch server/src/index.js",
+    "dev:auth": "node --watch auth/src/index.js",
     "start:api": "node server/src/index.js",
+    "start:auth": "node auth/src/index.js",
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test server/test/*.test.js"
@@ -23,6 +25,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
+    "oidc-provider": "^9.12.2",
     "qrcode": "^1.5.4"
   },
   "devDependencies": {

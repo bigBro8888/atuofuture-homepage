@@ -1,0 +1,19 @@
+[Unit]
+Description=Atuo Future unified OAuth and OIDC service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=atuoapp
+Group=atuoapp
+WorkingDirectory=/var/www/mydoc/atuofuture
+EnvironmentFile=/var/www/mydoc/atuofuture/.env
+ExecStart=/usr/bin/node auth/src/index.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
