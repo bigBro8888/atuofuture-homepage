@@ -8,6 +8,7 @@ import { adminRouter } from './modules/admin/routes.js'
 import { adminPagesRouter, publicPagesRouter } from './modules/pages/routes.js'
 import { aspaceSsoRouter } from './modules/aspace/sso-routes.js'
 import { adminAspaceRouter, publicAspaceRouter } from './modules/aspace/quick-actions-routes.js'
+import { aspaceIdentityRouter } from './modules/aspace/identity-routes.js'
 
 await initStore()
 
@@ -39,6 +40,7 @@ app.use('/api/public/uploads', express.static(config.uploadDir, {
 }))
 app.use('/api/public/apps', publicAppsRouter)
 app.use('/api/public/pages', publicPagesRouter)
+app.use('/api/public/aspace/auth', aspaceIdentityRouter)
 app.use('/api/public/aspace', publicAspaceRouter)
 app.use('/api/public/aspace/sso', aspaceSsoRouter)
 app.use('/api/admin/pages', adminPagesRouter)

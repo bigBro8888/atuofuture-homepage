@@ -22,6 +22,94 @@
 .aso-page button { color: inherit; }
 .aso-container { width: min(1440px, calc(100% - 48px)); margin: 0 auto; }
 
+.aso-login {
+  --aso-blue: #0879f9;
+  display: grid;
+  min-height: calc(100vh - 64px);
+  padding: 92px 24px 48px;
+  place-items: center;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(8, 121, 249, .16), transparent 32%),
+    radial-gradient(circle at 82% 76%, rgba(58, 206, 168, .12), transparent 30%),
+    #f4f8fd;
+  color: #0b1838;
+}
+.aso-login__card {
+  width: min(440px, 100%);
+  padding: 38px;
+  border: 1px solid rgba(255, 255, 255, .88);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, .88);
+  box-shadow: 0 28px 80px rgba(31, 62, 110, .16);
+  backdrop-filter: blur(24px) saturate(160%);
+}
+.aso-login__brand { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
+.aso-login__brand > span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #0879f9, #0754be);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+}
+.aso-login__brand div { display: grid; gap: 2px; }
+.aso-login__brand strong { font-size: 18px; }
+.aso-login__brand small { color: #7b899f; }
+.aso-login h1 { margin: 0; font-size: 30px; letter-spacing: -.03em; }
+.aso-login__lead { margin: 8px 0 26px; color: #6f7c96; font-size: 14px; }
+.aso-login form,
+.aso-profile form { display: grid; gap: 14px; }
+.aso-login label,
+.aso-profile label { display: grid; gap: 7px; color: #43516b; font-size: 13px; font-weight: 650; }
+.aso-login input,
+.aso-profile input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid #d9e3ef;
+  border-radius: 10px;
+  background: #fff;
+  color: #0b1838;
+  outline: 0;
+}
+.aso-login input:focus,
+.aso-profile input:focus { border-color: #0879f9; box-shadow: 0 0 0 3px rgba(8, 121, 249, .12); }
+.aso-login .aso-btn { width: 100%; min-height: 46px; margin-top: 4px; }
+.aso-login__message { min-height: 18px; margin: 0; color: #c33445; font-size: 12px; }
+
+.aso-profile {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  padding: 24px;
+  place-items: center;
+}
+.aso-profile[hidden] { display: none; }
+.aso-profile__backdrop { position: absolute; inset: 0; background: rgba(6, 18, 45, .48); backdrop-filter: blur(8px); }
+.aso-profile__panel {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 26px;
+  border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 30px 90px rgba(8, 26, 61, .28);
+}
+.aso-profile__panel > header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+.aso-profile__panel > header h2 { margin: 0; font-size: 24px; }
+.aso-profile__panel > header p { margin: 5px 0 0; color: #7b899f; font-size: 12px; }
+.aso-profile__panel > header button { display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 50%; background: #f0f4fa; cursor: pointer; }
+.aso-profile form + form { margin-top: 24px; padding-top: 22px; border-top: 1px solid #e6edf6; }
+.aso-profile form h3 { margin: 0; font-size: 15px; }
+.aso-profile form .aso-btn { min-height: 42px; margin-top: 2px; }
+.aso-profile__message { min-height: 18px; margin: 14px 0 0; color: #c33445; font-size: 12px; }
+
 .aso-subnav {
   position: fixed;
   top: 64px;

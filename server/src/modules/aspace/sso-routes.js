@@ -1,6 +1,7 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { Router } from 'express'
 import { config } from '../../config.js'
+import { requirePortalAuth } from './auth.js'
 
 function b64url(input) {
   return Buffer.from(input)
@@ -50,15 +51,24 @@ function slugifyLocalPart(name) {
 
 export const aspaceSsoRouter = Router()
 
+function requireApp(appId) {
+  return (request, response, next) => {
+    if (!request.portalUser.activeOrganization?.appIds?.includes(appId)) {
+      return response.status(403).json({ error: 'app_forbidden', message: '当前组织未开通该应用。' })
+    }
+    next()
+  }
+}
+
 /** 门户签发 AI 画报一次性 SSO 票据，返回可嵌入 URL */
-aspaceSsoRouter.post('/poster', (request, response) => {
+aspaceSsoRouter.post('/poster', requirePortalAuth, requireApp('poster'), (request, response) => {
   if (!config.posterSsoSecret) {
     return response.status(503).json({ error: 'sso_not_configured', message: '统一登录密钥未配置' })
   }
 
-  const name = String(request.body?.name || '张三').trim().slice(0, 32) || '张三'
-  const org = String(request.body?.org || '王力集团').trim().slice(0, 64)
-  const emailRaw = String(request.body?.email || '').trim().toLowerCase()
+  const name = request.portalUser.name
+  const org = request.portalUser.activeOrganization?.name || ''
+  const emailRaw = request.portalUser.email
   const email = emailRaw || `${slugifyLocalPart(name)}@aspace.atuofuture.local`
 
   const payload = {
@@ -86,6 +96,6 @@ aspaceSsoRouter.post('/poster', (request, response) => {
  * AAP 资产管理系统没有原生 SSO，也不允许共用账号自动登录。
  * 这里只返回网关嵌入 URL（不带票据），用户在嵌入页用自己的 AAP 账号登录。
  */
-aspaceSsoRouter.post('/embed/aap', (_request, response) => {
+aspaceSsoRouter.post('/embed/aap', requirePortalAuth, requireApp('resource'), (_request, response) => {
   response.json({ embedUrl: `${config.aapAppOrigin}/?embed=1` })
 })

@@ -48,15 +48,6 @@ const apps = [
   },
 ]
 
-const openedApps = apps.filter((app) => !app.locked).length
-const lockedApps = apps.length - openedApps
-
-const appFilters = [
-  ['all', '全部', apps.length],
-  ['open', '已开通', openedApps],
-  ['locked', '未开通', lockedApps],
-]
-
 const docs = [
   { title: 'Aspace One 快速入门指南', category: '全部文档', date: '2026-09-12', featured: true, keywords: '权限申请 账号绑定 入门' },
   { title: '能源能耗数据接入说明', category: '能源能耗', date: '2026-09-10', featured: true, keywords: '能耗数据接入 网关 采集' },
@@ -108,6 +99,7 @@ const defaultQuickActions = [
 ]
 let quickActions = defaultQuickActions.map((item) => ({ ...item }))
 let latestActivity = null
+let portalUser = null
 
 function icon(name, className = '') {
   return `<span class="material-symbols-outlined ${className}" aria-hidden="true">${name}</span>`
@@ -137,6 +129,47 @@ function quickSettingsRowsMarkup() {
       <label>文案<input type="text" maxlength="40" value="${escapeHtml(label)}" data-quick-label required /></label>
       <label>链接<input type="text" maxlength="500" value="${escapeHtml(url)}" data-quick-link placeholder="https://…、/站内路径 或 app:应用ID" /></label>
     </div>`).join('')
+}
+
+function loginMarkup() {
+  return `
+    <div class="aso-login">
+      <section class="aso-login__card" aria-labelledby="aso-login-title">
+        <div class="aso-login__brand"><span>A</span><div><strong>Aspace One</strong><small>空间智能产品平台</small></div></div>
+        <p class="aso-eyebrow">UNIFIED USER CENTER</p>
+        <h1 id="aso-login-title">登录统一用户中心</h1>
+        <p class="aso-login__lead">一个账号访问已授权的空间智能应用与组织。</p>
+        <form data-portal-login>
+          <label>账号<input type="text" name="account" autocomplete="username" required autofocus /></label>
+          <label>密码<input type="password" name="password" autocomplete="current-password" required /></label>
+          <p class="aso-login__message" data-login-message aria-live="polite"></p>
+          <button class="aso-btn aso-btn--primary" type="submit">登录 ${icon('arrow_forward')}</button>
+        </form>
+      </section>
+    </div>`
+}
+
+function profileModalMarkup() {
+  return `
+    <div class="aso-profile" data-profile-modal hidden aria-hidden="true">
+      <div class="aso-profile__backdrop" data-profile-close></div>
+      <section class="aso-profile__panel" role="dialog" aria-modal="true" aria-labelledby="aso-profile-title">
+        <header><div><h2 id="aso-profile-title">账号与安全</h2><p>${escapeHtml(portalUser.account)}</p></div><button type="button" data-profile-close aria-label="关闭">${icon('close')}</button></header>
+        <form data-profile-form>
+          <h3>个人信息</h3>
+          <label>姓名<input name="name" maxlength="40" value="${escapeHtml(portalUser.name)}" required /></label>
+          <label>邮箱<input name="email" type="email" maxlength="120" value="${escapeHtml(portalUser.email || '')}" /></label>
+          <button class="aso-btn aso-btn--primary" type="submit">保存个人信息</button>
+        </form>
+        <form data-password-form>
+          <h3>修改密码</h3>
+          <label>当前密码<input name="currentPassword" type="password" autocomplete="current-password" required /></label>
+          <label>新密码<input name="newPassword" type="password" minlength="8" autocomplete="new-password" required /></label>
+          <button class="aso-btn aso-btn--muted" type="submit">修改密码</button>
+        </form>
+        <p class="aso-profile__message" data-profile-message aria-live="polite"></p>
+      </section>
+    </div>`
 }
 
 function activityView() {
@@ -172,7 +205,7 @@ function activityView() {
 }
 
 function appCard(app, index) {
-  const locked = Boolean(app.locked)
+  const locked = !portalUser.activeOrganization?.appIds?.includes(app.id)
   return `
       <article class="aso-app-card${locked ? ' is-locked' : ''}" data-app="${app.id}" data-app-state="${locked ? 'locked' : 'open'}">
         <figure class="aso-app-card__shot">
@@ -182,7 +215,7 @@ function appCard(app, index) {
         <div class="aso-app-card__copy">
           <h3>${app.name}</h3>
           ${locked
-            ? `<p class="aso-app-card__desc">${app.desc}</p>`
+            ? '<p class="aso-app-card__desc">当前组织尚未开通该应用，可联系管理员申请权限。</p>'
             : `<p data-app-project>${app.project}</p>
           <div class="aso-app-card__meta">
             <small>最近使用 · ${app.time}</small>
@@ -216,6 +249,14 @@ function docRows(category = '全部文档', keyword = '') {
 
 function renderPortal() {
   const activity = activityView()
+  const openedApps = apps.filter((app) => portalUser.activeOrganization?.appIds?.includes(app.id)).length
+  const appFilters = [
+    ['all', '全部', apps.length],
+    ['open', '已开通', openedApps],
+    ['locked', '未开通', apps.length - openedApps],
+  ]
+  const organizations = portalUser.organizations || []
+  const activeOrganization = portalUser.activeOrganization
   return `
     <div class="aso-page">
       <nav class="aso-subnav" aria-label="Aspace One 导航">
@@ -229,17 +270,16 @@ function renderPortal() {
           </div>
           <div class="aso-subnav__tools">
             <button class="aso-org" type="button" data-org-toggle aria-expanded="false">
-              <span data-org-name>王力集团</span>${icon('expand_more')}
+              <span data-org-name>${escapeHtml(activeOrganization?.name || '未分配组织')}</span>${icon('expand_more')}
             </button>
             <button class="aso-icon-btn" type="button" data-notice-toggle aria-label="通知" aria-expanded="false">
               ${icon('notifications')}<b>2</b>
             </button>
-            <button class="aso-avatar" type="button" data-account-toggle aria-label="账号菜单" aria-expanded="false">张</button>
+            <button class="aso-avatar" type="button" data-account-toggle aria-label="账号菜单" aria-expanded="false">${escapeHtml(portalUser.name.slice(0, 1))}</button>
           </div>
           <div class="aso-popover aso-org-menu" data-org-menu aria-hidden="true">
             <p>切换组织 / 项目</p>
-            <button type="button" data-org="王力集团" data-project="王力集团总部项目"><b>王力集团</b><small>总部项目</small></button>
-            <button type="button" data-org="华东体验中心" data-project="上海展示项目"><b>华东体验中心</b><small>上海展示项目</small></button>
+            ${organizations.map((organization) => `<button type="button" data-org-id="${escapeHtml(organization.id)}"><b>${escapeHtml(organization.name)}</b><small>${escapeHtml(organization.project)}</small></button>`).join('')}
           </div>
           <div class="aso-popover aso-notice-menu" data-notice-menu aria-hidden="true">
             <p>最新通知</p>
@@ -247,11 +287,9 @@ function renderPortal() {
             <button type="button">AI画报权限已开通<small>昨天</small></button>
           </div>
           <div class="aso-popover aso-account-menu" data-account-menu aria-hidden="true">
-            <p>张三 · 客户普通用户</p>
-            <button type="button">个人信息</button>
-            <button type="button">账号与安全</button>
-            <button type="button">账号绑定</button>
-            <button type="button">退出登录</button>
+            <p>${escapeHtml(portalUser.name)} · ${portalUser.role === 'member' ? '组织成员' : escapeHtml(portalUser.role)}</p>
+            <button type="button" data-profile-open>个人信息与安全</button>
+            <button type="button" data-portal-logout>退出登录</button>
           </div>
         </div>
       </nav>
@@ -261,7 +299,7 @@ function renderPortal() {
           <header class="aso-apps__head">
             <div class="aso-apps__intro">
               <p class="aso-eyebrow">GOOD TO SEE YOU</p>
-              <h1>欢迎回来，张三</h1>
+              <h1>欢迎回来，${escapeHtml(portalUser.name)}</h1>
               <p class="aso-lead">高效的空间智能运营，从 Aspace One 开始</p>
             </div>
             <div class="aso-apps__tools">
@@ -415,6 +453,7 @@ function renderPortal() {
       </section>
 
       <div class="aso-toast" role="status" data-aso-toast aria-hidden="true"></div>
+      ${profileModalMarkup()}
       <div class="aso-quick-settings" data-quick-settings hidden aria-hidden="true">
         <div class="aso-quick-settings__backdrop" data-quick-settings-close></div>
         <section class="aso-quick-settings__panel" role="dialog" aria-modal="true" aria-labelledby="aso-quick-settings-title">
@@ -478,11 +517,10 @@ function showToast(message) {
 }
 
 function currentPortalUser(root) {
-  const org = root.querySelector('[data-org-name]')?.textContent?.trim() || '王力集团'
   return {
-    name: '张三',
-    org,
-    email: 'zhangsan@aspace.atuofuture.local',
+    name: portalUser.name,
+    org: portalUser.activeOrganization?.name || '',
+    email: portalUser.email || portalUser.account,
   }
 }
 
@@ -630,6 +668,67 @@ async function loadQuickActions() {
   } catch {
     quickActions = defaultQuickActions.map((item) => ({ ...item }))
   }
+}
+
+async function loadPortalUser() {
+  try {
+    const response = await fetch('/api/public/aspace/auth/me', { cache: 'no-store' })
+    if (!response.ok) {
+      portalUser = null
+      return
+    }
+    const data = await response.json()
+    portalUser = data.user || null
+  } catch {
+    portalUser = null
+  }
+}
+
+function bindPortalLogin(root) {
+  root.querySelector('[data-portal-login]')?.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    const form = event.currentTarget
+    const message = form.querySelector('[data-login-message]')
+    const button = form.querySelector('button[type="submit"]')
+    button.disabled = true
+    message.textContent = '正在验证账号…'
+    try {
+      const response = await fetch('/api/public/aspace/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.message || '登录失败，请重试。')
+      portalUser = data.user
+      await initAspaceOne()
+    } catch (error) {
+      message.textContent = error instanceof Error ? error.message : '登录失败，请重试。'
+    } finally {
+      button.disabled = false
+    }
+  })
+}
+
+function setProfileOpen(root, open) {
+  const modal = root.querySelector('[data-profile-modal]')
+  if (!modal) return
+  modal.hidden = !open
+  modal.setAttribute('aria-hidden', String(!open))
+  document.body.classList.toggle('aso-settings-open', open)
+}
+
+async function updatePortalProfile(root, endpoint, body) {
+  const message = root.querySelector('[data-profile-message]')
+  if (message) message.textContent = '正在保存…'
+  const response = await fetch(`/api/public/aspace/auth/${endpoint}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const data = response.status === 204 ? {} : await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(data.message || '保存失败。')
+  return data
 }
 
 async function loadLatestActivity() {
@@ -823,7 +922,13 @@ function openQuickAction(root, action) {
 export async function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
-  await Promise.all([loadQuickActions(), loadLatestActivity()])
+  await Promise.all([loadQuickActions(), loadPortalUser()])
+  if (!portalUser) {
+    root.innerHTML = loginMarkup()
+    bindPortalLogin(root)
+    return
+  }
+  await loadLatestActivity()
   root.innerHTML = renderPortal()
   bindAapSsoMessages(root)
   bindActivityMessages(root)
@@ -833,6 +938,24 @@ export async function initAspaceOne() {
   const accountMenu = root.querySelector('[data-account-menu]')
 
   root.addEventListener('click', (event) => {
+    if (event.target.closest('[data-profile-open]')) {
+      closePopovers()
+      setProfileOpen(root, true)
+      return
+    }
+    if (event.target.closest('[data-profile-close]')) {
+      setProfileOpen(root, false)
+      return
+    }
+    if (event.target.closest('[data-portal-logout]')) {
+      void fetch('/api/public/aspace/auth/logout', { method: 'POST' }).finally(() => {
+        portalUser = null
+        latestActivity = null
+        root.innerHTML = loginMarkup()
+        bindPortalLogin(root)
+      })
+      return
+    }
     if (event.target.closest('[data-quick-settings-open]')) {
       setQuickSettingsOpen(root, true)
       return
@@ -862,12 +985,18 @@ export async function initAspaceOne() {
       return
     }
 
-    const org = event.target.closest('[data-org]')
+    const org = event.target.closest('[data-org-id]')
     if (org) {
-      root.querySelector('[data-org-name]').textContent = org.dataset.org
-      root.querySelectorAll('[data-app-project]').forEach((p) => { p.textContent = org.dataset.project })
       setPopover(orgMenu, root.querySelector('[data-org-toggle]'), false)
-      showToast(`已切换到 ${org.dataset.org} · ${org.dataset.project}`)
+      void fetch('/api/public/aspace/auth/organization', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ organizationId: org.dataset.orgId }),
+      }).then(async (response) => {
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.message || '组织切换失败。')
+        window.location.reload()
+      }).catch((error) => showToast(error.message))
       return
     }
 
@@ -942,9 +1071,32 @@ export async function initAspaceOne() {
   })
 
   root.addEventListener('submit', (event) => {
-    if (!event.target.matches('[data-quick-settings-form]')) return
     event.preventDefault()
-    void publishQuickSettings(root)
+    if (event.target.matches('[data-quick-settings-form]')) {
+      void publishQuickSettings(root)
+      return
+    }
+    if (event.target.matches('[data-profile-form]')) {
+      const values = Object.fromEntries(new FormData(event.target))
+      void updatePortalProfile(root, 'profile', values).then((data) => {
+        portalUser = data.user
+        window.location.reload()
+      }).catch((error) => {
+        const message = root.querySelector('[data-profile-message]')
+        if (message) message.textContent = error.message
+      })
+      return
+    }
+    if (event.target.matches('[data-password-form]')) {
+      const values = Object.fromEntries(new FormData(event.target))
+      void updatePortalProfile(root, 'password', values).then(() => {
+        portalUser = null
+        window.location.reload()
+      }).catch((error) => {
+        const message = root.querySelector('[data-profile-message]')
+        if (message) message.textContent = error.message
+      })
+    }
   })
 
   const docList = root.querySelector('[data-doc-list]')
@@ -1007,7 +1159,8 @@ export async function initAspaceOne() {
   root.querySelector('[data-embed-close]')?.addEventListener('click', () => closeAppEmbed(root))
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return
-    if (!root.querySelector('[data-quick-settings]')?.hidden) setQuickSettingsOpen(root, false)
+    if (!root.querySelector('[data-profile-modal]')?.hidden) setProfileOpen(root, false)
+    else if (!root.querySelector('[data-quick-settings]')?.hidden) setQuickSettingsOpen(root, false)
     else if (!root.querySelector('[data-aso-embed]')?.hidden) closeAppEmbed(root)
   })
 

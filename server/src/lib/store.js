@@ -90,6 +90,21 @@ const initialData = {
   pageConfigs: [],
   aspaceQuickActions: structuredClone(defaultAspaceQuickActions),
   aspaceActivities: [],
+  aspaceOrganizations: [
+    {
+      id: 'wangli',
+      name: '王力集团',
+      project: '王力集团总部项目',
+      appIds: ['resource', 'screen', 'poster', 'energy', 'album'],
+    },
+    {
+      id: 'east-showroom',
+      name: '华东体验中心',
+      project: '上海展示项目',
+      appIds: ['screen', 'poster', 'album'],
+    },
+  ],
+  aspaceUsers: [],
   downloadEvents: [],
   adminUsers: [],
   auditLogs: [],
@@ -127,6 +142,21 @@ export async function initStore() {
       role: 'super_admin',
       enabled: true,
       createdAt: new Date().toISOString(),
+    })
+  }
+  if (!state.aspaceUsers.length) {
+    state.aspaceUsers.push({
+      id: randomUUID(),
+      account: config.aspacePortalAccount,
+      email: config.aspacePortalAccount.includes('@') ? config.aspacePortalAccount : '',
+      name: config.aspacePortalName || '张三',
+      passwordHash: await bcrypt.hash(config.aspacePortalPassword, 12),
+      role: 'member',
+      enabled: true,
+      activeOrganizationId: state.aspaceOrganizations[0]?.id || '',
+      organizationIds: state.aspaceOrganizations.map((item) => item.id),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     })
   }
   await persist()
