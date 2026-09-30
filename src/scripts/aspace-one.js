@@ -53,7 +53,7 @@ const apps = [
     time: '2026-09-30 18:02',
     image: '/images/aspace-one/showcase-building.jpg',
     alt: '空间智能管理平台场景',
-    url: 'https://aspacedev.atuofuture.com/',
+    embedUrl: 'https://aspacedev.atuofuture.com/',
   },
   {
     id: 'info-publish',
@@ -62,7 +62,7 @@ const apps = [
     time: '2026-09-30 18:02',
     image: '/images/aspace-one/app-poster.jpg',
     alt: '信息发布平台场景',
-    url: 'https://info-publish.atuofuture.com/',
+    embedUrl: 'https://info-publish.atuofuture.com/',
   },
   {
     id: 'deskplate',
@@ -71,7 +71,7 @@ const apps = [
     time: '2026-09-30 18:02',
     image: '/images/aspace-one/showcase-meeting.jpg',
     alt: '桌牌管理系统场景',
-    url: 'https://cloud.atuofuture.com/',
+    embedUrl: 'https://cloud.atuofuture.com/',
   },
 ]
 
