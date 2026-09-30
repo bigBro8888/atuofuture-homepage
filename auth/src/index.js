@@ -119,6 +119,7 @@ export async function createAuthService() {
         formAction: ["'self'", 'https://login.dingtalk.com'],
         baseUri: ["'none'"],
         frameAncestors: ["'none'"],
+        upgradeInsecureRequests: null,
       },
     },
     hsts: false,
