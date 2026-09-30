@@ -23,6 +23,7 @@ const apps = [
     time: '2026-09-18 16:20',
     image: '/images/aspace-one/app-album.jpg',
     alt: '大屏电子相册多屏展示场景',
+    href: '/app-download/',
   },
   {
     id: 'screen',
@@ -576,6 +577,10 @@ export function initAspaceOne() {
     if (enterApp) {
       const appId = enterApp.dataset.enterApp
       const app = apps.find((item) => item.id === appId)
+      if (app?.href) {
+        window.location.href = app.href
+        return
+      }
       if (app?.sso || app?.embed || app?.embedUrl) {
         void openAppEmbed(root, app)
         return
