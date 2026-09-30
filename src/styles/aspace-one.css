@@ -634,10 +634,11 @@
   background: #fff;
   color: #66809f;
   cursor: pointer;
-  transition: color .2s ease, border-color .2s ease, background .2s ease, transform .2s ease;
+  transition: color .2s ease, border-color .2s ease, background .2s ease;
 }
-.aso-quick__settings:hover { border-color: #9dc4f3; background: #edf6ff; color: #0879f9; transform: rotate(20deg); }
-.aso-quick__settings .material-symbols-outlined { font-size: 19px; }
+.aso-quick__settings:hover { border-color: #9dc4f3; background: #edf6ff; color: #0879f9; }
+.aso-quick__settings .material-symbols-outlined { font-size: 19px; transition: transform .35s ease; }
+.aso-quick__settings:hover .material-symbols-outlined { transform: rotate(90deg); }
 .aso-actions { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
 .aso-action {
   display: grid;
