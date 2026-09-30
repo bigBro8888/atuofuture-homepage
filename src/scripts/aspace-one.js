@@ -32,6 +32,7 @@ const apps = [
     warning: '1 台设备离线',
     image: '/images/aspace-one/app-control.jpg',
     alt: '会议室预约与中控屏场景',
+    embedUrl: 'http://47.95.170.47/pages/dashboard.html?_av=20260929f',
   },
   {
     id: 'resource',
@@ -415,12 +416,18 @@ async function openAppEmbed(root, app) {
   const loadingText = root.querySelector('[data-embed-loading-text]')
   const meta = root.querySelector('[data-embed-meta]')
   const openLink = root.querySelector('[data-embed-open]')
-  if (!shell || !frame || !(app?.sso || app?.embed)) return
+  if (!shell || !frame || !(app?.sso || app?.embed || app?.embedUrl)) return
 
   const isSso = Boolean(app.sso)
+  const isDirect = Boolean(app.embedUrl) && !app.sso && !app.embed
   const endpoint = isSso
     ? `/api/public/aspace/sso/${app.sso}`
     : `/api/public/aspace/sso/embed/${app.embed}`
+  const metaText = isSso
+    ? `${(currentPortalUser(root)).org} · 已统一登录`
+    : app.embed
+      ? `${app.name} · 请用你的账号登录`
+      : app.project || ''
   const hideLoading = () => {
     loading?.setAttribute('hidden', '')
     window.clearTimeout(openAppEmbed._loadingTimer)
@@ -433,7 +440,7 @@ async function openAppEmbed(root, app) {
   if (loadingText) {
     loadingText.textContent = isSso ? `正在通过统一身份进入 ${app.name}…` : `正在打开 ${app.name}…`
   }
-  if (meta) meta.textContent = isSso ? `${user.org} · 统一登录中…` : `${app.name} · 请用你的账号登录`
+  if (meta) meta.textContent = isSso ? `${user.org} · 统一登录中…` : metaText
   const titleEl = root.querySelector('[data-embed-title]')
   if (titleEl) titleEl.textContent = app.name
   frame.title = app.name
@@ -441,21 +448,25 @@ async function openAppEmbed(root, app) {
   frame.removeAttribute('src')
 
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(user),
-    })
-    const data = await response.json().catch(() => ({}))
-    if (!response.ok || !data.embedUrl) {
-      throw new Error(data.message || data.error || (isSso ? '统一登录签发失败' : '打开失败'))
+    let embedUrl = app.embedUrl
+    if (!isDirect) {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || !data.embedUrl) {
+        throw new Error(data.message || data.error || (isSso ? '统一登录签发失败' : '打开失败'))
+      }
+      embedUrl = data.embedUrl
     }
 
-    if (openLink) openLink.href = data.embedUrl
-    if (meta) meta.textContent = isSso ? `${user.org} · 已统一登录` : `${app.name} · 请用你的账号登录`
+    if (openLink) openLink.href = embedUrl
+    if (meta) meta.textContent = metaText
     openAppEmbed._loadingTimer = window.setTimeout(hideLoading, 15000)
     frame.onload = hideLoading
-    frame.src = data.embedUrl
+    frame.src = embedUrl
   } catch (error) {
     hideLoading()
     closeAppEmbed(root)
@@ -565,7 +576,7 @@ export function initAspaceOne() {
     if (enterApp) {
       const appId = enterApp.dataset.enterApp
       const app = apps.find((item) => item.id === appId)
-      if (app?.sso || app?.embed) {
+      if (app?.sso || app?.embed || app?.embedUrl) {
         void openAppEmbed(root, app)
         return
       }
