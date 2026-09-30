@@ -810,7 +810,10 @@ function openQuickAction(root, action) {
   if (url.startsWith('app:')) {
     const appId = url.slice(4)
     const button = root.querySelector(`[data-enter-app="${CSS.escape(appId)}"]`)
-    if (button) button.click()
+    if (button) {
+      root.dataset.pendingActivityFeature = action.querySelector('span')?.textContent?.trim() || ''
+      button.click()
+    }
     else showToast('对应应用不存在或尚未开通')
     return
   }
@@ -882,7 +885,9 @@ export async function initAspaceOne() {
     if (enterApp) {
       const appId = enterApp.dataset.enterApp
       const app = apps.find((item) => item.id === appId)
-      if (app) void reportActivity(root, app, `进入${app.name}首页`)
+      const feature = root.dataset.pendingActivityFeature || (app ? `进入${app.name}首页` : '')
+      delete root.dataset.pendingActivityFeature
+      if (app) void reportActivity(root, app, feature)
       if (app?.href) {
         window.location.href = app.href
         return
@@ -907,7 +912,10 @@ export async function initAspaceOne() {
       }
       const appId = latestActivity?.appId || resume.dataset.resumeOpen
       const appButton = root.querySelector(`[data-enter-app="${CSS.escape(appId)}"]`)
-      if (appButton) appButton.click()
+      if (appButton) {
+        root.dataset.pendingActivityFeature = latestActivity?.feature || ''
+        appButton.click()
+      }
       else showToast('对应系统暂时无法打开')
       return
     }
