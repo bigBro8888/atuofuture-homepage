@@ -1,14 +1,30 @@
 import { Router } from 'express'
 import { randomUUID } from 'node:crypto'
+import { config } from '../../config.js'
 import { addAudit, db, defaultAspaceQuickActions, save } from '../../lib/store.js'
 import { requireAuth } from '../admin/auth.js'
-import { requirePortalAuth } from './auth.js'
 
 export const publicAspaceRouter = Router()
 export const adminAspaceRouter = Router()
 
 const defaultsById = new Map(defaultAspaceQuickActions.map((item) => [item.id, item]))
 const validAppIds = new Set(['resource', 'screen', 'poster', 'energy', 'album'])
+const visitorCookie = 'aso_portal_visitor'
+
+function visitorId(request, response) {
+  const current = String(request.cookies?.[visitorCookie] || '')
+  if (/^[0-9a-f-]{36}$/i.test(current)) return current
+  const id = randomUUID()
+  response.cookie(visitorCookie, id, {
+    httpOnly: true,
+    secure: config.cookieSecure,
+    sameSite: 'lax',
+    maxAge: 365 * 24 * 60 * 60 * 1000,
+    path: '/',
+  })
+  return id
+}
+
 function cleanActivity(value = {}) {
   const appId = String(value.appId || '').trim()
   if (!validAppIds.has(appId)) throw new Error('系统标识无效')
@@ -71,28 +87,30 @@ publicAspaceRouter.get('/quick-actions', (_request, response) => {
   response.json({ actions: currentQuickActions() })
 })
 
-publicAspaceRouter.get('/activity/latest', requirePortalAuth, (request, response) => {
+publicAspaceRouter.get('/activity/latest', (request, response) => {
+  const id = visitorId(request, response)
   const activity = [...db().aspaceActivities]
     .reverse()
-    .find((item) => item.userId === request.portalUser.id) || null
+    .find((item) => item.visitorId === id) || null
   response.setHeader('Cache-Control', 'no-store')
   if (!activity) return response.json({ activity: null })
-  const { userId: _userId, visitorId: _visitorId, ...publicActivity } = activity
+  const { visitorId: _visitorId, ...publicActivity } = activity
   response.json({ activity: publicActivity })
 })
 
-publicAspaceRouter.post('/activity', requirePortalAuth, async (request, response) => {
+publicAspaceRouter.post('/activity', async (request, response) => {
   try {
+    const id = visitorId(request, response)
     const activity = {
       id: randomUUID(),
-      userId: request.portalUser.id,
+      visitorId: id,
       ...cleanActivity(request.body),
       createdAt: new Date().toISOString(),
     }
     db().aspaceActivities.push(activity)
     if (db().aspaceActivities.length > 5000) db().aspaceActivities.splice(0, db().aspaceActivities.length - 5000)
     await save()
-    const { userId: _userId, ...publicActivity } = activity
+    const { visitorId: _visitorId, ...publicActivity } = activity
     response.status(201).json({ activity: publicActivity })
   } catch (error) {
     response.status(400).json({

@@ -12,10 +12,6 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || 'change-this-secret-before-production',
   adminEmail: process.env.ADMIN_EMAIL || 'admin@atuofuture.com',
   adminPassword: process.env.ADMIN_PASSWORD || 'ChangeMe123!',
-  /** Aspace One 门户初始用户；未单独配置时复用后台初始账号，避免生成公开默认密码。 */
-  aspacePortalAccount: String(process.env.ASO_PORTAL_ACCOUNT || process.env.ADMIN_EMAIL || 'admin@atuofuture.com').trim().toLowerCase(),
-  aspacePortalPassword: process.env.ASO_PORTAL_PASSWORD || process.env.ADMIN_PASSWORD || 'ChangeMe123!',
-  aspacePortalName: String(process.env.ASO_PORTAL_NAME || '张三').trim(),
   dataFile: process.env.DATA_FILE || path.resolve(here, '../data/store.json'),
   uploadDir: process.env.UPLOAD_DIR || path.resolve(here, '../uploads'),
   publicBaseUrl: process.env.PUBLIC_BASE_URL || 'https://www.atuofuture.com',
