@@ -46,6 +46,33 @@ const apps = [
     alt: '大屏电子相册多屏展示场景',
     href: '/app-download/',
   },
+  {
+    id: 'aspace',
+    name: '空间智能管理平台',
+    project: 'Aspace One 综合管理项目',
+    time: '2026-09-30 18:02',
+    image: '/images/aspace-one/showcase-building.jpg',
+    alt: '空间智能管理平台场景',
+    url: 'https://aspacedev.atuofuture.com/',
+  },
+  {
+    id: 'info-publish',
+    name: '信息发布平台',
+    project: '企业信息发布项目',
+    time: '2026-09-30 18:02',
+    image: '/images/aspace-one/app-poster.jpg',
+    alt: '信息发布平台场景',
+    url: 'https://info-publish.atuofuture.com/',
+  },
+  {
+    id: 'deskplate',
+    name: '桌牌管理系统',
+    project: '智慧办公桌牌项目',
+    time: '2026-09-30 18:02',
+    image: '/images/aspace-one/showcase-meeting.jpg',
+    alt: '桌牌管理系统场景',
+    url: 'https://cloud.atuofuture.com/',
+  },
 ]
 
 const openedApps = apps.filter((app) => !app.locked).length

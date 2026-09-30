@@ -8,7 +8,16 @@ export const publicAspaceRouter = Router()
 export const adminAspaceRouter = Router()
 
 const defaultsById = new Map(defaultAspaceQuickActions.map((item) => [item.id, item]))
-const validAppIds = new Set(['resource', 'screen', 'poster', 'energy', 'album'])
+const validAppIds = new Set([
+  'resource',
+  'screen',
+  'poster',
+  'energy',
+  'album',
+  'aspace',
+  'info-publish',
+  'deskplate',
+])
 const visitorCookie = 'aso_portal_visitor'
 
 function visitorId(request, response) {
