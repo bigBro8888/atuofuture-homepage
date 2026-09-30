@@ -6,6 +6,7 @@ const apps = [
     time: '2026-09-20 14:32',
     image: '/images/aspace-one/app-energy.jpg',
     alt: '楼宇能耗看板场景',
+    embedUrl: 'http://47.95.170.47:8001/',
   },
   {
     id: 'poster',
