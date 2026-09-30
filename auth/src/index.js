@@ -228,9 +228,15 @@ export async function createAuthService() {
   return { app, provider }
 }
 
+export let authServer
+
 if (process.env.NODE_ENV !== 'test') {
   const { app } = await createAuthService()
-  app.listen(authConfig.port, authConfig.host, () => {
+  authServer = app.listen(authConfig.port, authConfig.host, () => {
     console.log(`Unified Auth listening on ${authConfig.host}:${authConfig.port} (${authConfig.issuer})`)
+  })
+  authServer.on('error', (error) => {
+    console.error('Unified Auth server error', error)
+    process.exitCode = 1
   })
 }
