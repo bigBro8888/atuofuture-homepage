@@ -224,15 +224,25 @@ function formatActivityDate(value) {
 
 function recentVisitsMarkup() {
   if (!recentActivities.length) {
-    return '<p class="aso-recent-visits__empty">访问应用后，操作记录会显示在这里。</p>'
+    return `
+      <div class="aso-recent-panel__empty">
+        ${icon('history')}
+        <b>暂无最近访问</b>
+        <p>进入应用或使用具体功能后，访问记录会显示在这里。</p>
+      </div>`
   }
   return recentActivities.map((activity, index) => {
     const app = apps.find((item) => item.id === activity.appId)
     return `
       <button class="aso-recent-visit${index === 0 ? ' is-latest' : ''}" type="button" data-recent-activity="${index}">
-        <span>${escapeHtml(activity.feature || `进入${app?.name || '应用'}首页`)}</span>
-        <small>${escapeHtml(activity.appName || app?.name || '应用系统')}</small>
-        <time>${escapeHtml(formatActivityDate(activity.createdAt))}</time>
+        <img src="${escapeHtml(app?.image || '/images/aspace-one/showcase-space.jpg')}" alt="" width="112" height="72" loading="lazy" />
+        <span class="aso-recent-visit__copy">
+          <em>${index === 0 ? '最近访问' : '访问记录'}</em>
+          <b>${escapeHtml(activity.feature || `进入${app?.name || '应用'}首页`)}</b>
+          <small>${escapeHtml(activity.appName || app?.name || '应用系统')} · ${escapeHtml(activity.project || app?.project || '')}</small>
+          <time>${icon('schedule')}${escapeHtml(formatActivityDate(activity.createdAt))}</time>
+        </span>
+        ${icon('arrow_forward', 'aso-recent-visit__arrow')}
       </button>`
   }).join('')
 }
@@ -347,6 +357,9 @@ function renderPortal() {
                 <button class="is-active" type="button" data-app-category-filter="all" aria-current="true">
                   ${icon('grid_view')}<span>全部应用</span><i>${apps.length}</i>
                 </button>
+                <button type="button" data-app-category-filter="recent">
+                  ${icon('history')}<span>最近访问</span><i data-recent-count>${recentActivities.length}</i>
+                </button>
               </nav>
               <div class="aso-app-sidebar__divider"></div>
               <p>业务分类</p>
@@ -356,11 +369,6 @@ function renderPortal() {
                   ${icon(ico)}<span>${label}</span><i>${apps.filter((app) => app.category === id).length}</i>
                 </button>`).join('')}
               </nav>
-              <div class="aso-app-sidebar__divider"></div>
-              <p>最近访问</p>
-              <div class="aso-recent-visits" data-recent-visits>
-                ${recentVisitsMarkup()}
-              </div>
             </aside>
 
             <div class="aso-app-catalog">
@@ -394,6 +402,19 @@ function renderPortal() {
               <div class="aso-app-grid" data-app-grid>${apps.map(appCard).join('')}</div>
               <p class="aso-empty aso-app-grid__empty" data-app-empty hidden>没有找到符合条件的应用。</p>
             </div>
+            <section class="aso-recent-panel" data-recent-panel hidden>
+              <header>
+                <div>
+                  <p class="aso-eyebrow">RECENT ACTIVITY</p>
+                  <h2>最近访问</h2>
+                  <p>按时间查看你最近进入的系统与使用过的功能，最新记录排在最前。</p>
+                </div>
+                <span>共 <b data-recent-panel-count>${recentActivities.length}</b> 条记录</span>
+              </header>
+              <div class="aso-recent-panel__grid" data-recent-visits>
+                ${recentVisitsMarkup()}
+              </div>
+            </section>
           </div>
         </div>
       </section>
@@ -645,6 +666,8 @@ function initAppFilters(root) {
   const sortSelect = root.querySelector('[data-app-sort]')
   const viewButtons = [...root.querySelectorAll('[data-app-view]')]
   const visibleCount = root.querySelector('[data-visible-app-count]')
+  const catalog = root.querySelector('.aso-app-catalog')
+  const recentPanel = root.querySelector('[data-recent-panel]')
   if (!grid || !statusButtons.length || !categoryButtons.length) return
 
   let status = 'all'
@@ -681,13 +704,16 @@ function initAppFilters(root) {
   categoryButtons.forEach((button) => {
     button.addEventListener('click', () => {
       category = button.dataset.appCategoryFilter
+      const showingRecent = category === 'recent'
+      if (catalog) catalog.hidden = showingRecent
+      if (recentPanel) recentPanel.hidden = !showingRecent
       categoryButtons.forEach((item) => {
         const active = item === button
         item.classList.toggle('is-active', active)
         if (active) item.setAttribute('aria-current', 'true')
         else item.removeAttribute('aria-current')
       })
-      applyFilters()
+      if (!showingRecent) applyFilters()
     })
   })
 
@@ -762,6 +788,9 @@ async function loadRecentActivities() {
 function updateRecentVisits(root) {
   const container = root.querySelector('[data-recent-visits]')
   if (container) container.innerHTML = recentVisitsMarkup()
+  root.querySelectorAll('[data-recent-count], [data-recent-panel-count]').forEach((element) => {
+    element.textContent = String(recentActivities.length)
+  })
 }
 
 async function reportActivity(root, app, feature, deepLink = '') {
