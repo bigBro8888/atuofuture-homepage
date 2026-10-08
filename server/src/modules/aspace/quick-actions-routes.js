@@ -97,6 +97,16 @@ publicAspaceRouter.get('/quick-actions', (_request, response) => {
   response.json({ actions: currentQuickActions() })
 })
 
+publicAspaceRouter.get('/activities', (request, response) => {
+  const id = visitorId(request, response)
+  const activities = [...db().aspaceActivities]
+    .reverse()
+    .filter((item) => item.visitorId === id)
+    .map(({ visitorId: _visitorId, ...activity }) => activity)
+  response.setHeader('Cache-Control', 'no-store')
+  response.json({ activities })
+})
+
 publicAspaceRouter.get('/activity/latest', (request, response) => {
   const id = visitorId(request, response)
   const activity = [...db().aspaceActivities]

@@ -177,7 +177,7 @@ const defaultQuickActions = [
   { id: 'permission', icon: 'person_add', label: '申请产品权限', url: '' },
 ]
 let quickActions = defaultQuickActions.map((item) => ({ ...item }))
-let latestActivity = null
+let recentActivities = []
 
 function icon(name, className = '') {
   return `<span class="material-symbols-outlined ${className}" aria-hidden="true">${name}</span>`
@@ -209,36 +209,32 @@ function quickSettingsRowsMarkup() {
     </div>`).join('')
 }
 
-function activityView() {
-  if (!latestActivity) {
-    return {
-      appId: 'energy',
-      appName: '能源能耗',
-      project: '王力大厦',
-      feature: '8月能源分析报告',
-      time: '今天 14:32',
-      message: '继续编辑你的报告，已完成约 60%',
-    }
+function formatActivityDate(value) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '刚刚'
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date)
+}
+
+function recentVisitsMarkup() {
+  if (!recentActivities.length) {
+    return '<p class="aso-recent-visits__empty">访问应用后，操作记录会显示在这里。</p>'
   }
-  const app = apps.find((item) => item.id === latestActivity.appId)
-  const happenedAt = new Date(latestActivity.createdAt)
-  const time = Number.isNaN(happenedAt.getTime())
-    ? '刚刚'
-    : new Intl.DateTimeFormat('zh-CN', {
-      month: 'numeric',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).format(happenedAt)
-  return {
-    appId: latestActivity.appId,
-    appName: latestActivity.appName || app?.name || '应用系统',
-    project: latestActivity.project || app?.project || '',
-    feature: latestActivity.feature,
-    time,
-    message: `继续你在${latestActivity.appName || app?.name || '该系统'}中的上次操作`,
-  }
+  return recentActivities.map((activity, index) => {
+    const app = apps.find((item) => item.id === activity.appId)
+    return `
+      <button class="aso-recent-visit${index === 0 ? ' is-latest' : ''}" type="button" data-recent-activity="${index}">
+        <span>${escapeHtml(activity.feature || `进入${app?.name || '应用'}首页`)}</span>
+        <small>${escapeHtml(activity.appName || app?.name || '应用系统')}</small>
+        <time>${escapeHtml(formatActivityDate(activity.createdAt))}</time>
+      </button>`
+  }).join('')
 }
 
 function appCard(app, index) {
@@ -291,7 +287,6 @@ function docRows(category = '全部文档', keyword = '') {
 }
 
 function renderPortal() {
-  const activity = activityView()
   return `
     <div class="aso-page">
       <nav class="aso-subnav" aria-label="Aspace One 导航">
@@ -361,6 +356,11 @@ function renderPortal() {
                   ${icon(ico)}<span>${label}</span><i>${apps.filter((app) => app.category === id).length}</i>
                 </button>`).join('')}
               </nav>
+              <div class="aso-app-sidebar__divider"></div>
+              <p>最近访问</p>
+              <div class="aso-recent-visits" data-recent-visits>
+                ${recentVisitsMarkup()}
+              </div>
             </aside>
 
             <div class="aso-app-catalog">
@@ -395,61 +395,6 @@ function renderPortal() {
               <p class="aso-empty aso-app-grid__empty" data-app-empty hidden>没有找到符合条件的应用。</p>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section class="aso-work aso-section">
-        <div class="aso-container">
-          <p class="aso-eyebrow">GET THINGS DONE</p>
-          <h2>从这里继续工作</h2>
-          <p class="aso-section__lead">快速访问你关心的任务与常用操作，掌握最新动态。</p>
-          <div class="aso-work__grid">
-            <article class="aso-resume">
-              <figure class="aso-resume__preview" aria-hidden="true">
-                <span class="aso-resume__sheet"></span>
-                <span class="aso-resume__sheet"></span>
-                <div class="aso-resume__doc">
-                  <b data-resume-feature>${escapeHtml(activity.feature)}</b>
-                  <small data-resume-project>${escapeHtml(activity.project)}</small>
-                  <div class="aso-resume__chart">
-                    ${[34, 44, 52, 66, 84, 72].map((h) => `<i style="--bar:${h}%"></i>`).join('')}
-                  </div>
-                  <div class="aso-resume__foot">
-                    <span class="aso-resume__lines"><i></i><i></i><i></i></span>
-                    <span class="aso-resume__donut"></span>
-                  </div>
-                </div>
-              </figure>
-              <div class="aso-resume__body">
-                <p class="aso-resume__kicker">${icon('description')} 继续上次工作</p>
-                <h3><span data-resume-system>${escapeHtml(activity.appName)}</span><i>|</i><span data-resume-title>${escapeHtml(activity.feature)}</span></h3>
-                <p class="aso-resume__time"><span data-resume-time>${escapeHtml(activity.time)}</span> · 最近操作</p>
-                <div class="aso-resume__progress">
-                  <span class="aso-resume__bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="报告完成度"><i style="width: 60%"></i></span>
-                  <small data-resume-message>${escapeHtml(activity.message)}</small>
-                </div>
-                <button class="aso-btn aso-btn--primary aso-resume__cta" type="button" data-resume-open="${escapeHtml(activity.appId)}">继续查看 ${icon('arrow_forward')}</button>
-              </div>
-            </article>
-            <article class="aso-tasks">
-              <header><h3>${icon('notifications', 'is-orange')} 待处理与提醒</h3><button type="button" data-show-all>查看全部 ${icon('arrow_forward')}</button></header>
-              <div class="aso-tasks__list">
-                <button type="button" data-task><span class="aso-dot aso-dot--orange"></span><b>2 份内容等待审核</b><small>今天</small>${icon('chevron_right')}</button>
-                <button type="button" data-task><span class="aso-dot aso-dot--orange"></span><b>1 台中控屏离线</b><small>今天</small>${icon('chevron_right')}</button>
-                <button type="button" data-task><span class="aso-dot aso-dot--orange"></span><b>1 个账号绑定待完成</b><small>9月20日</small>${icon('chevron_right')}</button>
-                <button type="button" data-task><span class="aso-dot aso-dot--green"></span><b>能耗月报已生成</b><small>9月20日</small>${icon('chevron_right')}</button>
-              </div>
-            </article>
-          </div>
-          <section class="aso-quick">
-            <header class="aso-quick__head">
-              <h3>${icon('grid_view')} 快捷入口</h3>
-              <button class="aso-quick__settings" type="button" data-quick-settings-open aria-label="配置快捷入口" title="配置快捷入口">
-                ${icon('settings')}
-              </button>
-            </header>
-            <div class="aso-actions" data-quick-actions>${quickActionsMarkup()}</div>
-          </section>
         </div>
       </section>
 
@@ -804,32 +749,19 @@ async function loadQuickActions() {
   }
 }
 
-async function loadLatestActivity() {
+async function loadRecentActivities() {
   try {
-    const response = await fetch('/api/public/aspace/activity/latest', { cache: 'no-store' })
+    const response = await fetch('/api/public/aspace/activities', { cache: 'no-store' })
     const data = await response.json()
-    if (response.ok) latestActivity = data.activity || null
+    recentActivities = response.ok && Array.isArray(data.activities) ? data.activities : []
   } catch {
-    latestActivity = null
+    recentActivities = []
   }
 }
 
-function updateResumeCard(root) {
-  const activity = activityView()
-  const values = [
-    ['[data-resume-feature]', activity.feature],
-    ['[data-resume-project]', activity.project],
-    ['[data-resume-system]', activity.appName],
-    ['[data-resume-title]', activity.feature],
-    ['[data-resume-time]', activity.time],
-    ['[data-resume-message]', activity.message],
-  ]
-  values.forEach(([selector, value]) => {
-    const element = root.querySelector(selector)
-    if (element) element.textContent = value
-  })
-  const button = root.querySelector('[data-resume-open]')
-  if (button) button.dataset.resumeOpen = activity.appId
+function updateRecentVisits(root) {
+  const container = root.querySelector('[data-recent-visits]')
+  if (container) container.innerHTML = recentVisitsMarkup()
 }
 
 async function reportActivity(root, app, feature, deepLink = '') {
@@ -849,8 +781,8 @@ async function reportActivity(root, app, feature, deepLink = '') {
     })
     const data = await response.json()
     if (!response.ok || !data.activity) return
-    latestActivity = data.activity
-    updateResumeCard(root)
+    recentActivities.unshift(data.activity)
+    updateRecentVisits(root)
   } catch {
     // 操作记录失败不能阻断用户进入业务系统。
   }
@@ -1000,7 +932,7 @@ export async function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
   loadAppPreferences()
-  await Promise.all([loadQuickActions(), loadLatestActivity()])
+  await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()
   bindAapSsoMessages(root)
   bindActivityMessages(root)
@@ -1073,17 +1005,18 @@ export async function initAspaceOne() {
       return
     }
 
-    const resume = event.target.closest('[data-resume-open]')
-    if (resume) {
-      if (latestActivity?.deepLink) {
-        window.open(latestActivity.deepLink, '_blank', 'noopener,noreferrer')
+    const recentVisit = event.target.closest('[data-recent-activity]')
+    if (recentVisit) {
+      const activity = recentActivities[Number(recentVisit.dataset.recentActivity)]
+      if (!activity) return
+      if (activity.deepLink) {
+        window.open(activity.deepLink, '_blank', 'noopener,noreferrer')
         return
       }
-      const appId = latestActivity?.appId || resume.dataset.resumeOpen
-      const appButton = root.querySelector(`[data-enter-app="${CSS.escape(appId)}"]`)
-      if (appButton) {
-        root.dataset.pendingActivityFeature = latestActivity?.feature || ''
-        appButton.click()
+      const app = apps.find((item) => item.id === activity.appId)
+      if (app) {
+        void reportActivity(root, app, activity.feature || `进入${app.name}首页`)
+        void openAppInNewPage(root, app)
       }
       else showToast('对应系统暂时无法打开')
       return

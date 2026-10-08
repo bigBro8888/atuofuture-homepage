@@ -294,6 +294,46 @@
   font-weight: 650;
 }
 .aso-app-sidebar button.is-active i { color: #4b94e7; }
+.aso-recent-visits {
+  display: grid;
+  gap: 6px;
+  max-height: 430px;
+  padding-right: 3px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #c9d8ea transparent;
+}
+.aso-app-sidebar .aso-recent-visit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 3px;
+  min-height: 0;
+  padding: 9px 10px;
+  border-radius: 10px;
+}
+.aso-app-sidebar .aso-recent-visit.is-latest {
+  background: rgba(235, 244, 255, .72);
+}
+.aso-recent-visit span,
+.aso-recent-visit small,
+.aso-recent-visit time {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aso-recent-visit span { color: #334b69; font-size: 12px; font-weight: 700; }
+.aso-recent-visit small { color: #73849a; font-size: 11px; }
+.aso-recent-visit time { color: #9aa8ba; font-size: 10px; }
+.aso-recent-visits__empty {
+  margin: 0;
+  padding: 4px 11px 8px;
+  color: #98a6b8;
+  font-size: 11px;
+  line-height: 1.65;
+}
 .aso-app-catalog { min-width: 0; }
 .aso-app-catalog__toolbar {
   display: grid;
@@ -315,6 +355,7 @@
 }
 .aso-app-search:focus-within,
 .aso-app-sort:focus-within { border-color: #86bdf5; background: #fff; }
+.aso-app-search input:focus-visible { outline: 0; }
 .aso-app-search { gap: 8px; padding: 0 13px; }
 .aso-app-search .material-symbols-outlined,
 .aso-app-sort .material-symbols-outlined { color: #8191a7; font-size: 19px; }
@@ -1474,8 +1515,10 @@ body.aso-embed-open { overflow: hidden; }
   .aso-app-sidebar { position: static; padding: 0 0 14px; border-right: 0; border-bottom: 1px solid rgba(211, 224, 240, .78); }
   .aso-app-sidebar nav { display: flex; flex-wrap: wrap; gap: 6px; }
   .aso-app-sidebar button { width: auto; min-width: 130px; }
-  .aso-app-sidebar__divider,
-  .aso-app-sidebar > p { display: none; }
+  .aso-app-sidebar__divider:first-of-type,
+  .aso-app-sidebar > p:first-of-type { display: none; }
+  .aso-recent-visits { grid-auto-flow: column; grid-auto-columns: 180px; max-height: none; overflow-x: auto; overflow-y: hidden; }
+  .aso-app-sidebar .aso-recent-visit { width: 180px; }
   .aso-app-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
   .aso-work__grid { grid-template-columns: 1fr; }
   .aso-help__head { grid-template-columns: 1fr; }
