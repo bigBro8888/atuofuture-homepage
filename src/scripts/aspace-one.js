@@ -146,7 +146,7 @@ const appFilters = [
   ['locked', '未开通', lockedApps],
 ]
 
-const appCategories = [
+let appCategories = [
   ['asset', 'business_center', '资产管理'],
   ['meeting', 'groups', '会议管理'],
   ['energy', 'eco', '能源管理'],
@@ -168,6 +168,17 @@ function loadAppPreferences() {
     if (Array.isArray(saved)) favoriteAppIds = new Set(saved.filter((id) => apps.some((app) => app.id === id)))
   } catch {
     // 本地偏好损坏时使用默认收藏。
+  }
+  try {
+    const savedOrder = JSON.parse(localStorage.getItem('aspace-one-category-order') || 'null')
+    if (Array.isArray(savedOrder)) {
+      const order = new Map(savedOrder.map((id, index) => [id, index]))
+      appCategories = [...appCategories].sort((left, right) => (
+        (order.get(left[0]) ?? Number.MAX_SAFE_INTEGER) - (order.get(right[0]) ?? Number.MAX_SAFE_INTEGER)
+      ))
+    }
+  } catch {
+    // 分类顺序损坏时使用默认排序。
   }
 }
 
@@ -383,10 +394,10 @@ function renderPortal() {
               </nav>
               <div class="aso-app-sidebar__divider"></div>
               <p>业务分类</p>
-              <nav>
+              <nav data-business-category-nav>
                 ${appCategories.map(([id, ico, label]) => `
-                <button type="button" data-app-category-filter="${id}">
-                  ${icon(ico)}<span>${label}</span><i>${apps.filter((app) => app.category === id).length}</i>
+                <button type="button" draggable="true" data-app-category-filter="${id}" title="按住拖拽排序">
+                  ${icon(ico)}<span>${label}</span>${icon('drag_indicator', 'aso-category-drag')}<i>${apps.filter((app) => app.category === id).length}</i>
                 </button>`).join('')}
               </nav>
             </aside>
@@ -618,6 +629,49 @@ async function openAppInNewPage(root, app) {
 async function openAppEmbed(root, app) {
   // 保留嵌入壳，默认入口改为新开页面；仅在显式需要时复用。
   await openAppInNewPage(root, app)
+}
+
+function initCategoryDrag(root) {
+  const nav = root.querySelector('[data-business-category-nav]')
+  if (!nav) return
+  let dragged = null
+
+  const saveOrder = () => {
+    const order = [...nav.querySelectorAll('[data-app-category-filter]')]
+      .map((button) => button.dataset.appCategoryFilter)
+    localStorage.setItem('aspace-one-category-order', JSON.stringify(order))
+  }
+
+  nav.addEventListener('dragstart', (event) => {
+    const button = event.target.closest('[data-app-category-filter]')
+    if (!button) return
+    dragged = button
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', button.dataset.appCategoryFilter)
+    window.requestAnimationFrame(() => button.classList.add('is-dragging'))
+  })
+
+  nav.addEventListener('dragover', (event) => {
+    if (!dragged) return
+    const target = event.target.closest('[data-app-category-filter]')
+    if (!target || target === dragged) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    const rect = target.getBoundingClientRect()
+    const insertAfter = event.clientY > rect.top + rect.height / 2
+    nav.insertBefore(dragged, insertAfter ? target.nextSibling : target)
+  })
+
+  nav.addEventListener('drop', (event) => {
+    if (!dragged) return
+    event.preventDefault()
+    saveOrder()
+  })
+
+  nav.addEventListener('dragend', () => {
+    dragged?.classList.remove('is-dragging')
+    dragged = null
+  })
 }
 
 function initAppFilters(root) {
@@ -1072,6 +1126,7 @@ export async function initAspaceOne() {
   }
 
   initAppFilters(root)
+  initCategoryDrag(root)
 
   root.querySelector('[data-embed-close]')?.addEventListener('click', () => closeAppEmbed(root))
   document.addEventListener('keydown', (event) => {

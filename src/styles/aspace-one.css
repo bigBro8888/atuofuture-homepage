@@ -294,6 +294,31 @@
   font-weight: 650;
 }
 .aso-app-sidebar button.is-active i { color: #4b94e7; }
+.aso-app-sidebar [data-business-category-nav] button {
+  grid-template-columns: 24px minmax(0, 1fr) 18px auto;
+  cursor: grab;
+}
+.aso-app-sidebar [data-business-category-nav] button:active { cursor: grabbing; }
+.aso-category-drag {
+  color: #a7b4c5;
+  font-size: 17px !important;
+  opacity: 0;
+  transition: opacity .18s ease, color .18s ease;
+}
+.aso-app-sidebar [data-business-category-nav] button:hover .aso-category-drag,
+.aso-app-sidebar [data-business-category-nav] button:focus-visible .aso-category-drag {
+  opacity: 1;
+}
+.aso-app-sidebar [data-business-category-nav] button.is-dragging {
+  border-color: rgba(90, 157, 236, .3);
+  background: #eaf4ff;
+  box-shadow: 0 8px 20px rgba(40, 91, 155, .12);
+  opacity: .58;
+}
+.aso-app-sidebar [data-business-category-nav] button.is-dragging .aso-category-drag {
+  color: #0879f9;
+  opacity: 1;
+}
 .aso-recent-panel {
   grid-column: 2;
   min-width: 0;
