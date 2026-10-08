@@ -524,70 +524,49 @@ function closeAppEmbed(root) {
   root.querySelector('[data-embed-loading]')?.removeAttribute('hidden')
 }
 
-async function openAppEmbed(root, app) {
-  const shell = root.querySelector('[data-aso-embed]')
-  const frame = root.querySelector('[data-embed-frame]')
-  const loading = root.querySelector('[data-embed-loading]')
-  const loadingText = root.querySelector('[data-embed-loading-text]')
-  const meta = root.querySelector('[data-embed-meta]')
-  const openLink = root.querySelector('[data-embed-open]')
-  if (!shell || !frame || !(app?.sso || app?.embed || app?.embedUrl)) return
+async function resolveAppOpenUrl(root, app) {
+  if (!app) return ''
+  if (app.href) return app.href
+  if (app.embedUrl) return app.embedUrl
+  if (app.url) return app.url
 
-  const isSso = Boolean(app.sso)
-  const isDirect = Boolean(app.embedUrl) && !app.sso && !app.embed
-  const endpoint = isSso
-    ? `/api/public/aspace/sso/${app.sso}`
-    : `/api/public/aspace/sso/embed/${app.embed}`
-  const metaText = isSso
-    ? `${(currentPortalUser(root)).org} · 已统一登录`
-    : app.embed
-      ? `${app.name} · 请用你的账号登录`
-      : app.project || ''
-  const hideLoading = () => {
-    loading?.setAttribute('hidden', '')
-    window.clearTimeout(openAppEmbed._loadingTimer)
-  }
-  const user = currentPortalUser(root)
-  shell.hidden = false
-  shell.setAttribute('aria-hidden', 'false')
-  document.body.classList.add('aso-embed-open')
-  loading?.removeAttribute('hidden')
-  if (loadingText) {
-    loadingText.textContent = isSso ? `正在通过统一身份进入 ${app.name}…` : `正在打开 ${app.name}…`
-  }
-  if (meta) meta.textContent = isSso ? `${user.org} · 统一登录中…` : metaText
-  const titleEl = root.querySelector('[data-embed-title]')
-  if (titleEl) titleEl.textContent = app.name
-  frame.title = app.name
-  frame.dataset.appId = app.id
-  // 打开前先断开旧文档，避免白屏叠在旧状态上
-  frame.removeAttribute('src')
-
-  try {
-    let embedUrl = app.embedUrl
-    if (!isDirect) {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user),
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok || !data.embedUrl) {
-        throw new Error(data.message || data.error || (isSso ? '统一登录签发失败' : '打开失败'))
-      }
-      embedUrl = data.embedUrl
+  if (app.sso || app.embed) {
+    const endpoint = app.sso
+      ? `/api/public/aspace/sso/${app.sso}`
+      : `/api/public/aspace/sso/embed/${app.embed}`
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(currentPortalUser(root)),
+    })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok || !data.embedUrl) {
+      throw new Error(data.message || data.error || (app.sso ? '统一登录签发失败' : '打开失败'))
     }
+    return data.embedUrl
+  }
 
-    if (openLink) openLink.href = embedUrl
-    if (meta) meta.textContent = metaText
-    openAppEmbed._loadingTimer = window.setTimeout(hideLoading, 15000)
-    frame.onload = hideLoading
-    frame.src = embedUrl
+  return ''
+}
+
+async function openAppInNewPage(root, app) {
+  if (!app) return
+  try {
+    const targetUrl = await resolveAppOpenUrl(root, app)
+    if (!targetUrl) {
+      showToast('该系统暂未配置访问地址')
+      return
+    }
+    const opened = window.open(targetUrl, '_blank', 'noopener,noreferrer')
+    if (!opened) showToast('浏览器拦截了新窗口，请允许弹窗后重试')
   } catch (error) {
-    hideLoading()
-    closeAppEmbed(root)
     showToast(error instanceof Error ? error.message : `无法进入 ${app.name}，请稍后重试`)
   }
+}
+
+async function openAppEmbed(root, app) {
+  // 保留嵌入壳，默认入口改为新开页面；仅在显式需要时复用。
+  await openAppInNewPage(root, app)
 }
 
 function bindAapSsoMessages(root) {
@@ -844,6 +823,10 @@ function openQuickAction(root, action) {
     else showToast('对应应用不存在或尚未开通')
     return
   }
+  if (/^https?:\/\//i.test(url)) {
+    window.open(url, '_blank', 'noopener,noreferrer')
+    return
+  }
   window.location.href = url
 }
 
@@ -915,16 +898,8 @@ export async function initAspaceOne() {
       const feature = root.dataset.pendingActivityFeature || (app ? `进入${app.name}首页` : '')
       delete root.dataset.pendingActivityFeature
       if (app) void reportActivity(root, app, feature)
-      if (app?.href) {
-        window.location.href = app.href
-        return
-      }
-      if (app?.sso || app?.embed || app?.embedUrl) {
-        void openAppEmbed(root, app)
-        return
-      }
-      if (app?.url) {
-        window.open(app.url, '_blank', 'noopener,noreferrer')
+      if (app) {
+        void openAppInNewPage(root, app)
         return
       }
       showToast('统一身份中转接口待接入，当前为前端流程预览')
@@ -934,7 +909,7 @@ export async function initAspaceOne() {
     const resume = event.target.closest('[data-resume-open]')
     if (resume) {
       if (latestActivity?.deepLink) {
-        window.location.href = latestActivity.deepLink
+        window.open(latestActivity.deepLink, '_blank', 'noopener,noreferrer')
         return
       }
       const appId = latestActivity?.appId || resume.dataset.resumeOpen
