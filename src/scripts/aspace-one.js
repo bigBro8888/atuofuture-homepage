@@ -74,7 +74,7 @@ const apps = [
   {
     id: 'deskplate',
     name: '桌牌管理系统',
-    category: 'device',
+    category: 'meeting',
     project: '智慧办公桌牌项目',
     time: '2026-09-30 18:02',
     image: '/images/aspace-one/showcase-meeting.jpg',
@@ -153,7 +153,6 @@ const appCategories = [
   ['energy', 'eco', '能源管理'],
   ['space', 'deployed_code', '空间运营'],
   ['content', 'description', '内容服务'],
-  ['device', 'settings_input_component', '设备与物联'],
   ['security', 'shield_lock', '门禁安防'],
 ]
 
