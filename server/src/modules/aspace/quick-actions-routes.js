@@ -17,6 +17,7 @@ const validAppIds = new Set([
   'aspace',
   'info-publish',
   'deskplate',
+  'digital-twin',
 ])
 const visitorCookie = 'aso_portal_visitor'
 

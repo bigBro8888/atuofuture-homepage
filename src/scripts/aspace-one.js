@@ -73,6 +73,15 @@ const apps = [
     alt: '桌牌管理系统场景',
     embedUrl: 'https://cloud.atuofuture.com/',
   },
+  {
+    id: 'digital-twin',
+    name: '数字孪生',
+    project: '楼宇数字孪生项目',
+    time: '2026-10-08 14:20',
+    image: '/images/aspace-one/showcase-space.jpg',
+    alt: '数字孪生楼宇场景',
+    url: 'http://47.95.170.47:8002/',
+  },
 ]
 
 const openedApps = apps.filter((app) => !app.locked).length
