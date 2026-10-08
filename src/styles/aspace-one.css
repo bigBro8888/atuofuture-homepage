@@ -637,6 +637,37 @@
 .aso-app-card__meta .aso-status { height: 21px; padding: 0 8px 0 7px; font-size: 11px; }
 .aso-app-card .aso-btn { width: 100%; min-height: 40px; }
 .aso-app-card.is-locked .aso-app-card__shot { background: #f2f6fc; }
+.aso-app-card__developing-art {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  background:
+    radial-gradient(circle at 28% 26%, rgba(125, 180, 242, .2), transparent 24%),
+    linear-gradient(145deg, #f8fbff, #eaf1f9);
+  color: #7990aa;
+}
+.aso-app-card__developing-art::before,
+.aso-app-card__developing-art::after {
+  position: absolute;
+  border: 1px solid rgba(133, 163, 198, .16);
+  border-radius: 50%;
+  content: "";
+}
+.aso-app-card__developing-art::before { inset: 18% 31%; }
+.aso-app-card__developing-art::after { inset: 31% 38%; }
+.aso-app-card__developing-art > .material-symbols-outlined {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 5px;
+  color: #5d8fc8;
+  font-size: 36px;
+}
+.aso-app-card__developing-art b,
+.aso-app-card__developing-art small { position: relative; z-index: 1; }
+.aso-app-card__developing-art b { color: #506a88; font-size: 13px; }
+.aso-app-card__developing-art small { margin-top: 2px; color: #9bacc0; font-size: 8px; letter-spacing: .16em; }
 .aso-app-grid.is-list-view { grid-template-columns: 1fr; }
 .aso-app-grid.is-list-view .aso-app-card {
   grid-template-columns: 190px minmax(0, 1fr) 132px;

@@ -91,6 +91,51 @@ const apps = [
     alt: '数字孪生楼宇场景',
     url: 'http://47.95.170.47:8002/',
   },
+  {
+    id: 'visitor-booking',
+    name: '访客预约',
+    category: 'meeting',
+    project: '访客服务',
+    desc: '访客登记、邀约与到访管理能力正在开发中。',
+    icon: 'construction',
+    locked: true,
+  },
+  {
+    id: 'meeting-info-screen',
+    name: '会议信息屏',
+    category: 'meeting',
+    project: '会议空间',
+    desc: '会议日程与会议信息展示能力正在开发中。',
+    icon: 'construction',
+    locked: true,
+  },
+  {
+    id: 'meeting-control-screen',
+    name: '会议中控屏',
+    category: 'meeting',
+    project: '会议空间',
+    desc: '会议设备与空间环境集中控制能力正在开发中。',
+    icon: 'construction',
+    locked: true,
+  },
+  {
+    id: 'wireless-screen',
+    name: '无线投屏',
+    category: 'meeting',
+    project: '会议空间',
+    desc: '跨设备无线投屏与内容共享能力正在开发中。',
+    icon: 'construction',
+    locked: true,
+  },
+  {
+    id: 'access-security',
+    name: '门禁安防',
+    category: 'security',
+    project: '安全管理',
+    desc: '门禁通行、事件告警与安防管理能力正在开发中。',
+    icon: 'construction',
+    locked: true,
+  },
 ]
 
 const openedApps = apps.filter((app) => !app.locked).length
@@ -109,6 +154,7 @@ const appCategories = [
   ['space', 'deployed_code', '空间运营'],
   ['content', 'description', '内容服务'],
   ['device', 'settings_input_component', '设备与物联'],
+  ['security', 'shield_lock', '门禁安防'],
 ]
 
 function appCategoryMeta(categoryId) {
@@ -254,8 +300,10 @@ function appCard(app, index) {
   return `
       <article class="aso-app-card${locked ? ' is-locked' : ''}" data-app="${app.id}" data-app-state="${locked ? 'locked' : 'open'}" data-app-category="${escapeHtml(app.category)}" data-app-search="${escapeHtml(`${app.name} ${app.project} ${categoryLabel}`.toLowerCase())}">
         <figure class="aso-app-card__shot">
-          <img src="${app.image}" alt="${app.alt}" width="640" height="400" loading="${index < 3 ? 'eager' : 'lazy'}" decoding="async" />
-          <span class="aso-status${locked ? ' aso-status--idle' : ''}"><i></i>${locked ? '未开通' : '运行中'}</span>
+          ${locked
+            ? `<span class="aso-app-card__developing-art">${icon(app.icon || 'construction')}<b>开发中</b><small>COMING SOON</small></span>`
+            : `<img src="${app.image}" alt="${app.alt}" width="640" height="400" loading="${index < 3 ? 'eager' : 'lazy'}" decoding="async" />`}
+          <span class="aso-status${locked ? ' aso-status--idle' : ''}"><i></i>${locked ? '开发中' : '运行中'}</span>
           <button class="aso-app-favorite${isFavorite ? ' is-active' : ''}" type="button" data-favorite-app="${app.id}" aria-label="${isFavorite ? '取消收藏' : '收藏'}${escapeHtml(app.name)}" aria-pressed="${isFavorite}">
             ${icon('star')}
           </button>
@@ -272,7 +320,7 @@ function appCard(app, index) {
           </div>`}
         </div>
         ${locked
-          ? '<button class="aso-btn aso-btn--muted" type="button" disabled>暂未开通</button>'
+          ? `<button class="aso-btn aso-btn--muted" type="button" disabled>${icon('construction')} 开发中</button>`
           : `<button class="aso-btn aso-btn--primary" type="button" data-enter-app="${app.id}">进入系统 ${icon('arrow_forward')}</button>`}
       </article>`
 }
