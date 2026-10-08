@@ -596,7 +596,8 @@
 .aso-app-favorite:active { transform: scale(.92); }
 .aso-app-favorite.is-active { color: #efa615; }
 .aso-app-favorite .material-symbols-outlined { font-size: 19px; font-variation-settings: "FILL" 0; }
-.aso-app-favorite.is-active .material-symbols-outlined { font-variation-settings: "FILL" 1; }
+.aso-app-favorite.is-active .material-symbols-outlined { display: none; }
+.aso-app-favorite.is-active::after { color: currentColor; font-size: 20px; line-height: 1; content: "★"; }
 .aso-app-card__copy { min-width: 0; padding: 0 5px; }
 .aso-app-card__copy h3 {
   margin: 0 0 6px;
