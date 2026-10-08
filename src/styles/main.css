@@ -712,6 +712,24 @@
     box-shadow: none;
   }
 
+  .site-header .site-header__actions .site-header__btn--ghost {
+    gap: 0.3rem;
+    padding: 0.45rem 0.35rem;
+    border: 0;
+    color: rgba(255, 255, 255, 0.82);
+    background: transparent;
+    font-size: 14px;
+  }
+
+  .site-header .site-header__actions .site-header__btn--ghost .material-symbols-outlined {
+    font-size: 17px;
+  }
+
+  .site-header .site-header__actions .site-header__btn--ghost:hover {
+    color: #fff;
+    background: transparent;
+  }
+
   .site-header .site-header__btn--ghost.is-current {
     border-color: #00e5c0;
     color: #00e5c0;
