@@ -8,7 +8,6 @@ const apps = [
     image: '/images/aspace-one/app-resource.jpg',
     alt: 'AAP 资产管理系统示意',
     url: 'https://asset.atuofuture.com/',
-    embed: 'aap',
   },
   {
     id: 'screen',
@@ -29,7 +28,7 @@ const apps = [
     time: '2026-09-19 10:15',
     image: '/images/aspace-one/app-poster.jpg',
     alt: 'AI画报在平板上的展示效果',
-    sso: 'poster',
+    url: 'http://47.103.102.65:5173/c/atuofuture/',
   },
   {
     id: 'energy',
@@ -355,32 +354,6 @@ function renderPortal() {
             <a href="#help">文档中心</a>
             <a href="#support">服务支持</a>
           </div>
-          <div class="aso-subnav__tools">
-            <button class="aso-org" type="button" data-org-toggle aria-expanded="false">
-              <span data-org-name>王力集团</span>${icon('expand_more')}
-            </button>
-            <button class="aso-icon-btn" type="button" data-notice-toggle aria-label="通知" aria-expanded="false">
-              ${icon('notifications')}<b>2</b>
-            </button>
-            <button class="aso-avatar" type="button" data-account-toggle aria-label="账号菜单" aria-expanded="false">张</button>
-          </div>
-          <div class="aso-popover aso-org-menu" data-org-menu aria-hidden="true">
-            <p>切换组织 / 项目</p>
-            <button type="button" data-org="王力集团" data-project="王力集团总部项目"><b>王力集团</b><small>总部项目</small></button>
-            <button type="button" data-org="华东体验中心" data-project="上海展示项目"><b>华东体验中心</b><small>上海展示项目</small></button>
-          </div>
-          <div class="aso-popover aso-notice-menu" data-notice-menu aria-hidden="true">
-            <p>最新通知</p>
-            <button type="button">中控屏离线告警<small>10 分钟前</small></button>
-            <button type="button">AI画报权限已开通<small>昨天</small></button>
-          </div>
-          <div class="aso-popover aso-account-menu" data-account-menu aria-hidden="true">
-            <p>张三 · 客户普通用户</p>
-            <button type="button">个人信息</button>
-            <button type="button">账号与安全</button>
-            <button type="button">账号绑定</button>
-            <button type="button">退出登录</button>
-          </div>
         </div>
       </nav>
 
@@ -579,14 +552,14 @@ function renderPortal() {
           <button class="aso-embed__back" type="button" data-embed-close>${icon('arrow_back')}<span>返回门户</span></button>
           <div class="aso-embed__title">
             <b data-embed-title>AI画报</b>
-            <small data-embed-meta>统一登录中…</small>
+            <small data-embed-meta>正在打开系统…</small>
           </div>
           <a class="aso-embed__open" data-embed-open href="#" target="_blank" rel="noopener noreferrer">新窗口打开 ${icon('open_in_new')}</a>
         </header>
         <div class="aso-embed__stage">
           <div class="aso-embed__loading" data-embed-loading>
             <span class="aso-embed__spinner" aria-hidden="true"></span>
-            <p data-embed-loading-text>正在通过统一身份进入系统…</p>
+            <p data-embed-loading-text>正在打开业务系统…</p>
           </div>
           <iframe class="aso-embed__frame" data-embed-frame title="应用嵌入" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
         </div>
@@ -607,15 +580,6 @@ function showToast(message) {
   }, 2600)
 }
 
-function currentPortalUser(root) {
-  const org = root.querySelector('[data-org-name]')?.textContent?.trim() || '王力集团'
-  return {
-    name: '张三',
-    org,
-    email: 'zhangsan@aspace.atuofuture.local',
-  }
-}
-
 function closeAppEmbed(root) {
   const shell = root.querySelector('[data-aso-embed]')
   const frame = root.querySelector('[data-embed-frame]')
@@ -632,22 +596,6 @@ async function resolveAppOpenUrl(root, app) {
   if (app.href) return app.href
   if (app.embedUrl) return app.embedUrl
   if (app.url) return app.url
-
-  if (app.sso || app.embed) {
-    const endpoint = app.sso
-      ? `/api/public/aspace/sso/${app.sso}`
-      : `/api/public/aspace/sso/embed/${app.embed}`
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(currentPortalUser(root)),
-    })
-    const data = await response.json().catch(() => ({}))
-    if (!response.ok || !data.embedUrl) {
-      throw new Error(data.message || data.error || (app.sso ? '统一登录签发失败' : '打开失败'))
-    }
-    return data.embedUrl
-  }
 
   return ''
 }
@@ -670,38 +618,6 @@ async function openAppInNewPage(root, app) {
 async function openAppEmbed(root, app) {
   // 保留嵌入壳，默认入口改为新开页面；仅在显式需要时复用。
   await openAppInNewPage(root, app)
-}
-
-function bindAapSsoMessages(root) {
-  window.addEventListener('message', (event) => {
-    const data = event?.data
-    if (!data || data.type !== 'aso-aap-sso') return
-    root.querySelector('[data-embed-loading]')?.setAttribute('hidden', '')
-    window.clearTimeout(openAppEmbed._loadingTimer)
-    const meta = root.querySelector('[data-embed-meta]')
-    const org = root.querySelector('[data-org-name]')?.textContent?.trim() || '王力集团'
-    if (data.ok) {
-      if (meta) meta.textContent = `${org} · 已统一登录`
-      return
-    }
-    if (meta) meta.textContent = `${org} · 请登录 AAP`
-    if (data.message) showToast(data.message)
-  })
-}
-
-function closePopovers(except) {
-  document.querySelectorAll('.aso-popover').forEach((popover) => {
-    if (popover === except) return
-    popover.classList.remove('is-open')
-    popover.setAttribute('aria-hidden', 'true')
-  })
-}
-
-function setPopover(menu, trigger, open) {
-  closePopovers(menu)
-  menu.classList.toggle('is-open', open)
-  menu.setAttribute('aria-hidden', String(!open))
-  trigger?.setAttribute('aria-expanded', String(open))
 }
 
 function initAppFilters(root) {
@@ -1010,12 +926,7 @@ export async function initAspaceOne() {
   loadAppPreferences()
   await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()
-  bindAapSsoMessages(root)
   bindActivityMessages(root)
-
-  const orgMenu = root.querySelector('[data-org-menu]')
-  const noticeMenu = root.querySelector('[data-notice-menu]')
-  const accountMenu = root.querySelector('[data-account-menu]')
 
   root.addEventListener('click', (event) => {
     if (event.target.closest('[data-quick-settings-open]')) {
@@ -1033,26 +944,6 @@ export async function initAspaceOne() {
     const quickAction = event.target.closest('[data-quick-action]')
     if (quickAction) {
       openQuickAction(root, quickAction)
-      return
-    }
-
-    const orgToggle = event.target.closest('[data-org-toggle]')
-    const noticeToggle = event.target.closest('[data-notice-toggle]')
-    const accountToggle = event.target.closest('[data-account-toggle]')
-    if (orgToggle || noticeToggle || accountToggle) {
-      const menu = orgToggle ? orgMenu : noticeToggle ? noticeMenu : accountMenu
-      const trigger = orgToggle || noticeToggle || accountToggle
-      const willOpen = !menu.classList.contains('is-open')
-      setPopover(menu, trigger, willOpen)
-      return
-    }
-
-    const org = event.target.closest('[data-org]')
-    if (org) {
-      root.querySelector('[data-org-name]').textContent = org.dataset.org
-      root.querySelectorAll('[data-app-project]').forEach((p) => { p.textContent = org.dataset.project })
-      setPopover(orgMenu, root.querySelector('[data-org-toggle]'), false)
-      showToast(`已切换到 ${org.dataset.org} · ${org.dataset.project}`)
       return
     }
 
@@ -1077,7 +968,7 @@ export async function initAspaceOne() {
         void openAppInNewPage(root, app)
         return
       }
-      showToast('统一身份中转接口待接入，当前为前端流程预览')
+      showToast('该业务系统暂未配置访问地址')
       return
     }
 
@@ -1100,7 +991,7 @@ export async function initAspaceOne() {
 
     const enter = event.target.closest('[data-action], [data-task]')
     if (enter) {
-      showToast('统一身份中转接口待接入，当前为前端流程预览')
+      showToast('该功能暂未配置访问地址')
       return
     }
 
@@ -1187,9 +1078,5 @@ export async function initAspaceOne() {
     if (event.key !== 'Escape') return
     if (!root.querySelector('[data-quick-settings]')?.hidden) setQuickSettingsOpen(root, false)
     else if (!root.querySelector('[data-aso-embed]')?.hidden) closeAppEmbed(root)
-  })
-
-  document.addEventListener('click', (event) => {
-    if (!event.target.closest('.aso-subnav__tools, .aso-popover')) closePopovers()
   })
 }
