@@ -2,6 +2,7 @@ const apps = [
   {
     id: 'resource',
     name: 'AAP资产管理系统',
+    category: 'asset',
     project: '王力集团总部项目',
     time: '2026-09-18 11:40',
     image: '/images/aspace-one/app-resource.jpg',
@@ -12,6 +13,7 @@ const apps = [
   {
     id: 'screen',
     name: '会议室预约系统',
+    category: 'meeting',
     project: '北京研发中心项目',
     time: '2026-09-21 09:12',
     warning: '1 台设备离线',
@@ -22,6 +24,7 @@ const apps = [
   {
     id: 'poster',
     name: 'AI画报',
+    category: 'content',
     project: '上海展示项目',
     time: '2026-09-19 10:15',
     image: '/images/aspace-one/app-poster.jpg',
@@ -31,6 +34,7 @@ const apps = [
   {
     id: 'energy',
     name: '能源能耗',
+    category: 'energy',
     project: '王力集团总部项目',
     time: '2026-09-20 14:32',
     image: '/images/aspace-one/app-energy.jpg',
@@ -40,6 +44,7 @@ const apps = [
   {
     id: 'album',
     name: '电子相册',
+    category: 'content',
     project: '杭州园区项目',
     time: '2026-09-18 16:20',
     image: '/images/aspace-one/app-album.jpg',
@@ -49,6 +54,7 @@ const apps = [
   {
     id: 'aspace',
     name: '空间智能管理平台',
+    category: 'space',
     project: 'Aspace One 综合管理项目',
     time: '2026-09-30 18:02',
     image: '/images/aspace-one/showcase-building.jpg',
@@ -58,6 +64,7 @@ const apps = [
   {
     id: 'info-publish',
     name: '信息发布平台',
+    category: 'content',
     project: '企业信息发布项目',
     time: '2026-09-30 18:02',
     image: '/images/aspace-one/app-poster.jpg',
@@ -67,6 +74,7 @@ const apps = [
   {
     id: 'deskplate',
     name: '桌牌管理系统',
+    category: 'device',
     project: '智慧办公桌牌项目',
     time: '2026-09-30 18:02',
     image: '/images/aspace-one/showcase-meeting.jpg',
@@ -76,6 +84,7 @@ const apps = [
   {
     id: 'digital-twin',
     name: '数字孪生',
+    category: 'space',
     project: '楼宇数字孪生项目',
     time: '2026-10-08 14:20',
     image: '/images/aspace-one/showcase-space.jpg',
@@ -92,6 +101,31 @@ const appFilters = [
   ['open', '已开通', openedApps],
   ['locked', '未开通', lockedApps],
 ]
+
+const appCategories = [
+  ['asset', 'business_center', '资产管理'],
+  ['meeting', 'groups', '会议管理'],
+  ['energy', 'eco', '能源管理'],
+  ['space', 'deployed_code', '空间运营'],
+  ['content', 'description', '内容服务'],
+  ['device', 'settings_input_component', '设备与物联'],
+]
+
+function appCategoryMeta(categoryId) {
+  const category = appCategories.find(([id]) => id === categoryId)
+  return category || ['other', 'apps', '其他应用']
+}
+
+let favoriteAppIds = new Set(['resource', 'poster', 'digital-twin'])
+
+function loadAppPreferences() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('aspace-one-favorite-apps') || 'null')
+    if (Array.isArray(saved)) favoriteAppIds = new Set(saved.filter((id) => apps.some((app) => app.id === id)))
+  } catch {
+    // 本地偏好损坏时使用默认收藏。
+  }
+}
 
 const docs = [
   { title: 'Aspace One 快速入门指南', category: '全部文档', date: '2026-09-12', featured: true, keywords: '权限申请 账号绑定 入门' },
@@ -209,11 +243,16 @@ function activityView() {
 
 function appCard(app, index) {
   const locked = Boolean(app.locked)
+  const [, categoryIcon, categoryLabel] = appCategoryMeta(app.category)
+  const isFavorite = favoriteAppIds.has(app.id)
   return `
-      <article class="aso-app-card${locked ? ' is-locked' : ''}" data-app="${app.id}" data-app-state="${locked ? 'locked' : 'open'}">
+      <article class="aso-app-card${locked ? ' is-locked' : ''}" data-app="${app.id}" data-app-state="${locked ? 'locked' : 'open'}" data-app-category="${escapeHtml(app.category)}" data-app-search="${escapeHtml(`${app.name} ${app.project} ${categoryLabel}`.toLowerCase())}">
         <figure class="aso-app-card__shot">
           <img src="${app.image}" alt="${app.alt}" width="640" height="400" loading="${index < 3 ? 'eager' : 'lazy'}" decoding="async" />
           <span class="aso-status${locked ? ' aso-status--idle' : ''}"><i></i>${locked ? '未开通' : '运行中'}</span>
+          <button class="aso-app-favorite${isFavorite ? ' is-active' : ''}" type="button" data-favorite-app="${app.id}" aria-label="${isFavorite ? '取消收藏' : '收藏'}${escapeHtml(app.name)}" aria-pressed="${isFavorite}">
+            ${icon('star')}
+          </button>
         </figure>
         <div class="aso-app-card__copy">
           <h3>${app.name}</h3>
@@ -221,6 +260,7 @@ function appCard(app, index) {
             ? `<p class="aso-app-card__desc">${app.desc}</p>`
             : `<p data-app-project>${app.project}</p>
           <div class="aso-app-card__meta">
+            <span class="aso-app-card__category">${icon(categoryIcon)} ${categoryLabel}</span>
             <small>最近使用 · ${app.time}</small>
             ${app.warning ? `<span class="aso-status aso-status--warn"><i></i>${app.warning}</span>` : ''}
           </div>`}
@@ -294,26 +334,67 @@ function renderPortal() {
 
       <section class="aso-hero" id="overview">
         <div class="aso-container aso-apps" id="apps">
-          <header class="aso-apps__head">
-            <div class="aso-apps__intro">
-              <p class="aso-eyebrow">GOOD TO SEE YOU</p>
-              <h1>欢迎回来，张三</h1>
-              <p class="aso-lead">高效的空间智能运营，从 Aspace One 开始</p>
+          <header class="aso-app-center__masthead">
+            <div>
+              <p class="aso-eyebrow">APPLICATION CENTER</p>
+              <h1>应用中心</h1>
+              <p class="aso-lead">连接每一个空间场景与运营服务</p>
             </div>
-            <div class="aso-apps__tools">
-              <div class="aso-filters" role="tablist" aria-label="按开通状态筛选应用">
-                ${appFilters
-                  .map(
-                    ([id, label, count], index) => `
-                <button class="${index === 0 ? 'is-active' : ''}" type="button" role="tab" aria-selected="${index === 0 ? 'true' : 'false'}" data-app-filter="${id}">${label} <i>${count}</i></button>`
-                  )
-                  .join('')}
-              </div>
-              <button class="aso-more" type="button" data-action="manage-apps">管理应用 ${icon('arrow_forward')}</button>
-            </div>
+            <button class="aso-more" type="button" data-action="manage-apps">管理应用 ${icon('arrow_forward')}</button>
           </header>
-          <div class="aso-app-grid" data-app-grid>${apps.map(appCard).join('')}</div>
-          <p class="aso-empty aso-app-grid__empty" data-app-empty hidden>该状态下暂时没有应用。</p>
+
+          <div class="aso-app-center">
+            <aside class="aso-app-sidebar" aria-label="应用分类">
+              <nav>
+                <button type="button" data-app-category-filter="favorites">
+                  ${icon('star')}<span>我的收藏</span><i data-favorite-count>${favoriteAppIds.size}</i>
+                </button>
+                <button class="is-active" type="button" data-app-category-filter="all" aria-current="true">
+                  ${icon('grid_view')}<span>全部应用</span><i>${apps.length}</i>
+                </button>
+              </nav>
+              <div class="aso-app-sidebar__divider"></div>
+              <p>业务分类</p>
+              <nav>
+                ${appCategories.map(([id, ico, label]) => `
+                <button type="button" data-app-category-filter="${id}">
+                  ${icon(ico)}<span>${label}</span><i>${apps.filter((app) => app.category === id).length}</i>
+                </button>`).join('')}
+              </nav>
+            </aside>
+
+            <div class="aso-app-catalog">
+              <div class="aso-app-catalog__toolbar">
+                <label class="aso-app-search">
+                  ${icon('search')}
+                  <input type="search" data-app-search-input aria-label="搜索应用" placeholder="搜索应用名称、项目或分类" />
+                </label>
+                <label class="aso-app-sort">
+                  ${icon('schedule')}
+                  <select data-app-sort aria-label="应用排序">
+                    <option value="default">默认排序</option>
+                    <option value="recent">最近使用</option>
+                    <option value="name">按名称</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="aso-app-catalog__controls">
+                <div class="aso-filters" role="tablist" aria-label="按开通状态筛选应用">
+                  ${appFilters.map(([id, label, count], index) => `
+                  <button class="${index === 0 ? 'is-active' : ''}" type="button" role="tab" aria-selected="${index === 0 ? 'true' : 'false'}" data-app-filter="${id}">${label} <i>${count}</i></button>`).join('')}
+                  <span>共 <b data-visible-app-count>${apps.length}</b> 个应用</span>
+                </div>
+                <div class="aso-app-view" aria-label="切换应用视图">
+                  <button class="is-active" type="button" data-app-view="grid" aria-label="网格视图" aria-pressed="true">${icon('grid_view')}</button>
+                  <button type="button" data-app-view="list" aria-label="列表视图" aria-pressed="false">${icon('view_list')}</button>
+                </div>
+              </div>
+
+              <div class="aso-app-grid" data-app-grid>${apps.map(appCard).join('')}</div>
+              <p class="aso-empty aso-app-grid__empty" data-app-empty hidden>没有找到符合条件的应用。</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -613,24 +694,100 @@ function setPopover(menu, trigger, open) {
 function initAppFilters(root) {
   const grid = root.querySelector('[data-app-grid]')
   const empty = root.querySelector('[data-app-empty]')
-  const buttons = [...root.querySelectorAll('[data-app-filter]')]
-  if (!grid || !buttons.length) return
+  const statusButtons = [...root.querySelectorAll('[data-app-filter]')]
+  const categoryButtons = [...root.querySelectorAll('[data-app-category-filter]')]
+  const searchInput = root.querySelector('[data-app-search-input]')
+  const sortSelect = root.querySelector('[data-app-sort]')
+  const viewButtons = [...root.querySelectorAll('[data-app-view]')]
+  const visibleCount = root.querySelector('[data-visible-app-count]')
+  if (!grid || !statusButtons.length || !categoryButtons.length) return
 
-  buttons.forEach((button) => {
+  let status = 'all'
+  let category = 'all'
+  let query = ''
+
+  const applyFilters = () => {
+    let visible = 0
+    grid.querySelectorAll('[data-app-state]').forEach((card) => {
+      const statusMatch = status === 'all' || card.dataset.appState === status
+      const categoryMatch = category === 'all'
+        || (category === 'favorites' ? favoriteAppIds.has(card.dataset.app) : card.dataset.appCategory === category)
+      const queryMatch = !query || card.dataset.appSearch.includes(query)
+      const match = statusMatch && categoryMatch && queryMatch
+      card.classList.toggle('is-hidden', !match)
+      if (match) visible += 1
+    })
+    if (visibleCount) visibleCount.textContent = String(visible)
+    if (empty) empty.hidden = visible > 0
+  }
+
+  statusButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      const filter = button.dataset.appFilter
-      buttons.forEach((item) => {
+      status = button.dataset.appFilter
+      statusButtons.forEach((item) => {
         const active = item === button
         item.classList.toggle('is-active', active)
         item.setAttribute('aria-selected', String(active))
       })
-      let visible = 0
-      grid.querySelectorAll('[data-app-state]').forEach((card) => {
-        const match = filter === 'all' || card.dataset.appState === filter
-        card.classList.toggle('is-hidden', !match)
-        if (match) visible += 1
+      applyFilters()
+    })
+  })
+
+  categoryButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      category = button.dataset.appCategoryFilter
+      categoryButtons.forEach((item) => {
+        const active = item === button
+        item.classList.toggle('is-active', active)
+        if (active) item.setAttribute('aria-current', 'true')
+        else item.removeAttribute('aria-current')
       })
-      if (empty) empty.hidden = visible > 0
+      applyFilters()
+    })
+  })
+
+  searchInput?.addEventListener('input', () => {
+    query = searchInput.value.trim().toLowerCase()
+    applyFilters()
+  })
+
+  sortSelect?.addEventListener('change', () => {
+    const cards = [...grid.querySelectorAll('[data-app]')]
+    cards.sort((left, right) => {
+      const leftApp = apps.find((app) => app.id === left.dataset.app)
+      const rightApp = apps.find((app) => app.id === right.dataset.app)
+      if (sortSelect.value === 'name') return leftApp.name.localeCompare(rightApp.name, 'zh-CN')
+      if (sortSelect.value === 'recent') return String(rightApp.time).localeCompare(String(leftApp.time))
+      return apps.indexOf(leftApp) - apps.indexOf(rightApp)
+    })
+    cards.forEach((card) => grid.appendChild(card))
+  })
+
+  viewButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const view = button.dataset.appView
+      grid.classList.toggle('is-list-view', view === 'list')
+      viewButtons.forEach((item) => {
+        const active = item === button
+        item.classList.toggle('is-active', active)
+        item.setAttribute('aria-pressed', String(active))
+      })
+    })
+  })
+
+  grid.querySelectorAll('[data-favorite-app]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const appId = button.dataset.favoriteApp
+      if (favoriteAppIds.has(appId)) favoriteAppIds.delete(appId)
+      else favoriteAppIds.add(appId)
+      localStorage.setItem('aspace-one-favorite-apps', JSON.stringify([...favoriteAppIds]))
+      const active = favoriteAppIds.has(appId)
+      button.classList.toggle('is-active', active)
+      button.setAttribute('aria-pressed', String(active))
+      button.setAttribute('aria-label', `${active ? '取消收藏' : '收藏'}${apps.find((app) => app.id === appId)?.name || ''}`)
+      const favoriteCount = root.querySelector('[data-favorite-count]')
+      if (favoriteCount) favoriteCount.textContent = String(favoriteAppIds.size)
+      applyFilters()
     })
   })
 }
@@ -842,6 +999,7 @@ function openQuickAction(root, action) {
 export async function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
+  loadAppPreferences()
   await Promise.all([loadQuickActions(), loadLatestActivity()])
   root.innerHTML = renderPortal()
   bindAapSsoMessages(root)
