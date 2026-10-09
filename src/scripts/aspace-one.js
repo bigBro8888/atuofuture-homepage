@@ -430,6 +430,24 @@ function recentVisitsMarkup() {
   }).join('')
 }
 
+function portalAccountMarkup() {
+  const user = window.ASPACE_CURRENT_USER
+  if (user?.id) {
+    const name = String(user.name || user.displayName || '已登录用户')
+    return `
+      <div class="aso-portal-account is-logged-in" data-portal-account>
+        <span>${escapeHtml(name.slice(0, 1))}</span>
+        <div><b>${escapeHtml(name)}</b><small>个人数据已同步</small></div>
+      </div>`
+  }
+  return `
+    <button class="aso-portal-account" type="button" data-personal-login>
+      <span>${icon('person')}</span>
+      <div><b>未登录</b><small>登录后同步个人数据</small></div>
+      ${icon('chevron_right')}
+    </button>`
+}
+
 function appCard(app, index) {
   const locked = Boolean(app.locked)
   const [, categoryIcon, categoryLabel] = appCategoryMeta(app.category)
@@ -530,6 +548,7 @@ function renderPortal() {
                   <h2 data-catalog-title>全部业务能力</h2>
                   <p data-catalog-description>按业务场景浏览 Aspace空间智能 已接入和规划中的能力</p>
                 </div>
+                ${portalAccountMarkup()}
               </header>
               <div class="aso-app-catalog__toolbar">
                 <label class="aso-app-search">
@@ -568,7 +587,10 @@ function renderPortal() {
                   <h2>最近访问</h2>
                   <p>按时间查看你最近进入的系统与使用过的功能，最新记录排在最前。</p>
                 </div>
-                <span>共 <b data-recent-panel-count>${recentActivities.length}</b> 条记录</span>
+                <div class="aso-recent-panel__account">
+                  ${portalAccountMarkup()}
+                  <span>共 <b data-recent-panel-count>${recentActivities.length}</b> 条记录</span>
+                </div>
               </header>
               <div class="aso-recent-panel__grid" data-recent-visits>
                 ${recentVisitsMarkup()}
@@ -750,6 +772,8 @@ function requirePersonalLogin(root, action) {
   if (isPortalAuthenticated()) return true
   const messages = {
     favorite: '收藏内容会跟随你的个人账号保存，请先登录后再操作。',
+    favoritesView: '收藏列表属于个人数据，请先登录后查看。',
+    recent: '最近访问记录属于个人数据，请先登录后查看。',
     categorySort: '业务分类顺序会跟随你的个人账号保存，请先登录后再拖拽。',
     capabilitySort: '能力卡片顺序会跟随你的个人账号保存，请先登录后再拖拽。',
   }
@@ -961,7 +985,10 @@ function initAppFilters(root) {
 
   categoryButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      category = button.dataset.appCategoryFilter
+      const nextCategory = button.dataset.appCategoryFilter
+      if (nextCategory === 'recent' && !requirePersonalLogin(root, 'recent')) return
+      if (nextCategory === 'favorites' && !requirePersonalLogin(root, 'favoritesView')) return
+      category = nextCategory
       const showingRecent = category === 'recent'
       if (catalog) catalog.hidden = showingRecent
       if (recentPanel) recentPanel.hidden = !showingRecent

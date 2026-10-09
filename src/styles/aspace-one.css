@@ -161,8 +161,14 @@
 }
 .aso-recent-panel > header h2 { margin: 2px 0 4px; color: var(--aso-text); font-size: 27px; }
 .aso-recent-panel > header p:not(.aso-eyebrow) { margin: 0; color: #7a899d; font-size: 13px; }
-.aso-recent-panel > header > span { flex-shrink: 0; color: #8290a4; font-size: 12px; }
-.aso-recent-panel > header > span b { color: #40536d; }
+.aso-recent-panel__account {
+  display: grid;
+  flex-shrink: 0;
+  justify-items: end;
+  gap: 8px;
+}
+.aso-recent-panel__account > span { color: #8290a4; font-size: 12px; }
+.aso-recent-panel__account > span b { color: #40536d; }
 .aso-recent-panel__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -240,12 +246,53 @@
 }
 .aso-app-catalog { min-width: 0; }
 .aso-app-catalog__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
   margin-bottom: 17px;
   padding-bottom: 17px;
   border-bottom: 1px solid rgba(211, 224, 240, .9);
 }
 .aso-app-catalog__heading h2 { margin: 0; color: var(--aso-text); font-size: 23px; letter-spacing: -.025em; }
 .aso-app-catalog__heading p { margin: 5px 0 0; color: #7b899e; font-size: 12px; }
+.aso-portal-account {
+  display: grid;
+  grid-template-columns: 34px minmax(0, auto) 16px;
+  align-items: center;
+  gap: 9px;
+  min-width: 178px;
+  min-height: 44px;
+  padding: 5px 9px;
+  border: 1px solid #dce8f5;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .8);
+  color: #40536d;
+  text-align: left;
+}
+button.aso-portal-account {
+  cursor: pointer;
+  transition: border-color .2s ease, background-color .2s ease, transform .16s ease;
+}
+button.aso-portal-account:hover { border-color: #9dc4f3; background: #fff; }
+button.aso-portal-account:active { transform: scale(.98); }
+.aso-portal-account > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: #e9f4ff;
+  color: #0879f9;
+  font-size: 14px;
+  font-weight: 750;
+}
+.aso-portal-account > span .material-symbols-outlined { font-size: 19px; }
+.aso-portal-account > div { display: grid; gap: 2px; min-width: 0; }
+.aso-portal-account b { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.aso-portal-account small { color: #8a98ab; font-size: 10px; white-space: nowrap; }
+.aso-portal-account > .material-symbols-outlined { color: #9babbf; font-size: 16px; }
+.aso-portal-account.is-logged-in { grid-template-columns: 34px minmax(0, auto); }
 .aso-app-catalog__toolbar {
   display: grid;
   grid-template-columns: minmax(240px, 1fr) auto;
@@ -1553,6 +1600,8 @@ body.aso-embed-open { overflow: hidden; }
   .aso-app-sidebar { overflow-x: auto; }
   .aso-app-sidebar nav { width: max-content; flex-wrap: nowrap; }
   .aso-app-sidebar button { min-width: max-content; }
+  .aso-app-catalog__heading { align-items: stretch; flex-direction: column; gap: 12px; }
+  .aso-app-catalog__heading .aso-portal-account { align-self: flex-start; }
   .aso-app-catalog__toolbar { grid-template-columns: 1fr; }
   .aso-app-sort { display: none; }
   .aso-app-catalog__controls { align-items: flex-start; flex-wrap: wrap; }
