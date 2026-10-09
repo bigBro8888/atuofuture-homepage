@@ -489,6 +489,10 @@ function renderPortal() {
         <div class="aso-container aso-apps" id="apps">
           <div class="aso-app-center">
             <aside class="aso-app-sidebar" aria-label="业务导航">
+              <header class="aso-app-sidebar__heading">
+                <span>${icon('account_tree')}</span>
+                <div><b>业务导航</b><small>${appCategories.length} 个业务域</small></div>
+              </header>
               <nav>
                 <button type="button" data-app-category-filter="favorites">
                   ${icon('star')}<span>我的收藏</span><i data-favorite-count>${favoriteAppIds.size}</i>
@@ -501,7 +505,7 @@ function renderPortal() {
                 </button>
               </nav>
               <div class="aso-app-sidebar__divider"></div>
-              <p>业务导航</p>
+              <p><span>业务分类</span><small title="拖动右侧能力卡片可调整顺序">${icon('drag_indicator')}拖拽排序</small></p>
               <nav data-business-category-nav>
                 ${appCategories.map(([id, ico, label]) => `
                 <button type="button" data-app-category-filter="${id}">
@@ -517,7 +521,6 @@ function renderPortal() {
                   <h2 data-catalog-title>全部业务能力</h2>
                   <p data-catalog-description>按业务场景浏览 Aspace One 已接入和规划中的能力</p>
                 </div>
-                <small>${icon('drag_indicator')} 拖拽能力卡片可调整同类功能顺序</small>
               </header>
               <div class="aso-app-catalog__toolbar">
                 <label class="aso-app-search">
