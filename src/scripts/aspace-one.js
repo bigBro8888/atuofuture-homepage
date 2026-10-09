@@ -774,7 +774,7 @@ function sha256Fallback(value) {
   for (let candidate = 2; primeCounter < 64; candidate += 1) {
     if (composite[candidate]) continue
     for (let multiple = candidate * candidate; multiple < 313; multiple += candidate) composite[multiple] = true
-    hash[primeCounter] = (Math.sqrt(candidate) * maxWord) | 0
+    if (primeCounter < 8) hash[primeCounter] = (Math.sqrt(candidate) * maxWord) | 0
     constants[primeCounter] = (candidate ** (1 / 3) * maxWord) | 0
     primeCounter += 1
   }
