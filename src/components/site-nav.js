@@ -86,13 +86,16 @@ function renderHardwareMega(root) {
     )
     .join('')
   const appCol = `
-          <section class="site-mega-col">
-            <div class="site-mega-col__head" data-stagger style="--stagger:${step++}">
-              <strong>智能硬件APP</strong>
-            </div>
-            <div class="site-mega-col__grid">
-              <a class="site-mega-prod" href="${root}${APP_DOWNLOAD_PATH}" data-stagger style="--stagger:${step++}">电子相框 App</a>
-            </div>
+          <section class="site-mega-col site-mega-col--app">
+            <a class="site-mega-app" href="${root}${APP_DOWNLOAD_PATH}" data-stagger style="--stagger:${step++}">
+              <span class="site-mega-app__kicker">软件下载</span>
+              <span class="site-mega-app__icon" aria-hidden="true">
+                <span class="material-symbols-outlined">install_mobile</span>
+              </span>
+              <strong>电子相框 App</strong>
+              <small>管理相框内容，随时发布与更新</small>
+              <span class="site-mega-app__cta">立即下载</span>
+            </a>
           </section>`
   return `
     <div class="site-mega site-mega--hardware" data-hardware-mega role="region" data-mega-panel>
@@ -119,9 +122,12 @@ function renderHardwareMobile(root) {
               .join('')}`
     )
     .join('')}
-            <p class="site-mobile-nav-group">智能硬件APP</p>
-            <a class="site-mobile-nav-link site-mobile-nav-link--child" href="${root}${APP_DOWNLOAD_PATH}">
-              <strong>电子相框 App</strong>
+            <a class="site-mobile-nav-link site-mobile-nav-link--app" href="${root}${APP_DOWNLOAD_PATH}">
+              <span class="material-symbols-outlined" aria-hidden="true">install_mobile</span>
+              <span>
+                <strong>电子相框 App</strong>
+                <small>软件下载 · 立即前往</small>
+              </span>
             </a>
             <a class="site-mobile-nav-link site-mobile-nav-link--cta" href="${root}hardware/products/">
               <strong>浏览全部产品</strong>
