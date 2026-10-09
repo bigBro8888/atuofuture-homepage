@@ -765,7 +765,12 @@ function setLoginPromptOpen(root, open, message = '') {
   document.body.classList.toggle('aso-login-prompt-open', open)
   const copy = modal.querySelector('[data-login-prompt-message]')
   if (copy && message) copy.textContent = message
-  if (open) window.setTimeout(() => modal.querySelector('[data-personal-login]')?.focus(), 20)
+  const loginButton = modal.querySelector('[data-personal-login]')
+  if (open && loginButton) {
+    loginButton.disabled = false
+    loginButton.textContent = '立即登录'
+    window.setTimeout(() => loginButton.focus(), 20)
+  }
 }
 
 function requirePersonalLogin(root, action) {
@@ -787,8 +792,14 @@ function startPersonalLogin(root) {
     window.location.href = loginUrl
     return
   }
-  setLoginPromptOpen(root, false)
-  showToast('统一用户中心登录接口已预留，配置后即可启用')
+  const modal = root.querySelector('[data-login-prompt]')
+  const message = modal?.querySelector('[data-login-prompt-message]')
+  const loginButton = modal?.querySelector('[data-personal-login]')
+  if (message) message.textContent = '统一认证服务已运行，但尚未配置钉钉等企业登录方式，完成企业应用参数配置后即可启用。'
+  if (loginButton) {
+    loginButton.disabled = true
+    loginButton.textContent = '登录暂未开通'
+  }
 }
 
 function closeAppEmbed(root) {
