@@ -68,6 +68,16 @@ test('serves OIDC discovery and a secure unified login interaction', async (cont
   assert.match(html, /登录到 Aspace空间智能/)
   assert.match(html, /等待配置企业应用参数/)
   assert.match(html, /name="password"/)
+  assert.doesNotMatch(html, /name="name"/)
+
+  const registrationPage = await fetch(`${baseUrl}${interactionPath}?mode=register`, {
+    headers: { Cookie: cookieHeader() },
+  })
+  assert.equal(registrationPage.status, 200)
+  const registrationHtml = await registrationPage.text()
+  assert.match(registrationHtml, /注册普通账号/)
+  assert.match(registrationHtml, /name="name"/)
+  assert.doesNotMatch(registrationHtml, /使用微信登录/)
 
   const registerResponse = await fetch(`${baseUrl}${interactionPath}/password`, {
     method: 'POST',

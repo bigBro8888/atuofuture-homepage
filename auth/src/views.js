@@ -10,8 +10,9 @@ function escapeHtml(value) {
   })[char])
 }
 
-export function loginPage({ uid, clientName, dingTalkEnabled, passwordEnabled, error = '' }) {
+export function loginPage({ uid, clientName, dingTalkEnabled, passwordEnabled, mode = 'login', error = '' }) {
   const base = authConfig.basePath
+  const registering = mode === 'register'
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -25,10 +26,10 @@ export function loginPage({ uid, clientName, dingTalkEnabled, passwordEnabled, e
     <section class="auth-card" aria-labelledby="auth-title">
       <header class="auth-brand"><span>A</span><div><strong>安托未来统一身份</strong><small>Atuo Future Identity</small></div></header>
       <p class="auth-eyebrow">UNIFIED AUTHENTICATION</p>
-      <h1 id="auth-title">登录到 ${escapeHtml(clientName)}</h1>
-      <p class="auth-lead">使用同一个身份安全访问已授权的内部系统。</p>
+      <h1 id="auth-title">${registering ? '注册普通账号' : `登录到 ${escapeHtml(clientName)}`}</h1>
+      <p class="auth-lead">${registering ? '创建一个用于收藏、排序与最近访问的个人账号。' : '使用同一个身份安全访问已授权的内部系统。'}</p>
       ${error ? `<p class="auth-error" role="alert">${escapeHtml(error)}</p>` : ''}
-      <div class="auth-methods">
+      ${registering ? '' : `<div class="auth-methods">
         ${dingTalkEnabled
           ? `<a class="auth-method auth-method--primary" href="${base}/interaction/${encodeURIComponent(uid)}/dingtalk"><i>钉</i><span><b>使用钉钉登录</b><small>推荐 · 企业内部账号</small></span><em>→</em></a>`
           : '<button class="auth-method auth-method--primary" type="button" disabled><i>钉</i><span><b>使用钉钉登录</b><small>等待配置企业应用参数</small></span></button>'}
@@ -36,22 +37,22 @@ export function loginPage({ uid, clientName, dingTalkEnabled, passwordEnabled, e
         <button class="auth-method" type="button" disabled><i>OA</i><span><b>使用企业 OA 登录</b><small>按客户系统对接</small></span></button>
         <button class="auth-method" type="button" disabled><i>码</i><span><b>短信验证码登录</b><small>等待短信服务配置</small></span></button>
       </div>
-      <div class="auth-divider"><span>其他方式</span></div>
+      <div class="auth-divider"><span>账号登录</span></div>`}
       ${passwordEnabled
-        ? `<form class="auth-local" action="${base}/interaction/${encodeURIComponent(uid)}/password" method="post">
-            <label>账号<input name="account" type="text" minlength="3" maxlength="64" autocomplete="username" placeholder="请输入账号" required /></label>
-            <label>密码<input name="password" type="password" minlength="8" maxlength="72" autocomplete="current-password" placeholder="请输入密码" required /></label>
-            <button name="action" value="login" type="submit">登录</button>
-          </form>
-          <details class="auth-register">
-            <summary>没有账号？注册普通账号</summary>
-            <form class="auth-local" action="${base}/interaction/${encodeURIComponent(uid)}/password" method="post">
+        ? registering
+          ? `<form class="auth-local" action="${base}/interaction/${encodeURIComponent(uid)}/password" method="post">
               <label>姓名<input name="name" type="text" maxlength="80" autocomplete="name" placeholder="请输入姓名" required /></label>
               <label>账号<input name="account" type="text" minlength="3" maxlength="64" autocomplete="username" placeholder="字母、数字或邮箱" required /></label>
               <label>密码<input name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="至少 8 位" required /></label>
               <button name="action" value="register" type="submit">注册并登录</button>
             </form>
-          </details>`
+            <a class="auth-switch" href="${base}/interaction/${encodeURIComponent(uid)}">已有账号？返回登录</a>`
+          : `<form class="auth-local" action="${base}/interaction/${encodeURIComponent(uid)}/password" method="post">
+            <label>账号<input name="account" type="text" minlength="3" maxlength="64" autocomplete="username" placeholder="请输入账号" required /></label>
+            <label>密码<input name="password" type="password" minlength="8" maxlength="72" autocomplete="current-password" placeholder="请输入密码" required /></label>
+            <button name="action" value="login" type="submit">登录</button>
+          </form>
+          <a class="auth-switch" href="${base}/interaction/${encodeURIComponent(uid)}?mode=register">没有账号？注册普通账号</a>`
         : '<button class="auth-password" type="button" disabled>普通账号登录暂未启用</button>'}
       <footer>登录即表示你同意企业安全与隐私规范</footer>
     </section>

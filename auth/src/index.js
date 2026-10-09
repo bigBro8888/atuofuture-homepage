@@ -180,6 +180,7 @@ export async function createAuthService() {
         clientName: client?.clientName || client?.clientId || '内部系统',
         dingTalkEnabled: Boolean(authConfig.dingtalk.clientId && authConfig.dingtalk.clientSecret),
         passwordEnabled: authConfig.passwordLoginEnabled,
+        mode: request.query.mode === 'register' ? 'register' : 'login',
         error: String(request.query.error || ''),
       }))
     } catch (error) {
@@ -224,7 +225,8 @@ export async function createAuthService() {
     } catch (error) {
       const message = error instanceof Error ? error.message : '登录失败'
       if (response.headersSent) return
-      response.redirect(303, `${authConfig.basePath}/interaction/${encodeURIComponent(request.params.uid)}?error=${encodeURIComponent(message)}`)
+      const mode = request.body?.action === 'register' ? '&mode=register' : ''
+      response.redirect(303, `${authConfig.basePath}/interaction/${encodeURIComponent(request.params.uid)}?error=${encodeURIComponent(message)}${mode}`)
     }
     },
   )
