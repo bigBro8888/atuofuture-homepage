@@ -1,103 +1,34 @@
-const apps = [
-  {
-    id: 'resource',
-    name: 'AAP资产管理系统',
-    category: 'asset',
-    project: '王力集团总部项目',
-    time: '2026-09-18 11:40',
-    image: '/images/aspace-one/app-resource.jpg',
-    alt: 'AAP 资产管理系统示意',
-    url: 'https://asset.atuofuture.com/',
-  },
-  {
-    id: 'screen',
-    name: '会议室预约系统',
-    category: 'meeting',
-    project: '北京研发中心项目',
-    time: '2026-09-21 09:12',
-    warning: '1 台设备离线',
-    image: '/images/aspace-one/app-control.jpg',
-    alt: '会议室预约与中控屏场景',
-    embedUrl: 'http://47.95.170.47/pages/dashboard.html?_av=20260929f',
-  },
-  {
-    id: 'poster',
-    name: 'AI画报',
-    category: 'content',
-    project: '上海展示项目',
-    time: '2026-09-19 10:15',
-    image: '/images/aspace-one/app-poster.jpg',
-    alt: 'AI画报在平板上的展示效果',
-    url: 'http://47.103.102.65:5173/c/atuofuture/',
-  },
-  {
-    id: 'energy',
-    name: '能源能耗',
-    category: 'energy',
-    project: '王力集团总部项目',
-    time: '2026-09-20 14:32',
-    image: '/images/aspace-one/app-energy.jpg',
-    alt: '楼宇能耗看板场景',
-    embedUrl: 'http://47.95.170.47:8001/',
-  },
-  {
-    id: 'album',
-    name: '电子相册',
-    category: 'content',
-    project: '杭州园区项目',
-    time: '2026-09-18 16:20',
-    image: '/images/aspace-one/app-album.jpg',
-    alt: '大屏电子相册多屏展示场景',
-    href: '/app-download/',
-  },
-  {
-    id: 'aspace',
-    name: '空间智能管理平台',
-    category: 'space',
-    project: 'Aspace One 综合管理项目',
-    time: '2026-09-30 18:02',
-    image: '/images/aspace-one/showcase-building.jpg',
-    alt: '空间智能管理平台场景',
-    embedUrl: 'https://aspacedev.atuofuture.com/',
-  },
-  {
-    id: 'info-publish',
-    name: '信息发布平台',
-    category: 'content',
-    project: '企业信息发布项目',
-    time: '2026-09-30 18:02',
-    image: '/images/aspace-one/app-poster.jpg',
-    alt: '信息发布平台场景',
-    embedUrl: 'https://info-publish.atuofuture.com/',
-  },
-  {
-    id: 'deskplate',
-    name: '桌牌管理系统',
-    category: 'meeting',
-    project: '智慧办公桌牌项目',
-    time: '2026-09-30 18:02',
-    image: '/images/aspace-one/showcase-meeting.jpg',
-    alt: '桌牌管理系统场景',
-    embedUrl: 'https://cloud.atuofuture.com/',
-  },
+let apps = [
   {
     id: 'digital-twin',
     name: '数字孪生',
-    category: 'space',
-    project: '楼宇数字孪生项目',
+    category: 'twin',
+    project: '园区空间可视化',
     time: '2026-10-08 14:20',
     image: '/images/aspace-one/showcase-space.jpg',
     alt: '数字孪生楼宇场景',
     url: 'http://47.95.170.47:8002/',
   },
   {
-    id: 'visitor-booking',
-    name: '访客预约',
+    id: 'screen',
+    name: '会议预约',
     category: 'meeting',
-    project: '访客服务',
-    desc: '访客登记、邀约与到访管理能力正在开发中。',
-    icon: 'construction',
-    locked: true,
+    project: '会议全流程服务',
+    time: '2026-09-21 09:12',
+    warning: '1 台设备离线',
+    image: '/images/aspace-one/app-control.jpg',
+    alt: '会议预约与中控屏场景',
+    embedUrl: 'http://47.95.170.47/pages/dashboard.html?_av=20260929f',
+  },
+  {
+    id: 'deskplate',
+    name: '桌牌管理',
+    category: 'meeting',
+    project: '智慧办公桌牌',
+    time: '2026-09-30 18:02',
+    image: '/images/aspace-one/showcase-meeting.jpg',
+    alt: '桌牌管理系统场景',
+    embedUrl: 'https://cloud.atuofuture.com/',
   },
   {
     id: 'meeting-info-screen',
@@ -105,16 +36,16 @@ const apps = [
     category: 'meeting',
     project: '会议空间',
     desc: '会议日程与会议信息展示能力正在开发中。',
-    icon: 'construction',
+    icon: 'developer_board',
     locked: true,
   },
   {
     id: 'meeting-control-screen',
-    name: '会议中控屏',
+    name: '会议室自控',
     category: 'meeting',
     project: '会议空间',
     desc: '会议设备与空间环境集中控制能力正在开发中。',
-    icon: 'construction',
+    icon: 'settings_remote',
     locked: true,
   },
   {
@@ -123,7 +54,66 @@ const apps = [
     category: 'meeting',
     project: '会议空间',
     desc: '跨设备无线投屏与内容共享能力正在开发中。',
-    icon: 'construction',
+    icon: 'cast',
+    locked: true,
+  },
+  {
+    id: 'info-publish',
+    name: '信息发布平台',
+    category: 'content',
+    project: '多终端信息发布',
+    time: '2026-09-30 18:02',
+    image: '/images/aspace-one/app-poster.jpg',
+    alt: '信息发布平台场景',
+    embedUrl: 'https://info-publish.atuofuture.com/',
+  },
+  {
+    id: 'poster',
+    name: 'AI画报',
+    category: 'content',
+    project: '智能内容创作',
+    time: '2026-09-19 10:15',
+    image: '/images/aspace-one/app-poster.jpg',
+    alt: 'AI画报在平板上的展示效果',
+    url: 'http://47.103.102.65:5173/c/atuofuture/',
+  },
+  {
+    id: 'album',
+    name: '电子相册',
+    category: 'content',
+    project: '企业影像展示',
+    time: '2026-09-18 16:20',
+    image: '/images/aspace-one/app-album.jpg',
+    alt: '大屏电子相册多屏展示场景',
+    href: '/app-download/',
+  },
+  {
+    id: 'resource',
+    name: 'AAP资产管理系统',
+    category: 'asset',
+    project: '资产全生命周期管理',
+    time: '2026-09-18 11:40',
+    image: '/images/aspace-one/app-resource.jpg',
+    alt: 'AAP 资产管理系统示意',
+    url: 'https://asset.atuofuture.com/',
+  },
+  {
+    id: 'energy',
+    name: '能源能耗',
+    category: 'energy',
+    project: '园区能源精细化运营',
+    time: '2026-09-20 14:32',
+    image: '/images/aspace-one/app-energy.jpg',
+    alt: '楼宇能耗看板场景',
+    embedUrl: 'http://47.95.170.47:8001/',
+  },
+  {
+    id: 'carbon-management',
+    name: '双碳管理',
+    category: 'carbon',
+    project: '绿色低碳运营',
+    desc: '碳排核算、减排分析与双碳目标管理能力正在规划中。',
+    icon: 'co2',
     locked: true,
   },
   {
@@ -132,7 +122,117 @@ const apps = [
     category: 'security',
     project: '安全管理',
     desc: '门禁通行、事件告警与安防管理能力正在开发中。',
-    icon: 'construction',
+    icon: 'shield_lock',
+    locked: true,
+  },
+  {
+    id: 'aspace',
+    name: '空间智能管理平台',
+    category: 'foundation',
+    group: 'platform',
+    project: '空间智能统一底座',
+    time: '2026-09-30 18:02',
+    image: '/images/aspace-one/showcase-building.jpg',
+    alt: '空间智能管理平台场景',
+    embedUrl: 'https://aspacedev.atuofuture.com/',
+  },
+  {
+    id: 'device-center',
+    name: '设备中心',
+    category: 'foundation',
+    group: 'base',
+    project: '基础能力',
+    desc: '统一设备接入、状态监测和设备生命周期管理能力正在建设中。',
+    icon: 'devices_other',
+    locked: true,
+  },
+  {
+    id: 'space-center',
+    name: '空间中心',
+    category: 'foundation',
+    group: 'base',
+    project: '基础能力',
+    desc: '统一园区、楼栋、楼层和房间空间模型能力正在建设中。',
+    icon: 'map',
+    locked: true,
+  },
+  {
+    id: 'permission-center',
+    name: '权限中心',
+    category: 'foundation',
+    group: 'base',
+    project: '基础能力',
+    desc: '统一角色、组织与业务权限配置能力正在建设中。',
+    icon: 'admin_panel_settings',
+    locked: true,
+  },
+  {
+    id: 'person-center',
+    name: '人员中心',
+    category: 'foundation',
+    group: 'base',
+    project: '基础能力',
+    desc: '统一人员档案、组织关系和身份信息管理能力正在建设中。',
+    icon: 'badge',
+    locked: true,
+  },
+  {
+    id: 'application-center',
+    name: '应用中心',
+    category: 'foundation',
+    group: 'base',
+    project: '基础能力',
+    desc: '统一应用注册、配置和运行状态管理能力正在建设中。',
+    icon: 'apps',
+    locked: true,
+  },
+  {
+    id: 'smart-lighting',
+    name: '智能照明',
+    category: 'foundation',
+    group: 'control',
+    project: '智能控制',
+    desc: '照明回路、调光策略与场景联动能力正在建设中。',
+    icon: 'lightbulb',
+    locked: true,
+  },
+  {
+    id: 'smart-air',
+    name: '智能空调',
+    category: 'foundation',
+    group: 'control',
+    project: '智能控制',
+    desc: '空调设备集中控制与节能策略能力正在建设中。',
+    icon: 'ac_unit',
+    locked: true,
+  },
+  {
+    id: 'smart-sensor',
+    name: '智能传感',
+    category: 'foundation',
+    group: 'control',
+    project: '智能控制',
+    desc: '环境与空间状态感知、数据采集能力正在建设中。',
+    icon: 'sensors',
+    locked: true,
+  },
+  {
+    id: 'smart-scene',
+    name: '智能场景',
+    category: 'foundation',
+    group: 'control',
+    project: '智能控制',
+    desc: '跨设备场景编排、自动联动与策略执行能力正在建设中。',
+    icon: 'auto_awesome',
+    locked: true,
+  },
+  {
+    id: 'visitor-booking',
+    name: '访客预约',
+    category: 'visitor',
+    project: '访客管理',
+    desc: '访客邀约、审批、登记与到访管理能力正在开发中。',
+    icon: 'person_add',
     locked: true,
   },
 ]
@@ -141,23 +241,33 @@ const openedApps = apps.filter((app) => !app.locked).length
 const lockedApps = apps.length - openedApps
 
 const appFilters = [
-  ['all', '全部', apps.length],
+  ['all', '全部能力', apps.length],
   ['open', '已开通', openedApps],
-  ['locked', '未开通', lockedApps],
+  ['locked', '规划中', lockedApps],
 ]
 
-let appCategories = [
-  ['asset', 'business_center', '资产管理'],
-  ['meeting', 'groups', '会议管理'],
-  ['energy', 'eco', '能源管理'],
-  ['space', 'deployed_code', '空间运营'],
-  ['content', 'description', '内容服务'],
-  ['security', 'shield_lock', '门禁安防'],
+const appCategories = [
+  ['twin', 'deployed_code', '数字孪生', '统一呈现园区、楼宇与空间运行态势'],
+  ['meeting', 'groups', '会议管理', '覆盖会前预约、会中控制与会后服务'],
+  ['content', 'campaign', '信息发布', '统一管理内容生产、发布与多终端展示'],
+  ['asset', 'business_center', '资产管理', '管理资产台账、流转与全生命周期'],
+  ['energy', 'eco', '能源能耗', '洞察能源使用、用能异常与节能空间'],
+  ['carbon', 'co2', '双碳管理', '支撑碳排核算、分析与减排目标管理'],
+  ['security', 'shield_lock', '门禁安防', '统一管理通行权限、事件与安全告警'],
+  ['foundation', 'hub', '智能底座', '沉淀空间、设备、人员和智能控制基础能力'],
+  ['visitor', 'person_add', '访客管理', '覆盖访客邀约、审批、登记与到访服务'],
 ]
 
 function appCategoryMeta(categoryId) {
   const category = appCategories.find(([id]) => id === categoryId)
-  return category || ['other', 'apps', '其他应用']
+  return category || ['other', 'apps', '其他能力', '']
+}
+
+function catalogMeta(categoryId) {
+  if (categoryId === 'favorites') return ['star', '我的收藏', '集中查看你收藏的常用业务能力']
+  if (categoryId === 'all') return ['grid_view', '全部业务能力', '按业务场景浏览 Aspace One 已接入和规划中的能力']
+  const [, ico, label, description] = appCategoryMeta(categoryId)
+  return [ico, label, description]
 }
 
 let favoriteAppIds = new Set(['resource', 'poster', 'digital-twin'])
@@ -170,15 +280,22 @@ function loadAppPreferences() {
     // 本地偏好损坏时使用默认收藏。
   }
   try {
-    const savedOrder = JSON.parse(localStorage.getItem('aspace-one-category-order') || 'null')
-    if (Array.isArray(savedOrder)) {
-      const order = new Map(savedOrder.map((id, index) => [id, index]))
-      appCategories = [...appCategories].sort((left, right) => (
-        (order.get(left[0]) ?? Number.MAX_SAFE_INTEGER) - (order.get(right[0]) ?? Number.MAX_SAFE_INTEGER)
-      ))
-    }
+    const savedOrder = JSON.parse(localStorage.getItem('aspace-one-capability-order') || '{}')
+    const categoryIndex = new Map(appCategories.map(([id], index) => [id, index]))
+    apps.sort((left, right) => {
+      const categoryDiff = (categoryIndex.get(left.category) ?? 99) - (categoryIndex.get(right.category) ?? 99)
+      if (categoryDiff) return categoryDiff
+      if (left.group !== right.group) {
+        const groups = ['platform', 'base', 'control']
+        return groups.indexOf(left.group) - groups.indexOf(right.group)
+      }
+      const order = Array.isArray(savedOrder[left.category]) ? savedOrder[left.category] : []
+      const leftIndex = order.indexOf(left.id)
+      const rightIndex = order.indexOf(right.id)
+      return (leftIndex < 0 ? Number.MAX_SAFE_INTEGER : leftIndex) - (rightIndex < 0 ? Number.MAX_SAFE_INTEGER : rightIndex)
+    })
   } catch {
-    // 分类顺序损坏时使用默认排序。
+    // 能力顺序损坏时使用产品定义的默认排序。
   }
 }
 
@@ -307,7 +424,7 @@ function appCard(app, index) {
   const [, categoryIcon, categoryLabel] = appCategoryMeta(app.category)
   const isFavorite = favoriteAppIds.has(app.id)
   return `
-      <article class="aso-app-card${locked ? ' is-locked' : ''}" data-app="${app.id}" data-app-state="${locked ? 'locked' : 'open'}" data-app-category="${escapeHtml(app.category)}" data-app-search="${escapeHtml(`${app.name} ${app.project} ${categoryLabel}`.toLowerCase())}">
+      <article class="aso-app-card${locked ? ' is-locked' : ''}" draggable="true" data-app="${app.id}" data-app-state="${locked ? 'locked' : 'open'}" data-app-category="${escapeHtml(app.category)}" data-capability-group="${escapeHtml(app.group || '')}" data-app-search="${escapeHtml(`${app.name} ${app.project} ${categoryLabel}`.toLowerCase())}">
         <figure class="aso-app-card__shot">
           ${locked
             ? `<span class="aso-app-card__developing-art">${icon(app.icon || 'construction')}<b>开发中</b><small>COMING SOON</small></span>`
@@ -330,8 +447,20 @@ function appCard(app, index) {
         </div>
         ${locked
           ? `<button class="aso-btn aso-btn--muted" type="button" disabled>${icon('construction')} 开发中</button>`
-          : `<button class="aso-btn aso-btn--primary" type="button" data-enter-app="${app.id}">进入系统 ${icon('arrow_forward')}</button>`}
+          : `<button class="aso-btn aso-btn--primary" type="button" data-enter-app="${app.id}">进入功能 ${icon('arrow_forward')}</button>`}
       </article>`
+}
+
+function capabilityGroupHeadingsMarkup() {
+  return `
+    <div class="aso-capability-group" data-capability-group-heading="base" hidden>
+      <span>${icon('account_tree')}</span>
+      <div><b>基础能力</b><small>设备、空间、权限、人员与应用的统一数据底座</small></div>
+    </div>
+    <div class="aso-capability-group" data-capability-group-heading="control" hidden>
+      <span>${icon('settings_input_component')}</span>
+      <div><b>智能控制</b><small>面向照明、空调、传感与场景的联动控制能力</small></div>
+    </div>`
 }
 
 function docRows(category = '全部文档', keyword = '') {
@@ -361,7 +490,7 @@ function renderPortal() {
           <a class="aso-brand" href="#overview"><strong>Aspace One</strong><span>/ 空间智能产品平台</span><em>前端演示</em></a>
           <div class="aso-subnav__links">
             <a class="is-active" href="#overview">概览</a>
-            <a href="#apps">我的应用</a>
+            <a href="#apps">业务工作台</a>
             <a href="#help">文档中心</a>
             <a href="#support">服务支持</a>
           </div>
@@ -372,46 +501,54 @@ function renderPortal() {
         <div class="aso-container aso-apps" id="apps">
           <header class="aso-app-center__masthead">
             <div>
-              <p class="aso-eyebrow">APPLICATION CENTER</p>
-              <h1>应用中心</h1>
-              <p class="aso-lead">连接每一个空间场景与运营服务</p>
+              <p class="aso-eyebrow">SPACE INTELLIGENCE WORKSPACE</p>
+              <h1>空间智能工作台</h1>
+              <p class="aso-lead">按业务场景连接空间、设备、内容与运营服务</p>
             </div>
-            <button class="aso-more" type="button" data-action="manage-apps">管理应用 ${icon('arrow_forward')}</button>
+            <button class="aso-more" type="button" data-action="manage-apps">能力接入 ${icon('arrow_forward')}</button>
           </header>
 
           <div class="aso-app-center">
-            <aside class="aso-app-sidebar" aria-label="应用分类">
+            <aside class="aso-app-sidebar" aria-label="业务导航">
               <nav>
                 <button type="button" data-app-category-filter="favorites">
                   ${icon('star')}<span>我的收藏</span><i data-favorite-count>${favoriteAppIds.size}</i>
                 </button>
                 <button class="is-active" type="button" data-app-category-filter="all" aria-current="true">
-                  ${icon('grid_view')}<span>全部应用</span><i>${apps.length}</i>
+                  ${icon('grid_view')}<span>全部能力</span><i>${apps.length}</i>
                 </button>
                 <button type="button" data-app-category-filter="recent">
                   ${icon('history')}<span>最近访问</span><i data-recent-count>${recentActivities.length}</i>
                 </button>
               </nav>
               <div class="aso-app-sidebar__divider"></div>
-              <p>业务分类</p>
+              <p>业务导航</p>
               <nav data-business-category-nav>
                 ${appCategories.map(([id, ico, label]) => `
-                <button type="button" draggable="true" data-app-category-filter="${id}" title="按住拖拽排序">
-                  ${icon(ico)}<span>${label}</span>${icon('drag_indicator', 'aso-category-drag')}<i>${apps.filter((app) => app.category === id).length}</i>
+                <button type="button" data-app-category-filter="${id}">
+                  ${icon(ico)}<span>${label}</span><i>${apps.filter((app) => app.category === id).length}</i>
                 </button>`).join('')}
               </nav>
             </aside>
 
             <div class="aso-app-catalog">
+              <header class="aso-app-catalog__heading">
+                <span data-catalog-icon>${icon('grid_view')}</span>
+                <div>
+                  <h2 data-catalog-title>全部业务能力</h2>
+                  <p data-catalog-description>按业务场景浏览 Aspace One 已接入和规划中的能力</p>
+                </div>
+                <small>${icon('drag_indicator')} 拖拽能力卡片可调整同类功能顺序</small>
+              </header>
               <div class="aso-app-catalog__toolbar">
                 <label class="aso-app-search">
                   ${icon('search')}
-                  <input type="search" data-app-search-input aria-label="搜索应用" placeholder="搜索应用名称、项目或分类" />
+                  <input type="search" data-app-search-input aria-label="搜索业务能力" placeholder="搜索能力名称、业务场景或分类" />
                 </label>
                 <label class="aso-app-sort">
                   ${icon('schedule')}
-                  <select data-app-sort aria-label="应用排序">
-                    <option value="default">默认排序</option>
+                  <select data-app-sort aria-label="业务能力排序">
+                    <option value="default">自定义排序</option>
                     <option value="recent">最近使用</option>
                     <option value="name">按名称</option>
                   </select>
@@ -419,10 +556,10 @@ function renderPortal() {
               </div>
 
               <div class="aso-app-catalog__controls">
-                <div class="aso-filters" role="tablist" aria-label="按开通状态筛选应用">
+                <div class="aso-filters" role="tablist" aria-label="按建设状态筛选业务能力">
                   ${appFilters.map(([id, label, count], index) => `
                   <button class="${index === 0 ? 'is-active' : ''}" type="button" role="tab" aria-selected="${index === 0 ? 'true' : 'false'}" data-app-filter="${id}">${label} <i>${count}</i></button>`).join('')}
-                  <span>共 <b data-visible-app-count>${apps.length}</b> 个应用</span>
+                  <span>共 <b data-visible-app-count>${apps.length}</b> 项能力</span>
                 </div>
                 <div class="aso-app-view" aria-label="切换应用视图">
                   <button class="is-active" type="button" data-app-view="grid" aria-label="网格视图" aria-pressed="true">${icon('grid_view')}</button>
@@ -430,8 +567,8 @@ function renderPortal() {
                 </div>
               </div>
 
-              <div class="aso-app-grid" data-app-grid>${apps.map(appCard).join('')}</div>
-              <p class="aso-empty aso-app-grid__empty" data-app-empty hidden>没有找到符合条件的应用。</p>
+              <div class="aso-app-grid" data-app-grid>${apps.map(appCard).join('')}${capabilityGroupHeadingsMarkup()}</div>
+              <p class="aso-empty aso-app-grid__empty" data-app-empty hidden>没有找到符合条件的业务能力。</p>
             </div>
             <section class="aso-recent-panel" data-recent-panel hidden>
               <header>
@@ -631,46 +768,60 @@ async function openAppEmbed(root, app) {
   await openAppInNewPage(root, app)
 }
 
-function initCategoryDrag(root) {
-  const nav = root.querySelector('[data-business-category-nav]')
-  if (!nav) return
-  let dragged = null
+function updateCapabilityOrder(categoryId, orderedIds) {
+  const rank = new Map(orderedIds.map((id, index) => [id, index]))
+  const categoryApps = apps
+    .filter((app) => app.category === categoryId)
+    .sort((left, right) => (rank.get(left.id) ?? 999) - (rank.get(right.id) ?? 999))
+  let cursor = 0
+  apps = apps.map((app) => app.category === categoryId ? categoryApps[cursor++] : app)
+  try {
+    const saved = JSON.parse(localStorage.getItem('aspace-one-capability-order') || '{}')
+    saved[categoryId] = categoryApps.map((app) => app.id)
+    localStorage.setItem('aspace-one-capability-order', JSON.stringify(saved))
+  } catch {
+    // 浏览器禁用本地存储时，本次会话内仍保留排序结果。
+  }
+}
 
-  const saveOrder = () => {
-    const order = [...nav.querySelectorAll('[data-app-category-filter]')]
-      .map((button) => button.dataset.appCategoryFilter)
-    localStorage.setItem('aspace-one-category-order', JSON.stringify(order))
+function arrangeCapabilityGrid(grid, category, sortMode = 'default') {
+  const cards = [...grid.querySelectorAll('[data-app]')]
+  const appForCard = (card) => apps.find((app) => app.id === card.dataset.app)
+  cards.sort((left, right) => {
+    const leftApp = appForCard(left)
+    const rightApp = appForCard(right)
+    if (sortMode === 'name') return leftApp.name.localeCompare(rightApp.name, 'zh-CN')
+    if (sortMode === 'recent') return String(rightApp.time || '').localeCompare(String(leftApp.time || ''))
+    return apps.indexOf(leftApp) - apps.indexOf(rightApp)
+  })
+
+  const headings = [...grid.querySelectorAll('[data-capability-group-heading]')]
+  headings.forEach((heading) => {
+    heading.hidden = true
+    grid.appendChild(heading)
+  })
+  if (category !== 'foundation') {
+    cards.forEach((card) => grid.insertBefore(card, headings[0] || null))
+    return
   }
 
-  nav.addEventListener('dragstart', (event) => {
-    const button = event.target.closest('[data-app-category-filter]')
-    if (!button) return
-    dragged = button
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('text/plain', button.dataset.appCategoryFilter)
-    window.requestAnimationFrame(() => button.classList.add('is-dragging'))
-  })
+  const appendGroup = (group) => {
+    const heading = headings.find((item) => item.dataset.capabilityGroupHeading === group)
+    if (heading) grid.appendChild(heading)
+    cards.filter((card) => card.dataset.capabilityGroup === group).forEach((card) => grid.appendChild(card))
+  }
+  cards.filter((card) => card.dataset.appCategory === 'foundation' && !card.dataset.capabilityGroup).forEach((card) => grid.appendChild(card))
+  cards.filter((card) => card.dataset.capabilityGroup === 'platform').forEach((card) => grid.appendChild(card))
+  appendGroup('base')
+  appendGroup('control')
+}
 
-  nav.addEventListener('dragover', (event) => {
-    if (!dragged) return
-    const target = event.target.closest('[data-app-category-filter]')
-    if (!target || target === dragged) return
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'move'
-    const rect = target.getBoundingClientRect()
-    const insertAfter = event.clientY > rect.top + rect.height / 2
-    nav.insertBefore(dragged, insertAfter ? target.nextSibling : target)
-  })
-
-  nav.addEventListener('drop', (event) => {
-    if (!dragged) return
-    event.preventDefault()
-    saveOrder()
-  })
-
-  nav.addEventListener('dragend', () => {
-    dragged?.classList.remove('is-dragging')
-    dragged = null
+function updateCapabilityGroupHeadings(grid, category) {
+  grid.querySelectorAll('[data-capability-group-heading]').forEach((heading) => {
+    const group = heading.dataset.capabilityGroupHeading
+    const hasVisibleCard = [...grid.querySelectorAll(`[data-capability-group="${group}"]`)]
+      .some((card) => !card.classList.contains('is-hidden'))
+    heading.hidden = category !== 'foundation' || !hasVisibleCard
   })
 }
 
@@ -685,13 +836,18 @@ function initAppFilters(root) {
   const visibleCount = root.querySelector('[data-visible-app-count]')
   const catalog = root.querySelector('.aso-app-catalog')
   const recentPanel = root.querySelector('[data-recent-panel]')
+  const catalogIcon = root.querySelector('[data-catalog-icon]')
+  const catalogTitle = root.querySelector('[data-catalog-title]')
+  const catalogDescription = root.querySelector('[data-catalog-description]')
   if (!grid || !statusButtons.length || !categoryButtons.length) return
 
   let status = 'all'
   let category = 'all'
   let query = ''
+  let draggedCard = null
 
   const applyFilters = () => {
+    arrangeCapabilityGrid(grid, category, sortSelect?.value || 'default')
     let visible = 0
     grid.querySelectorAll('[data-app-state]').forEach((card) => {
       const statusMatch = status === 'all' || card.dataset.appState === status
@@ -704,6 +860,7 @@ function initAppFilters(root) {
     })
     if (visibleCount) visibleCount.textContent = String(visible)
     if (empty) empty.hidden = visible > 0
+    updateCapabilityGroupHeadings(grid, category)
   }
 
   statusButtons.forEach((button) => {
@@ -724,6 +881,10 @@ function initAppFilters(root) {
       const showingRecent = category === 'recent'
       if (catalog) catalog.hidden = showingRecent
       if (recentPanel) recentPanel.hidden = !showingRecent
+      const [headingIcon, headingTitle, headingDescription] = catalogMeta(category)
+      if (catalogIcon) catalogIcon.innerHTML = icon(headingIcon)
+      if (catalogTitle) catalogTitle.textContent = headingTitle
+      if (catalogDescription) catalogDescription.textContent = headingDescription
       categoryButtons.forEach((item) => {
         const active = item === button
         item.classList.toggle('is-active', active)
@@ -740,15 +901,7 @@ function initAppFilters(root) {
   })
 
   sortSelect?.addEventListener('change', () => {
-    const cards = [...grid.querySelectorAll('[data-app]')]
-    cards.sort((left, right) => {
-      const leftApp = apps.find((app) => app.id === left.dataset.app)
-      const rightApp = apps.find((app) => app.id === right.dataset.app)
-      if (sortSelect.value === 'name') return leftApp.name.localeCompare(rightApp.name, 'zh-CN')
-      if (sortSelect.value === 'recent') return String(rightApp.time).localeCompare(String(leftApp.time))
-      return apps.indexOf(leftApp) - apps.indexOf(rightApp)
-    })
-    cards.forEach((card) => grid.appendChild(card))
+    applyFilters()
   })
 
   viewButtons.forEach((button) => {
@@ -778,6 +931,50 @@ function initAppFilters(root) {
       applyFilters()
     })
   })
+
+  grid.addEventListener('dragstart', (event) => {
+    const card = event.target.closest('[data-app]')
+    if (!card || event.target.closest('button')) {
+      event.preventDefault()
+      return
+    }
+    draggedCard = card
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', card.dataset.app)
+    window.requestAnimationFrame(() => card.classList.add('is-dragging'))
+  })
+
+  grid.addEventListener('dragover', (event) => {
+    if (!draggedCard) return
+    const target = event.target.closest('[data-app]')
+    const sameCategory = target?.dataset.appCategory === draggedCard.dataset.appCategory
+    const sameGroup = target?.dataset.capabilityGroup === draggedCard.dataset.capabilityGroup
+    if (!target || target === draggedCard || !sameCategory || !sameGroup) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    const rect = target.getBoundingClientRect()
+    const after = event.clientY > rect.top + rect.height / 2
+      || (Math.abs(event.clientY - (rect.top + rect.height / 2)) < rect.height / 3 && event.clientX > rect.left + rect.width / 2)
+    grid.insertBefore(draggedCard, after ? target.nextSibling : target)
+  })
+
+  grid.addEventListener('drop', (event) => {
+    if (!draggedCard) return
+    event.preventDefault()
+    const categoryId = draggedCard.dataset.appCategory
+    const orderedIds = [...grid.querySelectorAll(`[data-app-category="${categoryId}"]`)].map((card) => card.dataset.app)
+    updateCapabilityOrder(categoryId, orderedIds)
+    if (sortSelect) sortSelect.value = 'default'
+    showToast('功能顺序已保存在当前浏览器')
+  })
+
+  grid.addEventListener('dragend', () => {
+    draggedCard?.classList.remove('is-dragging')
+    draggedCard = null
+    applyFilters()
+  })
+
+  applyFilters()
 }
 
 async function loadQuickActions() {
@@ -1002,7 +1199,7 @@ export async function initAspaceOne() {
     }
 
     if (event.target.closest('[data-action="manage-apps"]')) {
-      showToast('应用管理后台接口待接入，当前为前端流程预览')
+      showToast('已预留统一能力注册与子系统快速接入接口')
       return
     }
 
@@ -1126,7 +1323,6 @@ export async function initAspaceOne() {
   }
 
   initAppFilters(root)
-  initCategoryDrag(root)
 
   root.querySelector('[data-embed-close]')?.addEventListener('click', () => closeAppEmbed(root))
   document.addEventListener('keydown', (event) => {
