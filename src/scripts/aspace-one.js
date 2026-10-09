@@ -485,18 +485,6 @@ function docRows(category = '全部文档', keyword = '') {
 function renderPortal() {
   return `
     <div class="aso-page">
-      <nav class="aso-subnav" aria-label="Aspace One 导航">
-        <div class="aso-container aso-subnav__inner">
-          <a class="aso-brand" href="#overview"><strong>Aspace One</strong><span>/ 空间智能产品平台</span><em>前端演示</em></a>
-          <div class="aso-subnav__links">
-            <a class="is-active" href="#overview">概览</a>
-            <a href="#apps">业务工作台</a>
-            <a href="#help">文档中心</a>
-            <a href="#support">服务支持</a>
-          </div>
-        </div>
-      </nav>
-
       <section class="aso-hero" id="overview">
         <div class="aso-container aso-apps" id="apps">
           <div class="aso-app-center">
@@ -1284,34 +1272,6 @@ export async function initAspaceOne() {
       docList.innerHTML = docRows(activeCategory, keyword)
     })
   })
-
-  const navLinks = [...root.querySelectorAll('.aso-subnav__links a')]
-  const setActiveNav = (href) => {
-    navLinks.forEach((link) => {
-      const active = link.getAttribute('href') === href
-      link.classList.toggle('is-active', active)
-      if (active) link.setAttribute('aria-current', 'page')
-      else link.removeAttribute('aria-current')
-    })
-  }
-  navLinks.forEach((link) => {
-    link.addEventListener('click', () => setActiveNav(link.getAttribute('href')))
-  })
-  setActiveNav('#overview')
-
-  const observedSections = ['overview', 'help', 'support']
-    .map((id) => document.getElementById(id))
-    .filter(Boolean)
-  if ('IntersectionObserver' in window && observedSections.length) {
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-      if (!visible) return
-      setActiveNav(`#${visible.target.id}`)
-    }, { rootMargin: '-124px 0px -55% 0px', threshold: [0.05, 0.25, 0.6] })
-    observedSections.forEach((section) => observer.observe(section))
-  }
 
   initAppFilters(root)
 
