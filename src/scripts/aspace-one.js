@@ -524,11 +524,32 @@ function renderPortal() {
       </nav>
       <section class="aso-hero" id="overview">
         <div class="aso-container aso-apps" id="apps">
+          <header class="aso-overview-head">
+            <div class="aso-overview-head__intro">
+              <p class="aso-eyebrow">ASPACE OVERVIEW</p>
+              <h1>Aspace功能全览</h1>
+              <p>统一浏览空间智能业务能力与应用服务</p>
+            </div>
+            <div class="aso-overview-head__find">
+              <form class="aso-search" data-app-search-form>
+                ${icon('search')}
+                <input type="search" data-app-search-input aria-label="搜索业务能力" placeholder="搜索能力名称、业务场景或分类，例如：会议预约、能源能耗" />
+                <button type="submit">搜索</button>
+              </form>
+              <div class="aso-hot">
+                <span>热门搜索：</span>
+                ${['会议管理', '资产管理', '数字孪生', '能源能耗'].map((word) => `<button type="button" data-app-search-hot="${word}">${word}</button>`).join('')}
+              </div>
+            </div>
+            <figure class="aso-overview-deco" aria-hidden="true">
+              <i class="aso-overview-deco__base"></i>
+              <i class="aso-overview-deco__tower"><span></span><span></span><span></span></i>
+              <i class="aso-overview-deco__node aso-overview-deco__node--one"></i>
+              <i class="aso-overview-deco__node aso-overview-deco__node--two"></i>
+            </figure>
+          </header>
           <div class="aso-app-center">
             <aside class="aso-app-sidebar" aria-label="业务导航">
-              <header class="aso-app-sidebar__heading">
-                <strong>Aspace空间智能</strong>
-              </header>
               <nav>
                 <button type="button" data-app-category-filter="favorites">
                   ${icon('star')}<span>我的收藏</span><i data-favorite-count>${favoriteAppIds.size}</i>
@@ -558,30 +579,25 @@ function renderPortal() {
                 </div>
                 ${portalAccountMarkup()}
               </header>
-              <div class="aso-app-catalog__toolbar">
-                <label class="aso-app-search">
-                  ${icon('search')}
-                  <input type="search" data-app-search-input aria-label="搜索业务能力" placeholder="搜索能力名称、业务场景或分类" />
-                </label>
-                <label class="aso-app-sort">
-                  ${icon('schedule')}
-                  <select data-app-sort aria-label="业务能力排序">
-                    <option value="default">自定义排序</option>
-                    <option value="recent">最近使用</option>
-                    <option value="name">按名称</option>
-                  </select>
-                </label>
-              </div>
-
               <div class="aso-app-catalog__controls">
                 <div class="aso-filters" role="tablist" aria-label="按建设状态筛选业务能力">
                   ${appFilters.map(([id, label, count], index) => `
                   <button class="${index === 0 ? 'is-active' : ''}" type="button" role="tab" aria-selected="${index === 0 ? 'true' : 'false'}" data-app-filter="${id}">${label} <i>${count}</i></button>`).join('')}
                   <span>共 <b data-visible-app-count>${apps.length}</b> 项能力</span>
                 </div>
-                <div class="aso-app-view" aria-label="切换应用视图">
-                  <button class="is-active" type="button" data-app-view="grid" aria-label="网格视图" aria-pressed="true">${icon('grid_view')}</button>
-                  <button type="button" data-app-view="list" aria-label="列表视图" aria-pressed="false">${icon('view_list')}</button>
+                <div class="aso-app-controls-right">
+                  <label class="aso-app-sort">
+                    ${icon('schedule')}
+                    <select data-app-sort aria-label="业务能力排序">
+                      <option value="default">自定义排序</option>
+                      <option value="recent">最近使用</option>
+                      <option value="name">按名称</option>
+                    </select>
+                  </label>
+                  <div class="aso-app-view" aria-label="切换应用视图">
+                    <button class="is-active" type="button" data-app-view="grid" aria-label="网格视图" aria-pressed="true">${icon('grid_view')}</button>
+                    <button type="button" data-app-view="list" aria-label="列表视图" aria-pressed="false">${icon('view_list')}</button>
+                  </div>
                 </div>
               </div>
 
@@ -1200,6 +1216,18 @@ function initAppFilters(root) {
   searchInput?.addEventListener('input', () => {
     query = searchInput.value.trim().toLowerCase()
     applyFilters()
+  })
+  root.querySelector('[data-app-search-form]')?.addEventListener('submit', (event) => {
+    event.preventDefault()
+    searchInput?.focus()
+    applyFilters()
+  })
+  root.querySelectorAll('[data-app-search-hot]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!searchInput) return
+      searchInput.value = button.dataset.appSearchHot
+      searchInput.dispatchEvent(new Event('input', { bubbles: true }))
+    })
   })
 
   sortSelect?.addEventListener('change', () => {
