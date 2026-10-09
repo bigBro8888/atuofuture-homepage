@@ -772,7 +772,7 @@ function setPortalMode(root, mode) {
     button.classList.toggle('is-active', active)
     button.setAttribute('aria-selected', String(active))
   })
-  root.dataset.portalMode = nextMode
+  root.dataset.activePortalMode = nextMode
   const top = root.getBoundingClientRect().top + window.scrollY
   if (window.scrollY > top + 12) window.scrollTo({ top, behavior: 'smooth' })
 }
