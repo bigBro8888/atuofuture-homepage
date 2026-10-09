@@ -47,32 +47,26 @@
 }
 .aso-app-sidebar {
   position: sticky;
-  top: 84px;
+  top: 24px;
   min-width: 0;
   padding: 0 16px 14px 0;
   border-right: 1px solid rgba(211, 224, 240, .78);
 }
 .aso-app-sidebar__heading {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
+  display: flex;
+  height: 76px;
   align-items: center;
-  gap: 10px;
   margin-bottom: 17px;
   padding-bottom: 17px;
   border-bottom: 1px solid rgba(211, 224, 240, .9);
 }
-.aso-app-sidebar__heading > span {
-  display: grid;
-  width: 40px;
-  height: 46px;
-  place-items: center;
-  border-radius: 13px;
-  background: linear-gradient(145deg, #e8f3ff, #dcecff);
+.aso-app-sidebar__heading strong {
   color: #0879f9;
+  font-family: "钉钉进步体", "DingTalk JinBuTi", "DingTalk Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: -.02em;
 }
-.aso-app-sidebar__heading > span .material-symbols-outlined { font-size: 21px; }
-.aso-app-sidebar__heading b { display: block; color: #263a57; font-size: 14px; }
-.aso-app-sidebar__heading small { display: block; margin-top: 4px; color: #8a98ab; font-size: 10px; }
 .aso-app-sidebar nav { display: grid; gap: 5px; }
 .aso-app-sidebar > p {
   display: flex;

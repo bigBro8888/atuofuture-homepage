@@ -1,7 +1,7 @@
 /** 全站顶部导航：一级 + 二级（mega menu） */
 export const SITE_NAV_ITEMS = [
   { id: 'home', label: '首页', segment: '' },
-  { id: 'aspace-one', label: 'Aspace One', segment: 'aspace-one/' },
+  { id: 'aspace-one', label: 'Aspace空间智能', segment: 'aspace-one/' },
   {
     id: 'agents',
     label: '空间智能体',

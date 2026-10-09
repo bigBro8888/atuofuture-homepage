@@ -265,7 +265,7 @@ function appCategoryMeta(categoryId) {
 
 function catalogMeta(categoryId) {
   if (categoryId === 'favorites') return ['star', '我的收藏', '集中查看你收藏的常用业务能力']
-  if (categoryId === 'all') return ['grid_view', '全部业务能力', '按业务场景浏览 Aspace One 已接入和规划中的能力']
+  if (categoryId === 'all') return ['grid_view', '全部业务能力', '按业务场景浏览 Aspace空间智能 已接入和规划中的能力']
   const [, ico, label, description] = appCategoryMeta(categoryId)
   return [ico, label, description]
 }
@@ -300,7 +300,7 @@ function loadAppPreferences() {
 }
 
 const docs = [
-  { title: 'Aspace One 快速入门指南', category: '全部文档', date: '2026-09-12', featured: true, keywords: '权限申请 账号绑定 入门' },
+  { title: 'Aspace空间智能快速入门指南', category: '全部文档', date: '2026-09-12', featured: true, keywords: '权限申请 账号绑定 入门' },
   { title: '能源能耗数据接入说明', category: '能源能耗', date: '2026-09-10', featured: true, keywords: '能耗数据接入 网关 采集' },
   { title: 'AI画报使用手册', category: 'AI画报', date: '2026-09-08', keywords: '模板 发布' },
   { title: '电子相册发布流程', category: '电子相册', date: '2026-09-06', keywords: '电子相册发布 多屏同步' },
@@ -322,7 +322,7 @@ const docCategories = [
 const hotSearches = ['会议室预约', '权限申请', '能耗数据接入', '电子相册发布']
 
 const featuredDocs = [
-  { title: 'Aspace One 快速入门指南', date: '2026-09-12', badge: '新手必读', tone: 'blue', art: 'lines' },
+  { title: 'Aspace空间智能快速入门指南', date: '2026-09-12', badge: '新手必读', tone: 'blue', art: 'lines' },
   { title: '能源能耗数据接入说明', date: '2026-09-10', badge: '热门文档', tone: 'teal', art: 'chart' },
 ]
 
@@ -490,8 +490,7 @@ function renderPortal() {
           <div class="aso-app-center">
             <aside class="aso-app-sidebar" aria-label="业务导航">
               <header class="aso-app-sidebar__heading">
-                <span>${icon('account_tree')}</span>
-                <div><b>业务导航</b><small>${appCategories.length} 个业务域</small></div>
+                <strong>Aspace空间智能</strong>
               </header>
               <nav>
                 <button type="button" data-app-category-filter="favorites">
@@ -519,7 +518,7 @@ function renderPortal() {
                 <span data-catalog-icon>${icon('grid_view')}</span>
                 <div>
                   <h2 data-catalog-title>全部业务能力</h2>
-                  <p data-catalog-description>按业务场景浏览 Aspace One 已接入和规划中的能力</p>
+                  <p data-catalog-description>按业务场景浏览 Aspace空间智能 已接入和规划中的能力</p>
                 </div>
               </header>
               <div class="aso-app-catalog__toolbar">
@@ -599,7 +598,7 @@ function renderPortal() {
             </nav>
             <div class="aso-docs">
               <h3>文档中心</h3>
-              <p class="aso-docs__lead">精选指南与操作说明，快速上手 Aspace One。</p>
+              <p class="aso-docs__lead">精选指南与操作说明，快速上手 Aspace空间智能。</p>
               <div class="aso-docs__feature">
                 ${featuredDocs
                   .map(
