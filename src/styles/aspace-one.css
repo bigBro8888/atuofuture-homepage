@@ -1194,6 +1194,7 @@ body.aso-settings-open { overflow: hidden; }
 .aso-help {
   position: relative;
   overflow: hidden;
+  padding: 24px 0 42px;
   background: linear-gradient(180deg, #edf4fe 0%, #f9fcff 24%, #f8fbfe 70%, #ecf3fc 100%);
 }
 .aso-help::before {
@@ -1209,7 +1210,13 @@ body.aso-settings-open { overflow: hidden; }
   content: "";
 }
 .aso-help > .aso-container { position: relative; z-index: 1; }
-.aso-help__head { display: grid; grid-template-columns: minmax(0, 290px) minmax(0, 1fr) 168px; align-items: start; gap: 0 34px; }
+.aso-help__head {
+  display: grid;
+  grid-template-columns: minmax(0, 290px) minmax(0, 1fr) 168px;
+  align-items: start;
+  gap: 0 34px;
+  margin-bottom: 30px;
+}
 .aso-help__intro h2 { margin: 0; }
 .aso-help__lead { margin: 10px 0 0; color: var(--aso-muted); font-size: 14px; }
 .aso-help__find { padding-top: 8px; }
@@ -1278,7 +1285,7 @@ body.aso-settings-open { overflow: hidden; }
 .aso-help__deco-page span:nth-child(1) { width: 68%; }
 .aso-help__deco-page span:nth-child(3) { width: 82%; }
 
-.aso-help__grid { display: grid; grid-template-columns: 196px minmax(0, 1fr) 340px; gap: 30px; margin-top: 26px; }
+.aso-help__grid { display: grid; grid-template-columns: 196px minmax(0, 1fr) 340px; gap: 30px; margin-top: 0; }
 .aso-doc-cats { display: grid; align-content: start; gap: 2px; }
 .aso-doc-cats button {
   display: grid;
@@ -1708,7 +1715,10 @@ body.aso-embed-open { overflow: hidden; }
   .aso-mode-switch { gap: 22px; min-height: 54px; padding: 8px 14px 7px; }
   .aso-mode-switch button { min-width: 0; padding: 0; font-size: 13px; }
   .aso-container { width: min(100% - 28px, 1440px); }
-  .aso-hero { padding-top: 20px; }
+  .aso-hero,
+  .aso-help.aso-section { padding-top: 20px; }
+  .aso-overview-head,
+  .aso-help__head { margin-bottom: 24px; }
   .aso-apps { padding: 0; }
   .aso-app-sidebar { overflow-x: auto; }
   .aso-app-sidebar nav { width: max-content; flex-wrap: nowrap; }
@@ -1717,7 +1727,6 @@ body.aso-embed-open { overflow: hidden; }
   .aso-app-catalog__heading .aso-portal-account { align-self: flex-start; }
   .aso-app-catalog__toolbar { grid-template-columns: 1fr; }
   .aso-app-sort { display: none; }
-  .aso-overview-head { margin-bottom: 24px; }
   .aso-overview-head__intro h1 { font-size: 28px; }
   .aso-search { grid-template-columns: 30px minmax(0, 1fr) 78px; }
   .aso-app-catalog__controls { align-items: flex-start; flex-wrap: wrap; }
@@ -1738,6 +1747,7 @@ body.aso-embed-open { overflow: hidden; }
   .aso-app-grid.is-list-view .aso-app-card__shot { height: auto; aspect-ratio: 21 / 10; }
   .aso-app-grid.is-list-view .aso-app-card .aso-btn { width: 100%; }
   .aso-section { padding: 34px 0; }
+  .aso-help.aso-section { padding: 20px 0 34px; }
   .aso-section h2 { font-size: 28px; }
   .aso-resume,
   .aso-tasks { padding: 16px; }
