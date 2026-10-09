@@ -1273,6 +1273,37 @@ async function loadQuickActions() {
   }
 }
 
+async function loadCatalog() {
+  try {
+    const response = await fetch('/api/public/aspace/catalog', { cache: 'no-store' })
+    const data = await response.json()
+    if (!response.ok || !Array.isArray(data.catalog?.categories) || !Array.isArray(data.catalog?.apps)) return
+    const existingById = new Map(appCategories.map((category) => [category[0], category]))
+    const configuredIds = new Set(data.catalog.categories.map((category) => category.id))
+    appCategories = data.catalog.categories
+      .filter((category) => existingById.has(category.id))
+      .map((category) => {
+        const fallback = existingById.get(category.id)
+        return [
+          category.id,
+          category.icon || fallback[1],
+          category.label || fallback[2],
+          category.description ?? fallback[3],
+        ]
+      })
+    existingById.forEach((category, id) => {
+      if (!configuredIds.has(id)) appCategories.push(category)
+    })
+    const assignments = new Map(data.catalog.apps.map((app) => [app.id, app.category]))
+    apps.forEach((app) => {
+      const category = assignments.get(app.id)
+      if (configuredIds.has(category)) app.category = category
+    })
+  } catch {
+    // 后台栏目配置不可用时继续使用页面内置配置。
+  }
+}
+
 async function loadRecentActivities() {
   try {
     const response = await fetch('/api/public/aspace/activities', { cache: 'no-store' })
@@ -1459,6 +1490,7 @@ export async function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
   await initPortalAuth()
+  await loadCatalog()
   loadAppPreferences()
   await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()

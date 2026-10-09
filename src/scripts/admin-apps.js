@@ -9,7 +9,7 @@ import { bindAboutVisualAdmin, collectAboutVisualContent, renderAboutVisualEdito
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 
 const API = '/api/admin'
-const state = { user: null, app: null, homePage: null, aboutPage: null, aboutSection: 'hero', sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, productLibrary: null, homeSection: 'hero', configSection: 'basic' }
+const state = { user: null, app: null, aspaceCatalog: null, homePage: null, aboutPage: null, aboutSection: 'hero', sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, productLibrary: null, homeSection: 'hero', configSection: 'basic' }
 const CONFIG_OUTLINE = [
   { id: 'basic', no: '01', title: '应用基础', desc: '名称、图标、介绍' },
   { id: 'copy', no: '02', title: '首屏文案', desc: '主标题、副标题、说明' },
@@ -49,6 +49,7 @@ const titles = {
   'content-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
   'page-news': ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
   'page-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
+  aspace: ['Aspace 空间智能', '路径 /aspace-one/ · 配置业务栏目与应用归属'],
   config: ['App 下载页', '路径 /app-download/ · 可视化编辑下载页'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
   analytics: ['下载统计', '查看匿名点击趋势和终端分布'],
@@ -210,6 +211,7 @@ function openTab(name, options = {}) {
   }
   if (name === 'overview') renderSitemap()
   if (name === 'site') loadSitePage()
+  if (name === 'aspace') loadAspaceCatalog()
   if (name === 'config') {
     loadConfig()
     showConfigSection(state.configSection || 'basic')
@@ -223,6 +225,72 @@ function openTab(name, options = {}) {
   if (name === 'analytics') loadStats()
   if (name === 'users' && state.user.role === 'super_admin') loadUsers()
   if (name === 'audit' && state.user.role === 'super_admin') loadAudit()
+}
+
+async function loadAspaceCatalog() {
+  try {
+    const { catalog } = await api('/aspace/catalog')
+    state.aspaceCatalog = catalog
+    renderAspaceCatalog()
+  } catch (error) {
+    toast(error.message, true)
+  }
+}
+
+function renderAspaceCatalog() {
+  const host = document.querySelector('[data-aspace-editor]')
+  const catalog = state.aspaceCatalog
+  if (!host || !catalog) return
+  const categoryOptions = catalog.categories.map((category) => (
+    `<option value="${escapeHtml(category.id)}">${escapeHtml(category.label)}</option>`
+  )).join('')
+  host.innerHTML = `
+    <section class="admin-aspace-section">
+      <header><div><h3>业务分类</h3><p>可编辑标题、图标和说明，并使用箭头调整前台显示顺序。</p></div></header>
+      <div class="admin-aspace-categories">
+        ${catalog.categories.map((category, index) => `
+          <article class="admin-aspace-category" data-aspace-category="${escapeHtml(category.id)}">
+            <div class="admin-aspace-category__order">
+              <span>${String(index + 1).padStart(2, '0')}</span>
+              <button type="button" data-aspace-move="-1" ${index === 0 ? 'disabled' : ''} title="上移"><span class="material-symbols-outlined">arrow_upward</span></button>
+              <button type="button" data-aspace-move="1" ${index === catalog.categories.length - 1 ? 'disabled' : ''} title="下移"><span class="material-symbols-outlined">arrow_downward</span></button>
+            </div>
+            <label><span>栏目标题</span><input name="category-label" maxlength="40" value="${escapeHtml(category.label)}" required /></label>
+            <label><span>Material 图标名</span><input name="category-icon" maxlength="40" value="${escapeHtml(category.icon)}" required /></label>
+            <label class="admin-aspace-category__description"><span>栏目说明</span><input name="category-description" maxlength="160" value="${escapeHtml(category.description)}" /></label>
+          </article>
+        `).join('')}
+      </div>
+    </section>
+    <section class="admin-aspace-section">
+      <header><div><h3>应用归属</h3><p>为每个应用选择一个栏目，避免重复配置；调整后前台分类和数量会同步更新。</p></div></header>
+      <div class="admin-aspace-apps">
+        ${catalog.apps.map((app) => `
+          <label data-aspace-app="${escapeHtml(app.id)}">
+            <span><b>${escapeHtml(app.name)}</b><small>${escapeHtml(app.id)}</small></span>
+            <select name="app-category">${categoryOptions}</select>
+          </label>
+        `).join('')}
+      </div>
+    </section>`
+  catalog.apps.forEach((app) => {
+    const select = host.querySelector(`[data-aspace-app="${CSS.escape(app.id)}"] select`)
+    if (select) select.value = app.category
+  })
+}
+
+function collectAspaceCatalog() {
+  const categories = [...document.querySelectorAll('[data-aspace-category]')].map((row) => ({
+    id: row.dataset.aspaceCategory,
+    label: row.querySelector('[name="category-label"]').value.trim(),
+    icon: row.querySelector('[name="category-icon"]').value.trim(),
+    description: row.querySelector('[name="category-description"]').value.trim(),
+  }))
+  const appCategories = new Map([...document.querySelectorAll('[data-aspace-app]')].map((row) => (
+    [row.dataset.aspaceApp, row.querySelector('select').value]
+  )))
+  const apps = state.aspaceCatalog.apps.map((app) => ({ ...app, category: appCategories.get(app.id) || app.category }))
+  return { categories, apps }
 }
 
 const featureIconOptions = [
@@ -1938,6 +2006,38 @@ window.addEventListener('hashchange', () => {
   if (name && titles[name]) openTab(name, { skipHash: true })
 })
 document.querySelector('[data-mobile-menu]').addEventListener('click', () => document.querySelector('.admin-sidebar').classList.toggle('is-open'))
+
+document.querySelector('[data-aspace-editor]').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-aspace-move]')
+  if (!button || !state.aspaceCatalog) return
+  const nextCatalog = collectAspaceCatalog()
+  const categoryId = button.closest('[data-aspace-category]').dataset.aspaceCategory
+  const index = nextCatalog.categories.findIndex((category) => category.id === categoryId)
+  const target = index + Number(button.dataset.aspaceMove)
+  if (index < 0 || target < 0 || target >= nextCatalog.categories.length) return
+  const [category] = nextCatalog.categories.splice(index, 1)
+  nextCatalog.categories.splice(target, 0, category)
+  state.aspaceCatalog = nextCatalog
+  renderAspaceCatalog()
+})
+
+document.querySelector('[data-aspace-form]').addEventListener('submit', async (event) => {
+  event.preventDefault()
+  const form = event.currentTarget
+  const submit = form.querySelector('button[type="submit"]')
+  submit.disabled = true
+  try {
+    const catalog = collectAspaceCatalog()
+    const result = await api('/aspace/catalog', { method: 'PUT', body: JSON.stringify({ catalog }) })
+    state.aspaceCatalog = result.catalog
+    renderAspaceCatalog()
+    toast('Aspace 栏目已保存并发布')
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    submit.disabled = false
+  }
+})
 
 document.querySelector('[data-config-form]').addEventListener('submit', async (event) => {
   event.preventDefault()

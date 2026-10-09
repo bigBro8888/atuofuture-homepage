@@ -52,6 +52,46 @@ export const defaultAspaceQuickActions = [
   { id: 'permission', icon: 'person_add', label: '申请产品权限', url: '' },
 ]
 
+export const defaultAspaceCatalog = {
+  categories: [
+    { id: 'twin', icon: 'deployed_code', label: '数字孪生', description: '统一呈现园区、楼宇与空间运行态势' },
+    { id: 'meeting', icon: 'groups', label: '会议管理', description: '覆盖会前预约、会中控制与会后服务' },
+    { id: 'content', icon: 'campaign', label: '信息发布', description: '统一管理内容生产、发布与多终端展示' },
+    { id: 'asset', icon: 'business_center', label: '资产管理', description: '管理资产台账、流转与全生命周期' },
+    { id: 'energy', icon: 'eco', label: '能源能耗', description: '洞察能源使用、用能异常与节能空间' },
+    { id: 'carbon', icon: 'co2', label: '双碳管理', description: '支撑碳排核算、分析与减排目标管理' },
+    { id: 'security', icon: 'shield_lock', label: '门禁安防', description: '统一管理通行权限、事件与安全告警' },
+    { id: 'foundation', icon: 'hub', label: '智能底座', description: '沉淀空间、设备、人员和智能控制基础能力' },
+    { id: 'visitor', icon: 'person_add', label: '访客管理', description: '覆盖访客邀约、审批、登记与到访服务' },
+  ],
+  apps: [
+    { id: 'digital-twin', name: '数字孪生', category: 'twin' },
+    { id: 'screen', name: '会议预约', category: 'meeting' },
+    { id: 'deskplate', name: '桌牌管理', category: 'meeting' },
+    { id: 'meeting-info-screen', name: '会议信息屏', category: 'meeting' },
+    { id: 'meeting-control-screen', name: '会议室自控', category: 'meeting' },
+    { id: 'wireless-screen', name: '无线投屏', category: 'meeting' },
+    { id: 'info-publish', name: '信息发布平台', category: 'content' },
+    { id: 'poster', name: 'AI画报', category: 'content' },
+    { id: 'album', name: '电子相册', category: 'content' },
+    { id: 'resource', name: 'AAP资产管理系统', category: 'asset' },
+    { id: 'energy', name: '能源能耗', category: 'energy' },
+    { id: 'carbon-management', name: '双碳管理', category: 'carbon' },
+    { id: 'access-security', name: '门禁安防', category: 'security' },
+    { id: 'aspace', name: '空间智能管理平台', category: 'foundation' },
+    { id: 'device-center', name: '设备中心', category: 'foundation' },
+    { id: 'space-center', name: '空间中心', category: 'foundation' },
+    { id: 'permission-center', name: '权限中心', category: 'foundation' },
+    { id: 'person-center', name: '人员中心', category: 'foundation' },
+    { id: 'application-center', name: '应用中心', category: 'foundation' },
+    { id: 'smart-lighting', name: '智能照明', category: 'foundation' },
+    { id: 'smart-air', name: '智能空调', category: 'foundation' },
+    { id: 'smart-sensor', name: '智能传感', category: 'foundation' },
+    { id: 'smart-scene', name: '智能场景', category: 'foundation' },
+    { id: 'visitor-booking', name: '访客预约', category: 'visitor' },
+  ],
+}
+
 export function normalizeAppButtons(value = {}) {
   const clean = (input, fallback) => String(input ?? fallback ?? '').trim().slice(0, 40) || fallback
   // 角标允许清空，因此只有字段缺失时才回退到默认值。
@@ -89,6 +129,7 @@ const initialData = {
   releases: [],
   pageConfigs: [],
   aspaceQuickActions: structuredClone(defaultAspaceQuickActions),
+  aspaceCatalog: structuredClone(defaultAspaceCatalog),
   aspaceActivities: [],
   downloadEvents: [],
   adminUsers: [],

@@ -740,6 +740,27 @@ body.admin-modal-open { overflow: hidden; }
 .admin-home-actions button:last-child { color: #fff; background: #1769ff; }
 .admin-home-actions button:disabled { cursor: wait; opacity: .55; }
 
+.admin-aspace-editor { display: grid; gap: 22px; }
+.admin-aspace-loading { color: #8a96a8; font-size: 12px; }
+.admin-aspace-section { padding: 20px; border: 1px solid #e4eaf2; border-radius: 14px; background: #f9fbfe; }
+.admin-aspace-section > header { margin-bottom: 16px; }
+.admin-aspace-section h3 { margin: 0; font-size: 14px; }
+.admin-aspace-section header p { margin: 5px 0 0; color: #8a96a8; font-size: 10px; }
+.admin-aspace-categories { display: grid; gap: 10px; }
+.admin-aspace-category { display: grid; grid-template-columns: 104px minmax(140px,.8fr) minmax(150px,.8fr) minmax(260px,1.4fr); gap: 12px; align-items: end; padding: 14px; border: 1px solid #e3e9f1; border-radius: 12px; background: #fff; }
+.admin-aspace-category label > span { display: block; margin-bottom: 7px; color: #667085; font-size: 10px; font-weight: 600; }
+.admin-aspace-category input, .admin-aspace-apps select { padding: 10px 11px; border-radius: 9px; font-size: 11px; }
+.admin-aspace-category__order { display: flex; align-items: center; gap: 5px; min-height: 39px; }
+.admin-aspace-category__order > span { min-width: 28px; color: #1769ff; font-size: 11px; font-weight: 700; }
+.admin-aspace-category__order button { display: grid; width: 30px; height: 30px; place-items: center; padding: 0; border: 1px solid #dce4ee; border-radius: 8px; color: #667085; background: #fff; }
+.admin-aspace-category__order button:disabled { cursor: default; opacity: .35; }
+.admin-aspace-category__order .material-symbols-outlined { font-size: 16px; }
+.admin-aspace-apps { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; }
+.admin-aspace-apps > label { display: grid; grid-template-columns: minmax(0,1fr) 130px; gap: 10px; align-items: center; padding: 11px 12px; border: 1px solid #e3e9f1; border-radius: 11px; background: #fff; }
+.admin-aspace-apps b, .admin-aspace-apps small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-aspace-apps b { font-size: 11px; }
+.admin-aspace-apps small { margin-top: 3px; color: #98a2b3; font-size: 8px; }
+
 /* 智能硬件 / 方案 / 智能体 共用 simple 面板：发布条固定在视口底部，避免长预览每次滚到底 */
 .admin-panel[data-panel="simple"].is-active .admin-home-form {
   padding-bottom: 92px;
@@ -2450,6 +2471,9 @@ button.hpi-edit-link.hpi-hero__link {
 @media (max-width: 1050px) {
   .admin-metrics { grid-template-columns: repeat(2,1fr); }
   .admin-grid-release { grid-template-columns: 1fr; }
+  .admin-aspace-category { grid-template-columns: 104px 1fr 1fr; }
+  .admin-aspace-category__description { grid-column: 2/-1; }
+  .admin-aspace-apps { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 @media (max-width: 760px) {
   .admin-layout { display: block; }
@@ -2463,6 +2487,9 @@ button.hpi-edit-link.hpi-hero__link {
   .admin-home-metrics { grid-template-columns: 1fr 1fr; }
   .admin-form-wide { grid-column: auto; }
   .admin-audit-item { grid-template-columns: 1fr; gap: 4px; }
+  .admin-aspace-category { grid-template-columns: 1fr; }
+  .admin-aspace-category__description { grid-column: auto; }
+  .admin-aspace-apps { grid-template-columns: 1fr; }
   .admin-panel[data-panel="simple"].is-active .admin-home-actions {
     left: 16px;
     right: 16px;

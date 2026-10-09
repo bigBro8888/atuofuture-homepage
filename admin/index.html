@@ -37,6 +37,7 @@
           <button type="button" data-tab="page-solutions"><span class="material-symbols-outlined">domain</span>行业解决方案</button>
           <button type="button" data-tab="page-agents"><span class="material-symbols-outlined">smart_toy</span>空间智能体</button>
           <button type="button" data-tab="page-hardware"><span class="material-symbols-outlined">memory</span>智能硬件</button>
+          <button type="button" data-tab="aspace"><span class="material-symbols-outlined">dashboard_customize</span>Aspace 空间智能</button>
           <button type="button" data-tab="config"><span class="material-symbols-outlined">install_mobile</span>App 下载页</button>
         </div>
         <div class="admin-nav-group">
@@ -92,6 +93,21 @@
             <ol class="admin-release-rules"><li><span>1</span><div><b>上传 APK</b><small>文件名将规范化为 artink-{version}.apk</small></div></li><li><span>2</span><div><b>服务端完整性校验</b><small>验证文件大小并计算 SHA-256</small></div></li><li><span>3</span><div><b>最后更新 version</b><small>仅 APK 可访问后切换权威版本</small></div></li></ol>
           </article>
         </div>
+      </section>
+
+      <section class="admin-panel" data-panel="aspace">
+        <form class="admin-card admin-aspace-form" data-aspace-form>
+          <div class="admin-card__head">
+            <div><h2>Aspace 空间智能栏目</h2><p>编辑业务分类、显示顺序和每个分类包含的应用，保存后前台立即生效。</p></div>
+          </div>
+          <div class="admin-aspace-editor" data-aspace-editor>
+            <p class="admin-aspace-loading">正在加载栏目配置…</p>
+          </div>
+          <div class="admin-home-actions">
+            <a href="/aspace-one/" target="_blank">预览 Aspace 空间智能</a>
+            <button type="submit">保存并发布栏目</button>
+          </div>
+        </form>
       </section>
 
       <section class="admin-panel" data-panel="config">

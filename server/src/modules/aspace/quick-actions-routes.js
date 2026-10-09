@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { randomUUID } from 'node:crypto'
 import { config } from '../../config.js'
-import { addAudit, db, defaultAspaceQuickActions, save } from '../../lib/store.js'
+import { addAudit, db, defaultAspaceCatalog, defaultAspaceQuickActions, save } from '../../lib/store.js'
 import { requireAuth } from '../admin/auth.js'
 
 export const publicAspaceRouter = Router()
@@ -93,8 +93,52 @@ function currentQuickActions() {
   }
 }
 
+function normalizeCatalog(value = {}) {
+  const defaultCategories = new Map(defaultAspaceCatalog.categories.map((item) => [item.id, item]))
+  const categorySource = Array.isArray(value.categories) ? value.categories : []
+  const sourceById = new Map(categorySource.map((item) => [String(item?.id || ''), item]))
+  const orderedIds = categorySource.map((item) => String(item?.id || '')).filter((id) => defaultCategories.has(id))
+  defaultAspaceCatalog.categories.forEach((item) => {
+    if (!orderedIds.includes(item.id)) orderedIds.push(item.id)
+  })
+  const categories = orderedIds.map((id) => {
+    const fallback = defaultCategories.get(id)
+    const item = sourceById.get(id) || {}
+    const label = String(item.label ?? fallback.label).trim().slice(0, 40)
+    if (!label) throw new Error('栏目标题不能为空')
+    const icon = String(item.icon ?? fallback.icon).trim().slice(0, 40)
+    if (!/^[a-z0-9_]+$/.test(icon)) throw new Error(`栏目“${label}”图标格式无效`)
+    return {
+      id,
+      icon,
+      label,
+      description: String(item.description ?? fallback.description).trim().slice(0, 160),
+    }
+  })
+  const categoryIds = new Set(categories.map((item) => item.id))
+  const appSource = new Map((Array.isArray(value.apps) ? value.apps : []).map((item) => [String(item?.id || ''), item]))
+  const apps = defaultAspaceCatalog.apps.map((fallback) => {
+    const category = String(appSource.get(fallback.id)?.category || fallback.category)
+    return { ...fallback, category: categoryIds.has(category) ? category : fallback.category }
+  })
+  return { categories, apps }
+}
+
+function currentCatalog() {
+  try {
+    return normalizeCatalog(db().aspaceCatalog)
+  } catch {
+    return structuredClone(defaultAspaceCatalog)
+  }
+}
+
 publicAspaceRouter.get('/quick-actions', (_request, response) => {
   response.json({ actions: currentQuickActions() })
+})
+
+publicAspaceRouter.get('/catalog', (_request, response) => {
+  response.setHeader('Cache-Control', 'no-store')
+  response.json({ catalog: currentCatalog() })
 })
 
 publicAspaceRouter.get('/activities', (request, response) => {
@@ -153,6 +197,28 @@ adminAspaceRouter.put('/quick-actions', requireAuth('config:write'), async (requ
     response.status(400).json({
       error: 'invalid_quick_actions',
       message: error instanceof Error ? error.message : '快捷入口配置无效',
+    })
+  }
+})
+
+adminAspaceRouter.get('/catalog', requireAuth(), (_request, response) => {
+  response.json({ catalog: currentCatalog() })
+})
+
+adminAspaceRouter.put('/catalog', requireAuth('config:write'), async (request, response) => {
+  try {
+    const catalog = normalizeCatalog(request.body?.catalog)
+    db().aspaceCatalog = catalog
+    await save()
+    await addAudit(request.admin, 'aspace.catalog.update', 'aspace-one', {
+      categories: catalog.categories.map(({ id, label }) => ({ id, label })),
+      apps: catalog.apps.map(({ id, category }) => ({ id, category })),
+    })
+    response.json({ catalog })
+  } catch (error) {
+    response.status(400).json({
+      error: 'invalid_aspace_catalog',
+      message: error instanceof Error ? error.message : '栏目配置无效',
     })
   }
 })
