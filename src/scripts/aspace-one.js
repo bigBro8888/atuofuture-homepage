@@ -434,24 +434,6 @@ function recentVisitsMarkup() {
   }).join('')
 }
 
-function portalAccountMarkup() {
-  const user = window.ASPACE_CURRENT_USER
-  if (user?.id) {
-    const name = String(user.name || user.displayName || '已登录用户')
-    return `
-      <div class="aso-portal-account is-logged-in" data-portal-account>
-        <span>${escapeHtml(name.slice(0, 1))}</span>
-        <div><b>${escapeHtml(name)}</b><small>账号已登录</small></div>
-      </div>`
-  }
-  return `
-    <button class="aso-portal-account" type="button" data-personal-login>
-      <span>${icon('person')}</span>
-      <div><b>未登录</b><small>登录后使用个人功能</small></div>
-      ${icon('chevron_right')}
-    </button>`
-}
-
 function appCard(app, index) {
   const locked = Boolean(app.locked)
   const [, categoryIcon, categoryLabel] = appCategoryMeta(app.category)
@@ -578,7 +560,6 @@ function renderPortal() {
                   <h2 data-catalog-title>全部业务能力</h2>
                   <p data-catalog-description>按业务场景浏览 Aspace空间智能 已接入和规划中的能力</p>
                 </div>
-                ${portalAccountMarkup()}
               </header>
               <div class="aso-app-catalog__controls">
                 <div class="aso-filters" role="tablist" aria-label="按建设状态筛选业务能力">
@@ -613,7 +594,6 @@ function renderPortal() {
                   <p>按时间查看你最近进入的系统与使用过的功能，最新记录排在最前。</p>
                 </div>
                 <div class="aso-recent-panel__account">
-                  ${portalAccountMarkup()}
                   <span>共 <b data-recent-panel-count>${recentActivities.length}</b> 条记录</span>
                 </div>
               </header>
