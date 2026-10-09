@@ -64,7 +64,7 @@
   color: #0879f9;
   font-family: "钉钉进步体", "DingTalk JinBuTi", "DingTalk Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 19px;
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: -.02em;
 }
 .aso-app-sidebar nav { display: grid; gap: 5px; }
@@ -125,6 +125,26 @@
   font-weight: 650;
 }
 .aso-app-sidebar button.is-active i { color: #4b94e7; }
+[data-business-category-nav] button {
+  grid-template-columns: 24px minmax(0, 1fr) 17px auto;
+}
+[data-business-category-nav] button[draggable="true"] { cursor: grab; }
+[data-business-category-nav] button[draggable="true"]:active { cursor: grabbing; }
+[data-business-category-nav] button.is-dragging {
+  border-color: rgba(126, 180, 242, .42);
+  background: #eaf4ff;
+  opacity: .5;
+}
+.aso-category-drag {
+  color: #a7b3c2;
+  font-size: 16px !important;
+  opacity: .72;
+  transition: color .18s ease, opacity .18s ease;
+}
+[data-business-category-nav] button:hover .aso-category-drag {
+  color: #438bdc;
+  opacity: 1;
+}
 .aso-recent-panel {
   grid-column: 2;
   min-width: 0;
@@ -1354,6 +1374,52 @@ body.aso-settings-open { overflow: hidden; }
 .aso-toast.is-visible {
   opacity: 1;
   transform: translateY(0) scale(1);
+}
+
+body.aso-login-prompt-open { overflow: hidden; }
+.aso-login-prompt {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.aso-login-prompt[hidden] { display: none !important; }
+.aso-login-prompt__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 20, 59, .48);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.aso-login-prompt__panel {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 30px;
+  border: 1px solid rgba(218, 230, 245, .96);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 28px 90px rgba(7, 29, 62, .24);
+  text-align: center;
+}
+.aso-login-prompt__icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 17px;
+  place-items: center;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #e8f3ff, #dcecff);
+  color: #0879f9;
+}
+.aso-login-prompt__icon .material-symbols-outlined { font-size: 28px; }
+.aso-login-prompt__panel h2 { margin: 0; color: var(--aso-text); font-size: 21px; }
+.aso-login-prompt__panel p { margin: 10px 0 24px; color: #718198; font-size: 13px; line-height: 1.7; }
+.aso-login-prompt__panel > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 body.aso-embed-open { overflow: hidden; }

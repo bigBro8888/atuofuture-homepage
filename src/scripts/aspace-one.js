@@ -246,7 +246,7 @@ const appFilters = [
   ['locked', '规划中', lockedApps],
 ]
 
-const appCategories = [
+let appCategories = [
   ['twin', 'deployed_code', '数字孪生', '统一呈现园区、楼宇与空间运行态势'],
   ['meeting', 'groups', '会议管理', '覆盖会前预约、会中控制与会后服务'],
   ['content', 'campaign', '信息发布', '统一管理内容生产、发布与多终端展示'],
@@ -278,6 +278,17 @@ function loadAppPreferences() {
     if (Array.isArray(saved)) favoriteAppIds = new Set(saved.filter((id) => apps.some((app) => app.id === id)))
   } catch {
     // 本地偏好损坏时使用默认收藏。
+  }
+  try {
+    const savedCategoryOrder = JSON.parse(localStorage.getItem('aspace-one-category-order') || 'null')
+    if (Array.isArray(savedCategoryOrder)) {
+      const order = new Map(savedCategoryOrder.map((id, index) => [id, index]))
+      appCategories = [...appCategories].sort((left, right) => (
+        (order.get(left[0]) ?? Number.MAX_SAFE_INTEGER) - (order.get(right[0]) ?? Number.MAX_SAFE_INTEGER)
+      ))
+    }
+  } catch {
+    // 分类顺序损坏时使用产品定义的默认排序。
   }
   try {
     const savedOrder = JSON.parse(localStorage.getItem('aspace-one-capability-order') || '{}')
@@ -504,11 +515,11 @@ function renderPortal() {
                 </button>
               </nav>
               <div class="aso-app-sidebar__divider"></div>
-              <p><span>业务分类</span><small title="拖动右侧能力卡片可调整顺序">${icon('drag_indicator')}拖拽排序</small></p>
+              <p><span>业务分类</span><small title="登录后可拖动分类或能力卡片调整顺序">${icon('drag_indicator')}拖拽排序</small></p>
               <nav data-business-category-nav>
                 ${appCategories.map(([id, ico, label]) => `
-                <button type="button" data-app-category-filter="${id}">
-                  ${icon(ico)}<span>${label}</span><i>${apps.filter((app) => app.category === id).length}</i>
+                <button type="button" draggable="true" data-app-category-filter="${id}" title="登录后可拖拽调整分类顺序">
+                  ${icon(ico)}<span>${label}</span>${icon('drag_indicator', 'aso-category-drag')}<i>${apps.filter((app) => app.category === id).length}</i>
                 </button>`).join('')}
               </nav>
             </aside>
@@ -647,6 +658,18 @@ function renderPortal() {
       </section>
 
       <div class="aso-toast" role="status" data-aso-toast aria-hidden="true"></div>
+      <div class="aso-login-prompt" data-login-prompt hidden aria-hidden="true">
+        <div class="aso-login-prompt__backdrop" data-login-prompt-close></div>
+        <section class="aso-login-prompt__panel" role="dialog" aria-modal="true" aria-labelledby="aso-login-prompt-title">
+          <span class="aso-login-prompt__icon">${icon('person')}</span>
+          <h2 id="aso-login-prompt-title">登录后使用个人功能</h2>
+          <p data-login-prompt-message>收藏和拖拽排序会跟随你的个人账号保存，请先登录。</p>
+          <div>
+            <button class="aso-btn aso-btn--muted" type="button" data-login-prompt-close>暂不登录</button>
+            <button class="aso-btn aso-btn--primary" type="button" data-personal-login>立即登录</button>
+          </div>
+        </section>
+      </div>
       <div class="aso-quick-settings" data-quick-settings hidden aria-hidden="true">
         <div class="aso-quick-settings__backdrop" data-quick-settings-close></div>
         <section class="aso-quick-settings__panel" role="dialog" aria-modal="true" aria-labelledby="aso-quick-settings-title">
@@ -709,6 +732,42 @@ function showToast(message) {
   }, 2600)
 }
 
+function isPortalAuthenticated() {
+  return Boolean(window.ASPACE_CURRENT_USER?.id)
+}
+
+function setLoginPromptOpen(root, open, message = '') {
+  const modal = root.querySelector('[data-login-prompt]')
+  if (!modal) return
+  modal.hidden = !open
+  modal.setAttribute('aria-hidden', String(!open))
+  document.body.classList.toggle('aso-login-prompt-open', open)
+  const copy = modal.querySelector('[data-login-prompt-message]')
+  if (copy && message) copy.textContent = message
+  if (open) window.setTimeout(() => modal.querySelector('[data-personal-login]')?.focus(), 20)
+}
+
+function requirePersonalLogin(root, action) {
+  if (isPortalAuthenticated()) return true
+  const messages = {
+    favorite: '收藏内容会跟随你的个人账号保存，请先登录后再操作。',
+    categorySort: '业务分类顺序会跟随你的个人账号保存，请先登录后再拖拽。',
+    capabilitySort: '能力卡片顺序会跟随你的个人账号保存，请先登录后再拖拽。',
+  }
+  setLoginPromptOpen(root, true, messages[action] || '该功能需要登录后使用。')
+  return false
+}
+
+function startPersonalLogin(root) {
+  const loginUrl = String(window.ASPACE_AUTH_LOGIN_URL || '').trim()
+  if (loginUrl) {
+    window.location.href = loginUrl
+    return
+  }
+  setLoginPromptOpen(root, false)
+  showToast('统一用户中心登录接口已预留，配置后即可启用')
+}
+
 function closeAppEmbed(root) {
   const shell = root.querySelector('[data-aso-embed]')
   const frame = root.querySelector('[data-embed-frame]')
@@ -763,6 +822,52 @@ function updateCapabilityOrder(categoryId, orderedIds) {
   } catch {
     // 浏览器禁用本地存储时，本次会话内仍保留排序结果。
   }
+}
+
+function initCategoryDrag(root) {
+  const nav = root.querySelector('[data-business-category-nav]')
+  if (!nav) return
+  let dragged = null
+
+  nav.addEventListener('dragstart', (event) => {
+    const button = event.target.closest('[data-app-category-filter]')
+    if (!button) return
+    if (!requirePersonalLogin(root, 'categorySort')) {
+      event.preventDefault()
+      return
+    }
+    dragged = button
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', button.dataset.appCategoryFilter)
+    window.requestAnimationFrame(() => button.classList.add('is-dragging'))
+  })
+
+  nav.addEventListener('dragover', (event) => {
+    if (!dragged) return
+    const target = event.target.closest('[data-app-category-filter]')
+    if (!target || target === dragged) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    const rect = target.getBoundingClientRect()
+    nav.insertBefore(dragged, event.clientY > rect.top + rect.height / 2 ? target.nextSibling : target)
+  })
+
+  nav.addEventListener('drop', (event) => {
+    if (!dragged) return
+    event.preventDefault()
+    const order = [...nav.querySelectorAll('[data-app-category-filter]')]
+      .map((button) => button.dataset.appCategoryFilter)
+    localStorage.setItem('aspace-one-category-order', JSON.stringify(order))
+    appCategories = order
+      .map((id) => appCategories.find(([categoryId]) => categoryId === id))
+      .filter(Boolean)
+    showToast('业务分类顺序已保存')
+  })
+
+  nav.addEventListener('dragend', () => {
+    dragged?.classList.remove('is-dragging')
+    dragged = null
+  })
 }
 
 function arrangeCapabilityGrid(grid, category, sortMode = 'default') {
@@ -899,6 +1004,7 @@ function initAppFilters(root) {
 
   grid.querySelectorAll('[data-favorite-app]').forEach((button) => {
     button.addEventListener('click', () => {
+      if (!requirePersonalLogin(root, 'favorite')) return
       const appId = button.dataset.favoriteApp
       if (favoriteAppIds.has(appId)) favoriteAppIds.delete(appId)
       else favoriteAppIds.add(appId)
@@ -916,6 +1022,10 @@ function initAppFilters(root) {
   grid.addEventListener('dragstart', (event) => {
     const card = event.target.closest('[data-app]')
     if (!card || event.target.closest('button')) {
+      event.preventDefault()
+      return
+    }
+    if (!requirePersonalLogin(root, 'capabilitySort')) {
       event.preventDefault()
       return
     }
@@ -1161,6 +1271,14 @@ export async function initAspaceOne() {
   bindActivityMessages(root)
 
   root.addEventListener('click', (event) => {
+    if (event.target.closest('[data-login-prompt-close]')) {
+      setLoginPromptOpen(root, false)
+      return
+    }
+    if (event.target.closest('[data-personal-login]')) {
+      startPersonalLogin(root)
+      return
+    }
     if (event.target.closest('[data-quick-settings-open]')) {
       setQuickSettingsOpen(root, true)
       return
@@ -1276,11 +1394,13 @@ export async function initAspaceOne() {
   })
 
   initAppFilters(root)
+  initCategoryDrag(root)
 
   root.querySelector('[data-embed-close]')?.addEventListener('click', () => closeAppEmbed(root))
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return
-    if (!root.querySelector('[data-quick-settings]')?.hidden) setQuickSettingsOpen(root, false)
+    if (!root.querySelector('[data-login-prompt]')?.hidden) setLoginPromptOpen(root, false)
+    else if (!root.querySelector('[data-quick-settings]')?.hidden) setQuickSettingsOpen(root, false)
     else if (!root.querySelector('[data-aso-embed]')?.hidden) closeAppEmbed(root)
   })
 }
