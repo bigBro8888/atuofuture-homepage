@@ -361,6 +361,7 @@ const defaultQuickActions = [
 ]
 let quickActions = defaultQuickActions.map((item) => ({ ...item }))
 let recentActivities = []
+let portalAuthError = ''
 
 function icon(name, className = '') {
   return `<span class="material-symbols-outlined ${className}" aria-hidden="true">${name}</span>`
@@ -437,13 +438,13 @@ function portalAccountMarkup() {
     return `
       <div class="aso-portal-account is-logged-in" data-portal-account>
         <span>${escapeHtml(name.slice(0, 1))}</span>
-        <div><b>${escapeHtml(name)}</b><small>个人数据已同步</small></div>
+        <div><b>${escapeHtml(name)}</b><small>账号已登录</small></div>
       </div>`
   }
   return `
     <button class="aso-portal-account" type="button" data-personal-login>
       <span>${icon('person')}</span>
-      <div><b>未登录</b><small>登录后同步个人数据</small></div>
+      <div><b>未登录</b><small>登录后使用个人功能</small></div>
       ${icon('chevron_right')}
     </button>`
 }
@@ -753,6 +754,156 @@ function showToast(message) {
   }, 2600)
 }
 
+function base64Url(bytes) {
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '')
+}
+
+function sha256Fallback(value) {
+  const rightRotate = (number, amount) => (number >>> amount) | (number << (32 - amount))
+  const maxWord = 2 ** 32
+  const words = []
+  const hash = []
+  const constants = []
+  const byteLength = value.length
+  const bitLength = byteLength * 8
+  const composite = {}
+  let primeCounter = 0
+  for (let candidate = 2; primeCounter < 64; candidate += 1) {
+    if (composite[candidate]) continue
+    for (let multiple = candidate * candidate; multiple < 313; multiple += candidate) composite[multiple] = true
+    hash[primeCounter] = (Math.sqrt(candidate) * maxWord) | 0
+    constants[primeCounter] = (candidate ** (1 / 3) * maxWord) | 0
+    primeCounter += 1
+  }
+  const bytes = [...new TextEncoder().encode(value), 0x80]
+  while ((bytes.length % 64) !== 56) bytes.push(0)
+  for (let index = 7; index >= 0; index -= 1) bytes.push(index < 4 ? (bitLength >>> (index * 8)) & 255 : 0)
+  for (let index = 0; index < bytes.length; index += 4) {
+    words.push((bytes[index] << 24) | (bytes[index + 1] << 16) | (bytes[index + 2] << 8) | bytes[index + 3])
+  }
+  for (let block = 0; block < words.length; block += 16) {
+    const schedule = words.slice(block, block + 16)
+    const oldHash = hash.slice()
+    for (let index = 0; index < 64; index += 1) {
+      const w15 = schedule[index - 15]
+      const w2 = schedule[index - 2]
+      const a = hash[0]
+      const e = hash[4]
+      const temp1 = (
+        hash[7]
+        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+        + ((e & hash[5]) ^ (~e & hash[6]))
+        + constants[index]
+        + (schedule[index] = index < 16 ? schedule[index] : (
+          schedule[index - 16]
+          + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+          + schedule[index - 7]
+          + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+        ) | 0)
+      ) | 0
+      const temp2 = (
+        (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]))
+      ) | 0
+      hash.pop()
+      hash.unshift((temp1 + temp2) | 0)
+      hash[4] = (hash[4] + temp1) | 0
+    }
+    hash.forEach((valueAtIndex, index) => {
+      hash[index] = (valueAtIndex + oldHash[index]) | 0
+    })
+  }
+  return Uint8Array.from(hash.flatMap((word) => [
+    (word >>> 24) & 255,
+    (word >>> 16) & 255,
+    (word >>> 8) & 255,
+    word & 255,
+  ]))
+}
+
+async function sha256(value) {
+  if (crypto.subtle) return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))
+  return sha256Fallback(value)
+}
+
+async function readPortalUser(accessToken) {
+  const response = await fetch('/auth/me', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  })
+  if (!response.ok) throw new Error('登录状态已过期')
+  return response.json()
+}
+
+async function initPortalAuth() {
+  const callbackPath = window.location.pathname.replace(/\/+$/, '') === '/aspace-one/auth/callback'
+  if (callbackPath) {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('error')) throw new Error(params.get('error_description') || params.get('error'))
+      const code = params.get('code')
+      const state = params.get('state')
+      const pending = JSON.parse(sessionStorage.getItem('aspace-one-oidc-pending') || 'null')
+      if (!code || !pending?.verifier || !state || state !== pending.state) throw new Error('登录回调校验失败，请重新登录')
+      const tokenResponse = await fetch('/auth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: 'aspace-one',
+          code,
+          code_verifier: pending.verifier,
+          redirect_uri: `${window.location.origin}/aspace-one/auth/callback`,
+        }),
+      })
+      const tokens = await tokenResponse.json()
+      if (!tokenResponse.ok || !tokens.access_token) throw new Error(tokens.error_description || '无法完成登录')
+      const user = await readPortalUser(tokens.access_token)
+      sessionStorage.setItem('aspace-one-oidc-tokens', JSON.stringify(tokens))
+      sessionStorage.removeItem('aspace-one-oidc-pending')
+      window.ASPACE_CURRENT_USER = { id: user.sub, ...user }
+      window.location.replace('/aspace-one/')
+      return
+    } catch (error) {
+      sessionStorage.removeItem('aspace-one-oidc-pending')
+      portalAuthError = error instanceof Error ? error.message : '登录失败，请重试'
+      window.history.replaceState({}, '', '/aspace-one/')
+    }
+  }
+  try {
+    const tokens = JSON.parse(sessionStorage.getItem('aspace-one-oidc-tokens') || 'null')
+    if (!tokens?.access_token) return
+    const user = await readPortalUser(tokens.access_token)
+    window.ASPACE_CURRENT_USER = { id: user.sub, ...user }
+  } catch {
+    sessionStorage.removeItem('aspace-one-oidc-tokens')
+    window.ASPACE_CURRENT_USER = null
+  }
+}
+
+async function createPortalLoginUrl() {
+  const verifier = base64Url(crypto.getRandomValues(new Uint8Array(32)))
+  const challenge = base64Url(await sha256(verifier))
+  const state = base64Url(crypto.getRandomValues(new Uint8Array(24)))
+  const nonce = base64Url(crypto.getRandomValues(new Uint8Array(24)))
+  sessionStorage.setItem('aspace-one-oidc-pending', JSON.stringify({ verifier, state, nonce }))
+  const authorizeUrl = new URL('/auth/auth', window.location.origin)
+  authorizeUrl.search = new URLSearchParams({
+    client_id: 'aspace-one',
+    redirect_uri: `${window.location.origin}/aspace-one/auth/callback`,
+    response_type: 'code',
+    scope: 'openid profile email',
+    state,
+    nonce,
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+  }).toString()
+  return authorizeUrl.toString()
+}
+
 function isPortalAuthenticated() {
   return Boolean(window.ASPACE_CURRENT_USER?.id)
 }
@@ -786,19 +937,26 @@ function requirePersonalLogin(root, action) {
   return false
 }
 
-function startPersonalLogin(root) {
+async function startPersonalLogin(root) {
   const loginUrl = String(window.ASPACE_AUTH_LOGIN_URL || '').trim()
   if (loginUrl) {
     window.location.href = loginUrl
     return
   }
-  const modal = root.querySelector('[data-login-prompt]')
-  const message = modal?.querySelector('[data-login-prompt-message]')
-  const loginButton = modal?.querySelector('[data-personal-login]')
-  if (message) message.textContent = '统一认证服务已运行，但尚未配置钉钉等企业登录方式，完成企业应用参数配置后即可启用。'
+  const loginButton = root.querySelector('[data-login-prompt] [data-personal-login]')
   if (loginButton) {
     loginButton.disabled = true
-    loginButton.textContent = '登录暂未开通'
+    loginButton.textContent = '正在进入登录…'
+  }
+  try {
+    window.location.href = await createPortalLoginUrl()
+  } catch {
+    if (loginButton) {
+      loginButton.disabled = false
+      loginButton.textContent = '立即登录'
+    }
+    const message = root.querySelector('[data-login-prompt-message]')
+    if (message) message.textContent = '无法启动登录，请检查浏览器安全设置后重试。'
   }
 }
 
@@ -1300,9 +1458,11 @@ function openQuickAction(root, action) {
 export async function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
+  await initPortalAuth()
   loadAppPreferences()
   await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()
+  if (portalAuthError) showToast(portalAuthError)
   bindActivityMessages(root)
 
   root.addEventListener('click', (event) => {
@@ -1311,7 +1471,7 @@ export async function initAspaceOne() {
       return
     }
     if (event.target.closest('[data-personal-login]')) {
-      startPersonalLogin(root)
+      void startPersonalLogin(root)
       return
     }
     if (event.target.closest('[data-quick-settings-open]')) {

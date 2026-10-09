@@ -10,7 +10,7 @@ function escapeHtml(value) {
   })[char])
 }
 
-export function loginPage({ uid, clientName, dingTalkEnabled, error = '' }) {
+export function loginPage({ uid, clientName, dingTalkEnabled, passwordEnabled, error = '' }) {
   const base = authConfig.basePath
   return `<!doctype html>
 <html lang="zh-CN">
@@ -37,7 +37,22 @@ export function loginPage({ uid, clientName, dingTalkEnabled, error = '' }) {
         <button class="auth-method" type="button" disabled><i>码</i><span><b>短信验证码登录</b><small>等待短信服务配置</small></span></button>
       </div>
       <div class="auth-divider"><span>其他方式</span></div>
-      <button class="auth-password" type="button" disabled>账号密码 + 二次验证码（安全策略配置后开放）</button>
+      ${passwordEnabled
+        ? `<form class="auth-local" action="${base}/interaction/${encodeURIComponent(uid)}/password" method="post">
+            <label>账号<input name="account" type="text" minlength="3" maxlength="64" autocomplete="username" placeholder="请输入账号" required /></label>
+            <label>密码<input name="password" type="password" minlength="8" maxlength="72" autocomplete="current-password" placeholder="请输入密码" required /></label>
+            <button name="action" value="login" type="submit">登录</button>
+          </form>
+          <details class="auth-register">
+            <summary>没有账号？注册普通账号</summary>
+            <form class="auth-local" action="${base}/interaction/${encodeURIComponent(uid)}/password" method="post">
+              <label>姓名<input name="name" type="text" maxlength="80" autocomplete="name" placeholder="请输入姓名" required /></label>
+              <label>账号<input name="account" type="text" minlength="3" maxlength="64" autocomplete="username" placeholder="字母、数字或邮箱" required /></label>
+              <label>密码<input name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="至少 8 位" required /></label>
+              <button name="action" value="register" type="submit">注册并登录</button>
+            </form>
+          </details>`
+        : '<button class="auth-password" type="button" disabled>普通账号登录暂未启用</button>'}
       <footer>登录即表示你同意企业安全与隐私规范</footer>
     </section>
   </main>

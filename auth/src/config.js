@@ -35,7 +35,7 @@ export const authConfig = {
   trustProxy: String(process.env.AUTH_TRUST_PROXY || 'true').toLowerCase() === 'true',
   clients: json(process.env.AUTH_CLIENTS_JSON, [{
     client_id: 'aspace-one',
-    client_name: 'Aspace One',
+    client_name: 'Aspace空间智能',
     redirect_uris: [`${portalOrigin}/aspace-one/auth/callback`],
     post_logout_redirect_uris: [`${portalOrigin}/aspace-one/`],
     response_types: ['code'],
@@ -46,6 +46,7 @@ export const authConfig = {
     clientId: String(process.env.AUTH_DINGTALK_CLIENT_ID || '').trim(),
     clientSecret: String(process.env.AUTH_DINGTALK_CLIENT_SECRET || ''),
   },
+  passwordLoginEnabled: String(process.env.AUTH_PASSWORD_LOGIN_ENABLED || 'false').toLowerCase() === 'true',
 }
 
 if (process.env.NODE_ENV === 'production' && authConfig.cookieKeys.includes('development-cookie-key-change-before-production')) {

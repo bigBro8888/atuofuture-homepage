@@ -11,11 +11,26 @@ import {
   addAuthAudit,
   findUser,
   initAuthStore,
+  registerLocalUser,
   upsertFederatedUser,
+  verifyLocalUser,
 } from './store.js'
 import { errorPage, loginPage } from './views.js'
 
 const dingTalkStates = new Map()
+const passwordAttempts = new Map()
+
+function checkPasswordRateLimit(ip) {
+  const key = String(ip || 'unknown')
+  const now = Date.now()
+  const current = passwordAttempts.get(key)
+  if (!current || current.resetAt <= now) {
+    passwordAttempts.set(key, { count: 1, resetAt: now + 10 * 60 * 1000 })
+    return true
+  }
+  current.count += 1
+  return current.count <= 10
+}
 
 function pruneDingTalkStates() {
   const now = Date.now()
@@ -141,7 +156,7 @@ export async function createAuthService() {
         wechat: false,
         oa: false,
         sms: false,
-        passwordMfa: false,
+        password: authConfig.passwordLoginEnabled,
       },
     })
   })
@@ -164,12 +179,55 @@ export async function createAuthService() {
         uid: details.uid,
         clientName: client?.clientName || client?.clientId || '内部系统',
         dingTalkEnabled: Boolean(authConfig.dingtalk.clientId && authConfig.dingtalk.clientSecret),
+        passwordEnabled: authConfig.passwordLoginEnabled,
         error: String(request.query.error || ''),
       }))
     } catch (error) {
       next(error)
     }
   })
+
+  app.post(
+    `${authConfig.basePath}/interaction/:uid/password`,
+    express.urlencoded({ extended: false, limit: '32kb' }),
+    async (request, response) => {
+    try {
+      if (!authConfig.passwordLoginEnabled) {
+        return response.status(404).type('html').send(errorPage('普通账号登录尚未启用。'))
+      }
+      if (!checkPasswordRateLimit(request.ip)) {
+        return response.redirect(303, `${authConfig.basePath}/interaction/${encodeURIComponent(request.params.uid)}?error=${encodeURIComponent('登录尝试过多，请 10 分钟后重试')}`)
+      }
+      const details = await provider.interactionDetails(request, response)
+      if (details.uid !== request.params.uid || details.prompt.name !== 'login') {
+        throw new Error('当前授权流程不需要重新登录')
+      }
+      const account = String(request.body?.account || '')
+      const password = String(request.body?.password || '')
+      const action = String(request.body?.action || 'login')
+      let user
+      if (action === 'register') {
+        user = await registerLocalUser({ account, password, name: request.body?.name })
+        await addAuthAudit('auth.register.password', { userId: user.id })
+      } else {
+        user = await verifyLocalUser(account, password)
+        if (!user) throw new Error('账号或密码错误')
+      }
+      passwordAttempts.delete(String(request.ip || 'unknown'))
+      await addAuthAudit('auth.login.password', { userId: user.id })
+      await provider.interactionFinished(
+        request,
+        response,
+        { login: { accountId: user.id, amr: ['pwd'] } },
+        { mergeWithLastSubmission: false },
+      )
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '登录失败'
+      if (response.headersSent) return
+      response.redirect(303, `${authConfig.basePath}/interaction/${encodeURIComponent(request.params.uid)}?error=${encodeURIComponent(message)}`)
+    }
+    },
+  )
 
   app.get(`${authConfig.basePath}/interaction/:uid/dingtalk`, async (request, response, next) => {
     try {

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import bcrypt from 'bcryptjs'
 import { authConfig } from './config.js'
 
 let state = { users: [], auditLogs: [] }
@@ -32,6 +33,59 @@ export function saveAuthStore() {
 
 export function findUser(id) {
   return state.users.find((item) => item.id === id && item.enabled !== false) || null
+}
+
+function normalizeLocalAccount(value) {
+  const account = String(value || '').trim().toLowerCase()
+  if (!/^[a-z0-9_.@-]{3,64}$/.test(account)) {
+    throw new Error('账号需为 3—64 位字母、数字或 _ . @ -')
+  }
+  return account
+}
+
+export async function registerLocalUser({ account: inputAccount, password, name }) {
+  const account = normalizeLocalAccount(inputAccount)
+  if (String(password || '').length < 8 || String(password || '').length > 72) {
+    throw new Error('密码长度需为 8—72 位')
+  }
+  const exists = state.users.some((item) => (
+    item.identities?.some((identity) => identity.provider === 'password' && identity.externalId === account)
+  ))
+  if (exists) throw new Error('该账号已注册')
+  const now = new Date().toISOString()
+  const user = {
+    id: randomUUID(),
+    name: String(name || account).trim().slice(0, 80) || account,
+    email: account.includes('@') ? account : '',
+    avatarUrl: '',
+    enabled: true,
+    passwordHash: await bcrypt.hash(String(password), 12),
+    identities: [{ provider: 'password', externalId: account }],
+    createdAt: now,
+    updatedAt: now,
+  }
+  state.users.push(user)
+  await saveAuthStore()
+  return user
+}
+
+export async function verifyLocalUser(inputAccount, password) {
+  let account
+  try {
+    account = normalizeLocalAccount(inputAccount)
+  } catch {
+    return null
+  }
+  const user = state.users.find((item) => (
+    item.enabled !== false
+    && item.passwordHash
+    && item.identities?.some((identity) => identity.provider === 'password' && identity.externalId === account)
+  ))
+  if (!user) {
+    await bcrypt.compare(String(password || ''), '$2b$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW')
+    return null
+  }
+  return await bcrypt.compare(String(password || ''), user.passwordHash) ? user : null
 }
 
 export async function upsertFederatedUser(provider, externalId, profile = {}) {

@@ -88,6 +88,36 @@ h1 { margin: 0; font-size: clamp(26px, 6vw, 32px); letter-spacing: -.035em; }
   color: #8996a9;
   font-size: 12px;
 }
+.auth-local { display: grid; gap: 12px; }
+.auth-local label { display: grid; gap: 6px; color: #52647d; font-size: 12px; font-weight: 700; }
+.auth-local input {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid #d8e3f0;
+  border-radius: 11px;
+  outline: 0;
+  background: #fff;
+  color: #142445;
+  font: inherit;
+  font-size: 13px;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.auth-local input:focus { border-color: #71acf0; box-shadow: 0 0 0 3px rgba(8, 121, 249, .12); }
+.auth-local > button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 11px;
+  background: #0879f9;
+  box-shadow: 0 8px 20px rgba(8, 121, 249, .2);
+  color: #fff;
+  font-weight: 750;
+  cursor: pointer;
+}
+.auth-local > button:hover { background: #086de0; }
+.auth-register { margin-top: 14px; padding-top: 14px; border-top: 1px solid #e8eef5; }
+.auth-register summary { color: #2675cf; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer; }
+.auth-register[open] summary { margin-bottom: 14px; }
 .auth-card footer { margin-top: 24px; color: #9aa6b8; font-size: 10px; text-align: center; }
 .auth-error { padding: 11px 13px; border-radius: 9px; background: #fff0f2; color: #b92e42; font-size: 13px; line-height: 1.6; }
 .auth-card--error p { margin: 18px 0; }
