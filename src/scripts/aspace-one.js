@@ -518,6 +518,10 @@ function docRows(category = '全部文档', keyword = '') {
 function renderPortal() {
   return `
     <div class="aso-page">
+      <nav class="aso-mode-switch" role="tablist" aria-label="切换空间智能门户内容">
+        <button class="is-active" type="button" role="tab" aria-selected="true" data-portal-mode="overview">Aspace空间智能全览</button>
+        <button type="button" role="tab" aria-selected="false" data-portal-mode="help">自助服务中心</button>
+      </nav>
       <section class="aso-hero" id="overview">
         <div class="aso-container aso-apps" id="apps">
           <div class="aso-app-center">
@@ -604,7 +608,7 @@ function renderPortal() {
         </div>
       </section>
 
-      <section class="aso-help aso-section" id="help">
+      <section class="aso-help aso-section" id="help" hidden>
         <div class="aso-container">
           <header class="aso-help__head">
             <div class="aso-help__intro">
@@ -755,6 +759,22 @@ function showToast(message) {
     toast.classList.remove('is-visible')
     toast.setAttribute('aria-hidden', 'true')
   }, 2600)
+}
+
+function setPortalMode(root, mode) {
+  const nextMode = mode === 'help' ? 'help' : 'overview'
+  const overview = root.querySelector('#overview')
+  const help = root.querySelector('#help')
+  if (overview) overview.hidden = nextMode !== 'overview'
+  if (help) help.hidden = nextMode !== 'help'
+  root.querySelectorAll('[data-portal-mode]').forEach((button) => {
+    const active = button.dataset.portalMode === nextMode
+    button.classList.toggle('is-active', active)
+    button.setAttribute('aria-selected', String(active))
+  })
+  root.dataset.portalMode = nextMode
+  const top = root.getBoundingClientRect().top + window.scrollY
+  if (window.scrollY > top + 12) window.scrollTo({ top, behavior: 'smooth' })
 }
 
 function base64Url(bytes) {
@@ -1501,6 +1521,11 @@ export async function initAspaceOne() {
   bindActivityMessages(root)
 
   root.addEventListener('click', (event) => {
+    const modeButton = event.target.closest('[data-portal-mode]')
+    if (modeButton) {
+      setPortalMode(root, modeButton.dataset.portalMode)
+      return
+    }
     if (event.target.closest('[data-login-prompt-close]')) {
       setLoginPromptOpen(root, false)
       return

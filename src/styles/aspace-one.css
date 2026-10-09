@@ -11,6 +11,7 @@
   background: #fff;
   font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-optical-sizing: auto;
+  position: relative;
 }
 
 .aso-page *,
@@ -20,6 +21,37 @@
 .aso-page input { font: inherit; }
 .aso-page button { color: inherit; }
 .aso-container { width: min(1440px, calc(100% - 48px)); margin: 0 auto; }
+.aso-hero[hidden], .aso-help[hidden] { display: none; }
+.aso-mode-switch {
+  position: absolute;
+  z-index: 8;
+  top: 17px;
+  left: 50%;
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid rgba(181, 203, 229, .76);
+  border-radius: 11px;
+  background: rgba(241, 247, 254, .86);
+  box-shadow: 0 5px 18px rgba(33, 72, 122, .06);
+  backdrop-filter: blur(14px);
+  transform: translateX(-50%);
+}
+.aso-mode-switch button {
+  min-height: 34px;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #728198;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
+.aso-mode-switch button:hover { color: #176fcf; }
+.aso-mode-switch button.is-active { color: #0879f9; background: #fff; box-shadow: 0 3px 10px rgba(37, 87, 145, .11); }
 
 .aso-eyebrow {
   margin: 0 0 8px;
@@ -1576,6 +1608,9 @@ body.aso-embed-open { overflow: hidden; }
 }
 
 @media (max-width: 1100px) {
+  .aso-mode-switch { position: relative; top: auto; left: auto; width: max-content; margin: 14px auto 0; transform: none; }
+  .aso-mode-switch + .aso-hero { padding-top: 16px; }
+  .aso-mode-switch + .aso-hero[hidden] + .aso-help { padding-top: 24px; }
   .aso-app-center { grid-template-columns: 1fr; gap: 18px; }
   .aso-app-sidebar { position: static; padding: 0 0 14px; border-right: 0; border-bottom: 1px solid rgba(211, 224, 240, .78); }
   .aso-app-sidebar__heading { display: none; }
@@ -1596,6 +1631,8 @@ body.aso-embed-open { overflow: hidden; }
 }
 
 @media (max-width: 640px) {
+  .aso-mode-switch { width: calc(100% - 28px); }
+  .aso-mode-switch button { flex: 1; min-width: 0; padding: 0 8px; font-size: 11px; }
   .aso-container { width: min(100% - 28px, 1440px); }
   .aso-hero { padding-top: 20px; }
   .aso-apps { padding: 0; }
