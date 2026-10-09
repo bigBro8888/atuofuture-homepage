@@ -526,7 +526,6 @@ function renderPortal() {
 
             <div class="aso-app-catalog">
               <header class="aso-app-catalog__heading">
-                <span data-catalog-icon>${icon('grid_view')}</span>
                 <div>
                   <h2 data-catalog-title>全部业务能力</h2>
                   <p data-catalog-description>按业务场景浏览 Aspace空间智能 已接入和规划中的能力</p>
@@ -922,7 +921,6 @@ function initAppFilters(root) {
   const visibleCount = root.querySelector('[data-visible-app-count]')
   const catalog = root.querySelector('.aso-app-catalog')
   const recentPanel = root.querySelector('[data-recent-panel]')
-  const catalogIcon = root.querySelector('[data-catalog-icon]')
   const catalogTitle = root.querySelector('[data-catalog-title]')
   const catalogDescription = root.querySelector('[data-catalog-description]')
   if (!grid || !statusButtons.length || !categoryButtons.length) return
@@ -967,8 +965,7 @@ function initAppFilters(root) {
       const showingRecent = category === 'recent'
       if (catalog) catalog.hidden = showingRecent
       if (recentPanel) recentPanel.hidden = !showingRecent
-      const [headingIcon, headingTitle, headingDescription] = catalogMeta(category)
-      if (catalogIcon) catalogIcon.innerHTML = icon(headingIcon)
+      const [, headingTitle, headingDescription] = catalogMeta(category)
       if (catalogTitle) catalogTitle.textContent = headingTitle
       if (catalogDescription) catalogDescription.textContent = headingDescription
       categoryButtons.forEach((item) => {
