@@ -499,13 +499,14 @@ function renderPortal() {
 
       <section class="aso-hero" id="overview">
         <div class="aso-container aso-apps" id="apps">
-          <header class="aso-app-center__masthead">
-            <div>
-              <p class="aso-eyebrow">SPACE INTELLIGENCE WORKSPACE</p>
-              <h1>空间智能工作台</h1>
-              <p class="aso-lead">按业务场景连接空间、设备、内容与运营服务</p>
+          <header class="aso-workspace-banner">
+            <img src="/images/aspace-one/showcase-building.jpg" alt="" width="1024" height="818" />
+            <div class="aso-workspace-banner__copy">
+              <span>ASPACE ONE</span>
+              <h1>让空间会思考</h1>
+              <p>连接空间、设备与服务，构建持续进化的智慧运营体验</p>
             </div>
-            <button class="aso-more" type="button" data-action="manage-apps">能力接入 ${icon('arrow_forward')}</button>
+            <span class="aso-workspace-banner__signal"><i></i>24 项空间能力在线协同</span>
           </header>
 
           <div class="aso-app-center">

@@ -216,28 +216,89 @@
 .aso-apps h1 { font-size: clamp(28px, 2.6vw, 38px); }
 .aso-lead,
 .aso-section__lead { margin: 8px 0 24px; color: var(--aso-muted); font-size: 14px; }
-.aso-app-center__masthead {
+.aso-workspace-banner {
+  position: relative;
   display: flex;
-  align-items: flex-end;
+  height: 122px;
+  align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 24px;
+  gap: 28px;
+  overflow: hidden;
+  margin-bottom: 22px;
+  padding: 0 30px;
+  border: 1px solid rgba(255, 255, 255, .56);
+  border-radius: 16px;
+  background: #10263d;
+  box-shadow: 0 12px 32px rgba(29, 59, 93, .12);
 }
-.aso-app-center__masthead .aso-lead { margin-bottom: 0; }
-.aso-app-center__masthead .aso-more {
+.aso-workspace-banner::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(8, 25, 45, .9) 0%, rgba(11, 35, 59, .7) 38%, rgba(20, 67, 107, .18) 74%, rgba(20, 67, 107, .28) 100%),
+    linear-gradient(180deg, rgba(33, 126, 212, .12), rgba(2, 18, 36, .24));
+  content: "";
+}
+.aso-workspace-banner > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 48%;
+}
+.aso-workspace-banner__copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  color: #fff;
+}
+.aso-workspace-banner__copy > span {
+  display: block;
+  margin-bottom: 5px;
+  color: rgba(218, 236, 255, .72);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .25em;
+}
+.aso-workspace-banner .aso-workspace-banner__copy h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 25px;
+  font-weight: 760;
+  letter-spacing: -.025em;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, .24);
+}
+.aso-workspace-banner__copy p {
+  margin: 6px 0 0;
+  color: rgba(232, 242, 252, .82);
+  font-size: 12px;
+}
+.aso-workspace-banner__signal {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 9px 2px;
-  border: 0;
-  background: transparent;
-  color: var(--aso-blue);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 650;
-  cursor: pointer;
+  gap: 8px;
+  flex: none;
+  min-height: 32px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, .24);
+  border-radius: 999px;
+  background: rgba(8, 27, 48, .36);
+  color: rgba(240, 247, 255, .9);
+  font-size: 11px;
+  font-weight: 600;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
-.aso-app-center__masthead .aso-more .material-symbols-outlined { font-size: 17px; }
+.aso-workspace-banner__signal i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #5ee2bc;
+  box-shadow: 0 0 0 4px rgba(94, 226, 188, .14);
+}
 .aso-app-center {
   display: grid;
   grid-template-columns: 190px minmax(0, 1fr);
@@ -1686,8 +1747,10 @@ body.aso-embed-open { overflow: hidden; }
   .aso-hero { padding-top: 18px; }
   .aso-apps { padding: 4px 0; }
   .aso-apps h1 { font-size: 30px; }
-  .aso-app-center__masthead { align-items: center; margin-bottom: 18px; }
-  .aso-app-center__masthead .aso-more { display: none; }
+  .aso-workspace-banner { height: 108px; margin-bottom: 18px; padding: 0 18px; border-radius: 13px; }
+  .aso-workspace-banner .aso-workspace-banner__copy h1 { font-size: 21px; }
+  .aso-workspace-banner__copy p { max-width: 260px; font-size: 11px; line-height: 1.5; }
+  .aso-workspace-banner__signal { display: none; }
   .aso-app-sidebar { overflow-x: auto; }
   .aso-app-sidebar nav { width: max-content; flex-wrap: nowrap; }
   .aso-app-sidebar button { min-width: max-content; }
