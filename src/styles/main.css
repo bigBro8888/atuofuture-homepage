@@ -434,7 +434,7 @@
 
   .site-mega__hardware {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0;
     padding: 30px 8px 22px;
     border: 0;
@@ -555,6 +555,10 @@
 
   .site-mega-col__head:hover strong {
     color: #0052d1;
+  }
+
+  .site-mega-col__head:not(a):hover strong {
+    color: inherit;
   }
 
   .site-mega-col__grid {
@@ -728,6 +732,49 @@
   .site-header .site-header__actions .site-header__btn--ghost:hover {
     color: #fff;
     background: transparent;
+  }
+
+  .site-header__account {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.45rem 0.2rem;
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.82);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .site-header__account .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  .site-header__account:hover {
+    color: #fff;
+  }
+
+  .site-header__account-avatar {
+    display: grid;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .site-mobile-drawer__actions .site-header__account {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 10px 4px;
+    color: rgba(255, 255, 255, 0.86);
   }
 
   .site-header .site-header__btn--ghost.is-current {

@@ -1,5 +1,6 @@
 import { SITE_NAV_ITEMS } from '../data/site-nav.js'
-import { SHOW_APP_DOWNLOAD, SITE_CTA, APP_DOWNLOAD_PATH, OFFICIAL_SITE_URL } from '../data/site-links.js'
+import { APP_DOWNLOAD_PATH, OFFICIAL_SITE_URL } from '../data/site-links.js'
+import { bindSiteAccount, renderSiteAccount } from '../lib/site-account.js'
 import { applyHardwareSimpleCms, applyProductLibraryCms, resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
 import { loadProductLibraryContent, loadSimplePageContent } from '../services/site-settings-api.js'
 import { SOLUTIONS } from '../data/solutions.js'
@@ -84,9 +85,18 @@ function renderHardwareMega(root) {
           </section>`
     )
     .join('')
+  const appCol = `
+          <section class="site-mega-col">
+            <div class="site-mega-col__head" data-stagger style="--stagger:${step++}">
+              <strong>智能硬件APP</strong>
+            </div>
+            <div class="site-mega-col__grid">
+              <a class="site-mega-prod" href="${root}${APP_DOWNLOAD_PATH}" data-stagger style="--stagger:${step++}">电子相框 App</a>
+            </div>
+          </section>`
   return `
     <div class="site-mega site-mega--hardware" data-hardware-mega role="region" data-mega-panel>
-      <div class="site-mega__hardware">${cols}</div>
+      <div class="site-mega__hardware">${cols}${appCol}</div>
       <div class="site-mega__hardware-foot">
         <a class="site-mega__all-btn" href="${root}hardware/products/" data-stagger="slow" style="--stagger:${step}">浏览全部产品</a>
       </div>
@@ -109,6 +119,10 @@ function renderHardwareMobile(root) {
               .join('')}`
     )
     .join('')}
+            <p class="site-mobile-nav-group">智能硬件APP</p>
+            <a class="site-mobile-nav-link site-mobile-nav-link--child" href="${root}${APP_DOWNLOAD_PATH}">
+              <strong>电子相框 App</strong>
+            </a>
             <a class="site-mobile-nav-link site-mobile-nav-link--cta" href="${root}hardware/products/">
               <strong>浏览全部产品</strong>
             </a>`
@@ -224,11 +238,7 @@ export function renderSiteNav(activeId) {
           ${renderDesktopNav(activeId, root)}
         </nav>
         <div class="site-header__actions hidden md:flex items-center">
-          ${SHOW_APP_DOWNLOAD
-            ? `<a href="${root}${APP_DOWNLOAD_PATH}" class="site-header__btn site-header__btn--ghost${activeId === 'app-download' ? ' is-current' : ''}">
-            <span class="material-symbols-outlined" aria-hidden="true">download</span> ${SITE_CTA.downloadLabel}
-          </a>`
-            : ''}
+          ${renderSiteAccount(window.ASPACE_CURRENT_USER)}
         </div>
         <button type="button" class="site-header__menu lg:hidden" id="menu-toggle" aria-label="打开菜单">
           <span class="material-symbols-outlined">menu</span>
@@ -252,9 +262,7 @@ export function renderSiteNav(activeId) {
             ${renderMobileNav(activeId, root)}
           </nav>
           <div class="site-mobile-drawer__actions">
-            ${SHOW_APP_DOWNLOAD
-              ? `<a href="${root}${APP_DOWNLOAD_PATH}" class="site-header__btn site-header__btn--ghost w-full${activeId === 'app-download' ? ' is-current' : ''}">${SITE_CTA.downloadLabel}</a>`
-              : ''}
+            ${renderSiteAccount(window.ASPACE_CURRENT_USER)}
           </div>
         </div>
       </div>
@@ -416,6 +424,7 @@ export function initSiteNav() {
     if (!header || activeId === 'app-download') return
     initMegaMenu(header)
     initMobileAccordion(header)
+    bindSiteAccount(header)
   }
 
   paint()
