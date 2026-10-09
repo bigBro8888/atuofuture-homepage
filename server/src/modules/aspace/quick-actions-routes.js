@@ -108,9 +108,14 @@ function normalizeCatalog(value = {}) {
     if (!label) throw new Error('栏目标题不能为空')
     const icon = String(item.icon ?? fallback.icon).trim().slice(0, 40)
     if (!/^[a-z0-9_]+$/.test(icon)) throw new Error(`栏目“${label}”图标格式无效`)
+    const iconUrl = String(item.iconUrl || '').trim().slice(0, 500)
+    if (iconUrl && !/^(?:https?:\/\/|\/(?:api\/public\/uploads\/images|images)\/)/i.test(iconUrl)) {
+      throw new Error(`栏目“${label}”自定义图标地址无效`)
+    }
     return {
       id,
       icon,
+      iconUrl,
       label,
       description: String(item.description ?? fallback.description).trim().slice(0, 160),
     }

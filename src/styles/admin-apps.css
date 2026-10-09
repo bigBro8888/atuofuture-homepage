@@ -747,14 +747,21 @@ body.admin-modal-open { overflow: hidden; }
 .admin-aspace-section h3 { margin: 0; font-size: 14px; }
 .admin-aspace-section header p { margin: 5px 0 0; color: #8a96a8; font-size: 10px; }
 .admin-aspace-categories { display: grid; gap: 10px; }
-.admin-aspace-category { display: grid; grid-template-columns: 104px minmax(140px,.8fr) minmax(150px,.8fr) minmax(260px,1.4fr); gap: 12px; align-items: end; padding: 14px; border: 1px solid #e3e9f1; border-radius: 12px; background: #fff; }
-.admin-aspace-category label > span { display: block; margin-bottom: 7px; color: #667085; font-size: 10px; font-weight: 600; }
+.admin-aspace-category { display: grid; grid-template-columns: 104px minmax(140px,.8fr) 190px minmax(260px,1.4fr); gap: 12px; align-items: end; padding: 14px; border: 1px solid #e3e9f1; border-radius: 12px; background: #fff; }
+.admin-aspace-category label > span, .admin-aspace-category__icon > span { display: block; margin-bottom: 7px; color: #667085; font-size: 10px; font-weight: 600; }
 .admin-aspace-category input, .admin-aspace-apps select { padding: 10px 11px; border-radius: 9px; font-size: 11px; }
 .admin-aspace-category__order { display: flex; align-items: center; gap: 5px; min-height: 39px; }
 .admin-aspace-category__order > span { min-width: 28px; color: #1769ff; font-size: 11px; font-weight: 700; }
 .admin-aspace-category__order button { display: grid; width: 30px; height: 30px; place-items: center; padding: 0; border: 1px solid #dce4ee; border-radius: 8px; color: #667085; background: #fff; }
 .admin-aspace-category__order button:disabled { cursor: default; opacity: .35; }
 .admin-aspace-category__order .material-symbols-outlined { font-size: 16px; }
+.admin-aspace-category__icon > div { display: flex; align-items: center; gap: 7px; min-height: 39px; }
+.admin-aspace-category__icon i { display: grid; flex: 0 0 38px; height: 38px; place-items: center; overflow: hidden; border: 1px solid #dce6f2; border-radius: 10px; color: #1769ff; background: #edf5ff; font-style: normal; }
+.admin-aspace-category__icon i .material-symbols-outlined { font-size: 21px; }
+.admin-aspace-category__icon i img { width: 24px; height: 24px; object-fit: contain; }
+.admin-aspace-category__icon label, .admin-aspace-category__icon button { padding: 7px 9px; border: 1px solid #dce4ee; border-radius: 8px; color: #1769ff; background: #fff; font-size: 9px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.admin-aspace-category__icon label input { display: none; }
+.admin-aspace-category__icon button { color: #667085; }
 .admin-aspace-apps { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; }
 .admin-aspace-apps > label { display: grid; grid-template-columns: minmax(0,1fr) 130px; gap: 10px; align-items: center; padding: 11px 12px; border: 1px solid #e3e9f1; border-radius: 11px; background: #fff; }
 .admin-aspace-apps b, .admin-aspace-apps small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -118,6 +118,8 @@
   color: #0879f9;
 }
 .aso-app-sidebar button > .material-symbols-outlined { font-size: 19px; }
+.aso-custom-icon { display: block; width: 19px; height: 19px; object-fit: contain; }
+.aso-app-sidebar button > .aso-custom-icon { justify-self: center; }
 .aso-app-sidebar button i {
   color: #99a8bc;
   font-size: 11px;
@@ -553,6 +555,7 @@ button.aso-portal-account:active { transform: scale(.98); }
   white-space: nowrap;
 }
 .aso-app-card__category .material-symbols-outlined { font-size: 13px; }
+.aso-app-card__category .aso-custom-icon { width: 13px; height: 13px; }
 .aso-app-card__meta small { color: #98a6bc; font-size: 11px; }
 .aso-app-card__meta .aso-status { height: 21px; padding: 0 8px 0 7px; font-size: 11px; }
 .aso-app-card .aso-btn { width: 100%; min-height: 40px; }

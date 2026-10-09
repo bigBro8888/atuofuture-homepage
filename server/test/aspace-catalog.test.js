@@ -44,6 +44,7 @@ test('admin can publish Aspace categories and app assignments', async (context) 
   const cookie = loginResponse.headers.get('set-cookie').split(';')[0]
   const meeting = initial.categories.find((category) => category.id === 'meeting')
   meeting.label = '智慧会议'
+  meeting.iconUrl = '/api/public/uploads/images/meeting-icon.png'
   initial.categories = [
     meeting,
     ...initial.categories.filter((category) => category.id !== 'meeting'),
@@ -60,5 +61,6 @@ test('admin can publish Aspace categories and app assignments', async (context) 
   const published = (await (await fetch(`${baseUrl}/api/public/aspace/catalog`)).json()).catalog
   assert.equal(published.categories[0].id, 'meeting')
   assert.equal(published.categories[0].label, '智慧会议')
+  assert.equal(published.categories[0].iconUrl, '/api/public/uploads/images/meeting-icon.png')
   assert.equal(published.apps.find((item) => item.id === 'visitor-booking').category, 'meeting')
 })

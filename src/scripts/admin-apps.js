@@ -246,7 +246,7 @@ function renderAspaceCatalog() {
   )).join('')
   host.innerHTML = `
     <section class="admin-aspace-section">
-      <header><div><h3>业务分类</h3><p>可编辑标题、图标和说明，并使用箭头调整前台显示顺序。</p></div></header>
+      <header><div><h3>业务分类</h3><p>可编辑标题和说明、上传自定义图标，并使用箭头调整前台显示顺序。</p></div></header>
       <div class="admin-aspace-categories">
         ${catalog.categories.map((category, index) => `
           <article class="admin-aspace-category" data-aspace-category="${escapeHtml(category.id)}">
@@ -256,7 +256,18 @@ function renderAspaceCatalog() {
               <button type="button" data-aspace-move="1" ${index === catalog.categories.length - 1 ? 'disabled' : ''} title="下移"><span class="material-symbols-outlined">arrow_downward</span></button>
             </div>
             <label><span>栏目标题</span><input name="category-label" maxlength="40" value="${escapeHtml(category.label)}" required /></label>
-            <label><span>Material 图标名</span><input name="category-icon" maxlength="40" value="${escapeHtml(category.icon)}" required /></label>
+            <div class="admin-aspace-category__icon">
+              <span>栏目图标</span>
+              <div>
+                <i data-aspace-icon-preview>${category.iconUrl
+                  ? `<img src="${escapeHtml(category.iconUrl)}" alt="" />`
+                  : `<span class="material-symbols-outlined">${escapeHtml(category.icon)}</span>`}</i>
+                <label>上传替换<input type="file" accept="image/jpeg,image/png,image/webp" data-aspace-icon-upload /></label>
+                <button type="button" data-aspace-icon-reset ${category.iconUrl ? '' : 'hidden'}>恢复默认</button>
+              </div>
+              <input type="hidden" name="category-icon" value="${escapeHtml(category.icon)}" />
+              <input type="hidden" name="category-icon-url" value="${escapeHtml(category.iconUrl || '')}" />
+            </div>
             <label class="admin-aspace-category__description"><span>栏目说明</span><input name="category-description" maxlength="160" value="${escapeHtml(category.description)}" /></label>
           </article>
         `).join('')}
@@ -284,6 +295,7 @@ function collectAspaceCatalog() {
     id: row.dataset.aspaceCategory,
     label: row.querySelector('[name="category-label"]').value.trim(),
     icon: row.querySelector('[name="category-icon"]').value.trim(),
+    iconUrl: row.querySelector('[name="category-icon-url"]').value.trim(),
     description: row.querySelector('[name="category-description"]').value.trim(),
   }))
   const appCategories = new Map([...document.querySelectorAll('[data-aspace-app]')].map((row) => (
@@ -2008,6 +2020,15 @@ window.addEventListener('hashchange', () => {
 document.querySelector('[data-mobile-menu]').addEventListener('click', () => document.querySelector('.admin-sidebar').classList.toggle('is-open'))
 
 document.querySelector('[data-aspace-editor]').addEventListener('click', (event) => {
+  const reset = event.target.closest('[data-aspace-icon-reset]')
+  if (reset) {
+    const row = reset.closest('[data-aspace-category]')
+    const icon = row.querySelector('[name="category-icon"]').value
+    row.querySelector('[name="category-icon-url"]').value = ''
+    row.querySelector('[data-aspace-icon-preview]').innerHTML = `<span class="material-symbols-outlined">${escapeHtml(icon)}</span>`
+    reset.hidden = true
+    return
+  }
   const button = event.target.closest('[data-aspace-move]')
   if (!button || !state.aspaceCatalog) return
   const nextCatalog = collectAspaceCatalog()
@@ -2019,6 +2040,28 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
   nextCatalog.categories.splice(target, 0, category)
   state.aspaceCatalog = nextCatalog
   renderAspaceCatalog()
+})
+
+document.querySelector('[data-aspace-editor]').addEventListener('change', async (event) => {
+  const upload = event.target.closest('[data-aspace-icon-upload]')
+  const file = upload?.files?.[0]
+  if (!upload || !file) return
+  const row = upload.closest('[data-aspace-category]')
+  upload.disabled = true
+  try {
+    const formData = new FormData()
+    formData.append('image', file)
+    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+    row.querySelector('[name="category-icon-url"]').value = url
+    row.querySelector('[data-aspace-icon-preview]').innerHTML = `<img src="${escapeHtml(url)}" alt="" />`
+    row.querySelector('[data-aspace-icon-reset]').hidden = false
+    toast('图标上传成功，点击保存后发布到前台')
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    upload.disabled = false
+    upload.value = ''
+  }
 })
 
 document.querySelector('[data-aspace-form]').addEventListener('submit', async (event) => {

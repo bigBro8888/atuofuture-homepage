@@ -364,6 +364,9 @@ let recentActivities = []
 let portalAuthError = ''
 
 function icon(name, className = '') {
+  if (/^(?:https?:\/\/|\/)/i.test(name || '')) {
+    return `<img class="aso-custom-icon ${className}" src="${escapeHtml(name)}" alt="" aria-hidden="true" />`
+  }
   return `<span class="material-symbols-outlined ${className}" aria-hidden="true">${name}</span>`
 }
 
@@ -1286,7 +1289,7 @@ async function loadCatalog() {
         const fallback = existingById.get(category.id)
         return [
           category.id,
-          category.icon || fallback[1],
+          category.iconUrl || category.icon || fallback[1],
           category.label || fallback[2],
           category.description ?? fallback[3],
         ]
