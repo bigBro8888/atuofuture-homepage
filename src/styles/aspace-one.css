@@ -70,13 +70,25 @@
   letter-spacing: .24em;
 }
 .aso-hero {
+  position: relative;
+  overflow: hidden;
   scroll-margin-top: 72px;
   padding: 24px 0 42px;
-  background:
-    radial-gradient(circle at 84% 12%, rgba(191, 222, 255, .42), transparent 31%),
-    linear-gradient(135deg, #fff 0%, #f7fbff 58%, #edf6ff 100%);
+  background: linear-gradient(180deg, #edf4fe 0%, #f9fcff 24%, #f8fbfe 70%, #fff 100%);
 }
-.aso-apps { padding: 0 0 8px; }
+.aso-hero::before {
+  position: absolute;
+  top: -78%;
+  right: -14%;
+  width: 78%;
+  height: 214%;
+  border-radius: 50%;
+  background: linear-gradient(198deg, #fff, rgba(255, 255, 255, .6) 36%, rgba(255, 255, 255, 0) 64%);
+  transform: rotate(-12deg);
+  pointer-events: none;
+  content: "";
+}
+.aso-apps { position: relative; z-index: 1; padding: 0 0 8px; }
 .aso-overview-head {
   display: grid;
   grid-template-columns: minmax(0, 290px) minmax(0, 1fr) 168px;
@@ -88,53 +100,46 @@
 .aso-overview-head__intro > p:last-child { margin: 10px 0 0; color: var(--aso-muted); font-size: 14px; }
 .aso-overview-head__find { padding-top: 8px; }
 .aso-overview-deco { position: relative; height: 150px; margin: 0; }
-.aso-overview-deco__base {
-  position: absolute;
-  right: 3px;
-  bottom: 9px;
-  width: 150px;
-  height: 50px;
-  border: 1px solid rgba(131, 181, 236, .34);
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 42%, rgba(255,255,255,.94), rgba(190,220,250,.5) 62%, rgba(137,190,239,.2));
-  box-shadow: 0 16px 34px rgba(48, 105, 178, .12);
-  transform: rotate(-4deg);
+.aso-overview-deco__back,
+.aso-overview-deco__building { position: absolute; border-radius: 14px; }
+.aso-overview-deco__back {
+  top: 26px;
+  left: 4px;
+  width: 62px;
+  height: 108px;
+  background: linear-gradient(160deg, #5aa0ee, #9cc8f5);
+  box-shadow: 0 10px 24px rgba(48, 105, 178, .16);
+  transform: rotate(-9deg);
 }
-.aso-overview-deco__tower {
-  position: absolute;
-  z-index: 2;
-  right: 42px;
-  bottom: 27px;
+.aso-overview-deco__building {
+  top: 10px;
+  left: 40px;
   display: grid;
-  align-content: center;
-  gap: 9px;
-  width: 72px;
-  height: 104px;
-  padding: 0 16px;
-  border: 1px solid rgba(255,255,255,.84);
-  border-radius: 13px 13px 9px 9px;
-  background: linear-gradient(150deg, rgba(255,255,255,.96), rgba(215,236,255,.88));
-  box-shadow: 0 15px 32px rgba(48,105,178,.18);
-  transform: perspective(240px) rotateY(-10deg) rotateZ(2deg);
+  grid-template-columns: 1fr 1fr;
+  align-content: start;
+  gap: 8px;
+  width: 118px;
+  height: 126px;
+  padding: 22px 18px 0;
+  border: 1px solid rgba(255, 255, 255, .8);
+  background: rgba(255, 255, 255, .78);
+  box-shadow: 0 16px 34px rgba(48, 105, 178, .14);
+  transform: rotate(3deg);
 }
-.aso-overview-deco__tower::before {
+.aso-overview-deco__building span {
+  height: 18px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #8bbef0, #c4def8);
+}
+.aso-overview-deco__building b {
   position: absolute;
-  top: -14px;
-  right: 8px;
-  left: 8px;
-  height: 25px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #55a4f1, #9bcbf7);
-  clip-path: polygon(50% 0, 100% 48%, 100% 100%, 0 100%, 0 48%);
-  content: "";
+  right: 28px;
+  bottom: 0;
+  left: 28px;
+  height: 16px;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, #5ea4ee, #8fc0f4);
 }
-.aso-overview-deco__tower span { height: 7px; border-radius: 3px; background: linear-gradient(90deg, #66aaed, #b3d7f7); }
-.aso-overview-deco__node { position: absolute; z-index: 3; width: 15px; height: 15px; border: 4px solid #fff; border-radius: 50%; background: #258cec; box-shadow: 0 4px 12px rgba(24,110,210,.28); }
-.aso-overview-deco__node::after { position: absolute; top: 3px; width: 42px; height: 2px; background: linear-gradient(90deg, #75b3ef, transparent); content: ""; }
-.aso-overview-deco__node--one { right: 8px; bottom: 50px; }
-.aso-overview-deco__node--one::after { right: 7px; transform: rotate(154deg); transform-origin: right; }
-.aso-overview-deco__node--two { right: 128px; bottom: 27px; }
-.aso-overview-deco__node--two::after { left: 7px; transform: rotate(-23deg); transform-origin: left; }
 .aso-section h2 { margin: 0; color: var(--aso-text); font-weight: 750; letter-spacing: -.025em; }
 .aso-lead,
 .aso-section__lead { margin: 8px 0 24px; color: var(--aso-muted); font-size: 14px; }

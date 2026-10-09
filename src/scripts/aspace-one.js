@@ -542,10 +542,11 @@ function renderPortal() {
               </div>
             </div>
             <figure class="aso-overview-deco" aria-hidden="true">
-              <i class="aso-overview-deco__base"></i>
-              <i class="aso-overview-deco__tower"><span></span><span></span><span></span></i>
-              <i class="aso-overview-deco__node aso-overview-deco__node--one"></i>
-              <i class="aso-overview-deco__node aso-overview-deco__node--two"></i>
+              <i class="aso-overview-deco__back"></i>
+              <i class="aso-overview-deco__building">
+                <span></span><span></span><span></span><span></span>
+                <b></b>
+              </i>
             </figure>
           </header>
           <div class="aso-app-center">
