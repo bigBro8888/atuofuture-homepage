@@ -75,9 +75,10 @@ let apps = [
     name: '无线投屏',
     category: 'meeting',
     project: '会议空间',
-    desc: '跨设备无线投屏与内容共享能力正在开发中。',
-    icon: 'cast',
-    locked: true,
+    time: '2026-10-10 17:00',
+    image: '/images/aspace-one/app-wireless.jpg',
+    alt: '无线投屏素材与内容投屏场景',
+    url: 'https://info-publish.atuofuture.com/publish/materials',
   },
   {
     id: 'info-publish',
