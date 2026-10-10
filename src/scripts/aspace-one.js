@@ -1424,14 +1424,14 @@ async function initPortalAuth() {
   }
 }
 
-async function createPortalLoginUrl() {
+async function createPortalLoginUrl({ forceLogin = true } = {}) {
   const verifier = base64Url(crypto.getRandomValues(new Uint8Array(32)))
   const challenge = base64Url(await sha256(verifier))
   const state = base64Url(crypto.getRandomValues(new Uint8Array(24)))
   const nonce = base64Url(crypto.getRandomValues(new Uint8Array(24)))
   sessionStorage.setItem('aspace-one-oidc-pending', JSON.stringify({ verifier, state, nonce }))
-  const authorizeUrl = new URL('/auth/auth', window.location.origin)
-  authorizeUrl.search = new URLSearchParams({
+  // 主动登录时强制出现登录页，避免沿用统一认证侧已有会话直接静默回跳
+  const params = {
     client_id: 'aspace-one',
     redirect_uri: `${window.location.origin}/aspace-one/auth/callback`,
     response_type: 'code',
@@ -1440,7 +1440,10 @@ async function createPortalLoginUrl() {
     nonce,
     code_challenge: challenge,
     code_challenge_method: 'S256',
-  }).toString()
+  }
+  if (forceLogin) params.prompt = 'login'
+  const authorizeUrl = new URL('/auth/auth', window.location.origin)
+  authorizeUrl.search = new URLSearchParams(params).toString()
   return authorizeUrl.toString()
 }
 
@@ -1477,23 +1480,32 @@ function requirePersonalLogin(root, action) {
   return false
 }
 
-async function startPersonalLogin(root) {
+async function startPersonalLogin(root, trigger) {
   const loginUrl = String(window.ASPACE_AUTH_LOGIN_URL || '').trim()
   if (loginUrl) {
     window.location.href = loginUrl
     return
   }
-  const loginButton = root.querySelector('[data-login-prompt] [data-personal-login]')
+  const loginButton = trigger?.closest?.('[data-personal-login]')
+    || root.querySelector('[data-login-prompt] [data-personal-login]')
+    || root.querySelector('.aso-shell__account[data-personal-login]')
   if (loginButton) {
     loginButton.disabled = true
-    loginButton.textContent = '正在进入登录…'
+    const label = loginButton.querySelector('span:last-child')
+    if (label) label.textContent = '正在进入登录…'
+    else loginButton.textContent = '正在进入登录…'
   }
   try {
-    window.location.href = await createPortalLoginUrl()
+    // 清除本地登录缓存，并强制统一认证弹出登录界面
+    sessionStorage.removeItem('aspace-one-oidc-tokens')
+    window.ASPACE_CURRENT_USER = null
+    window.location.href = await createPortalLoginUrl({ forceLogin: true })
   } catch {
     if (loginButton) {
       loginButton.disabled = false
-      loginButton.textContent = '立即登录'
+      const label = loginButton.querySelector('span:last-child')
+      if (label) label.textContent = '登录'
+      else loginButton.textContent = '立即登录'
     }
     const message = root.querySelector('[data-login-prompt-message]')
     if (message) message.textContent = '无法启动登录，请检查浏览器安全设置后重试。'
@@ -2110,8 +2122,9 @@ export async function initAspaceOne() {
       setLoginPromptOpen(root, false)
       return
     }
-    if (event.target.closest('[data-personal-login]')) {
-      void startPersonalLogin(root)
+    const personalLogin = event.target.closest('[data-personal-login]')
+    if (personalLogin) {
+      void startPersonalLogin(root, personalLogin)
       return
     }
     if (event.target.closest('[data-quick-settings-open]')) {
