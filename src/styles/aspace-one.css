@@ -226,6 +226,7 @@ body.aso-standalone .back-to-top { display: none !important; }
 .aso-home-hero__cta {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
   margin-top: 28px;
 }
