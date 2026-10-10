@@ -257,9 +257,10 @@ let apps = [
     category: 'foundation',
     group: 'control',
     project: '智能控制',
-    desc: '跨设备场景编排、自动联动与策略执行能力正在建设中。',
-    icon: 'auto_awesome',
-    locked: true,
+    time: '2026-10-10 17:48',
+    image: '/images/aspace-one/showcase-control.jpg',
+    alt: '智能场景编排与联动策略场景',
+    url: 'https://aspacedev.atuofuture.com/#/rule-list/query',
   },
   {
     id: 'visitor-booking',
