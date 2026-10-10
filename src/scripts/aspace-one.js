@@ -702,18 +702,19 @@ function renderHomeView() {
   return `
     <section class="aso-home" data-aso-view="home">
       <section class="aso-home-hero">
-        <div class="aso-container aso-home-hero__grid">
+        <img class="aso-home-hero__bg" src="/images/aspace-one/showcase-building.jpg" alt="" />
+        <div class="aso-home-hero__shade" aria-hidden="true"></div>
+        <div class="aso-container aso-home-hero__content">
           <div class="aso-home-hero__copy">
             <p class="aso-home-hero__eyebrow">ASPACE · 空间智能应用平台</p>
             <h1>连接空间业务<br />让智能应用触手可及</h1>
             <p class="aso-home-hero__lead">汇聚会务、资产、设备与能源等能力，帮助园区与楼宇团队更快找到并进入业务系统。</p>
             <div class="aso-home-hero__cta">
               <button type="button" class="aso-btn aso-btn--primary" data-aso-nav="apps">浏览应用广场 ${icon('arrow_forward')}</button>
-              <button type="button" class="aso-btn aso-btn--outline" data-home-scroll="scenes">探索业务场景</button>
+              <button type="button" class="aso-btn aso-btn--hero-ghost" data-home-scroll="scenes">探索业务场景</button>
             </div>
           </div>
-          <div class="aso-home-hero__visual" aria-hidden="true">
-            <img class="aso-home-hero__photo" src="/images/aspace-one/showcase-building.jpg" alt="" />
+          <div class="aso-home-hero__float" aria-hidden="true">
             <div class="aso-home-hero__chips">
               <span>${icon('groups')}会议管理</span>
               <span>${icon('inventory_2')}资产管理</span>
@@ -722,8 +723,8 @@ function renderHomeView() {
             </div>
             <aside class="aso-home-hero__card">
               <strong>会议室 A301</strong>
-              <em>使用中 · 14:00–15:30</em>
-              <small>已预约 · 产品评审会</small>
+              <em>空闲中 · 可预约</em>
+              <small>下一场 15:30</small>
             </aside>
           </div>
         </div>
