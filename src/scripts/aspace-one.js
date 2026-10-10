@@ -1240,7 +1240,7 @@ function initHomeGlobe(root) {
       markerColor: [0.03, 0.47, 0.98],
       glowColor: [0.7, 0.84, 1],
       scale: 3.24,
-      offset: [0, height * dpr * 0.42],
+      offset: [0, height * dpr * 0.28],
       markers: HOME_GLOBE_MARKERS,
       markerElevation: 0.012,
     })
