@@ -774,28 +774,14 @@ function setPortalMode(root, mode) {
   if (window.scrollY > top + 12) window.scrollTo({ top, behavior: 'smooth' })
 }
 
-function siteHeaderOffset() {
-  const header = document.querySelector('.site-header')
-  return Math.round(header?.getBoundingClientRect().height || 64) + 12
-}
-
-/** 分类筛选后列表变短时，焦点滚动/滚动锚定会把页面甩到页脚；把目录区拉回可视位置。 */
-function ensureAppCatalogInView(root, focusedButton) {
-  focusedButton?.focus?.({ preventScroll: true })
-  const showingRecent = !root.querySelector('[data-recent-panel]')?.hidden
-  const anchor = showingRecent
-    ? root.querySelector('[data-recent-panel] > header') || root.querySelector('[data-recent-panel]')
-    : root.querySelector('.aso-app-catalog__heading') || root.querySelector('.aso-app-center') || root.querySelector('#apps')
-  if (!anchor) return
-  const offset = siteHeaderOffset()
-  const rect = anchor.getBoundingClientRect()
-  const needsFix = rect.top < offset || rect.bottom < offset + 96
-  if (!needsFix) return
-  const top = Math.max(0, window.scrollY + rect.top - offset)
+/** 点击左侧分类时锁定当前滚动，避免焦点/锚定把页面拽走。 */
+function keepScrollPosition(run) {
   const html = document.documentElement
+  const scrollY = window.scrollY
   const previousBehavior = html.style.scrollBehavior
   html.style.scrollBehavior = 'auto'
-  html.scrollTop = top
+  run()
+  html.scrollTop = scrollY
   html.style.scrollBehavior = previousBehavior
 }
 
@@ -1202,23 +1188,22 @@ function initAppFilters(root) {
       const nextCategory = button.dataset.appCategoryFilter
       if (nextCategory === 'recent' && !requirePersonalLogin(root, 'recent')) return
       if (nextCategory === 'favorites' && !requirePersonalLogin(root, 'favoritesView')) return
-      category = nextCategory
-      const showingRecent = category === 'recent'
-      if (catalog) catalog.hidden = showingRecent
-      if (recentPanel) recentPanel.hidden = !showingRecent
-      const [, headingTitle, headingDescription] = catalogMeta(category)
-      if (catalogTitle) catalogTitle.textContent = headingTitle
-      if (catalogDescription) catalogDescription.textContent = headingDescription
-      categoryButtons.forEach((item) => {
-        const active = item === button
-        item.classList.toggle('is-active', active)
-        if (active) item.setAttribute('aria-current', 'true')
-        else item.removeAttribute('aria-current')
-      })
-      if (!showingRecent) applyFilters()
-      // 等布局按筛选结果收拢后再校正滚动，避免落到页脚
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => ensureAppCatalogInView(root, button))
+      keepScrollPosition(() => {
+        category = nextCategory
+        const showingRecent = category === 'recent'
+        if (catalog) catalog.hidden = showingRecent
+        if (recentPanel) recentPanel.hidden = !showingRecent
+        const [, headingTitle, headingDescription] = catalogMeta(category)
+        if (catalogTitle) catalogTitle.textContent = headingTitle
+        if (catalogDescription) catalogDescription.textContent = headingDescription
+        categoryButtons.forEach((item) => {
+          const active = item === button
+          item.classList.toggle('is-active', active)
+          if (active) item.setAttribute('aria-current', 'true')
+          else item.removeAttribute('aria-current')
+        })
+        if (!showingRecent) applyFilters()
+        button.focus({ preventScroll: true })
       })
     })
   })
