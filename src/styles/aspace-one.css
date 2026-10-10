@@ -170,16 +170,16 @@ body.aso-standalone .back-to-top { display: none !important; }
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   transform: translateZ(0);
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 52%, rgba(0, 0, 0, .45) 78%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 52%, rgba(0, 0, 0, .45) 78%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 68%, rgba(0, 0, 0, .75) 88%, rgba(0, 0, 0, .2) 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 68%, rgba(0, 0, 0, .75) 88%, rgba(0, 0, 0, .2) 100%);
 }
 .aso-home-hero__shade {
   position: absolute;
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, .22) 0%, rgba(255, 255, 255, .06) 28%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0) 48%, rgba(255, 255, 255, .5) 76%, #fff 100%);
+    linear-gradient(90deg, rgba(255, 255, 255, .18) 0%, rgba(255, 255, 255, .04) 28%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 62%, rgba(255, 255, 255, .22) 86%, rgba(255, 255, 255, .55) 100%);
   pointer-events: none;
 }
 .aso-home-hero__content {
