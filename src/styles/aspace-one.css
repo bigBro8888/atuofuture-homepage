@@ -164,7 +164,7 @@ body.aso-standalone .back-to-top { display: none !important; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 40%;
+  object-position: right center;
   z-index: 0;
 }
 .aso-home-hero__shade {
@@ -172,8 +172,8 @@ body.aso-standalone .back-to-top { display: none !important; }
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(90deg, rgba(244, 248, 255, .92) 0%, rgba(244, 248, 255, .78) 34%, rgba(244, 248, 255, .28) 58%, rgba(244, 248, 255, 0) 78%),
-    linear-gradient(180deg, rgba(8, 28, 68, .12) 0%, rgba(8, 28, 68, 0) 28%, rgba(244, 248, 255, .18) 72%, rgba(255, 255, 255, .88) 100%);
+    linear-gradient(90deg, rgba(244, 248, 255, .55) 0%, rgba(244, 248, 255, .22) 32%, rgba(244, 248, 255, 0) 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 58%, rgba(255, 255, 255, .72) 88%, #fff 100%);
   pointer-events: none;
 }
 .aso-home-hero__content {
