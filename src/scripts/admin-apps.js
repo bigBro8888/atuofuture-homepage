@@ -49,7 +49,7 @@ const titles = {
   'content-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
   'page-news': ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
   'page-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
-  aspace: ['Aspace 空间智能', '路径 /aspace-one/ · 配置业务栏目与应用归属'],
+  aspace: ['Aspace 空间智能', '路径 /aspace-one/ · 分标签管理业务分类、应用归属与封面文案'],
   config: ['App 下载页', '路径 /app-download/ · 可视化编辑下载页'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
   analytics: ['下载统计', '查看匿名点击趋势和终端分布'],
@@ -227,6 +227,8 @@ function openTab(name, options = {}) {
   if (name === 'audit' && state.user.role === 'super_admin') loadAudit()
 }
 
+let aspaceEditorTab = 'categories'
+
 async function loadAspaceCatalog() {
   try {
     const { catalog } = await api('/aspace/catalog')
@@ -237,6 +239,19 @@ async function loadAspaceCatalog() {
   }
 }
 
+function setAspaceEditorTab(tab) {
+  const next = ['categories', 'ownership', 'profiles'].includes(tab) ? tab : 'categories'
+  aspaceEditorTab = next
+  const host = document.querySelector('[data-aspace-editor]')
+  if (!host) return
+  host.querySelectorAll('[data-aspace-tab]').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.aspaceTab === next)
+  })
+  host.querySelectorAll('[data-aspace-tab-panel]').forEach((panel) => {
+    panel.hidden = panel.dataset.aspaceTabPanel !== next
+  })
+}
+
 function renderAspaceCatalog() {
   const host = document.querySelector('[data-aspace-editor]')
   const catalog = state.aspaceCatalog
@@ -245,7 +260,12 @@ function renderAspaceCatalog() {
     `<option value="${escapeHtml(category.id)}">${escapeHtml(category.label)}</option>`
   )).join('')
   host.innerHTML = `
-    <section class="admin-aspace-section">
+    <nav class="admin-aspace-tabs" aria-label="Aspace 配置分组">
+      <button type="button" data-aspace-tab="categories">业务分类</button>
+      <button type="button" data-aspace-tab="ownership">应用归属</button>
+      <button type="button" data-aspace-tab="profiles">应用资料</button>
+    </nav>
+    <section class="admin-aspace-section" data-aspace-tab-panel="categories">
       <header><div><h3>业务分类</h3><p>可编辑标题和说明、上传自定义图标，并使用箭头调整前台显示顺序。</p></div></header>
       <div class="admin-aspace-categories">
         ${catalog.categories.map((category, index) => `
@@ -273,7 +293,7 @@ function renderAspaceCatalog() {
         `).join('')}
       </div>
     </section>
-    <section class="admin-aspace-section">
+    <section class="admin-aspace-section" data-aspace-tab-panel="ownership" hidden>
       <header><div><h3>应用归属</h3><p>为每个应用选择一个栏目，避免重复配置；调整后前台分类和数量会同步更新。</p></div></header>
       <div class="admin-aspace-apps">
         ${catalog.apps.map((app) => `
@@ -283,11 +303,38 @@ function renderAspaceCatalog() {
           </label>
         `).join('')}
       </div>
+    </section>
+    <section class="admin-aspace-section" data-aspace-tab-panel="profiles" hidden>
+      <header><div><h3>应用资料</h3><p>为每个应用设置封面图、标题和简介；保存后同步到前台能力卡片。</p></div></header>
+      <div class="admin-aspace-profiles">
+        ${catalog.apps.map((app) => `
+          <article class="admin-aspace-profile" data-aspace-profile="${escapeHtml(app.id)}">
+            <div class="admin-aspace-profile__cover">
+              <figure data-aspace-cover-preview>
+                ${app.image
+                  ? `<img src="${escapeHtml(app.image)}" alt="" />`
+                  : `<span class="material-symbols-outlined">image</span>`}
+              </figure>
+              <div>
+                <label class="admin-aspace-profile__upload">上传封面<input type="file" accept="image/jpeg,image/png,image/webp" data-aspace-cover-upload /></label>
+                <button type="button" data-aspace-cover-clear ${app.image ? '' : 'hidden'}>清除封面</button>
+              </div>
+              <input type="hidden" name="app-image" value="${escapeHtml(app.image || '')}" />
+            </div>
+            <div class="admin-aspace-profile__fields">
+              <p class="admin-aspace-profile__id">${escapeHtml(app.id)}</p>
+              <label><span>标题</span><input name="app-name" maxlength="40" value="${escapeHtml(app.name || '')}" required /></label>
+              <label><span>简介</span><input name="app-description" maxlength="160" value="${escapeHtml(app.description || '')}" placeholder="显示在卡片上的一行说明" /></label>
+            </div>
+          </article>
+        `).join('')}
+      </div>
     </section>`
   catalog.apps.forEach((app) => {
     const select = host.querySelector(`[data-aspace-app="${CSS.escape(app.id)}"] select`)
     if (select) select.value = app.category
   })
+  setAspaceEditorTab(aspaceEditorTab)
 }
 
 function collectAspaceCatalog() {
@@ -298,10 +345,27 @@ function collectAspaceCatalog() {
     iconUrl: row.querySelector('[name="category-icon-url"]').value.trim(),
     description: row.querySelector('[name="category-description"]').value.trim(),
   }))
-  const appCategories = new Map([...document.querySelectorAll('[data-aspace-app]')].map((row) => (
+  const ownership = new Map([...document.querySelectorAll('[data-aspace-app]')].map((row) => (
     [row.dataset.aspaceApp, row.querySelector('select').value]
   )))
-  const apps = state.aspaceCatalog.apps.map((app) => ({ ...app, category: appCategories.get(app.id) || app.category }))
+  const profiles = new Map([...document.querySelectorAll('[data-aspace-profile]')].map((row) => [
+    row.dataset.aspaceProfile,
+    {
+      name: row.querySelector('[name="app-name"]').value.trim(),
+      description: row.querySelector('[name="app-description"]').value.trim(),
+      image: row.querySelector('[name="app-image"]').value.trim(),
+    },
+  ]))
+  const apps = state.aspaceCatalog.apps.map((app) => {
+    const profile = profiles.get(app.id) || {}
+    return {
+      ...app,
+      category: ownership.get(app.id) || app.category,
+      name: profile.name || app.name,
+      description: profile.description ?? app.description ?? '',
+      image: profile.image ?? app.image ?? '',
+    }
+  })
   return { categories, apps }
 }
 
@@ -2020,6 +2084,11 @@ window.addEventListener('hashchange', () => {
 document.querySelector('[data-mobile-menu]').addEventListener('click', () => document.querySelector('.admin-sidebar').classList.toggle('is-open'))
 
 document.querySelector('[data-aspace-editor]').addEventListener('click', (event) => {
+  const tab = event.target.closest('[data-aspace-tab]')
+  if (tab) {
+    setAspaceEditorTab(tab.dataset.aspaceTab)
+    return
+  }
   const reset = event.target.closest('[data-aspace-icon-reset]')
   if (reset) {
     const row = reset.closest('[data-aspace-category]')
@@ -2027,6 +2096,14 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
     row.querySelector('[name="category-icon-url"]').value = ''
     row.querySelector('[data-aspace-icon-preview]').innerHTML = `<span class="material-symbols-outlined">${escapeHtml(icon)}</span>`
     reset.hidden = true
+    return
+  }
+  const clearCover = event.target.closest('[data-aspace-cover-clear]')
+  if (clearCover) {
+    const row = clearCover.closest('[data-aspace-profile]')
+    row.querySelector('[name="app-image"]').value = ''
+    row.querySelector('[data-aspace-cover-preview]').innerHTML = '<span class="material-symbols-outlined">image</span>'
+    clearCover.hidden = true
     return
   }
   const button = event.target.closest('[data-aspace-move]')
@@ -2043,24 +2120,48 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
 })
 
 document.querySelector('[data-aspace-editor]').addEventListener('change', async (event) => {
-  const upload = event.target.closest('[data-aspace-icon-upload]')
-  const file = upload?.files?.[0]
-  if (!upload || !file) return
-  const row = upload.closest('[data-aspace-category]')
-  upload.disabled = true
+  const iconUpload = event.target.closest('[data-aspace-icon-upload]')
+  if (iconUpload) {
+    const file = iconUpload.files?.[0]
+    if (!file) return
+    const row = iconUpload.closest('[data-aspace-category]')
+    iconUpload.disabled = true
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+      row.querySelector('[name="category-icon-url"]').value = url
+      row.querySelector('[data-aspace-icon-preview]').innerHTML = `<img src="${escapeHtml(url)}" alt="" />`
+      row.querySelector('[data-aspace-icon-reset]').hidden = false
+      toast('图标上传成功，点击保存后发布到前台')
+    } catch (error) {
+      toast(error.message, true)
+    } finally {
+      iconUpload.disabled = false
+      iconUpload.value = ''
+    }
+    return
+  }
+
+  const coverUpload = event.target.closest('[data-aspace-cover-upload]')
+  if (!coverUpload) return
+  const file = coverUpload.files?.[0]
+  if (!file) return
+  const row = coverUpload.closest('[data-aspace-profile]')
+  coverUpload.disabled = true
   try {
     const formData = new FormData()
     formData.append('image', file)
     const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
-    row.querySelector('[name="category-icon-url"]').value = url
-    row.querySelector('[data-aspace-icon-preview]').innerHTML = `<img src="${escapeHtml(url)}" alt="" />`
-    row.querySelector('[data-aspace-icon-reset]').hidden = false
-    toast('图标上传成功，点击保存后发布到前台')
+    row.querySelector('[name="app-image"]').value = url
+    row.querySelector('[data-aspace-cover-preview]').innerHTML = `<img src="${escapeHtml(url)}" alt="" />`
+    row.querySelector('[data-aspace-cover-clear]').hidden = false
+    toast('封面上传成功，点击保存后发布到前台')
   } catch (error) {
     toast(error.message, true)
   } finally {
-    upload.disabled = false
-    upload.value = ''
+    coverUpload.disabled = false
+    coverUpload.value = ''
   }
 })
 
@@ -2074,7 +2175,7 @@ document.querySelector('[data-aspace-form]').addEventListener('submit', async (e
     const result = await api('/aspace/catalog', { method: 'PUT', body: JSON.stringify({ catalog }) })
     state.aspaceCatalog = result.catalog
     renderAspaceCatalog()
-    toast('Aspace 栏目已保存并发布')
+    toast('Aspace 配置已保存并发布')
   } catch (error) {
     toast(error.message, true)
   } finally {

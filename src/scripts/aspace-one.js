@@ -2046,10 +2046,20 @@ async function loadCatalog() {
     existingById.forEach((category, id) => {
       if (!configuredIds.has(id)) appCategories.push(category)
     })
-    const assignments = new Map(data.catalog.apps.map((app) => [app.id, app.category]))
+    const catalogApps = new Map(data.catalog.apps.map((app) => [app.id, app]))
     apps.forEach((app) => {
-      const category = assignments.get(app.id)
-      if (configuredIds.has(category)) app.category = category
+      const meta = catalogApps.get(app.id)
+      if (!meta) return
+      if (configuredIds.has(meta.category)) app.category = meta.category
+      if (meta.name) app.name = meta.name
+      if (meta.description) {
+        app.project = meta.description
+        app.desc = meta.description
+      }
+      if (meta.image) {
+        app.image = meta.image
+        if (!app.alt) app.alt = `${meta.name || app.name}封面`
+      }
     })
   } catch {
     // 后台栏目配置不可用时继续使用页面内置配置。

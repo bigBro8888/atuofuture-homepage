@@ -27,7 +27,8 @@ test('admin can publish Aspace categories and app assignments', async (context) 
   assert.equal(initialResponse.status, 200)
   const initial = (await initialResponse.json()).catalog
   assert.equal(initial.categories.length, 9)
-  assert.equal(initial.apps.length, 24)
+  assert.equal(initial.apps.length, 22)
+  assert.ok(initial.apps.every((app) => 'image' in app && 'description' in app && 'name' in app))
 
   const unauthorized = await fetch(`${baseUrl}/api/admin/aspace/catalog`, {
     method: 'PUT',
@@ -49,7 +50,11 @@ test('admin can publish Aspace categories and app assignments', async (context) 
     meeting,
     ...initial.categories.filter((category) => category.id !== 'meeting'),
   ]
-  initial.apps.find((item) => item.id === 'visitor-booking').category = 'meeting'
+  const visitor = initial.apps.find((item) => item.id === 'visitor-booking')
+  visitor.category = 'meeting'
+  visitor.name = '访客邀约'
+  visitor.description = '一键邀约与到访通行'
+  visitor.image = '/images/aspace-one/app-visitor.jpg'
 
   const updateResponse = await fetch(`${baseUrl}/api/admin/aspace/catalog`, {
     method: 'PUT',
@@ -62,5 +67,9 @@ test('admin can publish Aspace categories and app assignments', async (context) 
   assert.equal(published.categories[0].id, 'meeting')
   assert.equal(published.categories[0].label, '智慧会议')
   assert.equal(published.categories[0].iconUrl, '/api/public/uploads/images/meeting-icon.png')
-  assert.equal(published.apps.find((item) => item.id === 'visitor-booking').category, 'meeting')
+  const publishedVisitor = published.apps.find((item) => item.id === 'visitor-booking')
+  assert.equal(publishedVisitor.category, 'meeting')
+  assert.equal(publishedVisitor.name, '访客邀约')
+  assert.equal(publishedVisitor.description, '一键邀约与到访通行')
+  assert.equal(publishedVisitor.image, '/images/aspace-one/app-visitor.jpg')
 })

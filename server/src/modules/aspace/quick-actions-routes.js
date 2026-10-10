@@ -123,8 +123,21 @@ function normalizeCatalog(value = {}) {
   const categoryIds = new Set(categories.map((item) => item.id))
   const appSource = new Map((Array.isArray(value.apps) ? value.apps : []).map((item) => [String(item?.id || ''), item]))
   const apps = defaultAspaceCatalog.apps.map((fallback) => {
-    const category = String(appSource.get(fallback.id)?.category || fallback.category)
-    return { ...fallback, category: categoryIds.has(category) ? category : fallback.category }
+    const item = appSource.get(fallback.id) || {}
+    const category = String(item.category || fallback.category)
+    const name = String(item.name ?? fallback.name).trim().slice(0, 40) || fallback.name
+    const description = String(item.description ?? fallback.description ?? '').trim().slice(0, 160)
+    const image = String(item.image ?? fallback.image ?? '').trim().slice(0, 500)
+    if (image && !/^(?:https?:\/\/|\/(?:api\/public\/uploads\/images|images)\/)/i.test(image)) {
+      throw new Error(`应用“${name}”封面图地址无效`)
+    }
+    return {
+      id: fallback.id,
+      name,
+      category: categoryIds.has(category) ? category : fallback.category,
+      image,
+      description,
+    }
   })
   return { categories, apps }
 }
@@ -217,7 +230,7 @@ adminAspaceRouter.put('/catalog', requireAuth('config:write'), async (request, r
     await save()
     await addAudit(request.admin, 'aspace.catalog.update', 'aspace-one', {
       categories: catalog.categories.map(({ id, label }) => ({ id, label })),
-      apps: catalog.apps.map(({ id, category }) => ({ id, category })),
+      apps: catalog.apps.map(({ id, category, name }) => ({ id, category, name })),
     })
     response.json({ catalog })
   } catch (error) {
