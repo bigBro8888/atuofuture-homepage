@@ -551,8 +551,6 @@ function renderPortal() {
                   <h2 data-catalog-title>全部业务能力</h2>
                   <p data-catalog-description>按业务场景浏览 Aspace空间智能 已接入和规划中的能力</p>
                 </div>
-              </header>
-              <div class="aso-app-catalog__controls">
                 <div class="aso-app-controls-right">
                   <label class="aso-app-sort">
                     ${icon('schedule')}
@@ -567,7 +565,7 @@ function renderPortal() {
                     <button type="button" data-app-view="list" aria-label="列表视图" aria-pressed="false">${icon('view_list')}</button>
                   </div>
                 </div>
-              </div>
+              </header>
 
               <div class="aso-app-grid" data-app-grid>${apps.map(appCard).join('')}${capabilityGroupHeadingsMarkup()}</div>
               <p class="aso-empty aso-app-grid__empty" data-app-empty hidden>没有找到符合条件的业务能力。</p>

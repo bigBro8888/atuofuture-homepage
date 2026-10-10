@@ -354,15 +354,16 @@
 .aso-app-catalog { min-width: 0; }
 .aso-app-catalog__heading {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 17px;
-  padding-bottom: 17px;
+  margin-bottom: 12px;
+  padding-bottom: 14px;
   border-bottom: 1px solid rgba(211, 224, 240, .9);
 }
 .aso-app-catalog__heading h2 { margin: 0; color: var(--aso-text); font-size: 23px; letter-spacing: -.025em; }
 .aso-app-catalog__heading p { margin: 5px 0 0; color: #7b899e; font-size: 12px; }
+.aso-app-catalog__heading .aso-app-controls-right { flex-shrink: 0; }
 .aso-portal-account {
   display: grid;
   grid-template-columns: 34px minmax(0, auto) 16px;
@@ -436,13 +437,6 @@ button.aso-portal-account:active { transform: scale(.98); }
 .aso-app-search input::placeholder { color: #9aa8ba; }
 .aso-app-sort { min-width: 138px; gap: 4px; padding: 0 10px; }
 .aso-app-sort select { cursor: pointer; }
-.aso-app-catalog__controls {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 18px;
-  margin-bottom: 15px;
-}
 .aso-app-controls-right { display: flex; align-items: center; gap: 10px; }
 .aso-app-view { display: inline-flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(224, 234, 246, .7); }
 .aso-app-view button {
@@ -1680,12 +1674,12 @@ body.aso-embed-open { overflow: hidden; }
   .aso-app-sidebar nav { width: max-content; flex-wrap: nowrap; }
   .aso-app-sidebar button { min-width: max-content; }
   .aso-app-catalog__heading { align-items: stretch; flex-direction: column; gap: 12px; }
-  .aso-app-catalog__heading .aso-portal-account { align-self: flex-start; }
+  .aso-app-catalog__heading .aso-portal-account,
+  .aso-app-catalog__heading .aso-app-controls-right { align-self: flex-start; }
   .aso-app-catalog__toolbar { grid-template-columns: 1fr; }
   .aso-app-sort { display: none; }
   .aso-overview-head__intro h1 { font-size: 28px; }
   .aso-search { grid-template-columns: 30px minmax(0, 1fr) 78px; }
-  .aso-app-catalog__controls { align-items: flex-end; flex-wrap: wrap; }
   .aso-apps__head { margin-bottom: 20px; gap: 12px 18px; }
   .aso-apps__tools { gap: 6px 16px; }
   .aso-apps__tools .aso-more { padding-left: 16px; }
