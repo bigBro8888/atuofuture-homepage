@@ -66,7 +66,7 @@ test('serves OIDC discovery and a secure unified login interaction', async (cont
   assert.equal(interactionResponse.status, 200)
   const html = await interactionResponse.text()
   assert.match(html, /登录到 Aspace空间智能/)
-  assert.match(html, /等待配置企业应用参数/)
+  assert.doesNotMatch(html, /使用钉钉登录|使用微信登录|企业 OA|短信验证码/)
   assert.match(html, /name="password"/)
   assert.doesNotMatch(html, /name="name"/)
 

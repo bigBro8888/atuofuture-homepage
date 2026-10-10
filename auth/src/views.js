@@ -10,6 +10,24 @@ function escapeHtml(value) {
   })[char])
 }
 
+/** 第三方登录尚未对接完成前不展示；接入后改为 true，并保持横向图标入口。 */
+const SHOW_SOCIAL_LOGIN = false
+
+function socialLoginMarkup({ uid, dingTalkEnabled }) {
+  if (!SHOW_SOCIAL_LOGIN) return ''
+  const base = authConfig.basePath
+  const dingTalk = dingTalkEnabled
+    ? `<a class="auth-method" href="${base}/interaction/${encodeURIComponent(uid)}/dingtalk" title="钉钉登录"><i>钉</i><span>钉钉</span></a>`
+    : '<button class="auth-method" type="button" disabled title="钉钉登录待配置"><i>钉</i><span>钉钉</span></button>'
+  return `<div class="auth-methods" aria-label="其他登录方式">
+      ${dingTalk}
+      <button class="auth-method" type="button" disabled title="微信登录待接入"><i>微</i><span>微信</span></button>
+      <button class="auth-method" type="button" disabled title="企业 OA 登录待接入"><i>OA</i><span>企业 OA</span></button>
+      <button class="auth-method" type="button" disabled title="短信登录待接入"><i>码</i><span>短信</span></button>
+    </div>
+    <div class="auth-divider"><span>账号登录</span></div>`
+}
+
 export function loginPage({ uid, clientName, dingTalkEnabled, passwordEnabled, mode = 'login', error = '' }) {
   const base = authConfig.basePath
   const registering = mode === 'register'
@@ -29,15 +47,7 @@ export function loginPage({ uid, clientName, dingTalkEnabled, passwordEnabled, m
       <h1 id="auth-title">${registering ? '注册普通账号' : `登录到 ${escapeHtml(clientName)}`}</h1>
       <p class="auth-lead">${registering ? '创建一个用于收藏、排序与最近访问的个人账号。' : '使用同一个身份安全访问已授权的内部系统。'}</p>
       ${error ? `<p class="auth-error" role="alert">${escapeHtml(error)}</p>` : ''}
-      ${registering ? '' : `<div class="auth-methods">
-        ${dingTalkEnabled
-          ? `<a class="auth-method auth-method--primary" href="${base}/interaction/${encodeURIComponent(uid)}/dingtalk"><i>钉</i><span><b>使用钉钉登录</b><small>推荐 · 企业内部账号</small></span><em>→</em></a>`
-          : '<button class="auth-method auth-method--primary" type="button" disabled><i>钉</i><span><b>使用钉钉登录</b><small>等待配置企业应用参数</small></span></button>'}
-        <button class="auth-method" type="button" disabled><i>微</i><span><b>使用微信登录</b><small>第二批接入</small></span></button>
-        <button class="auth-method" type="button" disabled><i>OA</i><span><b>使用企业 OA 登录</b><small>按客户系统对接</small></span></button>
-        <button class="auth-method" type="button" disabled><i>码</i><span><b>短信验证码登录</b><small>等待短信服务配置</small></span></button>
-      </div>
-      <div class="auth-divider"><span>账号登录</span></div>`}
+      ${registering ? '' : socialLoginMarkup({ uid, dingTalkEnabled })}
       ${passwordEnabled
         ? registering
           ? `<form class="auth-local" action="${base}/interaction/${encodeURIComponent(uid)}/password" method="post">
