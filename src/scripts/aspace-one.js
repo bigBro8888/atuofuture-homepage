@@ -145,10 +145,11 @@ let apps = [
     id: 'access-security',
     name: '门禁安防',
     category: 'security',
-    project: '安全管理',
-    desc: '门禁通行、事件告警与安防管理能力正在开发中。',
-    icon: 'shield_lock',
-    locked: true,
+    project: '通行权限与安防告警',
+    time: '2026-10-10 17:20',
+    image: '/images/aspace-one/app-security.jpg',
+    alt: '门禁安防通行与识别场景',
+    requireDevice: true,
   },
   {
     id: 'aspace',
@@ -1100,6 +1101,24 @@ function renderPortal() {
       ${renderPortalFooter()}
 
       <div class="aso-toast" role="status" data-aso-toast aria-hidden="true"></div>
+      <div class="aso-device-modal" data-device-modal hidden aria-hidden="true">
+        <div class="aso-device-modal__backdrop" data-device-modal-close></div>
+        <section class="aso-device-modal__panel" role="dialog" aria-modal="true" aria-labelledby="aso-device-modal-title">
+          <div class="aso-device-modal__scan" aria-hidden="true"></div>
+          <div class="aso-device-modal__ring" aria-hidden="true"><i></i><i></i><i></i></div>
+          <button type="button" class="aso-device-modal__close" data-device-modal-close aria-label="关闭">${icon('close')}</button>
+          <div class="aso-device-modal__badge">${icon('sensors')}</div>
+          <p class="aso-device-modal__eyebrow">ACCESS SECURITY</p>
+          <h2 id="aso-device-modal-title">请接入设备</h2>
+          <p>尚未检测到可用门禁终端。接入读卡器、闸机或识别设备后，即可开通通行权限与安防告警能力。</p>
+          <ul class="aso-device-modal__signals" aria-hidden="true">
+            <li><span></span>设备探测中</li>
+            <li><span></span>通道链路待命</li>
+            <li><span></span>等待终端上线</li>
+          </ul>
+          <button type="button" class="aso-device-modal__action" data-device-modal-close>我知道了</button>
+        </section>
+      </div>
       <div class="aso-login-prompt" data-login-prompt hidden aria-hidden="true">
         <div class="aso-login-prompt__backdrop" data-login-prompt-close></div>
         <section class="aso-login-prompt__panel" role="dialog" aria-modal="true" aria-labelledby="aso-login-prompt-title">
@@ -1496,6 +1515,23 @@ async function createPortalLoginUrl({ forceLogin = true } = {}) {
 
 function isPortalAuthenticated() {
   return Boolean(window.ASPACE_CURRENT_USER?.id)
+}
+
+function setDeviceModalOpen(root, open) {
+  const modal = root.querySelector('[data-device-modal]')
+  if (!modal) return
+  modal.hidden = !open
+  modal.setAttribute('aria-hidden', String(!open))
+  document.body.classList.toggle('aso-device-modal-open', open)
+  if (open) {
+    modal.classList.remove('is-open')
+    // restart enter animation
+    void modal.offsetWidth
+    modal.classList.add('is-open')
+    window.setTimeout(() => modal.querySelector('[data-device-modal-close]')?.focus(), 20)
+  } else {
+    modal.classList.remove('is-open')
+  }
 }
 
 function setLoginPromptOpen(root, open, message = '') {
@@ -2217,6 +2253,11 @@ export async function initAspaceOne() {
       return
     }
 
+    if (event.target.closest('[data-device-modal-close]')) {
+      setDeviceModalOpen(root, false)
+      return
+    }
+
     const enterApp = event.target.closest('[data-enter-app]')
     if (enterApp) {
       const appId = enterApp.dataset.enterApp
@@ -2224,6 +2265,10 @@ export async function initAspaceOne() {
       const feature = root.dataset.pendingActivityFeature || (app ? `进入${app.name}首页` : '')
       delete root.dataset.pendingActivityFeature
       if (app) void reportActivity(root, app, feature)
+      if (app?.requireDevice) {
+        setDeviceModalOpen(root, true)
+        return
+      }
       if (app) {
         void openAppInNewPage(root, app)
         return
@@ -2321,7 +2366,8 @@ export async function initAspaceOne() {
   root.querySelector('[data-embed-close]')?.addEventListener('click', () => closeAppEmbed(root))
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return
-    if (!root.querySelector('[data-login-prompt]')?.hidden) setLoginPromptOpen(root, false)
+    if (!root.querySelector('[data-device-modal]')?.hidden) setDeviceModalOpen(root, false)
+    else if (!root.querySelector('[data-login-prompt]')?.hidden) setLoginPromptOpen(root, false)
     else if (!root.querySelector('[data-quick-settings]')?.hidden) setQuickSettingsOpen(root, false)
     else if (!root.querySelector('[data-aso-embed]')?.hidden) closeAppEmbed(root)
   })
