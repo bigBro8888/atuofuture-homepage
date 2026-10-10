@@ -559,7 +559,7 @@ function renderShellHeader(activeView = 'home') {
       <div class="aso-shell__inner">
         <a class="aso-shell__brand" href="/aspace-one/" data-aso-nav="home">
           <img src="/assets/artink-logo-light.png" alt="" width="120" height="28" />
-          <span>安墨客空间智能</span>
+          <span>空间智能开放平台</span>
         </a>
         <nav class="aso-shell__nav" aria-label="门户导航">
           ${items.map(([id, label]) => `
