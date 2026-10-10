@@ -202,9 +202,10 @@ let apps = [
     category: 'foundation',
     group: 'base',
     project: '基础能力',
-    desc: '统一人员档案、组织关系和身份信息管理能力正在建设中。',
-    icon: 'badge',
-    locked: true,
+    time: '2026-10-10 17:44',
+    image: '/images/aspace-one/showcase-meeting.jpg',
+    alt: '人员中心组织与角色管理场景',
+    url: 'https://aspacedev.atuofuture.com/#/sys-list/role-management',
   },
   {
     id: 'application-center',
