@@ -747,9 +747,10 @@ export function initDemoRequestModal() {
 const page = document.body.dataset.page
 
 function bootstrap() {
-  // 空间智能门户独立运行，不挂载官网头尾与智能体浮层
+  // 空间智能门户独立运行，不挂载官网头尾与智能体浮层；预约演示弹窗与主站共用
   if (page === 'aspace-one') {
     void initAspaceOne()
+    initDemoRequestModal()
     return
   }
 

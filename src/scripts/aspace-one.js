@@ -1,3 +1,5 @@
+import { CONTACT, contactMailto, contactTelHref } from '../data/contact.js'
+
 let apps = [
   {
     id: 'digital-twin',
@@ -820,52 +822,89 @@ function renderHomeView() {
         </div>
       </section>
 
-      <footer class="aso-home-footer">
-        <div class="aso-container aso-home-footer__inner">
-          <div class="aso-home-footer__brand">
-            <img src="/assets/artink-logo.png" alt="Artink 安墨客" width="108" height="26" />
-            <p>AI 让空间更智能，让运营更简单</p>
-          </div>
-          <nav class="aso-home-footer__nav" aria-label="页脚导航">
-            <button type="button" data-aso-nav="apps">应用广场</button>
-            <button type="button" data-aso-nav="help">自助服务</button>
-            <button type="button" data-aso-nav="about">关于我们</button>
-          </nav>
-        </div>
-      </footer>
     </section>`
 }
 
+function renderPortalFooter() {
+  return `
+    <footer class="aso-home-footer">
+      <div class="aso-container aso-home-footer__inner">
+        <div class="aso-home-footer__brand">
+          <img src="/assets/artink-logo.png" alt="Artink 安墨客" width="120" height="28" />
+          <p>AI 让空间更智能，让运营更简单</p>
+        </div>
+        <nav class="aso-home-footer__nav" aria-label="页脚导航">
+          <button type="button" data-aso-nav="apps">应用广场</button>
+          <button type="button" data-aso-nav="help">自助服务</button>
+          <button type="button" data-aso-nav="about">关于我们</button>
+        </nav>
+      </div>
+    </footer>`
+}
+
 function renderAboutView() {
+  const mail = contactMailto()
+  const tel = contactTelHref()
+  const email1 = CONTACT.email || 'service@atuofuture.com'
+  const email2 = CONTACT.emailSecondary || ''
+  const phoneDisplay = CONTACT.phoneDisplay || ''
+  const addressZh = CONTACT.address || '杭州市余杭区阿里巴巴数字生态创新园 1 号楼 5 层'
+  const addressEn = '5th Floor, Building 1, Alibaba Digital Ecological Innovation Park, Yuhang District, Hangzhou'
   return `
     <section class="aso-about" data-aso-view="about" hidden>
-      <div class="aso-container">
-        <header class="aso-about__head">
-          <p class="aso-eyebrow">ABOUT</p>
-          <h1>关于安墨客空间智能</h1>
-          <p>安墨客空间智能（Aspace）面向园区、楼宇与运营团队，提供可浏览、可进入、可协作的空间业务门户。</p>
-        </header>
-        <div class="aso-about__grid">
-          <article>
-            <h2>我们做什么</h2>
-            <p>把分散在会议、信息发布、资产、能耗、安防与智能底座中的能力汇聚到同一入口，减少系统切换成本，提升日常运营效率。</p>
-          </article>
-          <article>
-            <h2>适合谁用</h2>
-            <p>空间运营、行政会务、设施运维、信息化与业务管理员，都可以从应用广场进入对应能力，或在自助服务中心快速查找文档。</p>
-          </article>
-          <article>
-            <h2>如何开始</h2>
-            <p>登录后可同步收藏、最近访问与个性化排序。未登录也可浏览公开能力，进入已开通系统完成日常工作。</p>
-          </article>
+      <section class="ab-contact" id="contact">
+        <div class="aso-container">
+          <div class="ab-contact__head">
+            <div>
+              <p class="ab-label">联系我们</p>
+              <h2>Artink 在等你</h2>
+            </div>
+            <p class="ab-contact__lead">杭州安托未来科技有限公司。校园招聘与社会招聘同步开放，也欢迎客户、伙伴与投资者来信。</p>
+          </div>
+          <div class="ab-contact__panel">
+            <aside class="ab-contact__aside">
+              <span class="ab-contact__mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+              <h3>加入我们</h3>
+              <p>青春正好，我们在等你。你的经验与锋芒，值得更大的舞台。</p>
+              <button type="button" class="ab-contact__demo" data-demo-modal-open>预约方案演示</button>
+            </aside>
+            <div class="ab-contact__list">
+              <a class="ab-contact__row" href="${escapeHtml(mail || `mailto:${email1}`)}">
+                <span class="ab-contact__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m4.5 7.5 7.5 6 7.5-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div>
+                  <h3>邮箱</h3>
+                  <p>${escapeHtml(email1)}</p>
+                  ${email2 ? `<p>${escapeHtml(email2)}</p>` : ''}
+                </div>
+                <span class="ab-contact__go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </a>
+              <a class="ab-contact__row"${phoneDisplay ? '' : ' hidden'}${tel ? ` href="${escapeHtml(tel)}"` : ''}>
+                <span class="ab-contact__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7.4 4.8c.3-.8 1.2-1.2 2-.9l2.2.8c.7.2 1.1.9 1 1.6l-.4 2.2c-.1.6-.5 1-1.1 1.2l-1.3.4c.8 1.7 2.1 3.1 3.8 4l.4-1.3c.2-.6.6-1 1.2-1.1l2.2-.4c.7-.1 1.4.3 1.6 1l.8 2.2c.3.8-.1 1.7-.9 2A15.2 15.2 0 0 1 7.4 4.8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                </span>
+                <div>
+                  <h3>电话</h3>
+                  <p>${escapeHtml(phoneDisplay)}</p>
+                </div>
+                <span class="ab-contact__go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </a>
+              <div class="ab-contact__row">
+                <span class="ab-contact__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="9.8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                </span>
+                <div>
+                  <h3>地址</h3>
+                  <p>${escapeHtml(addressZh)}</p>
+                  <p data-about-contact-address-en>${escapeHtml(addressEn)}</p>
+                </div>
+                <span class="ab-contact__go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="aso-about__cta">
-          <button type="button" class="aso-btn aso-btn--primary" data-aso-nav="apps">进入应用广场</button>
-          ${window.ASPACE_CURRENT_USER?.id
-            ? `<button type="button" class="aso-btn aso-btn--ghost" data-aso-nav="home">返回首页</button>`
-            : `<button type="button" class="aso-btn aso-btn--ghost" data-personal-login>登录账号</button>`}
-        </div>
-      </div>
+      </section>
     </section>`
 }
 
@@ -1048,6 +1087,7 @@ function renderPortal() {
       </section>
       </div>
       ${renderAboutView()}
+      ${renderPortalFooter()}
 
       <div class="aso-toast" role="status" data-aso-toast aria-hidden="true"></div>
       <div class="aso-login-prompt" data-login-prompt hidden aria-hidden="true">

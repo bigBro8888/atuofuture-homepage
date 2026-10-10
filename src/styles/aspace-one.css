@@ -654,89 +654,54 @@ body.aso-standalone .back-to-top { display: none !important; }
 }
 
 .aso-home-footer {
-  border-top: 1px solid #e7eef8;
-  background: #f8fafc;
-  padding: 28px 0 34px;
+  border-top: 1px solid #e8edf5;
+  background: #f7f8fa;
+  padding: 36px 0 40px;
 }
 .aso-home-footer__inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 28px 40px;
 }
 .aso-home-footer__brand {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 .aso-home-footer__brand img {
   display: block;
-  width: 108px;
+  width: 118px;
   height: auto;
 }
 .aso-home-footer__brand p {
   margin: 0;
-  color: var(--aso-muted);
+  color: #8a93a8;
   font-size: 13px;
+  line-height: 1.5;
 }
 .aso-home-footer__nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 22px;
+  gap: 10px 28px;
 }
-.aso-home-footer__nav button {
+.aso-page .aso-home-footer__nav button {
   padding: 0;
   border: 0;
   background: transparent;
-  color: #314866;
+  color: #1a2336;
   font-size: 14px;
   font-weight: 650;
   cursor: pointer;
 }
-.aso-home-footer__nav button:hover { color: #0879f9; }
+.aso-page .aso-home-footer__nav button:hover { color: #0879f9; }
 
-.aso-btn--ghost {
-  border-color: rgba(255, 255, 255, .28);
-  background: rgba(255, 255, 255, .08);
-  color: #fff !important;
-}
-.aso-btn--ghost:hover { background: rgba(255, 255, 255, .16); }
-.aso-about .aso-btn--ghost {
-  border-color: rgba(8, 121, 249, .22);
-  background: #fff;
-  color: #0879f9 !important;
-}
-
-.aso-about { padding: 48px 0 72px; }
-.aso-about__head { max-width: 680px; margin-bottom: 34px; }
-.aso-about__head h1 {
-  margin: 0;
-  font-size: clamp(32px, 4vw, 44px);
-  letter-spacing: -.03em;
-}
-.aso-about__head > p:last-child {
-  margin: 12px 0 0;
-  color: var(--aso-muted);
-  font-size: 15px;
-  line-height: 1.7;
-}
-.aso-about__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-}
-.aso-about__grid article {
-  padding: 24px 22px;
-  border: 1px solid rgba(205, 222, 242, .9);
-  border-radius: 18px;
+.aso-about {
+  padding: 0;
   background: #fff;
 }
-.aso-about__grid h2 { margin: 0 0 10px; font-size: 18px; }
-.aso-about__grid p { margin: 0; color: var(--aso-muted); font-size: 14px; line-height: 1.7; }
-.aso-about__cta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 28px;
+.aso-about .ab-contact {
+  padding-top: 56px;
+  padding-bottom: 72px;
 }
 
 .aso-page *,
