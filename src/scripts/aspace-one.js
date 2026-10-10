@@ -1232,19 +1232,21 @@ function initHomeGlobe(root) {
       phi,
       theta: 0.18,
       dark: 0,
-      diffuse: 1.2,
+      diffuse: 1.25,
       mapSamples: width < 640 ? 14000 : 24000,
-      mapBrightness: 6.2,
-      mapBaseBrightness: 0.08,
-      baseColor: [0.62, 0.78, 0.98],
+      mapBrightness: 5.8,
+      mapBaseBrightness: 0.06,
+      baseColor: [0.7, 0.84, 1],
       markerColor: [0.03, 0.47, 0.98],
-      glowColor: [0, 0, 0],
+      // 与白底接近的淡蓝光晕，避免顶部被裁切时出现黑边
+      glowColor: [0.93, 0.96, 1],
       opacity: 1,
-      scale: 3.24,
-      offset: [0, height * dpr * 0.34],
+      scale: 2.85,
+      // 下移：保证半圆顶部完整落在画布内，不被容器顶边截断
+      offset: [0, height * dpr * 0.58],
       markers: HOME_GLOBE_MARKERS,
       markerElevation: 0.012,
-      context: { alpha: true, premultipliedAlpha: true, antialias: true },
+      context: { alpha: true, antialias: true },
     })
     start()
   }
