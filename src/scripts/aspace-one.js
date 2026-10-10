@@ -801,26 +801,6 @@ function renderHomeView() {
         </div>
       </section>
 
-      <section class="aso-home-utils">
-        <div class="aso-container aso-home-utils__grid">
-          <button type="button" data-aso-nav="help">
-            <span>${icon('menu_book')}</span>
-            <strong>使用指南</strong>
-            <em>了解开通与使用方式</em>
-          </button>
-          <a href="/hardware/">
-            <span>${icon('dns')}</span>
-            <strong>智能硬件</strong>
-            <em>探索配套设备与接入</em>
-          </a>
-          <button type="button" data-aso-nav="about">
-            <span>${icon('support_agent')}</span>
-            <strong>方案咨询</strong>
-            <em>获取适合你的应用方案</em>
-          </button>
-        </div>
-      </section>
-
     </section>`
 }
 
