@@ -180,9 +180,10 @@ let apps = [
     category: 'foundation',
     group: 'base',
     project: '基础能力',
-    desc: '统一园区、楼栋、楼层和房间空间模型能力正在建设中。',
-    icon: 'map',
-    locked: true,
+    time: '2026-10-10 17:41',
+    image: '/images/aspace-one/showcase-space.jpg',
+    alt: '空间中心园区与楼宇空间管理场景',
+    url: 'https://aspacedev.atuofuture.com/#/space-list/query',
   },
   {
     id: 'permission-center',
