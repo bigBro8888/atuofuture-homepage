@@ -90,6 +90,151 @@ export const defaultAspaceCatalog = {
   ],
 }
 
+export const defaultAspaceHome = {
+  hero: {
+    background: 'https://img.alicdn.com/imgextra/i2/52311814/O1CN01rXdBocv2JPBCHL4y_!!52311814.png',
+    title: '连接空间业务\n让智能应用触手可及',
+    primaryCta: '浏览应用广场',
+    secondaryCta: '探索业务场景',
+  },
+  panorama: {
+    title: '业务全景',
+    lead: '从日常办公到空间运营，能力按业务链路串联协同。',
+    moreLabel: '查看全部能力',
+    items: [
+      {
+        id: 'collab',
+        step: '01',
+        stage: '协同',
+        image: '/images/aspace-one/showcase-meeting.jpg',
+        title: '会议与办公',
+        desc: '提升空间使用效率',
+        items: [
+          { category: 'meeting', label: '会议预约' },
+          { category: 'meeting', label: '智能门牌' },
+          { category: 'meeting', label: '会议控制' },
+        ],
+      },
+      {
+        id: 'asset',
+        step: '02',
+        stage: '资产',
+        image: '/images/aspace-one/app-resource.jpg',
+        title: '资产与仓储',
+        desc: '掌握资产全生命周期',
+        items: [
+          { category: 'asset', label: '资产台账' },
+          { category: 'asset', label: 'RFID盘点' },
+          { category: 'asset', label: '借还管理' },
+        ],
+      },
+      {
+        id: 'ops',
+        step: '03',
+        stage: '运维',
+        image: '/images/aspace-one/app-energy.jpg',
+        title: '设备与能源',
+        desc: '看清运行与能源使用',
+        items: [
+          { category: 'foundation', label: '设备监测' },
+          { category: 'foundation', label: '空调控制' },
+          { category: 'energy', label: '能耗分析' },
+        ],
+      },
+      {
+        id: 'service',
+        step: '04',
+        stage: '服务',
+        image: '/images/aspace-one/showcase-building.jpg',
+        title: '通行与服务',
+        desc: '连接人员与日常服务',
+        items: [
+          { category: 'visitor', label: '访客接待' },
+          { category: 'security', label: '门禁通行' },
+          { category: 'foundation', label: '工单巡检' },
+        ],
+      },
+      {
+        id: 'insight',
+        step: '05',
+        stage: '洞察',
+        image: '/images/aspace-one/showcase-space.jpg',
+        title: '可视化与展示',
+        desc: '让空间状态清晰可见',
+        items: [
+          { category: 'twin', label: '数字孪生' },
+          { category: 'content', label: '信息发布' },
+          { category: 'content', label: '电子相框' },
+        ],
+      },
+    ],
+  },
+  scenes: {
+    title: '从你的业务场景开始',
+    lead: '围绕实际需求，发现可以协同使用的应用。',
+    items: [
+      {
+        id: 'office',
+        label: '企业办公',
+        title: '让办公空间高效运转',
+        lead: '连接会议、资产与日常服务，提升办公体验与管理效率。',
+        image: '/images/aspace-one/showcase-meeting.jpg',
+        apps: [
+          { id: 'screen', label: '会议预约', icon: 'calendar_month' },
+          { id: 'resource', label: '资产管理', icon: 'view_in_ar' },
+          { id: 'info-publish', label: '信息发布', icon: 'description' },
+        ],
+      },
+      {
+        id: 'campus',
+        label: '园区楼宇',
+        title: '让园区运行状态一目了然',
+        lead: '以数字孪生串联楼宇、设备与能耗，支撑运营调度与态势感知。',
+        image: '/images/aspace-one/showcase-building.jpg',
+        apps: [
+          { id: 'digital-twin', label: '数字孪生', icon: 'deployed_code' },
+          { id: 'energy', label: '能源能耗', icon: 'eco' },
+          { id: 'aspace', label: '空间管理', icon: 'hub' },
+        ],
+      },
+      {
+        id: 'factory',
+        label: '生产制造',
+        title: '让产线周边空间更可控',
+        lead: '把设备状态、环境控制与安全通行纳入统一门户，缩短现场响应链路。',
+        image: '/images/aspace-one/showcase-control.jpg',
+        apps: [
+          { id: 'device-center', label: '设备中心', icon: 'devices_other' },
+          { id: 'smart-sensor', label: '智能传感', icon: 'sensors' },
+          { id: 'access-security', label: '门禁安防', icon: 'shield_lock' },
+        ],
+      },
+      {
+        id: 'warehouse',
+        label: '智慧仓储',
+        title: '让资产流转更清晰可追溯',
+        lead: '从台账到借还、盘点，帮助仓储与行政团队掌握物资位置与状态。',
+        image: '/images/aspace-one/app-resource.jpg',
+        apps: [
+          { id: 'resource', label: '资产管理', icon: 'inventory_2' },
+          { id: 'visitor-booking', label: '访客邀约', icon: 'person_add' },
+          { id: 'info-publish', label: '信息发布', icon: 'campaign' },
+        ],
+      },
+    ],
+  },
+  infra: {
+    title: '连接空间业务、覆盖多场景的智能应用能力',
+    cta: '浏览应用广场',
+    stats: [
+      { value: '20', unit: '+', label: '空间智能应用' },
+      { value: '9', unit: '', label: '业务能力分类' },
+      { value: '300', unit: '+', label: '典型落地场景' },
+      { value: '10000', unit: '+', label: '业务协同链路' },
+    ],
+  },
+}
+
 export function normalizeAppButtons(value = {}) {
   const clean = (input, fallback) => String(input ?? fallback ?? '').trim().slice(0, 40) || fallback
   // 角标允许清空，因此只有字段缺失时才回退到默认值。
@@ -128,6 +273,7 @@ const initialData = {
   pageConfigs: [],
   aspaceQuickActions: structuredClone(defaultAspaceQuickActions),
   aspaceCatalog: structuredClone(defaultAspaceCatalog),
+  aspaceHome: structuredClone(defaultAspaceHome),
   aspaceActivities: [],
   downloadEvents: [],
   adminUsers: [],

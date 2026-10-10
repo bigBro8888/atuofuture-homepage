@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { randomUUID } from 'node:crypto'
 import { config } from '../../config.js'
-import { addAudit, db, defaultAspaceCatalog, defaultAspaceQuickActions, save } from '../../lib/store.js'
+import { addAudit, db, defaultAspaceCatalog, defaultAspaceHome, defaultAspaceQuickActions, save } from '../../lib/store.js'
 import { requireAuth } from '../admin/auth.js'
 
 export const publicAspaceRouter = Router()
@@ -150,6 +150,105 @@ function currentCatalog() {
   }
 }
 
+function cleanMediaUrl(value, label) {
+  const url = String(value || '').trim().slice(0, 500)
+  if (!url) return ''
+  if (!/^(?:https?:\/\/|\/(?:api\/public\/uploads\/images|images)\/)/i.test(url)) {
+    throw new Error(`${label}地址无效`)
+  }
+  return url
+}
+
+function normalizeHome(value = {}) {
+  const fallback = defaultAspaceHome
+  const heroSource = value.hero || {}
+  const panoramaSource = value.panorama || {}
+  const scenesSource = value.scenes || {}
+  const infraSource = value.infra || {}
+  const panoramaItemsSource = new Map((Array.isArray(panoramaSource.items) ? panoramaSource.items : []).map((item) => [String(item?.id || ''), item]))
+  const sceneItemsSource = new Map((Array.isArray(scenesSource.items) ? scenesSource.items : []).map((item) => [String(item?.id || ''), item]))
+  const statsSource = Array.isArray(infraSource.stats) ? infraSource.stats : []
+
+  const hero = {
+    background: cleanMediaUrl(heroSource.background ?? fallback.hero.background, '首页背景图') || fallback.hero.background,
+    title: String(heroSource.title ?? fallback.hero.title).trim().slice(0, 120) || fallback.hero.title,
+    primaryCta: String(heroSource.primaryCta ?? fallback.hero.primaryCta).trim().slice(0, 40) || fallback.hero.primaryCta,
+    secondaryCta: String(heroSource.secondaryCta ?? fallback.hero.secondaryCta).trim().slice(0, 40) || fallback.hero.secondaryCta,
+  }
+
+  const panorama = {
+    title: String(panoramaSource.title ?? fallback.panorama.title).trim().slice(0, 60) || fallback.panorama.title,
+    lead: String(panoramaSource.lead ?? fallback.panorama.lead).trim().slice(0, 160) || fallback.panorama.lead,
+    moreLabel: String(panoramaSource.moreLabel ?? fallback.panorama.moreLabel).trim().slice(0, 40) || fallback.panorama.moreLabel,
+    items: fallback.panorama.items.map((itemFallback) => {
+      const item = panoramaItemsSource.get(itemFallback.id) || {}
+      const linkSource = Array.isArray(item.items) ? item.items : []
+      return {
+        id: itemFallback.id,
+        step: String(item.step ?? itemFallback.step).trim().slice(0, 8) || itemFallback.step,
+        stage: String(item.stage ?? itemFallback.stage).trim().slice(0, 20) || itemFallback.stage,
+        image: cleanMediaUrl(item.image ?? itemFallback.image, `业务全景「${itemFallback.title}」封面`) || itemFallback.image,
+        title: String(item.title ?? itemFallback.title).trim().slice(0, 40) || itemFallback.title,
+        desc: String(item.desc ?? itemFallback.desc).trim().slice(0, 80) || itemFallback.desc,
+        items: itemFallback.items.map((linkFallback, index) => {
+          const link = linkSource[index] || {}
+          return {
+            category: linkFallback.category,
+            label: String(link.label ?? linkFallback.label).trim().slice(0, 30) || linkFallback.label,
+          }
+        }),
+      }
+    }),
+  }
+
+  const scenes = {
+    title: String(scenesSource.title ?? fallback.scenes.title).trim().slice(0, 60) || fallback.scenes.title,
+    lead: String(scenesSource.lead ?? fallback.scenes.lead).trim().slice(0, 160) || fallback.scenes.lead,
+    items: fallback.scenes.items.map((itemFallback) => {
+      const item = sceneItemsSource.get(itemFallback.id) || {}
+      const appsSource = Array.isArray(item.apps) ? item.apps : []
+      return {
+        id: itemFallback.id,
+        label: String(item.label ?? itemFallback.label).trim().slice(0, 30) || itemFallback.label,
+        title: String(item.title ?? itemFallback.title).trim().slice(0, 60) || itemFallback.title,
+        lead: String(item.lead ?? itemFallback.lead).trim().slice(0, 160) || itemFallback.lead,
+        image: cleanMediaUrl(item.image ?? itemFallback.image, `业务场景「${itemFallback.label}」封面`) || itemFallback.image,
+        apps: itemFallback.apps.map((appFallback, index) => {
+          const app = appsSource[index] || {}
+          return {
+            id: appFallback.id,
+            label: String(app.label ?? appFallback.label).trim().slice(0, 30) || appFallback.label,
+            icon: appFallback.icon,
+          }
+        }),
+      }
+    }),
+  }
+
+  const infra = {
+    title: String(infraSource.title ?? fallback.infra.title).trim().slice(0, 80) || fallback.infra.title,
+    cta: String(infraSource.cta ?? fallback.infra.cta).trim().slice(0, 40) || fallback.infra.cta,
+    stats: fallback.infra.stats.map((statFallback, index) => {
+      const stat = statsSource[index] || {}
+      return {
+        value: String(stat.value ?? statFallback.value).trim().slice(0, 16) || statFallback.value,
+        unit: String(stat.unit ?? statFallback.unit).trim().slice(0, 8),
+        label: String(stat.label ?? statFallback.label).trim().slice(0, 40) || statFallback.label,
+      }
+    }),
+  }
+
+  return { hero, panorama, scenes, infra }
+}
+
+function currentHome() {
+  try {
+    return normalizeHome(db().aspaceHome)
+  } catch {
+    return structuredClone(defaultAspaceHome)
+  }
+}
+
 publicAspaceRouter.get('/quick-actions', (_request, response) => {
   response.json({ actions: currentQuickActions() })
 })
@@ -157,6 +256,11 @@ publicAspaceRouter.get('/quick-actions', (_request, response) => {
 publicAspaceRouter.get('/catalog', (_request, response) => {
   response.setHeader('Cache-Control', 'no-store')
   response.json({ catalog: currentCatalog() })
+})
+
+publicAspaceRouter.get('/home', (_request, response) => {
+  response.setHeader('Cache-Control', 'no-store')
+  response.json({ home: currentHome() })
 })
 
 publicAspaceRouter.get('/activities', (request, response) => {
@@ -237,6 +341,29 @@ adminAspaceRouter.put('/catalog', requireAuth('config:write'), async (request, r
     response.status(400).json({
       error: 'invalid_aspace_catalog',
       message: error instanceof Error ? error.message : '栏目配置无效',
+    })
+  }
+})
+
+adminAspaceRouter.get('/home', requireAuth(), (_request, response) => {
+  response.json({ home: currentHome() })
+})
+
+adminAspaceRouter.put('/home', requireAuth('config:write'), async (request, response) => {
+  try {
+    const home = normalizeHome(request.body?.home)
+    db().aspaceHome = home
+    await save()
+    await addAudit(request.admin, 'aspace.home.update', 'aspace-one', {
+      heroTitle: home.hero.title,
+      panoramaTitle: home.panorama.title,
+      scenesTitle: home.scenes.title,
+    })
+    response.json({ home })
+  } catch (error) {
+    response.status(400).json({
+      error: 'invalid_aspace_home',
+      message: error instanceof Error ? error.message : '首页配置无效',
     })
   }
 })

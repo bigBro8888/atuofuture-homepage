@@ -651,139 +651,68 @@ function renderShellHeader(activeView = 'home') {
     </header>`
 }
 
-function renderHomeView() {
-  const panorama = [
-    {
-      step: '01',
-      stage: '协同',
-      image: '/images/aspace-one/showcase-meeting.jpg',
-      title: '会议与办公',
-      desc: '提升空间使用效率',
-      items: [
-        ['meeting', '会议预约'],
-        ['meeting', '智能门牌'],
-        ['meeting', '会议控制'],
-      ],
-    },
-    {
-      step: '02',
-      stage: '资产',
-      image: '/images/aspace-one/app-resource.jpg',
-      title: '资产与仓储',
-      desc: '掌握资产全生命周期',
-      items: [
-        ['asset', '资产台账'],
-        ['asset', 'RFID盘点'],
-        ['asset', '借还管理'],
-      ],
-    },
-    {
-      step: '03',
-      stage: '运维',
-      image: '/images/aspace-one/app-energy.jpg',
-      title: '设备与能源',
-      desc: '看清运行与能源使用',
-      items: [
-        ['foundation', '设备监测'],
-        ['foundation', '空调控制'],
-        ['energy', '能耗分析'],
-      ],
-    },
-    {
-      step: '04',
-      stage: '服务',
-      image: '/images/aspace-one/showcase-building.jpg',
-      title: '通行与服务',
-      desc: '连接人员与日常服务',
-      items: [
-        ['visitor', '访客接待'],
-        ['security', '门禁通行'],
-        ['foundation', '工单巡检'],
-      ],
-    },
-    {
-      step: '05',
-      stage: '洞察',
-      image: '/images/aspace-one/showcase-space.jpg',
-      title: '可视化与展示',
-      desc: '让空间状态清晰可见',
-      items: [
-        ['twin', '数字孪生'],
-        ['content', '信息发布'],
-        ['content', '电子相框'],
-      ],
-    },
-  ]
-  const scenes = [
-    {
-      id: 'office',
-      label: '企业办公',
-      title: '让办公空间高效运转',
-      lead: '连接会议、资产与日常服务，提升办公体验与管理效率。',
-      image: '/images/aspace-one/showcase-meeting.jpg',
-      apps: [
-        ['screen', '会议预约', 'calendar_month'],
-        ['resource', '资产管理', 'view_in_ar'],
-        ['info-publish', '信息发布', 'description'],
-      ],
-    },
-    {
-      id: 'campus',
-      label: '园区楼宇',
-      title: '让园区运行状态一目了然',
-      lead: '以数字孪生串联楼宇、设备与能耗，支撑运营调度与态势感知。',
-      image: '/images/aspace-one/showcase-building.jpg',
-      apps: [
-        ['digital-twin', '数字孪生', 'deployed_code'],
-        ['energy', '能源能耗', 'eco'],
-        ['aspace', '空间管理', 'hub'],
-      ],
-    },
-    {
-      id: 'factory',
-      label: '生产制造',
-      title: '让产线周边空间更可控',
-      lead: '把设备状态、环境控制与安全通行纳入统一门户，缩短现场响应链路。',
-      image: '/images/aspace-one/showcase-control.jpg',
-      apps: [
-        ['device-center', '设备中心', 'devices_other'],
-        ['smart-sensor', '智能传感', 'sensors'],
-        ['access-security', '门禁安防', 'shield_lock'],
-      ],
-    },
-    {
-      id: 'warehouse',
-      label: '智慧仓储',
-      title: '让资产流转更清晰可追溯',
-      lead: '从台账到借还、盘点，帮助仓储与行政团队掌握物资位置与状态。',
-      image: '/images/aspace-one/app-resource.jpg',
-      apps: [
-        ['resource', '资产管理', 'inventory_2'],
-        ['visitor-booking', '访客邀约', 'person_add'],
-        ['info-publish', '信息发布', 'campaign'],
-      ],
-    },
-  ]
-  const capabilityStats = [
-    ['20', '+', '空间智能应用'],
-    ['9', '', '业务能力分类'],
-    ['300', '+', '典型落地场景'],
-    ['10000', '+', '业务协同链路'],
-  ]
+const defaultHomeContent = {
+  hero: {
+    background: 'https://img.alicdn.com/imgextra/i2/52311814/O1CN01rXdBocv2JPBCHL4y_!!52311814.png',
+    title: '连接空间业务\n让智能应用触手可及',
+    primaryCta: '浏览应用广场',
+    secondaryCta: '探索业务场景',
+  },
+  panorama: {
+    title: '业务全景',
+    lead: '从日常办公到空间运营，能力按业务链路串联协同。',
+    moreLabel: '查看全部能力',
+    items: [
+      { id: 'collab', step: '01', stage: '协同', image: '/images/aspace-one/showcase-meeting.jpg', title: '会议与办公', desc: '提升空间使用效率', items: [{ category: 'meeting', label: '会议预约' }, { category: 'meeting', label: '智能门牌' }, { category: 'meeting', label: '会议控制' }] },
+      { id: 'asset', step: '02', stage: '资产', image: '/images/aspace-one/app-resource.jpg', title: '资产与仓储', desc: '掌握资产全生命周期', items: [{ category: 'asset', label: '资产台账' }, { category: 'asset', label: 'RFID盘点' }, { category: 'asset', label: '借还管理' }] },
+      { id: 'ops', step: '03', stage: '运维', image: '/images/aspace-one/app-energy.jpg', title: '设备与能源', desc: '看清运行与能源使用', items: [{ category: 'foundation', label: '设备监测' }, { category: 'foundation', label: '空调控制' }, { category: 'energy', label: '能耗分析' }] },
+      { id: 'service', step: '04', stage: '服务', image: '/images/aspace-one/showcase-building.jpg', title: '通行与服务', desc: '连接人员与日常服务', items: [{ category: 'visitor', label: '访客接待' }, { category: 'security', label: '门禁通行' }, { category: 'foundation', label: '工单巡检' }] },
+      { id: 'insight', step: '05', stage: '洞察', image: '/images/aspace-one/showcase-space.jpg', title: '可视化与展示', desc: '让空间状态清晰可见', items: [{ category: 'twin', label: '数字孪生' }, { category: 'content', label: '信息发布' }, { category: 'content', label: '电子相框' }] },
+    ],
+  },
+  scenes: {
+    title: '从你的业务场景开始',
+    lead: '围绕实际需求，发现可以协同使用的应用。',
+    items: [
+      { id: 'office', label: '企业办公', title: '让办公空间高效运转', lead: '连接会议、资产与日常服务，提升办公体验与管理效率。', image: '/images/aspace-one/showcase-meeting.jpg', apps: [{ id: 'screen', label: '会议预约', icon: 'calendar_month' }, { id: 'resource', label: '资产管理', icon: 'view_in_ar' }, { id: 'info-publish', label: '信息发布', icon: 'description' }] },
+      { id: 'campus', label: '园区楼宇', title: '让园区运行状态一目了然', lead: '以数字孪生串联楼宇、设备与能耗，支撑运营调度与态势感知。', image: '/images/aspace-one/showcase-building.jpg', apps: [{ id: 'digital-twin', label: '数字孪生', icon: 'deployed_code' }, { id: 'energy', label: '能源能耗', icon: 'eco' }, { id: 'aspace', label: '空间管理', icon: 'hub' }] },
+      { id: 'factory', label: '生产制造', title: '让产线周边空间更可控', lead: '把设备状态、环境控制与安全通行纳入统一门户，缩短现场响应链路。', image: '/images/aspace-one/showcase-control.jpg', apps: [{ id: 'device-center', label: '设备中心', icon: 'devices_other' }, { id: 'smart-sensor', label: '智能传感', icon: 'sensors' }, { id: 'access-security', label: '门禁安防', icon: 'shield_lock' }] },
+      { id: 'warehouse', label: '智慧仓储', title: '让资产流转更清晰可追溯', lead: '从台账到借还、盘点，帮助仓储与行政团队掌握物资位置与状态。', image: '/images/aspace-one/app-resource.jpg', apps: [{ id: 'resource', label: '资产管理', icon: 'inventory_2' }, { id: 'visitor-booking', label: '访客邀约', icon: 'person_add' }, { id: 'info-publish', label: '信息发布', icon: 'campaign' }] },
+    ],
+  },
+  infra: {
+    title: '连接空间业务、覆盖多场景的智能应用能力',
+    cta: '浏览应用广场',
+    stats: [
+      { value: '20', unit: '+', label: '空间智能应用' },
+      { value: '9', unit: '', label: '业务能力分类' },
+      { value: '300', unit: '+', label: '典型落地场景' },
+      { value: '10000', unit: '+', label: '业务协同链路' },
+    ],
+  },
+}
 
+let homeContent = structuredClone(defaultHomeContent)
+
+function heroTitleMarkup(title) {
+  return String(title || '').split(/\n+/).filter(Boolean).map((line) => escapeHtml(line)).join('<br />')
+}
+
+function renderHomeView() {
+  const { hero, panorama, scenes, infra } = homeContent
   return `
     <section class="aso-home" data-aso-view="home">
       <section class="aso-home-hero">
-        <img class="aso-home-hero__bg" src="https://img.alicdn.com/imgextra/i2/52311814/O1CN01rXdBocv2JPBCHL4y_!!52311814.png" alt="" decoding="async" fetchpriority="high" />
+        <img class="aso-home-hero__bg" src="${escapeHtml(hero.background)}" alt="" decoding="async" fetchpriority="high" />
         <div class="aso-home-hero__shade" aria-hidden="true"></div>
         <div class="aso-container aso-home-hero__content">
           <div class="aso-home-hero__copy">
-            <h1>连接空间业务<br />让智能应用触手可及</h1>
+            <h1>${heroTitleMarkup(hero.title)}</h1>
           </div>
         </div>
         <div class="aso-home-hero__cta">
-          <button type="button" class="aso-btn aso-btn--primary" data-aso-nav="apps">浏览应用广场 ${icon('arrow_forward')}</button>
-          <button type="button" class="aso-btn aso-btn--hero-ghost" data-home-scroll="scenes">探索业务场景</button>
+          <button type="button" class="aso-btn aso-btn--primary" data-aso-nav="apps">${escapeHtml(hero.primaryCta)} ${icon('arrow_forward')}</button>
+          <button type="button" class="aso-btn aso-btn--hero-ghost" data-home-scroll="scenes">${escapeHtml(hero.secondaryCta)}</button>
         </div>
       </section>
 
@@ -791,13 +720,13 @@ function renderHomeView() {
         <div class="aso-container">
           <header class="aso-home-panorama__head">
             <div>
-              <h2>业务全景</h2>
-              <p>从日常办公到空间运营，能力按业务链路串联协同。</p>
+              <h2>${escapeHtml(panorama.title)}</h2>
+              <p>${escapeHtml(panorama.lead)}</p>
             </div>
-            <button type="button" class="aso-home-panorama__more" data-aso-nav="apps">查看全部能力 ${icon('north_east')}</button>
+            <button type="button" class="aso-home-panorama__more" data-aso-nav="apps">${escapeHtml(panorama.moreLabel)} ${icon('north_east')}</button>
           </header>
           <div class="aso-home-panorama__flow">
-            ${panorama.map((column, index) => `
+            ${panorama.items.map((column, index) => `
             <article class="aso-home-panorama__node" style="--aso-delay: ${index * 90}ms">
               ${index > 0 ? `
               <span class="aso-home-panorama__bridge" aria-hidden="true">
@@ -820,10 +749,10 @@ function renderHomeView() {
                   <h3>${escapeHtml(column.title)}</h3>
                   <p>${escapeHtml(column.desc)}</p>
                   <ul>
-                    ${column.items.map(([category, label]) => `
+                    ${column.items.map((link) => `
                     <li>
-                      <button type="button" data-aso-nav="apps" data-app-category-goto="${escapeHtml(category)}">
-                        <span>${escapeHtml(label)}</span>
+                      <button type="button" data-aso-nav="apps" data-app-category-goto="${escapeHtml(link.category)}">
+                        <span>${escapeHtml(link.label)}</span>
                         ${icon('arrow_forward')}
                       </button>
                     </li>`).join('')}
@@ -839,15 +768,15 @@ function renderHomeView() {
         <div class="aso-container">
           <header class="aso-home-section__head">
             <div>
-              <h2>从你的业务场景开始</h2>
-              <p>围绕实际需求，发现可以协同使用的应用。</p>
+              <h2>${escapeHtml(scenes.title)}</h2>
+              <p>${escapeHtml(scenes.lead)}</p>
             </div>
           </header>
           <div class="aso-home-scenes__tabs" role="tablist" aria-label="业务场景">
-            ${scenes.map((scene, index) => `
+            ${scenes.items.map((scene, index) => `
             <button type="button" role="tab" class="${index === 0 ? 'is-active' : ''}" aria-selected="${index === 0 ? 'true' : 'false'}" data-home-scene="${escapeHtml(scene.id)}">${escapeHtml(scene.label)}</button>`).join('')}
           </div>
-          ${scenes.map((scene, index) => `
+          ${scenes.items.map((scene, index) => `
           <div class="aso-home-scenes__panel${index === 0 ? ' is-active' : ''}" data-home-scene-panel="${escapeHtml(scene.id)}" ${index === 0 ? '' : 'hidden'}>
             <article class="aso-home-scenes__card">
               <figure class="aso-home-scenes__media">
@@ -858,11 +787,11 @@ function renderHomeView() {
                 <h3>${escapeHtml(scene.title)}</h3>
                 <p class="aso-home-scenes__lead">${escapeHtml(scene.lead)}</p>
                 <ul class="aso-home-scenes__apps">
-                  ${scene.apps.map(([appId, label, ico]) => `
+                  ${scene.apps.map((app) => `
                   <li>
-                    <button type="button" data-enter-app="${escapeHtml(appId)}">
-                      <i>${icon(ico)}</i>
-                      <strong>${escapeHtml(label)}</strong>
+                    <button type="button" data-enter-app="${escapeHtml(app.id)}">
+                      <i>${icon(app.icon)}</i>
+                      <strong>${escapeHtml(app.label)}</strong>
                       ${icon('chevron_right')}
                     </button>
                   </li>`).join('')}
@@ -876,15 +805,15 @@ function renderHomeView() {
 
       <section class="aso-home-infra" data-home-globe>
         <div class="aso-container aso-home-infra__content">
-          <h2>连接空间业务、覆盖多场景的智能应用能力</h2>
+          <h2>${escapeHtml(infra.title)}</h2>
           <ul class="aso-home-infra__stats">
-            ${capabilityStats.map(([value, unit, label]) => `
+            ${infra.stats.map((stat) => `
             <li>
-              <strong><em>${escapeHtml(value)}</em>${unit ? `<span>${escapeHtml(unit)}</span>` : ''}</strong>
-              <p>${escapeHtml(label)}</p>
+              <strong><em>${escapeHtml(stat.value)}</em>${stat.unit ? `<span>${escapeHtml(stat.unit)}</span>` : ''}</strong>
+              <p>${escapeHtml(stat.label)}</p>
             </li>`).join('')}
           </ul>
-          <button type="button" class="aso-home-infra__cta" data-aso-nav="apps">浏览应用广场 ${icon('north_east')}</button>
+          <button type="button" class="aso-home-infra__cta" data-aso-nav="apps">${escapeHtml(infra.cta)} ${icon('north_east')}</button>
         </div>
         <div class="aso-home-infra__globe" aria-hidden="true">
           <canvas data-home-globe-canvas></canvas>
@@ -2066,6 +1995,17 @@ async function loadCatalog() {
   }
 }
 
+async function loadHomeContent() {
+  try {
+    const response = await fetch('/api/public/aspace/home', { cache: 'no-store' })
+    const data = await response.json()
+    if (!response.ok || !data.home?.hero || !data.home?.panorama || !data.home?.scenes || !data.home?.infra) return
+    homeContent = data.home
+  } catch {
+    homeContent = structuredClone(defaultHomeContent)
+  }
+}
+
 async function loadRecentActivities() {
   try {
     const response = await fetch('/api/public/aspace/activities', { cache: 'no-store' })
@@ -2253,7 +2193,7 @@ export async function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
   await initPortalAuth()
-  await loadCatalog()
+  await Promise.all([loadCatalog(), loadHomeContent()])
   loadAppPreferences()
   await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()
