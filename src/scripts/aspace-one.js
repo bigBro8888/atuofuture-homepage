@@ -709,9 +709,7 @@ function renderHomeView() {
         <div class="aso-home-hero__shade" aria-hidden="true"></div>
         <div class="aso-container aso-home-hero__content">
           <div class="aso-home-hero__copy">
-            <p class="aso-home-hero__eyebrow">ASPACE · 空间智能应用平台</p>
             <h1>连接空间业务<br />让智能应用触手可及</h1>
-            <p class="aso-home-hero__lead">汇聚会务、资产、设备与能源等能力，帮助园区与楼宇团队更快找到并进入业务系统。</p>
             <div class="aso-home-hero__cta">
               <button type="button" class="aso-btn aso-btn--primary" data-aso-nav="apps">浏览应用广场 ${icon('arrow_forward')}</button>
               <button type="button" class="aso-btn aso-btn--hero-ghost" data-home-scroll="scenes">探索业务场景</button>
