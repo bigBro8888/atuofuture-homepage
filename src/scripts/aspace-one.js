@@ -60,6 +60,7 @@ let apps = [
     desc: '会议日程与会议信息展示能力正在开发中。',
     icon: 'developer_board',
     locked: true,
+    hidden: true,
   },
   {
     id: 'meeting-control-screen',
@@ -69,6 +70,7 @@ let apps = [
     desc: '会议设备与空间环境集中控制能力正在开发中。',
     icon: 'settings_remote',
     locked: true,
+    hidden: true,
   },
   {
     id: 'wireless-screen',
@@ -271,6 +273,10 @@ let appCategories = [
   ['foundation', 'hub', '智能底座', '沉淀空间、设备、人员和智能控制基础能力'],
   ['visitor', 'person_add', '访客管理', '覆盖访客邀约、审批、登记与到访服务'],
 ]
+
+function visibleApps() {
+  return apps.filter((app) => !app.hidden)
+}
 
 function appCategoryMeta(categoryId) {
   const category = appCategories.find(([id]) => id === categoryId)
@@ -952,7 +958,7 @@ function renderPortal() {
                   ${icon('star')}<span>我的收藏</span><i data-favorite-count>${favoriteAppIds.size}</i>
                 </button>
                 <button class="is-active" type="button" data-app-category-filter="all" aria-current="true">
-                  ${icon('grid_view')}<span>全部能力</span><i>${apps.length}</i>
+                  ${icon('grid_view')}<span>全部能力</span><i>${visibleApps().length}</i>
                 </button>
                 <button type="button" data-app-category-filter="recent">
                   ${icon('history')}<span>最近访问</span><i data-recent-count>${recentActivities.length}</i>
@@ -963,7 +969,7 @@ function renderPortal() {
               <nav data-business-category-nav>
                 ${appCategories.map(([id, ico, label]) => `
                 <button type="button" draggable="true" data-app-category-filter="${id}" title="登录后可拖拽调整分类顺序">
-                  ${icon(ico)}<span>${label}</span>${icon('drag_indicator', 'aso-category-drag')}<i>${apps.filter((app) => app.category === id).length}</i>
+                  ${icon(ico)}<span>${label}</span>${icon('drag_indicator', 'aso-category-drag')}<i>${visibleApps().filter((app) => app.category === id).length}</i>
                 </button>`).join('')}
               </nav>
             </aside>
@@ -990,7 +996,7 @@ function renderPortal() {
                 </div>
               </header>
 
-              <div class="aso-app-grid" data-app-grid>${apps.map(appCard).join('')}${capabilityGroupHeadingsMarkup()}</div>
+              <div class="aso-app-grid" data-app-grid>${visibleApps().map(appCard).join('')}${capabilityGroupHeadingsMarkup()}</div>
               <p class="aso-empty aso-app-grid__empty" data-app-empty hidden>没有找到符合条件的业务能力。</p>
             </div>
             <section class="aso-recent-panel" data-recent-panel hidden>
