@@ -1,3 +1,4 @@
+import createGlobe from 'cobe'
 import { CONTACT, contactMailto, contactTelHref } from '../data/contact.js'
 import { renderSiteFooter } from '../components/site-footer.js'
 
@@ -573,25 +574,6 @@ function renderShellHeader(activeView = 'home') {
     </header>`
 }
 
-function homeAppById(id) {
-  return apps.find((app) => app.id === id)
-}
-
-function renderHomeFeaturedCard(id, desc) {
-  const app = homeAppById(id)
-  if (!app) return ''
-  const image = app.image
-    ? `<img src="${escapeHtml(app.image)}" alt="${escapeHtml(app.alt || app.name)}" loading="lazy" />`
-    : `<div class="aso-home-pick__placeholder">${icon(app.icon || 'apps')}</div>`
-  return `
-    <article class="aso-home-pick">
-      <div class="aso-home-pick__media">${image}</div>
-      <h3>${escapeHtml(app.name)}</h3>
-      <p>${escapeHtml(desc)}</p>
-      <button type="button" data-enter-app="${escapeHtml(app.id)}">了解应用 ${icon('arrow_forward')}</button>
-    </article>`
-}
-
 function renderHomeView() {
   const panorama = [
     {
@@ -705,11 +687,11 @@ function renderHomeView() {
       ],
     },
   ]
-  const featured = [
-    ['digital-twin', '三维呈现园区与楼宇运行态势'],
-    ['resource', '覆盖资产台账、流转与盘点'],
-    ['screen', '会前预约与会议空间服务入口'],
-    ['info-publish', '统一管理多终端内容发布'],
+  const capabilityStats = [
+    ['20', '+', '空间智能应用'],
+    ['9', '', '业务能力分类'],
+    ['4', '', '典型落地场景'],
+    ['5', '', '业务协同链路'],
   ]
 
   return `
@@ -815,18 +797,20 @@ function renderHomeView() {
         </div>
       </section>
 
-      <section class="aso-home-featured">
-        <div class="aso-container">
-          <header class="aso-home-section__head">
-            <div>
-              <h2>精选应用</h2>
-              <p>优先呈现高频业务入口，便于快速进入</p>
-            </div>
-            <button type="button" class="aso-home-section__more" data-aso-nav="apps">查看全部应用 ${icon('arrow_forward')}</button>
-          </header>
-          <div class="aso-home-featured__grid">
-            ${featured.map(([id, desc]) => renderHomeFeaturedCard(id, desc)).join('')}
-          </div>
+      <section class="aso-home-infra" data-home-globe>
+        <div class="aso-container aso-home-infra__content">
+          <h2>连接空间业务、覆盖多场景的智能应用能力</h2>
+          <ul class="aso-home-infra__stats">
+            ${capabilityStats.map(([value, unit, label]) => `
+            <li>
+              <strong><em>${escapeHtml(value)}</em>${unit ? `<span>${escapeHtml(unit)}</span>` : ''}</strong>
+              <p>${escapeHtml(label)}</p>
+            </li>`).join('')}
+          </ul>
+          <button type="button" class="aso-home-infra__cta" data-aso-nav="apps">浏览应用广场 ${icon('north_east')}</button>
+        </div>
+        <div class="aso-home-infra__globe" aria-hidden="true">
+          <canvas data-home-globe-canvas></canvas>
         </div>
       </section>
 
@@ -1189,6 +1173,109 @@ function initPanoramaFlow(root) {
     })
   }, { threshold: 0.28 })
   observer.observe(section)
+}
+
+const HOME_GLOBE_MARKERS = [
+  { location: [30.27, 120.15], size: 0.08 }, // 杭州
+  { location: [31.23, 121.47], size: 0.06 }, // 上海
+  { location: [39.9, 116.41], size: 0.07 }, // 北京
+  { location: [22.54, 114.06], size: 0.06 }, // 深圳
+  { location: [30.57, 104.07], size: 0.05 }, // 成都
+  { location: [23.13, 113.26], size: 0.05 }, // 广州
+]
+
+const HOME_GLOBE_ARCS = [
+  { from: [30.27, 120.15], to: [31.23, 121.47] },
+  { from: [30.27, 120.15], to: [39.9, 116.41] },
+  { from: [30.27, 120.15], to: [22.54, 114.06] },
+  { from: [39.9, 116.41], to: [30.57, 104.07] },
+  { from: [22.54, 114.06], to: [23.13, 113.26] },
+  { from: [31.23, 121.47], to: [39.9, 116.41] },
+]
+
+function initHomeGlobe(root) {
+  const section = root.querySelector('[data-home-globe]')
+  const canvas = root.querySelector('[data-home-globe-canvas]')
+  if (!section || !canvas) return
+
+  let globe = null
+  let raf = 0
+  let phi = 2.35
+  let visible = false
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  const stop = () => {
+    if (!raf) return
+    cancelAnimationFrame(raf)
+    raf = 0
+  }
+
+  const tick = () => {
+    if (!visible || !globe || reducedMotion) {
+      raf = 0
+      return
+    }
+    phi += 0.0032
+    globe.update({ phi })
+    raf = requestAnimationFrame(tick)
+  }
+
+  const start = () => {
+    if (reducedMotion || !visible || !globe || raf) return
+    raf = requestAnimationFrame(tick)
+  }
+
+  const mount = () => {
+    stop()
+    if (globe) {
+      globe.destroy()
+      globe = null
+    }
+    const width = Math.max(canvas.clientWidth || 720, 320)
+    const height = Math.max(canvas.clientHeight || 420, 240)
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    globe = createGlobe(canvas, {
+      devicePixelRatio: dpr,
+      width: width * dpr,
+      height: height * dpr,
+      phi,
+      theta: 0.22,
+      dark: 0,
+      diffuse: 1.4,
+      mapSamples: width < 640 ? 12000 : 20000,
+      mapBrightness: 5.4,
+      mapBaseBrightness: 0.05,
+      baseColor: [0.78, 0.88, 1],
+      markerColor: [0.03, 0.47, 0.98],
+      glowColor: [0.7, 0.84, 1],
+      scale: 1.08,
+      offset: [0, height * dpr * 0.22],
+      markers: HOME_GLOBE_MARKERS,
+      arcs: HOME_GLOBE_ARCS,
+      arcColor: [0.18, 0.55, 1],
+      arcWidth: 0.5,
+      arcHeight: 0.32,
+      markerElevation: 0.018,
+    })
+    start()
+  }
+
+  mount()
+
+  const visibility = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      visible = entry.isIntersecting
+      if (visible) start()
+      else stop()
+    })
+  }, { threshold: 0.12 })
+  visibility.observe(section)
+
+  let resizeTimer = 0
+  window.addEventListener('resize', () => {
+    window.clearTimeout(resizeTimer)
+    resizeTimer = window.setTimeout(mount, 160)
+  })
 }
 
 function setShellView(root, view, { portalMode, category } = {}) {
@@ -2151,6 +2238,7 @@ export async function initAspaceOne() {
   initAppFilters(root)
   initCategoryDrag(root)
   initPanoramaFlow(root)
+  initHomeGlobe(root)
 
   root.querySelector('[data-embed-close]')?.addEventListener('click', () => closeAppEmbed(root))
   document.addEventListener('keydown', (event) => {
