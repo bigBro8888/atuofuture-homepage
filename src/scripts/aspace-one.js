@@ -548,6 +548,7 @@ function renderShellHeader(activeView = 'home') {
   const items = [
     ['home', '首页'],
     ['apps', '应用广场'],
+    ['help', '自助服务'],
     ['about', '关于我们'],
   ]
   return `
@@ -601,7 +602,7 @@ function renderHomeView() {
           <span>${icon('support_agent')}</span>
           <h2>自助服务</h2>
           <p>搜索帮助文档、热门问题和操作指南，缩短从疑问到解决的路径。</p>
-          <button type="button" data-aso-nav="apps" data-portal-mode="help">获取帮助 ${icon('arrow_forward')}</button>
+          <button type="button" data-aso-nav="help">获取帮助 ${icon('arrow_forward')}</button>
         </article>
         <article class="aso-home__panel">
           <span>${icon('hub')}</span>
@@ -652,10 +653,6 @@ function renderPortal() {
       ${renderShellHeader('home')}
       ${renderHomeView()}
       <div data-aso-view="apps" hidden>
-      <nav class="aso-mode-switch" role="tablist" aria-label="切换空间智能门户内容">
-        <button class="is-active" type="button" role="tab" aria-selected="true" data-portal-mode="overview">Aspace空间智能全览</button>
-        <button type="button" role="tab" aria-selected="false" data-portal-mode="help">自助服务中心</button>
-      </nav>
       <section class="aso-hero" id="overview">
         <div class="aso-container aso-apps" id="apps">
           <header class="aso-overview-head">
@@ -911,18 +908,15 @@ function setPortalMode(root, mode) {
   const help = root.querySelector('#help')
   if (overview) overview.hidden = nextMode !== 'overview'
   if (help) help.hidden = nextMode !== 'help'
-  root.querySelectorAll('.aso-mode-switch [data-portal-mode]').forEach((button) => {
-    const active = button.dataset.portalMode === nextMode
-    button.classList.toggle('is-active', active)
-    button.setAttribute('aria-selected', String(active))
-  })
   root.dataset.activePortalMode = nextMode
 }
 
 function setShellView(root, view, { portalMode } = {}) {
-  const nextView = ['home', 'apps', 'about'].includes(view) ? view : 'home'
+  let nextView = ['home', 'apps', 'help', 'about'].includes(view) ? view : 'home'
+  if (nextView === 'apps' && portalMode === 'help') nextView = 'help'
+  const contentView = nextView === 'help' ? 'apps' : nextView
   root.querySelectorAll('[data-aso-view]').forEach((section) => {
-    section.hidden = section.dataset.asoView !== nextView
+    section.hidden = section.dataset.asoView !== contentView
   })
   root.querySelectorAll('[data-aso-nav]').forEach((item) => {
     const active = item.dataset.asoNav === nextView
@@ -931,7 +925,7 @@ function setShellView(root, view, { portalMode } = {}) {
   })
   root.dataset.activeShellView = nextView
   root.classList.remove('is-menu-open')
-  if (nextView === 'apps') setPortalMode(root, portalMode === 'help' ? 'help' : 'overview')
+  if (contentView === 'apps') setPortalMode(root, nextView === 'help' ? 'help' : 'overview')
   window.scrollTo({ top: 0, behavior: 'auto' })
   const nextHash = nextView === 'home' ? '' : `#${nextView}`
   const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`
@@ -1690,11 +1684,14 @@ export async function initAspaceOne() {
   loadAppPreferences()
   await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()
-  const initialView = window.location.hash === '#about'
+  const hash = window.location.hash
+  const initialView = hash === '#about'
     ? 'about'
-    : window.location.hash === '#apps'
-      ? 'apps'
-      : 'home'
+    : hash === '#help'
+      ? 'help'
+      : hash === '#apps'
+        ? 'apps'
+        : 'home'
   setShellView(root, initialView)
   if (portalAuthError) showToast(portalAuthError)
   bindActivityMessages(root)
@@ -1708,11 +1705,6 @@ export async function initAspaceOne() {
     if (navButton) {
       event.preventDefault()
       setShellView(root, navButton.dataset.asoNav, { portalMode: navButton.dataset.portalMode })
-      return
-    }
-    const modeButton = event.target.closest('.aso-mode-switch [data-portal-mode], [data-aso-view="apps"] [data-portal-mode]')
-    if (modeButton && modeButton.dataset.portalMode && !modeButton.dataset.asoNav) {
-      setPortalMode(root, modeButton.dataset.portalMode)
       return
     }
     if (event.target.closest('[data-login-prompt-close]')) {
