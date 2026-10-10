@@ -714,19 +714,6 @@ function renderHomeView() {
               <button type="button" class="aso-btn aso-btn--hero-ghost" data-home-scroll="scenes">探索业务场景</button>
             </div>
           </div>
-          <div class="aso-home-hero__float" aria-hidden="true">
-            <div class="aso-home-hero__chips">
-              <span>${icon('groups')}会议管理</span>
-              <span>${icon('inventory_2')}资产管理</span>
-              <span>${icon('settings_remote')}设备控制</span>
-              <span>${icon('eco')}能源能耗</span>
-            </div>
-            <aside class="aso-home-hero__card">
-              <strong>会议室 A301</strong>
-              <em>空闲中 · 可预约</em>
-              <small>下一场 15:30</small>
-            </aside>
-          </div>
         </div>
       </section>
 
