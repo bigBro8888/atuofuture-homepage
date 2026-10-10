@@ -102,7 +102,13 @@ export async function createAuthService() {
     features: {
       devInteractions: { enabled: false },
       revocation: { enabled: true },
-      rpInitiatedLogout: { enabled: true },
+      rpInitiatedLogout: {
+        enabled: true,
+        // 跳过“是否确认退出”页，直接完成退出并回跳
+        logoutSource: async (ctx, form) => {
+          ctx.body = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>正在退出…</title></head><body onload="document.forms[0].submit()">${form}</body></html>`
+        },
+      },
     },
     findAccount: async (_context, id) => {
       const user = findUser(id)

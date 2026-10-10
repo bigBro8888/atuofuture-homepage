@@ -593,11 +593,17 @@ async function logoutPortalAccount() {
   sessionStorage.removeItem('aspace-one-oidc-tokens')
   sessionStorage.removeItem('aspace-one-oidc-pending')
   window.ASPACE_CURRENT_USER = null
-  const endUrl = new URL('/auth/session/end', window.location.origin)
-  endUrl.searchParams.set('client_id', 'aspace-one')
-  endUrl.searchParams.set('post_logout_redirect_uri', `${window.location.origin}/aspace-one/`)
-  if (idToken) endUrl.searchParams.set('id_token_hint', idToken)
-  window.location.href = endUrl.toString()
+
+  // 有 id_token 时走统一认证静默退出（服务端已取消确认页）；否则直接回首页
+  if (idToken) {
+    const endUrl = new URL('/auth/session/end', window.location.origin)
+    endUrl.searchParams.set('id_token_hint', idToken)
+    endUrl.searchParams.set('client_id', 'aspace-one')
+    endUrl.searchParams.set('post_logout_redirect_uri', `${window.location.origin}/aspace-one/`)
+    window.location.replace(endUrl.toString())
+    return
+  }
+  window.location.replace('/aspace-one/')
 }
 
 function renderShellHeader(activeView = 'home') {
