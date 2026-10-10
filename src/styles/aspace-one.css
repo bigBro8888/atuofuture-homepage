@@ -276,10 +276,56 @@
 }
 .aso-recent-panel__account > span { color: #8290a4; font-size: 12px; }
 .aso-recent-panel__account > span b { color: #40536d; }
+.aso-recent-panel__body {
+  display: grid;
+  gap: 18px;
+}
 .aso-recent-panel__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 14px;
+}
+.aso-recent-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.aso-recent-pager button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid rgba(203, 222, 242, .95);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .88);
+  color: #40536d;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color .18s ease, color .18s ease, background-color .18s ease;
+}
+.aso-recent-pager button .material-symbols-outlined { font-size: 20px; }
+.aso-recent-pager button:hover:not(:disabled) {
+  border-color: rgba(8, 121, 249, .35);
+  color: #0879f9;
+  background: #fff;
+}
+.aso-recent-pager button.is-active {
+  border-color: transparent;
+  background: #0879f9;
+  color: #fff;
+}
+.aso-recent-pager button:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+}
+.aso-recent-pager__ellipsis {
+  min-width: 20px;
+  color: #98a6b8;
+  text-align: center;
 }
 .aso-recent-visit {
   position: relative;

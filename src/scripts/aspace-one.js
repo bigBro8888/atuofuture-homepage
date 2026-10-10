@@ -352,6 +352,8 @@ const defaultQuickActions = [
 ]
 let quickActions = defaultQuickActions.map((item) => ({ ...item }))
 let recentActivities = []
+const RECENT_PAGE_SIZE = 5
+let recentPage = 1
 let portalAuthError = ''
 
 function icon(name, className = '') {
@@ -400,8 +402,39 @@ function formatActivityDate(value) {
   }).format(date)
 }
 
+function recentPageCount() {
+  return Math.max(1, Math.ceil(recentActivities.length / RECENT_PAGE_SIZE) || 1)
+}
+
+function recentPagerMarkup(page, totalPages) {
+  if (totalPages <= 1) return ''
+  const pages = []
+  const pushPage = (value) => {
+    if (pages[pages.length - 1] === value) return
+    pages.push(value)
+  }
+  pushPage(1)
+  for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i += 1) pushPage(i)
+  pushPage(totalPages)
+  let markup = `
+    <nav class="aso-recent-pager" aria-label="最近访问分页">
+      <button type="button" data-recent-page="${page - 1}" ${page <= 1 ? 'disabled' : ''} aria-label="上一页">${icon('chevron_left')}</button>`
+  let previous = 0
+  pages.forEach((item) => {
+    if (previous && item - previous > 1) markup += `<span class="aso-recent-pager__ellipsis">…</span>`
+    markup += `
+      <button type="button" class="${item === page ? 'is-active' : ''}" data-recent-page="${item}" aria-label="第 ${item} 页" aria-current="${item === page ? 'page' : 'false'}">${item}</button>`
+    previous = item
+  })
+  markup += `
+      <button type="button" data-recent-page="${page + 1}" ${page >= totalPages ? 'disabled' : ''} aria-label="下一页">${icon('chevron_right')}</button>
+    </nav>`
+  return markup
+}
+
 function recentVisitsMarkup() {
   if (!recentActivities.length) {
+    recentPage = 1
     return `
       <div class="aso-recent-panel__empty">
         ${icon('history')}
@@ -409,7 +442,12 @@ function recentVisitsMarkup() {
         <p>进入应用或使用具体功能后，访问记录会显示在这里。</p>
       </div>`
   }
-  return recentActivities.map((activity, index) => {
+  const totalPages = recentPageCount()
+  recentPage = Math.min(Math.max(1, recentPage), totalPages)
+  const start = (recentPage - 1) * RECENT_PAGE_SIZE
+  const pageItems = recentActivities.slice(start, start + RECENT_PAGE_SIZE)
+  const list = pageItems.map((activity, offset) => {
+    const index = start + offset
     const app = apps.find((item) => item.id === activity.appId)
     return `
       <button class="aso-recent-visit${index === 0 ? ' is-latest' : ''}" type="button" data-recent-activity="${index}">
@@ -423,6 +461,7 @@ function recentVisitsMarkup() {
         ${icon('arrow_forward', 'aso-recent-visit__arrow')}
       </button>`
   }).join('')
+  return `<div class="aso-recent-panel__grid">${list}</div>${recentPagerMarkup(recentPage, totalPages)}`
 }
 
 function appCard(app, index) {
@@ -581,7 +620,7 @@ function renderPortal() {
                   <span>共 <b data-recent-panel-count>${recentActivities.length}</b> 条记录</span>
                 </div>
               </header>
-              <div class="aso-recent-panel__grid" data-recent-visits>
+              <div class="aso-recent-panel__body" data-recent-visits>
                 ${recentVisitsMarkup()}
               </div>
             </section>
@@ -1327,7 +1366,8 @@ async function loadRecentActivities() {
   }
 }
 
-function updateRecentVisits(root) {
+function updateRecentVisits(root, { resetPage = false } = {}) {
+  if (resetPage) recentPage = 1
   const container = root.querySelector('[data-recent-visits]')
   if (container) container.innerHTML = recentVisitsMarkup()
   root.querySelectorAll('[data-recent-count], [data-recent-panel-count]').forEach((element) => {
@@ -1353,7 +1393,7 @@ async function reportActivity(root, app, feature, deepLink = '') {
     const data = await response.json()
     if (!response.ok || !data.activity) return
     recentActivities.unshift(data.activity)
-    updateRecentVisits(root)
+    updateRecentVisits(root, { resetPage: true })
   } catch {
     // 操作记录失败不能阻断用户进入业务系统。
   }
@@ -1564,6 +1604,16 @@ export async function initAspaceOne() {
         return
       }
       showToast('该业务系统暂未配置访问地址')
+      return
+    }
+
+    const recentPageButton = event.target.closest('[data-recent-page]')
+    if (recentPageButton) {
+      if (recentPageButton.disabled) return
+      const nextPage = Number(recentPageButton.dataset.recentPage)
+      if (!Number.isFinite(nextPage) || nextPage < 1 || nextPage > recentPageCount()) return
+      recentPage = nextPage
+      updateRecentVisits(root)
       return
     }
 
