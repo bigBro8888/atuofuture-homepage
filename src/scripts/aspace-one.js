@@ -527,9 +527,131 @@ function docRows(category = '全部文档', keyword = '') {
     </button>`).join('')
 }
 
+function portalAccountMarkup() {
+  const user = window.ASPACE_CURRENT_USER
+  if (user?.id) {
+    const name = String(user.name || user.displayName || user.email || '已登录')
+    return `
+      <button type="button" class="aso-shell__account is-logged-in" data-aso-account title="${escapeHtml(name)}">
+        <span class="aso-shell__avatar">${escapeHtml(name.slice(0, 1))}</span>
+        <span>${escapeHtml(name)}</span>
+      </button>`
+  }
+  return `
+    <button type="button" class="aso-shell__account" data-personal-login>
+      ${icon('person')}
+      <span>登录</span>
+    </button>`
+}
+
+function renderShellHeader(activeView = 'home') {
+  const items = [
+    ['home', '首页'],
+    ['apps', '应用广场'],
+    ['about', '关于我们'],
+  ]
+  return `
+    <header class="aso-shell">
+      <div class="aso-shell__inner">
+        <a class="aso-shell__brand" href="/aspace-one/" data-aso-nav="home">
+          <img src="/assets/artink-logo-light.png" alt="" width="120" height="28" />
+          <span>安墨客空间智能</span>
+        </a>
+        <nav class="aso-shell__nav" aria-label="门户导航">
+          ${items.map(([id, label]) => `
+          <button type="button" class="${id === activeView ? 'is-active' : ''}" data-aso-nav="${id}" aria-current="${id === activeView ? 'page' : 'false'}">${label}</button>`).join('')}
+        </nav>
+        <div class="aso-shell__actions">
+          ${portalAccountMarkup()}
+          <button type="button" class="aso-shell__menu" data-aso-menu aria-label="打开菜单">${icon('menu')}</button>
+        </div>
+      </div>
+    </header>`
+}
+
+function renderHomeView() {
+  const openCount = apps.filter((app) => !app.locked).length
+  return `
+    <section class="aso-home" data-aso-view="home">
+      <div class="aso-home__hero">
+        <div class="aso-home__hero-bg" aria-hidden="true"></div>
+        <div class="aso-container aso-home__hero-copy">
+          <p class="aso-home__eyebrow">ASPACE SPACE INTELLIGENCE</p>
+          <h1>安墨客空间智能</h1>
+          <p class="aso-home__lead">统一连接业务能力、设备终端与自助服务，让园区与楼宇空间更快进入可感知、可调度、可运营的状态。</p>
+          <div class="aso-home__cta">
+            <button type="button" class="aso-btn aso-btn--primary" data-aso-nav="apps">进入应用广场 ${icon('arrow_forward')}</button>
+            <button type="button" class="aso-btn aso-btn--ghost" data-aso-nav="about">了解平台</button>
+          </div>
+          <dl class="aso-home__stats">
+            <div><dt>${apps.length}</dt><dd>业务能力</dd></div>
+            <div><dt>${openCount}</dt><dd>已开通服务</dd></div>
+            <div><dt>${appCategories.length}</dt><dd>业务分类</dd></div>
+          </dl>
+        </div>
+      </div>
+      <div class="aso-container aso-home__panels">
+        <article class="aso-home__panel">
+          <span>${icon('apps')}</span>
+          <h2>应用广场</h2>
+          <p>按业务场景浏览会议、资产、能源、信息发布等能力，收藏常用入口并快速进入系统。</p>
+          <button type="button" data-aso-nav="apps">去看看 ${icon('arrow_forward')}</button>
+        </article>
+        <article class="aso-home__panel">
+          <span>${icon('support_agent')}</span>
+          <h2>自助服务</h2>
+          <p>搜索帮助文档、热门问题和操作指南，缩短从疑问到解决的路径。</p>
+          <button type="button" data-aso-nav="apps" data-portal-mode="help">获取帮助 ${icon('arrow_forward')}</button>
+        </article>
+        <article class="aso-home__panel">
+          <span>${icon('hub')}</span>
+          <h2>统一底座</h2>
+          <p>设备、空间、权限与人员能力沉淀在同一底座上，支撑场景联动与持续扩展。</p>
+          <button type="button" data-aso-nav="about">了解更多 ${icon('arrow_forward')}</button>
+        </article>
+      </div>
+    </section>`
+}
+
+function renderAboutView() {
+  return `
+    <section class="aso-about" data-aso-view="about" hidden>
+      <div class="aso-container">
+        <header class="aso-about__head">
+          <p class="aso-eyebrow">ABOUT</p>
+          <h1>关于安墨客空间智能</h1>
+          <p>安墨客空间智能（Aspace）面向园区、楼宇与运营团队，提供可浏览、可进入、可协作的空间业务门户。</p>
+        </header>
+        <div class="aso-about__grid">
+          <article>
+            <h2>我们做什么</h2>
+            <p>把分散在会议、信息发布、资产、能耗、安防与智能底座中的能力汇聚到同一入口，减少系统切换成本，提升日常运营效率。</p>
+          </article>
+          <article>
+            <h2>适合谁用</h2>
+            <p>空间运营、行政会务、设施运维、信息化与业务管理员，都可以从应用广场进入对应能力，或在自助服务中心快速查找文档。</p>
+          </article>
+          <article>
+            <h2>如何开始</h2>
+            <p>登录后可同步收藏、最近访问与个性化排序。未登录也可浏览公开能力，进入已开通系统完成日常工作。</p>
+          </article>
+        </div>
+        <div class="aso-about__cta">
+          <button type="button" class="aso-btn aso-btn--primary" data-aso-nav="apps">进入应用广场</button>
+          ${window.ASPACE_CURRENT_USER?.id
+            ? `<button type="button" class="aso-btn aso-btn--ghost" data-aso-nav="home">返回首页</button>`
+            : `<button type="button" class="aso-btn aso-btn--ghost" data-personal-login>登录账号</button>`}
+        </div>
+      </div>
+    </section>`
+}
+
 function renderPortal() {
   return `
-    <div class="aso-page">
+    <div class="aso-page aso-page--shell">
+      ${renderShellHeader('home')}
+      ${renderHomeView()}
+      <div data-aso-view="apps" hidden>
       <nav class="aso-mode-switch" role="tablist" aria-label="切换空间智能门户内容">
         <button class="is-active" type="button" role="tab" aria-selected="true" data-portal-mode="overview">Aspace空间智能全览</button>
         <button type="button" role="tab" aria-selected="false" data-portal-mode="help">自助服务中心</button>
@@ -705,6 +827,8 @@ function renderPortal() {
           </div>
         </div>
       </section>
+      </div>
+      ${renderAboutView()}
 
       <div class="aso-toast" role="status" data-aso-toast aria-hidden="true"></div>
       <div class="aso-login-prompt" data-login-prompt hidden aria-hidden="true">
@@ -787,14 +911,33 @@ function setPortalMode(root, mode) {
   const help = root.querySelector('#help')
   if (overview) overview.hidden = nextMode !== 'overview'
   if (help) help.hidden = nextMode !== 'help'
-  root.querySelectorAll('[data-portal-mode]').forEach((button) => {
+  root.querySelectorAll('.aso-mode-switch [data-portal-mode]').forEach((button) => {
     const active = button.dataset.portalMode === nextMode
     button.classList.toggle('is-active', active)
     button.setAttribute('aria-selected', String(active))
   })
   root.dataset.activePortalMode = nextMode
-  const top = root.getBoundingClientRect().top + window.scrollY
-  if (window.scrollY > top + 12) window.scrollTo({ top, behavior: 'smooth' })
+}
+
+function setShellView(root, view, { portalMode } = {}) {
+  const nextView = ['home', 'apps', 'about'].includes(view) ? view : 'home'
+  root.querySelectorAll('[data-aso-view]').forEach((section) => {
+    section.hidden = section.dataset.asoView !== nextView
+  })
+  root.querySelectorAll('[data-aso-nav]').forEach((item) => {
+    const active = item.dataset.asoNav === nextView
+    item.classList.toggle('is-active', active)
+    if (item.matches('button, a')) item.setAttribute('aria-current', active ? 'page' : 'false')
+  })
+  root.dataset.activeShellView = nextView
+  root.classList.remove('is-menu-open')
+  if (nextView === 'apps') setPortalMode(root, portalMode === 'help' ? 'help' : 'overview')
+  window.scrollTo({ top: 0, behavior: 'auto' })
+  const nextHash = nextView === 'home' ? '' : `#${nextView}`
+  const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`
+  if (`${window.location.pathname}${window.location.search}${window.location.hash}` !== nextUrl) {
+    window.history.replaceState({}, '', nextUrl)
+  }
 }
 
 /** 点击左侧分类时锁定当前滚动，避免焦点/锚定把页面拽走。 */
@@ -1547,12 +1690,28 @@ export async function initAspaceOne() {
   loadAppPreferences()
   await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()
+  const initialView = window.location.hash === '#about'
+    ? 'about'
+    : window.location.hash === '#apps'
+      ? 'apps'
+      : 'home'
+  setShellView(root, initialView)
   if (portalAuthError) showToast(portalAuthError)
   bindActivityMessages(root)
 
   root.addEventListener('click', (event) => {
-    const modeButton = event.target.closest('[data-portal-mode]')
-    if (modeButton) {
+    if (event.target.closest('[data-aso-menu]')) {
+      root.classList.toggle('is-menu-open')
+      return
+    }
+    const navButton = event.target.closest('[data-aso-nav]')
+    if (navButton) {
+      event.preventDefault()
+      setShellView(root, navButton.dataset.asoNav, { portalMode: navButton.dataset.portalMode })
+      return
+    }
+    const modeButton = event.target.closest('.aso-mode-switch [data-portal-mode], [data-aso-view="apps"] [data-portal-mode]')
+    if (modeButton && modeButton.dataset.portalMode && !modeButton.dataset.asoNav) {
       setPortalMode(root, modeButton.dataset.portalMode)
       return
     }

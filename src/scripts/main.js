@@ -747,6 +747,12 @@ export function initDemoRequestModal() {
 const page = document.body.dataset.page
 
 function bootstrap() {
+  // 空间智能门户独立运行，不挂载官网头尾与智能体浮层
+  if (page === 'aspace-one') {
+    void initAspaceOne()
+    return
+  }
+
   // 首页 CMS 内容不阻塞首屏初始化（线上无 API 时最多会卡 2.5s）
   if (page === 'home') {
     void loadAndApplyHomeContent()
@@ -773,11 +779,7 @@ function bootstrap() {
     initOrder()
   }
 
-  if (page === 'aspace-one') {
-    initAspaceOne()
-  }
-
-  if (page !== 'aspace-one') initScrollReveal()
+  initScrollReveal()
   initBackToTop()
 
   if (page === 'agents') {
