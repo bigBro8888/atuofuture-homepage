@@ -102,6 +102,9 @@ body.aso-standalone .back-to-top { display: none !important; }
   gap: 16px;
   margin-left: auto;
 }
+.aso-shell__account-menu {
+  position: relative;
+}
 .aso-page .aso-shell__account {
   display: inline-flex;
   align-items: center;
@@ -117,13 +120,22 @@ body.aso-standalone .back-to-top { display: none !important; }
   cursor: pointer;
   transition: color .18s ease, background-color .18s ease;
 }
-.aso-page .aso-shell__account:hover {
+.aso-page .aso-shell__account:hover,
+.aso-shell__account-menu.is-open .aso-shell__account {
   color: #fff;
   background: rgba(255, 255, 255, .1);
 }
 .aso-page .aso-shell__account .material-symbols-outlined {
   color: #fff;
   font-size: 20px;
+}
+.aso-page .aso-shell__account[data-aso-account-toggle] .material-symbols-outlined:last-child {
+  margin-left: -2px;
+  font-size: 18px;
+  transition: transform .18s ease;
+}
+.aso-shell__account-menu.is-open .aso-shell__account[data-aso-account-toggle] .material-symbols-outlined:last-child {
+  transform: rotate(180deg);
 }
 .aso-page .aso-shell__avatar {
   display: grid;
@@ -135,6 +147,37 @@ body.aso-standalone .back-to-top { display: none !important; }
   color: #fff;
   font-size: 12px;
   font-weight: 700;
+}
+.aso-shell__account-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  min-width: 148px;
+  padding: 6px;
+  border: 1px solid rgba(190, 214, 242, .55);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(8, 24, 56, .18);
+}
+.aso-shell__account-dropdown button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #0b1d44;
+  font-size: 14px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+.aso-shell__account-dropdown button:hover {
+  background: #eef5ff;
+  color: #0879f9;
 }
 .aso-shell__menu {
   display: none;

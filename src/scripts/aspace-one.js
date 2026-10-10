@@ -554,16 +554,50 @@ function portalAccountMarkup() {
   if (user?.id) {
     const name = String(user.name || user.displayName || user.email || '已登录')
     return `
-      <button type="button" class="aso-shell__account is-logged-in" data-aso-account title="${escapeHtml(name)}">
-        <span class="aso-shell__avatar">${escapeHtml(name.slice(0, 1))}</span>
-        <span>${escapeHtml(name)}</span>
-      </button>`
+      <div class="aso-shell__account-menu" data-aso-account-menu>
+        <button type="button" class="aso-shell__account is-logged-in" data-aso-account-toggle aria-expanded="false" aria-haspopup="menu" title="${escapeHtml(name)}">
+          <span class="aso-shell__avatar">${escapeHtml(name.slice(0, 1))}</span>
+          <span>${escapeHtml(name)}</span>
+          ${icon('expand_more')}
+        </button>
+        <div class="aso-shell__account-dropdown" data-aso-account-dropdown hidden role="menu">
+          <button type="button" role="menuitem" data-aso-logout>退出登录</button>
+        </div>
+      </div>`
   }
   return `
     <button type="button" class="aso-shell__account" data-personal-login>
       ${icon('person')}
       <span>登录</span>
     </button>`
+}
+
+function setAccountMenuOpen(root, open) {
+  const menu = root.querySelector('[data-aso-account-menu]')
+  const toggle = root.querySelector('[data-aso-account-toggle]')
+  const dropdown = root.querySelector('[data-aso-account-dropdown]')
+  if (!menu || !toggle || !dropdown) return
+  menu.classList.toggle('is-open', open)
+  toggle.setAttribute('aria-expanded', String(open))
+  dropdown.hidden = !open
+}
+
+async function logoutPortalAccount() {
+  let idToken = ''
+  try {
+    const tokens = JSON.parse(sessionStorage.getItem('aspace-one-oidc-tokens') || 'null')
+    idToken = String(tokens?.id_token || '')
+  } catch {
+    idToken = ''
+  }
+  sessionStorage.removeItem('aspace-one-oidc-tokens')
+  sessionStorage.removeItem('aspace-one-oidc-pending')
+  window.ASPACE_CURRENT_USER = null
+  const endUrl = new URL('/auth/session/end', window.location.origin)
+  endUrl.searchParams.set('client_id', 'aspace-one')
+  endUrl.searchParams.set('post_logout_redirect_uri', `${window.location.origin}/aspace-one/`)
+  if (idToken) endUrl.searchParams.set('id_token_hint', idToken)
+  window.location.href = endUrl.toString()
 }
 
 function renderShellHeader(activeView = 'home') {
@@ -2126,6 +2160,21 @@ export async function initAspaceOne() {
     if (personalLogin) {
       void startPersonalLogin(root, personalLogin)
       return
+    }
+    const accountToggle = event.target.closest('[data-aso-account-toggle]')
+    if (accountToggle) {
+      const menu = accountToggle.closest('[data-aso-account-menu]')
+      const open = !menu?.classList.contains('is-open')
+      setAccountMenuOpen(root, open)
+      return
+    }
+    if (event.target.closest('[data-aso-logout]')) {
+      setAccountMenuOpen(root, false)
+      void logoutPortalAccount()
+      return
+    }
+    if (root.querySelector('[data-aso-account-menu].is-open') && !event.target.closest('[data-aso-account-menu]')) {
+      setAccountMenuOpen(root, false)
     }
     if (event.target.closest('[data-quick-settings-open]')) {
       setQuickSettingsOpen(root, true)
