@@ -742,9 +742,12 @@ function renderHomeView() {
             <article class="aso-home-panorama__node" style="--aso-delay: ${index * 90}ms">
               ${index > 0 ? `
               <span class="aso-home-panorama__bridge" aria-hidden="true">
-                <i class="aso-home-panorama__wire"></i>
-                <i class="aso-home-panorama__current"></i>
-                <i class="aso-home-panorama__arrow"></i>
+                <svg class="aso-home-panorama__bridge-svg" viewBox="0 0 56 24" fill="none">
+                  <path class="aso-home-panorama__track" d="M2 12h38" />
+                  <path class="aso-home-panorama__flow" d="M2 12h38" />
+                  <path class="aso-home-panorama__pulse" d="M2 12h38" />
+                  <path class="aso-home-panorama__tip" d="M40 6.5 50 12 40 17.5" />
+                </svg>
               </span>` : ''}
               <div class="aso-home-panorama__card">
                 <figure class="aso-home-panorama__media">
