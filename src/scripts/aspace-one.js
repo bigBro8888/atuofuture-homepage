@@ -237,15 +237,6 @@ let apps = [
   },
 ]
 
-const openedApps = apps.filter((app) => !app.locked).length
-const lockedApps = apps.length - openedApps
-
-const appFilters = [
-  ['all', '全部能力', apps.length],
-  ['open', '已开通', openedApps],
-  ['locked', '规划中', lockedApps],
-]
-
 let appCategories = [
   ['twin', 'deployed_code', '数字孪生', '统一呈现园区、楼宇与空间运行态势'],
   ['meeting', 'groups', '会议管理', '覆盖会前预约、会中控制与会后服务'],
@@ -562,11 +553,6 @@ function renderPortal() {
                 </div>
               </header>
               <div class="aso-app-catalog__controls">
-                <div class="aso-filters" role="tablist" aria-label="按建设状态筛选业务能力">
-                  ${appFilters.map(([id, label, count], index) => `
-                  <button class="${index === 0 ? 'is-active' : ''}" type="button" role="tab" aria-selected="${index === 0 ? 'true' : 'false'}" data-app-filter="${id}">${label} <i>${count}</i></button>`).join('')}
-                  <span>共 <b data-visible-app-count>${apps.length}</b> 项能力</span>
-                </div>
                 <div class="aso-app-controls-right">
                   <label class="aso-app-sort">
                     ${icon('schedule')}
@@ -1137,19 +1123,16 @@ function updateCapabilityGroupHeadings(grid, category) {
 function initAppFilters(root) {
   const grid = root.querySelector('[data-app-grid]')
   const empty = root.querySelector('[data-app-empty]')
-  const statusButtons = [...root.querySelectorAll('[data-app-filter]')]
   const categoryButtons = [...root.querySelectorAll('[data-app-category-filter]')]
   const searchInput = root.querySelector('[data-app-search-input]')
   const sortSelect = root.querySelector('[data-app-sort]')
   const viewButtons = [...root.querySelectorAll('[data-app-view]')]
-  const visibleCount = root.querySelector('[data-visible-app-count]')
   const catalog = root.querySelector('.aso-app-catalog')
   const recentPanel = root.querySelector('[data-recent-panel]')
   const catalogTitle = root.querySelector('[data-catalog-title]')
   const catalogDescription = root.querySelector('[data-catalog-description]')
-  if (!grid || !statusButtons.length || !categoryButtons.length) return
+  if (!grid || !categoryButtons.length) return
 
-  let status = 'all'
   let category = 'all'
   let query = ''
   let draggedCard = null
@@ -1158,30 +1141,16 @@ function initAppFilters(root) {
     arrangeCapabilityGrid(grid, category, sortSelect?.value || 'default')
     let visible = 0
     grid.querySelectorAll('[data-app-state]').forEach((card) => {
-      const statusMatch = status === 'all' || card.dataset.appState === status
       const categoryMatch = category === 'all'
         || (category === 'favorites' ? favoriteAppIds.has(card.dataset.app) : card.dataset.appCategory === category)
       const queryMatch = !query || card.dataset.appSearch.includes(query)
-      const match = statusMatch && categoryMatch && queryMatch
+      const match = categoryMatch && queryMatch
       card.classList.toggle('is-hidden', !match)
       if (match) visible += 1
     })
-    if (visibleCount) visibleCount.textContent = String(visible)
     if (empty) empty.hidden = visible > 0
     updateCapabilityGroupHeadings(grid, category)
   }
-
-  statusButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      status = button.dataset.appFilter
-      statusButtons.forEach((item) => {
-        const active = item === button
-        item.classList.toggle('is-active', active)
-        item.setAttribute('aria-selected', String(active))
-      })
-      applyFilters()
-    })
-  })
 
   categoryButtons.forEach((button) => {
     button.addEventListener('click', () => {
