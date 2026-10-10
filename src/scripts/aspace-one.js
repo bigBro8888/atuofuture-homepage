@@ -216,6 +216,7 @@ let apps = [
     desc: '统一应用注册、配置和运行状态管理能力正在建设中。',
     icon: 'apps',
     locked: true,
+    hidden: true,
   },
   {
     id: 'smart-lighting',
