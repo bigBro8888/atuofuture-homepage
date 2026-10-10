@@ -255,12 +255,13 @@ let apps = [
   },
   {
     id: 'visitor-booking',
-    name: '访客预约',
+    name: '访客邀约',
     category: 'visitor',
     project: '访客管理',
-    desc: '访客邀约、审批、登记与到访管理能力正在开发中。',
-    icon: 'person_add',
-    locked: true,
+    time: '2026-10-10 17:30',
+    image: '/images/aspace-one/app-visitor.jpg',
+    alt: '访客邀约与到访接待场景',
+    requireInvite: true,
   },
 ]
 
@@ -749,7 +750,7 @@ function renderHomeView() {
       image: '/images/aspace-one/app-resource.jpg',
       apps: [
         ['resource', '资产管理', 'inventory_2'],
-        ['visitor-booking', '访客预约', 'person_add'],
+        ['visitor-booking', '访客邀约', 'person_add'],
         ['info-publish', '信息发布', 'campaign'],
       ],
     },
@@ -1118,6 +1119,63 @@ function renderPortal() {
             <li><span></span>等待终端上线</li>
           </ul>
           <button type="button" class="aso-device-modal__action" data-device-modal-close>我知道了</button>
+        </section>
+      </div>
+      <div class="aso-invite-modal" data-invite-modal hidden aria-hidden="true">
+        <div class="aso-invite-modal__backdrop" data-invite-modal-close></div>
+        <section class="aso-invite-modal__panel" role="dialog" aria-modal="true" aria-labelledby="aso-invite-modal-title">
+          <div class="aso-invite-modal__glow" aria-hidden="true"></div>
+          <div class="aso-invite-modal__orbit" aria-hidden="true"><i></i><i></i></div>
+          <button type="button" class="aso-invite-modal__close" data-invite-modal-close aria-label="关闭">${icon('close')}</button>
+          <header class="aso-invite-modal__head">
+            <div class="aso-invite-modal__badge">${icon('person_add')}</div>
+            <div>
+              <p class="aso-invite-modal__eyebrow">VISITOR INVITE</p>
+              <h2 id="aso-invite-modal-title">访客邀约</h2>
+              <p>填写访客信息，一键发起邀约并生成到访通行凭证。</p>
+            </div>
+          </header>
+          <form class="aso-invite-modal__form" data-invite-form>
+            <div class="aso-invite-modal__grid">
+              <label>
+                <span>访客姓名</span>
+                <input name="guestName" type="text" required maxlength="40" placeholder="请输入姓名" autocomplete="name" />
+              </label>
+              <label>
+                <span>手机号</span>
+                <input name="guestPhone" type="tel" required maxlength="11" pattern="1[3-9]\\d{9}" placeholder="11 位手机号" inputmode="numeric" />
+              </label>
+              <label>
+                <span>来访单位</span>
+                <input name="guestOrg" type="text" maxlength="60" placeholder="公司 / 机构名称" />
+              </label>
+              <label>
+                <span>被访人</span>
+                <input name="hostName" type="text" required maxlength="40" placeholder="接待同事姓名" />
+              </label>
+              <label>
+                <span>到访日期</span>
+                <input name="visitDate" type="date" required />
+              </label>
+              <label>
+                <span>预计到访</span>
+                <input name="visitTime" type="time" required />
+              </label>
+              <label class="aso-invite-modal__full">
+                <span>来访事由</span>
+                <input name="purpose" type="text" required maxlength="80" placeholder="例如：商务洽谈、项目对接、参观交流" />
+              </label>
+            </div>
+            <div class="aso-invite-modal__steps" aria-hidden="true">
+              <span class="is-active"><i></i>填写信息</span>
+              <span><i></i>发送邀约</span>
+              <span><i></i>通行到访</span>
+            </div>
+            <div class="aso-invite-modal__actions">
+              <button type="button" class="aso-invite-modal__ghost" data-invite-modal-close>取消</button>
+              <button type="submit" class="aso-invite-modal__submit">${icon('send')} 发送邀约</button>
+            </div>
+          </form>
         </section>
       </div>
       <div class="aso-login-prompt" data-login-prompt hidden aria-hidden="true">
@@ -1533,6 +1591,57 @@ function setDeviceModalOpen(root, open) {
   } else {
     modal.classList.remove('is-open')
   }
+}
+
+function defaultInviteDate() {
+  const date = new Date()
+  date.setDate(date.getDate() + 1)
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+function setInviteModalOpen(root, open) {
+  const modal = root.querySelector('[data-invite-modal]')
+  if (!modal) return
+  modal.hidden = !open
+  modal.setAttribute('aria-hidden', String(!open))
+  document.body.classList.toggle('aso-invite-modal-open', open)
+  if (open) {
+    const form = modal.querySelector('[data-invite-form]')
+    form?.reset()
+    const dateInput = form?.querySelector('[name="visitDate"]')
+    const timeInput = form?.querySelector('[name="visitTime"]')
+    if (dateInput) dateInput.value = defaultInviteDate()
+    if (timeInput) timeInput.value = '10:00'
+    const host = window.ASPACE_CURRENT_USER?.name || window.ASPACE_CURRENT_USER?.displayName || ''
+    const hostInput = form?.querySelector('[name="hostName"]')
+    if (hostInput && host) hostInput.value = host
+    modal.classList.remove('is-open')
+    void modal.offsetWidth
+    modal.classList.add('is-open')
+    window.setTimeout(() => form?.querySelector('[name="guestName"]')?.focus(), 20)
+  } else {
+    modal.classList.remove('is-open')
+  }
+}
+
+function submitVisitorInvite(root, form) {
+  const data = new FormData(form)
+  const guestName = String(data.get('guestName') || '').trim()
+  const guestPhone = String(data.get('guestPhone') || '').trim()
+  const visitDate = String(data.get('visitDate') || '').trim()
+  const visitTime = String(data.get('visitTime') || '').trim()
+  if (!guestName || !guestPhone || !visitDate || !visitTime) {
+    showToast('请完整填写访客邀约信息')
+    return
+  }
+  if (!/^1[3-9]\d{9}$/.test(guestPhone)) {
+    showToast('请输入正确的 11 位手机号')
+    return
+  }
+  setInviteModalOpen(root, false)
+  showToast(`已向 ${guestName} 发送访客邀约（${visitDate} ${visitTime}）`)
 }
 
 function setLoginPromptOpen(root, open, message = '') {
@@ -2259,6 +2368,11 @@ export async function initAspaceOne() {
       return
     }
 
+    if (event.target.closest('[data-invite-modal-close]')) {
+      setInviteModalOpen(root, false)
+      return
+    }
+
     const enterApp = event.target.closest('[data-enter-app]')
     if (enterApp) {
       const appId = enterApp.dataset.enterApp
@@ -2268,6 +2382,10 @@ export async function initAspaceOne() {
       if (app) void reportActivity(root, app, feature)
       if (app?.requireDevice) {
         setDeviceModalOpen(root, true)
+        return
+      }
+      if (app?.requireInvite) {
+        setInviteModalOpen(root, true)
         return
       }
       if (app) {
@@ -2299,7 +2417,9 @@ export async function initAspaceOne() {
       const app = apps.find((item) => item.id === activity.appId)
       if (app) {
         void reportActivity(root, app, activity.feature || `进入${app.name}首页`)
-        void openAppInNewPage(root, app)
+        if (app.requireDevice) setDeviceModalOpen(root, true)
+        else if (app.requireInvite) setInviteModalOpen(root, true)
+        else void openAppInNewPage(root, app)
       }
       else showToast('对应系统暂时无法打开')
       return
@@ -2327,6 +2447,11 @@ export async function initAspaceOne() {
   })
 
   root.addEventListener('submit', (event) => {
+    if (event.target.matches('[data-invite-form]')) {
+      event.preventDefault()
+      submitVisitorInvite(root, event.target)
+      return
+    }
     if (!event.target.matches('[data-quick-settings-form]')) return
     event.preventDefault()
     void publishQuickSettings(root)
@@ -2367,7 +2492,8 @@ export async function initAspaceOne() {
   root.querySelector('[data-embed-close]')?.addEventListener('click', () => closeAppEmbed(root))
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return
-    if (!root.querySelector('[data-device-modal]')?.hidden) setDeviceModalOpen(root, false)
+    if (!root.querySelector('[data-invite-modal]')?.hidden) setInviteModalOpen(root, false)
+    else if (!root.querySelector('[data-device-modal]')?.hidden) setDeviceModalOpen(root, false)
     else if (!root.querySelector('[data-login-prompt]')?.hidden) setLoginPromptOpen(root, false)
     else if (!root.querySelector('[data-quick-settings]')?.hidden) setQuickSettingsOpen(root, false)
     else if (!root.querySelector('[data-aso-embed]')?.hidden) closeAppEmbed(root)
