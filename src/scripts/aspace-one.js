@@ -1175,15 +1175,6 @@ function initPanoramaFlow(root) {
   observer.observe(section)
 }
 
-const HOME_GLOBE_MARKERS = [
-  { location: [30.27, 120.15], size: 0.05 }, // 杭州
-  { location: [31.23, 121.47], size: 0.04 }, // 上海
-  { location: [39.9, 116.41], size: 0.045 }, // 北京
-  { location: [22.54, 114.06], size: 0.04 }, // 深圳
-  { location: [30.57, 104.07], size: 0.035 }, // 成都
-  { location: [23.13, 113.26], size: 0.035 }, // 广州
-]
-
 function initHomeGlobe(root) {
   const section = root.querySelector('[data-home-globe]')
   const canvas = root.querySelector('[data-home-globe-canvas]')
@@ -1244,8 +1235,7 @@ function initHomeGlobe(root) {
       scale: 2.8,
       // 球心下移，露出完整上半圆（顶弧不被画布裁断）
       offset: [0, Math.round(height * 0.62)],
-      markers: HOME_GLOBE_MARKERS,
-      markerElevation: 0.012,
+      markers: [],
       context: { alpha: true, antialias: true },
     })
     start()
