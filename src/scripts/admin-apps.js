@@ -315,11 +315,14 @@ function renderAspaceCatalog() {
                   ? `<img src="${escapeHtml(app.image)}" alt="" />`
                   : `<span class="material-symbols-outlined">image</span>`}
               </figure>
+              <label class="admin-aspace-profile__url">
+                <span>图片链接</span>
+                <input name="app-image" type="text" maxlength="500" value="${escapeHtml(app.image || '')}" placeholder="https://… 或 /images/…" data-aspace-cover-url />
+              </label>
               <div>
                 <label class="admin-aspace-profile__upload">上传封面<input type="file" accept="image/jpeg,image/png,image/webp" data-aspace-cover-upload /></label>
                 <button type="button" data-aspace-cover-clear ${app.image ? '' : 'hidden'}>清除封面</button>
               </div>
-              <input type="hidden" name="app-image" value="${escapeHtml(app.image || '')}" />
             </div>
             <div class="admin-aspace-profile__fields">
               <p class="admin-aspace-profile__id">${escapeHtml(app.id)}</p>
@@ -2101,7 +2104,8 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
   const clearCover = event.target.closest('[data-aspace-cover-clear]')
   if (clearCover) {
     const row = clearCover.closest('[data-aspace-profile]')
-    row.querySelector('[name="app-image"]').value = ''
+    const imageInput = row.querySelector('[name="app-image"]')
+    if (imageInput) imageInput.value = ''
     row.querySelector('[data-aspace-cover-preview]').innerHTML = '<span class="material-symbols-outlined">image</span>'
     clearCover.hidden = true
     return
@@ -2139,6 +2143,22 @@ document.querySelector('[data-aspace-editor]').addEventListener('change', async 
     } finally {
       iconUpload.disabled = false
       iconUpload.value = ''
+    }
+    return
+  }
+
+  const coverUrl = event.target.closest('[data-aspace-cover-url]')
+  if (coverUrl) {
+    const row = coverUrl.closest('[data-aspace-profile]')
+    const url = coverUrl.value.trim()
+    const preview = row.querySelector('[data-aspace-cover-preview]')
+    const clear = row.querySelector('[data-aspace-cover-clear]')
+    if (url) {
+      preview.innerHTML = `<img src="${escapeHtml(url)}" alt="" />`
+      if (clear) clear.hidden = false
+    } else {
+      preview.innerHTML = '<span class="material-symbols-outlined">image</span>'
+      if (clear) clear.hidden = true
     }
     return
   }
