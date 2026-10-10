@@ -1176,21 +1176,12 @@ function initPanoramaFlow(root) {
 }
 
 const HOME_GLOBE_MARKERS = [
-  { location: [30.27, 120.15], size: 0.08 }, // 杭州
-  { location: [31.23, 121.47], size: 0.06 }, // 上海
-  { location: [39.9, 116.41], size: 0.07 }, // 北京
-  { location: [22.54, 114.06], size: 0.06 }, // 深圳
-  { location: [30.57, 104.07], size: 0.05 }, // 成都
-  { location: [23.13, 113.26], size: 0.05 }, // 广州
-]
-
-const HOME_GLOBE_ARCS = [
-  { from: [30.27, 120.15], to: [31.23, 121.47] },
-  { from: [30.27, 120.15], to: [39.9, 116.41] },
-  { from: [30.27, 120.15], to: [22.54, 114.06] },
-  { from: [39.9, 116.41], to: [30.57, 104.07] },
-  { from: [22.54, 114.06], to: [23.13, 113.26] },
-  { from: [31.23, 121.47], to: [39.9, 116.41] },
+  { location: [30.27, 120.15], size: 0.05 }, // 杭州
+  { location: [31.23, 121.47], size: 0.04 }, // 上海
+  { location: [39.9, 116.41], size: 0.045 }, // 北京
+  { location: [22.54, 114.06], size: 0.04 }, // 深圳
+  { location: [30.57, 104.07], size: 0.035 }, // 成都
+  { location: [23.13, 113.26], size: 0.035 }, // 广州
 ]
 
 function initHomeGlobe(root) {
@@ -1215,7 +1206,7 @@ function initHomeGlobe(root) {
       raf = 0
       return
     }
-    phi += 0.0032
+    phi += 0.0024
     globe.update({ phi })
     raf = requestAnimationFrame(tick)
   }
@@ -1232,30 +1223,26 @@ function initHomeGlobe(root) {
       globe = null
     }
     const width = Math.max(canvas.clientWidth || 720, 320)
-    const height = Math.max(canvas.clientHeight || 420, 240)
+    const height = Math.max(canvas.clientHeight || 360, 220)
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
     globe = createGlobe(canvas, {
       devicePixelRatio: dpr,
       width: width * dpr,
       height: height * dpr,
       phi,
-      theta: 0.22,
+      theta: 0.18,
       dark: 0,
       diffuse: 1.4,
-      mapSamples: width < 640 ? 12000 : 20000,
+      mapSamples: width < 640 ? 14000 : 24000,
       mapBrightness: 5.4,
       mapBaseBrightness: 0.05,
       baseColor: [0.78, 0.88, 1],
       markerColor: [0.03, 0.47, 0.98],
       glowColor: [0.7, 0.84, 1],
-      scale: 1.08,
-      offset: [0, height * dpr * 0.22],
+      scale: 3.24,
+      offset: [0, height * dpr * 0.72],
       markers: HOME_GLOBE_MARKERS,
-      arcs: HOME_GLOBE_ARCS,
-      arcColor: [0.18, 0.55, 1],
-      arcWidth: 0.5,
-      arcHeight: 0.32,
-      markerElevation: 0.018,
+      markerElevation: 0.012,
     })
     start()
   }
