@@ -6,7 +6,6 @@ body.aso-standalone {
   color: #0b1838;
 }
 body.aso-standalone #site-header,
-body.aso-standalone #site-footer,
 body.aso-standalone #agent-chat-root,
 body.aso-standalone .back-to-top { display: none !important; }
 .aso-auth-loading {
@@ -653,47 +652,20 @@ body.aso-standalone .back-to-top { display: none !important; }
   font-style: normal;
 }
 
-.aso-home-footer {
-  border-top: 1px solid #e8edf5;
-  background: #f7f8fa;
-  padding: 36px 0 40px;
+.aso-page .site-footer {
+  margin-top: 0;
 }
-.aso-home-footer__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 28px 40px;
-}
-.aso-home-footer__brand {
-  display: grid;
-  gap: 10px;
-}
-.aso-home-footer__brand img {
-  display: block;
-  width: 118px;
-  height: auto;
-}
-.aso-home-footer__brand p {
-  margin: 0;
-  color: #8a93a8;
-  font-size: 13px;
-  line-height: 1.5;
-}
-.aso-home-footer__nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 28px;
-}
-.aso-page .aso-home-footer__nav button {
+.aso-page .site-footer__text-btn {
   padding: 0;
   border: 0;
   background: transparent;
-  color: #1a2336;
+  color: rgba(255, 255, 255, 0.82);
+  font: inherit;
   font-size: 14px;
-  font-weight: 650;
+  text-align: left;
   cursor: pointer;
 }
-.aso-page .aso-home-footer__nav button:hover { color: #0879f9; }
+.aso-page .site-footer__text-btn:hover { color: #00e5c0; }
 
 .aso-about {
   padding: 0;

@@ -1,4 +1,5 @@
 import { CONTACT, contactMailto, contactTelHref } from '../data/contact.js'
+import { renderSiteFooter } from '../components/site-footer.js'
 
 let apps = [
   {
@@ -826,20 +827,7 @@ function renderHomeView() {
 }
 
 function renderPortalFooter() {
-  return `
-    <footer class="aso-home-footer">
-      <div class="aso-container aso-home-footer__inner">
-        <div class="aso-home-footer__brand">
-          <img src="/assets/artink-logo.png" alt="Artink 安墨客" width="120" height="28" />
-          <p>AI 让空间更智能，让运营更简单</p>
-        </div>
-        <nav class="aso-home-footer__nav" aria-label="页脚导航">
-          <button type="button" data-aso-nav="apps">应用广场</button>
-          <button type="button" data-aso-nav="help">自助服务</button>
-          <button type="button" data-aso-nav="about">关于我们</button>
-        </nav>
-      </div>
-    </footer>`
+  return renderSiteFooter()
 }
 
 function renderAboutView() {
