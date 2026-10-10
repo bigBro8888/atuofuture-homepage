@@ -63,7 +63,7 @@ let apps = [
   },
   {
     id: 'meeting-control-screen',
-    name: '会议室自控',
+    name: '会议室智控',
     category: 'meeting',
     project: '会议空间',
     desc: '会议设备与空间环境集中控制能力正在开发中。',

@@ -69,7 +69,7 @@ export const defaultAspaceCatalog = {
     { id: 'screen', name: '会议预约', category: 'meeting' },
     { id: 'deskplate', name: '桌牌管理', category: 'meeting' },
     { id: 'meeting-info-screen', name: '会议信息屏', category: 'meeting' },
-    { id: 'meeting-control-screen', name: '会议室自控', category: 'meeting' },
+    { id: 'meeting-control-screen', name: '会议室智控', category: 'meeting' },
     { id: 'wireless-screen', name: '无线投屏', category: 'meeting' },
     { id: 'info-publish', name: '信息发布平台', category: 'content' },
     { id: 'poster', name: 'AI画报', category: 'content' },
