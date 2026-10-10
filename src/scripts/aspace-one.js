@@ -1227,23 +1227,23 @@ function initHomeGlobe(root) {
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
     globe = createGlobe(canvas, {
       devicePixelRatio: dpr,
-      width: width * dpr,
-      height: height * dpr,
+      // cobe 会再乘 devicePixelRatio，这里只传 CSS 像素
+      width,
+      height,
       phi,
-      theta: 0.18,
+      theta: 0.16,
       dark: 0,
-      diffuse: 1.25,
+      diffuse: 1.2,
       mapSamples: width < 640 ? 14000 : 24000,
-      mapBrightness: 5.8,
-      mapBaseBrightness: 0.06,
-      baseColor: [0.7, 0.84, 1],
+      mapBrightness: 5.6,
+      mapBaseBrightness: 0.05,
+      baseColor: [0.74, 0.86, 1],
       markerColor: [0.03, 0.47, 0.98],
-      // 与白底接近的淡蓝光晕，避免顶部被裁切时出现黑边
-      glowColor: [0.93, 0.96, 1],
+      glowColor: [0.96, 0.98, 1],
       opacity: 1,
-      scale: 2.85,
-      // 下移：保证半圆顶部完整落在画布内，不被容器顶边截断
-      offset: [0, height * dpr * 0.58],
+      scale: 2.8,
+      // 球心下移，露出完整上半圆（顶弧不被画布裁断）
+      offset: [0, Math.round(height * 0.62)],
       markers: HOME_GLOBE_MARKERS,
       markerElevation: 0.012,
       context: { alpha: true, antialias: true },
