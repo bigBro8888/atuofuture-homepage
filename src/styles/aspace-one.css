@@ -148,10 +148,11 @@
   grid-template-columns: 190px minmax(0, 1fr);
   gap: 26px;
   align-items: start;
+  overflow-anchor: none;
 }
 .aso-app-sidebar {
   position: sticky;
-  top: 24px;
+  top: 88px;
   min-width: 0;
   padding: 0 16px 14px 0;
   border-right: 1px solid rgba(211, 224, 240, .78);
