@@ -137,9 +137,10 @@ let apps = [
     name: '双碳管理',
     category: 'carbon',
     project: '绿色低碳运营',
-    desc: '碳排核算、减排分析与双碳目标管理能力正在规划中。',
-    icon: 'co2',
-    locked: true,
+    time: '2026-10-10 17:26',
+    image: '/images/aspace-one/app-energy.jpg',
+    alt: '双碳管理与能耗分析场景',
+    embedUrl: 'http://47.95.170.47:8001/',
   },
   {
     id: 'access-security',
