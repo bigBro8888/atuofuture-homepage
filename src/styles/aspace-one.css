@@ -2416,10 +2416,6 @@ body.aso-embed-open { overflow: hidden; }
     padding-right: 0;
     border-left: 1px solid #e6edf6;
   }
-  .aso-home-footer__inner {
-    display: grid;
-    gap: 18px;
-  }
 }
 
 @media (max-width: 640px) {
