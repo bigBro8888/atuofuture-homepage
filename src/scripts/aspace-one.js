@@ -191,9 +191,10 @@ let apps = [
     category: 'foundation',
     group: 'base',
     project: '基础能力',
-    desc: '统一角色、组织与业务权限配置能力正在建设中。',
-    icon: 'admin_panel_settings',
-    locked: true,
+    time: '2026-10-10 17:43',
+    image: '/images/aspace-one/showcase-building.jpg',
+    alt: '权限中心角色与组织权限管理场景',
+    url: 'https://aspacedev.atuofuture.com/#/sys-list/info',
   },
   {
     id: 'person-center',
