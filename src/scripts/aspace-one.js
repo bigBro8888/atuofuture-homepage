@@ -629,7 +629,7 @@ function renderShellHeader(activeView = 'home') {
   const items = [
     ['home', '首页'],
     ['apps', '应用广场'],
-    ['help', '自助服务'],
+    ['help', '知识库'],
     ['about', '关于我们'],
   ]
   return `
@@ -1035,7 +1035,7 @@ function renderPortal() {
           <header class="aso-help__head">
             <div class="aso-help__intro">
               <p class="aso-eyebrow">HELP CENTER</p>
-              <h2>自助服务中心</h2>
+              <h2>知识库</h2>
               <p class="aso-help__lead">搜索知识、获取帮助，让问题更快解决</p>
             </div>
             <div class="aso-help__find">
