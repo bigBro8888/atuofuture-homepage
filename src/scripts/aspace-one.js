@@ -595,6 +595,8 @@ function renderHomeFeaturedCard(id, desc) {
 function renderHomeView() {
   const panorama = [
     {
+      step: '01',
+      stage: '协同',
       icon: 'calendar_month',
       title: '会议与办公',
       desc: '提升空间使用效率',
@@ -605,6 +607,8 @@ function renderHomeView() {
       ],
     },
     {
+      step: '02',
+      stage: '资产',
       icon: 'view_in_ar',
       title: '资产与仓储',
       desc: '掌握资产全生命周期',
@@ -615,6 +619,8 @@ function renderHomeView() {
       ],
     },
     {
+      step: '03',
+      stage: '运维',
       icon: 'settings',
       title: '设备与能源',
       desc: '看清运行与能源使用',
@@ -625,6 +631,8 @@ function renderHomeView() {
       ],
     },
     {
+      step: '04',
+      stage: '服务',
       icon: 'person',
       title: '通行与服务',
       desc: '连接人员与日常服务',
@@ -635,6 +643,8 @@ function renderHomeView() {
       ],
     },
     {
+      step: '05',
+      stage: '洞察',
       icon: 'bar_chart',
       title: '可视化与展示',
       desc: '让空间状态清晰可见',
@@ -718,30 +728,48 @@ function renderHomeView() {
         </div>
       </section>
 
-      <section class="aso-home-panorama">
+      <section class="aso-home-panorama" data-panorama-flow>
         <div class="aso-container">
           <header class="aso-home-panorama__head">
             <div>
               <h2>业务全景</h2>
-              <p>从日常办公到空间运营，找到适合你的业务能力。</p>
+              <p>从日常办公到空间运营，能力按业务链路串联协同。</p>
             </div>
             <button type="button" class="aso-home-panorama__more" data-aso-nav="apps">查看全部能力 ${icon('north_east')}</button>
           </header>
-          <div class="aso-home-panorama__grid">
-            ${panorama.map((column) => `
-            <article class="aso-home-panorama__col">
-              <span class="aso-home-panorama__icon">${icon(column.icon)}</span>
-              <h3>${escapeHtml(column.title)}</h3>
-              <p>${escapeHtml(column.desc)}</p>
-              <ul>
-                ${column.items.map(([category, label]) => `
-                <li>
-                  <button type="button" data-aso-nav="apps" data-app-category-goto="${escapeHtml(category)}">
-                    <span>${escapeHtml(label)}</span>
-                    ${icon('arrow_forward')}
-                  </button>
-                </li>`).join('')}
-              </ul>
+          <div class="aso-home-panorama__logic" aria-hidden="true">
+            <span>办公协同</span>
+            <i></i>
+            <span>资源管理</span>
+            <i></i>
+            <span>运行保障</span>
+            <i></i>
+            <span>服务通行</span>
+            <i></i>
+            <span>态势洞察</span>
+          </div>
+          <div class="aso-home-panorama__flow">
+            ${panorama.map((column, index) => `
+            <article class="aso-home-panorama__node" style="--aso-delay: ${index * 90}ms">
+              ${index > 0 ? '<span class="aso-home-panorama__bridge" aria-hidden="true"><i></i></span>' : ''}
+              <div class="aso-home-panorama__card">
+                <header>
+                  <em>${escapeHtml(column.step)}</em>
+                  <b>${escapeHtml(column.stage)}</b>
+                </header>
+                <span class="aso-home-panorama__icon">${icon(column.icon)}</span>
+                <h3>${escapeHtml(column.title)}</h3>
+                <p>${escapeHtml(column.desc)}</p>
+                <ul>
+                  ${column.items.map(([category, label]) => `
+                  <li>
+                    <button type="button" data-aso-nav="apps" data-app-category-goto="${escapeHtml(category)}">
+                      <span>${escapeHtml(label)}</span>
+                      ${icon('arrow_forward')}
+                    </button>
+                  </li>`).join('')}
+                </ul>
+              </div>
             </article>`).join('')}
           </div>
         </div>
@@ -1143,6 +1171,23 @@ function selectAppCategory(root, categoryId) {
   if (!categoryId) return
   const button = root.querySelector(`[data-app-category-filter="${categoryId}"]`)
   if (button) button.click()
+}
+
+function initPanoramaFlow(root) {
+  const section = root.querySelector('[data-panorama-flow]')
+  if (!section) return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    section.classList.add('is-inview')
+    return
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return
+      section.classList.add('is-inview')
+      observer.disconnect()
+    })
+  }, { threshold: 0.28 })
+  observer.observe(section)
 }
 
 function setShellView(root, view, { portalMode, category } = {}) {
@@ -2104,6 +2149,7 @@ export async function initAspaceOne() {
 
   initAppFilters(root)
   initCategoryDrag(root)
+  initPanoramaFlow(root)
 
   root.querySelector('[data-embed-close]')?.addEventListener('click', () => closeAppEmbed(root))
   document.addEventListener('keydown', (event) => {
