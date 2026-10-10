@@ -226,7 +226,7 @@ body.aso-standalone .back-to-top { display: none !important; }
 .aso-home-hero__cta {
   position: absolute;
   left: 50%;
-  top: 52%;
+  top: calc(52% + 20px);
   z-index: 3;
   display: flex;
   flex-wrap: wrap;
