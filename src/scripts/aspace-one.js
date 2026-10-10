@@ -647,12 +647,12 @@ function renderHomeView() {
       id: 'office',
       label: '企业办公',
       title: '让办公空间高效运转',
-      lead: '围绕会议、资产与信息触达，提升日常办公体验与空间利用率。',
+      lead: '连接会议、资产与日常服务，提升办公体验与管理效率。',
       image: '/images/aspace-one/showcase-meeting.jpg',
       apps: [
-        ['screen', '会议预约', 'event_available'],
-        ['resource', '资产管理', 'inventory_2'],
-        ['info-publish', '信息发布', 'campaign'],
+        ['screen', '会议预约', 'calendar_month'],
+        ['resource', '资产管理', 'view_in_ar'],
+        ['info-publish', '信息发布', 'description'],
       ],
     },
     {
@@ -760,25 +760,27 @@ function renderHomeView() {
           </div>
           ${scenes.map((scene, index) => `
           <div class="aso-home-scenes__panel${index === 0 ? ' is-active' : ''}" data-home-scene-panel="${escapeHtml(scene.id)}" ${index === 0 ? '' : 'hidden'}>
-            <figure class="aso-home-scenes__media">
-              <img src="${escapeHtml(scene.image)}" alt="" loading="lazy" />
-            </figure>
-            <div class="aso-home-scenes__body">
-              <p class="aso-home-scenes__label">${escapeHtml(scene.label)}</p>
-              <h3>${escapeHtml(scene.title)}</h3>
-              <p class="aso-home-scenes__lead">${escapeHtml(scene.lead)}</p>
-              <ul class="aso-home-scenes__apps">
-                ${scene.apps.map(([appId, label, ico]) => `
-                <li>
-                  <button type="button" data-enter-app="${escapeHtml(appId)}">
-                    <span>${icon(ico)}</span>
-                    <strong>${escapeHtml(label)}</strong>
-                    ${icon('chevron_right')}
-                  </button>
-                </li>`).join('')}
-              </ul>
-              <button type="button" class="aso-home-scenes__link" data-aso-nav="apps">查看相关应用 ${icon('arrow_forward')}</button>
-            </div>
+            <article class="aso-home-scenes__card">
+              <figure class="aso-home-scenes__media">
+                <img src="${escapeHtml(scene.image)}" alt="" loading="lazy" />
+              </figure>
+              <div class="aso-home-scenes__body">
+                <p class="aso-home-scenes__label">${escapeHtml(scene.label)}</p>
+                <h3>${escapeHtml(scene.title)}</h3>
+                <p class="aso-home-scenes__lead">${escapeHtml(scene.lead)}</p>
+                <ul class="aso-home-scenes__apps">
+                  ${scene.apps.map(([appId, label, ico]) => `
+                  <li>
+                    <button type="button" data-enter-app="${escapeHtml(appId)}">
+                      <i>${icon(ico)}</i>
+                      <strong>${escapeHtml(label)}</strong>
+                      ${icon('chevron_right')}
+                    </button>
+                  </li>`).join('')}
+                </ul>
+                <button type="button" class="aso-home-scenes__link" data-aso-nav="apps">查看相关应用 ${icon('arrow_forward')}</button>
+              </div>
+            </article>
           </div>`).join('')}
         </div>
       </section>
