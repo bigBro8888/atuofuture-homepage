@@ -592,9 +592,9 @@ function renderHomeFeaturedCard(id, desc) {
 function renderHomeView() {
   const panorama = [
     {
-      icon: 'groups',
+      icon: 'calendar_month',
       title: '会议与办公',
-      desc: '覆盖预约、门牌与会中控制',
+      desc: '提升空间使用效率',
       items: [
         ['screen', '会议预约'],
         ['deskplate', '智能门牌'],
@@ -602,9 +602,9 @@ function renderHomeView() {
       ],
     },
     {
-      icon: 'inventory_2',
+      icon: 'view_in_ar',
       title: '资产与仓储',
-      desc: '台账、盘点与借还闭环管理',
+      desc: '掌握资产全生命周期',
       items: [
         ['resource', '资产台账'],
         ['resource', 'RFID盘点'],
@@ -612,9 +612,9 @@ function renderHomeView() {
       ],
     },
     {
-      icon: 'electrical_services',
+      icon: 'settings',
       title: '设备与能源',
-      desc: '监测、控制与能耗分析一体',
+      desc: '看清运行与能源使用',
       items: [
         ['device-center', '设备监测'],
         ['smart-air', '空调控制'],
@@ -622,9 +622,9 @@ function renderHomeView() {
       ],
     },
     {
-      icon: 'badge',
+      icon: 'person',
       title: '通行与服务',
-      desc: '访客、通行与巡检服务协同',
+      desc: '连接人员与日常服务',
       items: [
         ['visitor-booking', '访客接待'],
         ['access-security', '门禁通行'],
@@ -632,9 +632,9 @@ function renderHomeView() {
       ],
     },
     {
-      icon: 'nest_display',
+      icon: 'bar_chart',
       title: '可视化与展示',
-      desc: '孪生态势与多终端内容呈现',
+      desc: '让空间状态清晰可见',
       items: [
         ['digital-twin', '数字孪生'],
         ['info-publish', '信息发布'],
@@ -719,12 +719,12 @@ function renderHomeView() {
 
       <section class="aso-home-panorama">
         <div class="aso-container">
-          <header class="aso-home-section__head">
+          <header class="aso-home-panorama__head">
             <div>
               <h2>业务全景</h2>
-              <p>按业务域快速定位能力，进入对应应用继续办理</p>
+              <p>从日常办公到空间运营，找到适合你的业务能力。</p>
             </div>
-            <button type="button" class="aso-home-section__more" data-aso-nav="apps">查看全部能力 ${icon('north_east')}</button>
+            <button type="button" class="aso-home-panorama__more" data-aso-nav="apps">查看全部能力 ${icon('north_east')}</button>
           </header>
           <div class="aso-home-panorama__grid">
             ${panorama.map((column) => `
@@ -734,7 +734,12 @@ function renderHomeView() {
               <p>${escapeHtml(column.desc)}</p>
               <ul>
                 ${column.items.map(([appId, label]) => `
-                <li><button type="button" data-enter-app="${escapeHtml(appId)}">${escapeHtml(label)} ${icon('chevron_right')}</button></li>`).join('')}
+                <li>
+                  <button type="button" data-enter-app="${escapeHtml(appId)}">
+                    <span>${escapeHtml(label)}</span>
+                    ${icon('arrow_forward')}
+                  </button>
+                </li>`).join('')}
               </ul>
             </article>`).join('')}
           </div>
@@ -746,7 +751,7 @@ function renderHomeView() {
           <header class="aso-home-section__head">
             <div>
               <h2>从你的业务场景开始</h2>
-              <p>选择常见空间场景，查看推荐能力组合</p>
+              <p>围绕实际需求，发现可以协同使用的应用。</p>
             </div>
           </header>
           <div class="aso-home-scenes__tabs" role="tablist" aria-label="业务场景">
