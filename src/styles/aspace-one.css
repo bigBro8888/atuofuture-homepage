@@ -155,7 +155,7 @@ body.aso-standalone .back-to-top { display: none !important; }
   overflow: hidden;
   min-height: min(78vh, 720px);
   display: grid;
-  align-items: end;
+  align-items: start;
   color: #0b1d44;
 }
 .aso-home-hero__bg {
@@ -184,15 +184,16 @@ body.aso-standalone .back-to-top { display: none !important; }
   position: relative;
   z-index: 2;
   display: flex;
-  align-items: end;
+  align-items: flex-start;
   width: min(1440px, calc(100% - 48px));
   min-height: min(78vh, 720px);
-  padding: 88px 0 72px;
+  padding: 72px 0 120px;
   margin: 0 auto;
 }
 .aso-home-hero__copy {
   max-width: 520px;
-  padding-bottom: 12px;
+  margin-top: clamp(12px, 4vh, 36px);
+  padding-bottom: 0;
   animation: aso-home-rise .7s var(--aso-spring) both;
 }
 .aso-home-hero__eyebrow {
