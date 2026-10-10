@@ -169,9 +169,10 @@ let apps = [
     category: 'foundation',
     group: 'base',
     project: '基础能力',
-    desc: '统一设备接入、状态监测和设备生命周期管理能力正在建设中。',
-    icon: 'devices_other',
-    locked: true,
+    time: '2026-10-10 17:39',
+    image: '/images/aspace-one/showcase-control.jpg',
+    alt: '设备中心产品与接入管理场景',
+    url: 'https://aspacedev.atuofuture.com/#/device-mgmt/products',
   },
   {
     id: 'space-center',
