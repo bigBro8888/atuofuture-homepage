@@ -599,9 +599,9 @@ function renderHomeView() {
       title: '会议与办公',
       desc: '提升空间使用效率',
       items: [
-        ['screen', '会议预约'],
-        ['deskplate', '智能门牌'],
-        ['meeting-control-screen', '会议控制'],
+        ['meeting', '会议预约'],
+        ['meeting', '智能门牌'],
+        ['meeting', '会议控制'],
       ],
     },
     {
@@ -609,9 +609,9 @@ function renderHomeView() {
       title: '资产与仓储',
       desc: '掌握资产全生命周期',
       items: [
-        ['resource', '资产台账'],
-        ['resource', 'RFID盘点'],
-        ['resource', '借还管理'],
+        ['asset', '资产台账'],
+        ['asset', 'RFID盘点'],
+        ['asset', '借还管理'],
       ],
     },
     {
@@ -619,8 +619,8 @@ function renderHomeView() {
       title: '设备与能源',
       desc: '看清运行与能源使用',
       items: [
-        ['device-center', '设备监测'],
-        ['smart-air', '空调控制'],
+        ['foundation', '设备监测'],
+        ['foundation', '空调控制'],
         ['energy', '能耗分析'],
       ],
     },
@@ -629,9 +629,9 @@ function renderHomeView() {
       title: '通行与服务',
       desc: '连接人员与日常服务',
       items: [
-        ['visitor-booking', '访客接待'],
-        ['access-security', '门禁通行'],
-        ['aspace', '工单巡检'],
+        ['visitor', '访客接待'],
+        ['security', '门禁通行'],
+        ['foundation', '工单巡检'],
       ],
     },
     {
@@ -639,9 +639,9 @@ function renderHomeView() {
       title: '可视化与展示',
       desc: '让空间状态清晰可见',
       items: [
-        ['digital-twin', '数字孪生'],
-        ['info-publish', '信息发布'],
-        ['album', '电子相框'],
+        ['twin', '数字孪生'],
+        ['content', '信息发布'],
+        ['content', '电子相框'],
       ],
     },
   ]
@@ -734,9 +734,9 @@ function renderHomeView() {
               <h3>${escapeHtml(column.title)}</h3>
               <p>${escapeHtml(column.desc)}</p>
               <ul>
-                ${column.items.map(([appId, label]) => `
+                ${column.items.map(([category, label]) => `
                 <li>
-                  <button type="button" data-enter-app="${escapeHtml(appId)}">
+                  <button type="button" data-aso-nav="apps" data-app-category-goto="${escapeHtml(category)}">
                     <span>${escapeHtml(label)}</span>
                     ${icon('arrow_forward')}
                   </button>
@@ -1159,7 +1159,13 @@ function setPortalMode(root, mode) {
   root.dataset.activePortalMode = nextMode
 }
 
-function setShellView(root, view, { portalMode } = {}) {
+function selectAppCategory(root, categoryId) {
+  if (!categoryId) return
+  const button = root.querySelector(`[data-app-category-filter="${categoryId}"]`)
+  if (button) button.click()
+}
+
+function setShellView(root, view, { portalMode, category } = {}) {
   let nextView = ['home', 'apps', 'help', 'about'].includes(view) ? view : 'home'
   if (nextView === 'apps' && portalMode === 'help') nextView = 'help'
   const contentView = nextView === 'help' ? 'apps' : nextView
@@ -1179,6 +1185,9 @@ function setShellView(root, view, { portalMode } = {}) {
   const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`
   if (`${window.location.pathname}${window.location.search}${window.location.hash}` !== nextUrl) {
     window.history.replaceState({}, '', nextUrl)
+  }
+  if (contentView === 'apps' && category) {
+    window.requestAnimationFrame(() => selectAppCategory(root, category))
   }
 }
 
@@ -1952,7 +1961,10 @@ export async function initAspaceOne() {
     const navButton = event.target.closest('[data-aso-nav]')
     if (navButton) {
       event.preventDefault()
-      setShellView(root, navButton.dataset.asoNav, { portalMode: navButton.dataset.portalMode })
+      setShellView(root, navButton.dataset.asoNav, {
+        portalMode: navButton.dataset.portalMode,
+        category: navButton.dataset.appCategoryGoto,
+      })
       return
     }
     const homeScroll = event.target.closest('[data-home-scroll]')
