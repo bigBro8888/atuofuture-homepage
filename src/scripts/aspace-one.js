@@ -1,6 +1,24 @@
 import createGlobe from 'cobe'
-import { CONTACT, contactMailto, contactTelHref } from '../data/contact.js'
 import { renderSiteFooter } from '../components/site-footer.js'
+import { fetchAboutPageContent, mountAboutContent } from './about-page.js'
+
+const ABOUT_SECTION_IDS = new Set([
+  'about',
+  'intro',
+  'story',
+  'culture',
+  'join',
+  'contact',
+  'team',
+  'delivery',
+  'company',
+])
+
+function aboutSectionIdFromHash(hash = window.location.hash) {
+  const id = String(hash || '').replace(/^#/, '')
+  if (!ABOUT_SECTION_IDS.has(id)) return ''
+  return id === 'about' ? 'intro' : id
+}
 
 let apps = [
   {
@@ -822,99 +840,35 @@ function renderPortalFooter() {
 }
 
 function renderAboutView() {
-  const mail = contactMailto()
-  const tel = contactTelHref()
-  const email1 = CONTACT.email || 'service@atuofuture.com'
-  const email2 = CONTACT.emailSecondary || ''
-  const phoneDisplay = CONTACT.phoneDisplay || ''
-  const addressZh = CONTACT.address || '杭州市余杭区阿里巴巴数字生态创新园 1 号楼 5 层'
-  const addressEn = '5th Floor, Building 1, Alibaba Digital Ecological Innovation Park, Yuhang District, Hangzhou'
-  const channels = [
-    {
-      key: 'mail',
-      title: '邮箱',
-      href: mail || `mailto:${email1}`,
-      tag: 'Mail',
-      lines: [email1, email2].filter(Boolean),
-      icon: '<svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m4.5 7.5 7.5 6 7.5-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-    },
-    phoneDisplay ? {
-      key: 'phone',
-      title: '电话',
-      href: tel || '',
-      tag: 'Phone',
-      lines: [phoneDisplay],
-      icon: '<svg viewBox="0 0 24 24"><path d="M7.4 4.8c.3-.8 1.2-1.2 2-.9l2.2.8c.7.2 1.1.9 1 1.6l-.4 2.2c-.1.6-.5 1-1.1 1.2l-1.3.4c.8 1.7 2.1 3.1 3.8 4l.4-1.3c.2-.6.6-1 1.2-1.1l2.2-.4c.7-.1 1.4.3 1.6 1l.8 2.2c.3.8-.1 1.7-.9 2A15.2 15.2 0 0 1 7.4 4.8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
-    } : null,
-    {
-      key: 'address',
-      title: '地址',
-      href: '',
-      tag: 'Office',
-      lines: [addressZh, addressEn],
-      icon: '<svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="9.8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
-    },
-  ].filter(Boolean)
-
   return `
     <section class="aso-about" data-aso-view="about" hidden>
-      <div class="aso-about__stage" id="contact">
-        <div class="aso-about__glow" aria-hidden="true"></div>
-        <div class="aso-container">
-          <header class="aso-about__head">
-            <p class="aso-about__eyebrow">联系我们 · Contact</p>
-            <div class="aso-about__intro">
-              <h1>Artink <span>在等你</span></h1>
-              <p>杭州安托未来科技有限公司。校园招聘与社会招聘同步开放，也欢迎客户、伙伴与投资者来信。</p>
-            </div>
-          </header>
-
-          <ul class="aso-about__pillars">
-            <li>
-              <em>01</em>
-              <strong>方案咨询</strong>
-              <span>空间智能落地与产品演示</span>
-            </li>
-            <li>
-              <em>02</em>
-              <strong>合作伙伴</strong>
-              <span>渠道共建与联合交付</span>
-            </li>
-            <li>
-              <em>03</em>
-              <strong>加入团队</strong>
-              <span>校园招聘与社会招聘同步开放</span>
-            </li>
-          </ul>
-
-          <div class="aso-about__panel">
-            <aside class="aso-about__join">
-              <div class="aso-about__join-orb" aria-hidden="true"></div>
-              <p class="aso-about__join-kicker">Join Artink</p>
-              <h2>一起把空间智能做成可用的业务能力</h2>
-              <p>青春正好，我们在等你。你的经验与锋芒，值得更大的舞台。</p>
-              <button type="button" class="aso-about__demo" data-demo-modal-open>预约方案演示 ${icon('north_east')}</button>
-            </aside>
-            <div class="aso-about__channels">
-              ${channels.map((item) => {
-                const body = `
-                  <span class="aso-about__channel-icon" aria-hidden="true">${item.icon}</span>
-                  <div class="aso-about__channel-copy">
-                    <small>${escapeHtml(item.tag)}</small>
-                    <h3>${escapeHtml(item.title)}</h3>
-                    ${item.lines.map((line, index) => `<p class="${index > 0 ? 'is-sub' : ''}">${escapeHtml(line)}</p>`).join('')}
-                  </div>
-                  <span class="aso-about__channel-go" aria-hidden="true">${icon('north_east')}</span>`
-                if (item.href) {
-                  return `<a class="aso-about__channel" href="${escapeHtml(item.href)}">${body}</a>`
-                }
-                return `<div class="aso-about__channel">${body}</div>`
-              }).join('')}
-            </div>
-          </div>
-        </div>
+      <div id="aso-about-root" class="aso-about__embed" aria-live="polite">
+        <p class="aso-about__loading">正在加载关于我们…</p>
       </div>
     </section>`
+}
+
+async function initAboutEmbed(root) {
+  const host = root.querySelector('#aso-about-root')
+  if (!host || host.dataset.ready === '1') return
+  host.dataset.ready = '1'
+  try {
+    mountAboutContent(host, await fetchAboutPageContent())
+  } catch {
+    host.innerHTML = '<p class="aso-about__loading">关于我们内容加载失败，请稍后重试。</p>'
+    host.dataset.ready = '0'
+  }
+}
+
+function scrollAboutSection(root, sectionId = 'intro') {
+  const target = root.querySelector(`#${CSS.escape(sectionId)}`)
+  if (!target) {
+    window.scrollTo({ top: 0, behavior: 'auto' })
+    return
+  }
+  window.requestAnimationFrame(() => {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
 }
 
 function renderPortal() {
@@ -1289,12 +1243,15 @@ function initHomeGlobe(root) {
   })
 }
 
-function setShellView(root, view, { portalMode, category } = {}) {
+function setShellView(root, view, { portalMode, category, section, preserveScroll } = {}) {
   let nextView = ['home', 'apps', 'help', 'about'].includes(view) ? view : 'home'
   if (nextView === 'apps' && portalMode === 'help') nextView = 'help'
   const contentView = nextView === 'help' ? 'apps' : nextView
-  root.querySelectorAll('[data-aso-view]').forEach((section) => {
-    section.hidden = section.dataset.asoView !== contentView
+  const aboutSection = nextView === 'about'
+    ? (section || aboutSectionIdFromHash() || 'intro')
+    : ''
+  root.querySelectorAll('[data-aso-view]').forEach((sectionEl) => {
+    sectionEl.hidden = sectionEl.dataset.asoView !== contentView
   })
   root.querySelectorAll('[data-aso-nav]').forEach((item) => {
     const active = item.dataset.asoNav === nextView
@@ -1304,8 +1261,11 @@ function setShellView(root, view, { portalMode, category } = {}) {
   root.dataset.activeShellView = nextView
   root.classList.remove('is-menu-open')
   if (contentView === 'apps') setPortalMode(root, nextView === 'help' ? 'help' : 'overview')
-  window.scrollTo({ top: 0, behavior: 'auto' })
-  const nextHash = nextView === 'home' ? '' : `#${nextView}`
+  const nextHash = nextView === 'home'
+    ? ''
+    : nextView === 'about'
+      ? `#${aboutSection}`
+      : `#${nextView}`
   const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`
   if (`${window.location.pathname}${window.location.search}${window.location.hash}` !== nextUrl) {
     window.history.replaceState({}, '', nextUrl)
@@ -1313,6 +1273,14 @@ function setShellView(root, view, { portalMode, category } = {}) {
   if (contentView === 'apps' && category) {
     window.requestAnimationFrame(() => selectAppCategory(root, category))
   }
+  if (nextView === 'about') {
+    void initAboutEmbed(root).then(() => {
+      if (preserveScroll) return
+      scrollAboutSection(root, aboutSection)
+    })
+    return
+  }
+  if (!preserveScroll) window.scrollTo({ top: 0, behavior: 'auto' })
 }
 
 /** 点击左侧分类时锁定当前滚动，避免焦点/锚定把页面拽走。 */
@@ -2066,21 +2034,44 @@ export async function initAspaceOne() {
   await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()
   const hash = window.location.hash
-  const initialView = hash === '#about'
+  const initialAboutSection = aboutSectionIdFromHash(hash)
+  const initialView = initialAboutSection
     ? 'about'
     : hash === '#help'
       ? 'help'
       : hash === '#apps'
         ? 'apps'
         : 'home'
-  setShellView(root, initialView)
+  setShellView(root, initialView, {
+    section: initialAboutSection || undefined,
+  })
   if (portalAuthError) showToast(portalAuthError)
   bindActivityMessages(root)
+
+  window.addEventListener('hashchange', () => {
+    const section = aboutSectionIdFromHash()
+    if (!section) return
+    if (root.dataset.activeShellView !== 'about') {
+      setShellView(root, 'about', { section })
+      return
+    }
+    window.history.replaceState({}, '', `${window.location.pathname}${window.location.search}#${section}`)
+    scrollAboutSection(root, section)
+  })
 
   root.addEventListener('click', (event) => {
     if (event.target.closest('[data-aso-menu]')) {
       root.classList.toggle('is-menu-open')
       return
+    }
+    const aboutAnchor = event.target.closest('.aso-about a[href^="#"]')
+    if (aboutAnchor) {
+      const section = aboutSectionIdFromHash(aboutAnchor.getAttribute('href') || '')
+      if (section) {
+        event.preventDefault()
+        setShellView(root, 'about', { section })
+        return
+      }
     }
     const navButton = event.target.closest('[data-aso-nav]')
     if (navButton) {
@@ -2088,6 +2079,7 @@ export async function initAspaceOne() {
       setShellView(root, navButton.dataset.asoNav, {
         portalMode: navButton.dataset.portalMode,
         category: navButton.dataset.appCategoryGoto,
+        section: navButton.dataset.asoNav === 'about' ? 'intro' : undefined,
       })
       return
     }

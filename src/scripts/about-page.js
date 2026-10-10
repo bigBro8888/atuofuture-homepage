@@ -161,8 +161,7 @@ function bindJoinCarousel(root) {
   play()
 }
 
-function mountAbout(content) {
-  const root = document.getElementById('about-root')
+export function mountAboutContent(root, content) {
   if (!root) return
   root.innerHTML = renderAboutPage(content || {}, { editable: false })
   root.querySelectorAll('[data-about-partners] img').forEach((image) => {
@@ -174,11 +173,17 @@ function mountAbout(content) {
   bindJoinCarousel(root.querySelector('[data-about-join-carousel]'))
 }
 
-export async function loadAndApplyAboutContent() {
+export async function fetchAboutPageContent() {
   try {
     const payload = await getAboutContent()
-    mountAbout(payload.content || FALLBACK_ABOUT)
+    return payload.content || FALLBACK_ABOUT
   } catch {
-    mountAbout(FALLBACK_ABOUT)
+    return FALLBACK_ABOUT
   }
+}
+
+export async function loadAndApplyAboutContent() {
+  const root = document.getElementById('about-root')
+  if (!root) return
+  mountAboutContent(root, await fetchAboutPageContent())
 }
