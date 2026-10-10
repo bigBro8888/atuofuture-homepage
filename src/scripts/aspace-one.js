@@ -705,7 +705,7 @@ function renderHomeView() {
   return `
     <section class="aso-home" data-aso-view="home">
       <section class="aso-home-hero">
-        <img class="aso-home-hero__bg" src="/images/aspace-one/hero-cover.jpg" alt="" />
+        <img class="aso-home-hero__bg" src="https://img.alicdn.com/imgextra/i2/52311814/O1CN01ONHbjZ7MnXDCHL4y_!!52311814.png" alt="" decoding="async" fetchpriority="high" />
         <div class="aso-home-hero__shade" aria-hidden="true"></div>
         <div class="aso-container aso-home-hero__content">
           <div class="aso-home-hero__copy">
