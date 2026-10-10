@@ -570,47 +570,274 @@ function renderShellHeader(activeView = 'home') {
     </header>`
 }
 
+function homeAppById(id) {
+  return apps.find((app) => app.id === id)
+}
+
+function renderHomeFeaturedCard(id, desc) {
+  const app = homeAppById(id)
+  if (!app) return ''
+  const image = app.image
+    ? `<img src="${escapeHtml(app.image)}" alt="${escapeHtml(app.alt || app.name)}" loading="lazy" />`
+    : `<div class="aso-home-pick__placeholder">${icon(app.icon || 'apps')}</div>`
+  return `
+    <article class="aso-home-pick">
+      <div class="aso-home-pick__media">${image}</div>
+      <h3>${escapeHtml(app.name)}</h3>
+      <p>${escapeHtml(desc)}</p>
+      <button type="button" data-enter-app="${escapeHtml(app.id)}">了解应用 ${icon('arrow_forward')}</button>
+    </article>`
+}
+
 function renderHomeView() {
-  const openCount = apps.filter((app) => !app.locked).length
+  const panorama = [
+    {
+      icon: 'groups',
+      title: '会议与办公',
+      desc: '覆盖预约、门牌与会中控制',
+      items: [
+        ['screen', '会议预约'],
+        ['deskplate', '智能门牌'],
+        ['meeting-control-screen', '会议控制'],
+      ],
+    },
+    {
+      icon: 'inventory_2',
+      title: '资产与仓储',
+      desc: '台账、盘点与借还闭环管理',
+      items: [
+        ['resource', '资产台账'],
+        ['resource', 'RFID盘点'],
+        ['resource', '借还管理'],
+      ],
+    },
+    {
+      icon: 'electrical_services',
+      title: '设备与能源',
+      desc: '监测、控制与能耗分析一体',
+      items: [
+        ['device-center', '设备监测'],
+        ['smart-air', '空调控制'],
+        ['energy', '能耗分析'],
+      ],
+    },
+    {
+      icon: 'badge',
+      title: '通行与服务',
+      desc: '访客、通行与巡检服务协同',
+      items: [
+        ['visitor-booking', '访客接待'],
+        ['access-security', '门禁通行'],
+        ['aspace', '工单巡检'],
+      ],
+    },
+    {
+      icon: 'nest_display',
+      title: '可视化与展示',
+      desc: '孪生态势与多终端内容呈现',
+      items: [
+        ['digital-twin', '数字孪生'],
+        ['info-publish', '信息发布'],
+        ['album', '电子相框'],
+      ],
+    },
+  ]
+  const scenes = [
+    {
+      id: 'office',
+      label: '企业办公',
+      title: '让办公空间高效运转',
+      lead: '围绕会议、资产与信息触达，提升日常办公体验与空间利用率。',
+      image: '/images/aspace-one/showcase-meeting.jpg',
+      apps: [
+        ['screen', '会议预约', 'event_available'],
+        ['resource', '资产管理', 'inventory_2'],
+        ['info-publish', '信息发布', 'campaign'],
+      ],
+    },
+    {
+      id: 'campus',
+      label: '园区楼宇',
+      title: '让园区运行状态一目了然',
+      lead: '以数字孪生串联楼宇、设备与能耗，支撑运营调度与态势感知。',
+      image: '/images/aspace-one/showcase-building.jpg',
+      apps: [
+        ['digital-twin', '数字孪生', 'deployed_code'],
+        ['energy', '能源能耗', 'eco'],
+        ['aspace', '空间管理', 'hub'],
+      ],
+    },
+    {
+      id: 'factory',
+      label: '生产制造',
+      title: '让产线周边空间更可控',
+      lead: '把设备状态、环境控制与安全通行纳入统一门户，缩短现场响应链路。',
+      image: '/images/aspace-one/showcase-control.jpg',
+      apps: [
+        ['device-center', '设备中心', 'devices_other'],
+        ['smart-sensor', '智能传感', 'sensors'],
+        ['access-security', '门禁安防', 'shield_lock'],
+      ],
+    },
+    {
+      id: 'warehouse',
+      label: '智慧仓储',
+      title: '让资产流转更清晰可追溯',
+      lead: '从台账到借还、盘点，帮助仓储与行政团队掌握物资位置与状态。',
+      image: '/images/aspace-one/app-resource.jpg',
+      apps: [
+        ['resource', '资产管理', 'inventory_2'],
+        ['visitor-booking', '访客预约', 'person_add'],
+        ['info-publish', '信息发布', 'campaign'],
+      ],
+    },
+  ]
+  const featured = [
+    ['digital-twin', '三维呈现园区与楼宇运行态势'],
+    ['resource', '覆盖资产台账、流转与盘点'],
+    ['screen', '会前预约与会议空间服务入口'],
+    ['info-publish', '统一管理多终端内容发布'],
+  ]
+
   return `
     <section class="aso-home" data-aso-view="home">
-      <div class="aso-home__hero">
-        <div class="aso-home__hero-bg" aria-hidden="true"></div>
-        <div class="aso-container aso-home__hero-copy">
-          <p class="aso-home__eyebrow">ASPACE SPACE INTELLIGENCE</p>
-          <h1>安墨客空间智能</h1>
-          <p class="aso-home__lead">统一连接业务能力、设备终端与自助服务，让园区与楼宇空间更快进入可感知、可调度、可运营的状态。</p>
-          <div class="aso-home__cta">
-            <button type="button" class="aso-btn aso-btn--primary" data-aso-nav="apps">进入应用广场 ${icon('arrow_forward')}</button>
-            <button type="button" class="aso-btn aso-btn--ghost" data-aso-nav="about">了解平台</button>
+      <section class="aso-home-hero">
+        <div class="aso-container aso-home-hero__grid">
+          <div class="aso-home-hero__copy">
+            <p class="aso-home-hero__eyebrow">ASPACE · 空间智能应用平台</p>
+            <h1>连接空间业务<br />让智能应用触手可及</h1>
+            <p class="aso-home-hero__lead">汇聚会务、资产、设备与能源等能力，帮助园区与楼宇团队更快找到并进入业务系统。</p>
+            <div class="aso-home-hero__cta">
+              <button type="button" class="aso-btn aso-btn--primary" data-aso-nav="apps">浏览应用广场 ${icon('arrow_forward')}</button>
+              <button type="button" class="aso-btn aso-btn--outline" data-home-scroll="scenes">探索业务场景</button>
+            </div>
           </div>
-          <dl class="aso-home__stats">
-            <div><dt>${apps.length}</dt><dd>业务能力</dd></div>
-            <div><dt>${openCount}</dt><dd>已开通服务</dd></div>
-            <div><dt>${appCategories.length}</dt><dd>业务分类</dd></div>
-          </dl>
+          <div class="aso-home-hero__visual" aria-hidden="true">
+            <img class="aso-home-hero__photo" src="/images/aspace-one/showcase-building.jpg" alt="" />
+            <div class="aso-home-hero__chips">
+              <span>${icon('groups')}会议管理</span>
+              <span>${icon('inventory_2')}资产管理</span>
+              <span>${icon('settings_remote')}设备控制</span>
+              <span>${icon('eco')}能源能耗</span>
+            </div>
+            <aside class="aso-home-hero__card">
+              <strong>会议室 A301</strong>
+              <em>使用中 · 14:00–15:30</em>
+              <small>已预约 · 产品评审会</small>
+            </aside>
+          </div>
         </div>
-      </div>
-      <div class="aso-container aso-home__panels">
-        <article class="aso-home__panel">
-          <span>${icon('apps')}</span>
-          <h2>应用广场</h2>
-          <p>按业务场景浏览会议、资产、能源、信息发布等能力，收藏常用入口并快速进入系统。</p>
-          <button type="button" data-aso-nav="apps">去看看 ${icon('arrow_forward')}</button>
-        </article>
-        <article class="aso-home__panel">
-          <span>${icon('support_agent')}</span>
-          <h2>自助服务</h2>
-          <p>搜索帮助文档、热门问题和操作指南，缩短从疑问到解决的路径。</p>
-          <button type="button" data-aso-nav="help">获取帮助 ${icon('arrow_forward')}</button>
-        </article>
-        <article class="aso-home__panel">
-          <span>${icon('hub')}</span>
-          <h2>统一底座</h2>
-          <p>设备、空间、权限与人员能力沉淀在同一底座上，支撑场景联动与持续扩展。</p>
-          <button type="button" data-aso-nav="about">了解更多 ${icon('arrow_forward')}</button>
-        </article>
-      </div>
+      </section>
+
+      <section class="aso-home-panorama">
+        <div class="aso-container">
+          <header class="aso-home-section__head">
+            <div>
+              <h2>业务全景</h2>
+              <p>按业务域快速定位能力，进入对应应用继续办理</p>
+            </div>
+            <button type="button" class="aso-home-section__more" data-aso-nav="apps">查看全部能力 ${icon('north_east')}</button>
+          </header>
+          <div class="aso-home-panorama__grid">
+            ${panorama.map((column) => `
+            <article class="aso-home-panorama__col">
+              <span class="aso-home-panorama__icon">${icon(column.icon)}</span>
+              <h3>${escapeHtml(column.title)}</h3>
+              <p>${escapeHtml(column.desc)}</p>
+              <ul>
+                ${column.items.map(([appId, label]) => `
+                <li><button type="button" data-enter-app="${escapeHtml(appId)}">${escapeHtml(label)} ${icon('chevron_right')}</button></li>`).join('')}
+              </ul>
+            </article>`).join('')}
+          </div>
+        </div>
+      </section>
+
+      <section class="aso-home-scenes" id="aso-home-scenes" data-home-scenes>
+        <div class="aso-container">
+          <header class="aso-home-section__head">
+            <div>
+              <h2>从你的业务场景开始</h2>
+              <p>选择常见空间场景，查看推荐能力组合</p>
+            </div>
+          </header>
+          <div class="aso-home-scenes__tabs" role="tablist" aria-label="业务场景">
+            ${scenes.map((scene, index) => `
+            <button type="button" role="tab" class="${index === 0 ? 'is-active' : ''}" aria-selected="${index === 0 ? 'true' : 'false'}" data-home-scene="${escapeHtml(scene.id)}">${escapeHtml(scene.label)}</button>`).join('')}
+          </div>
+          ${scenes.map((scene, index) => `
+          <div class="aso-home-scenes__panel${index === 0 ? ' is-active' : ''}" data-home-scene-panel="${escapeHtml(scene.id)}" ${index === 0 ? '' : 'hidden'}>
+            <figure class="aso-home-scenes__media">
+              <img src="${escapeHtml(scene.image)}" alt="" loading="lazy" />
+            </figure>
+            <div class="aso-home-scenes__body">
+              <p class="aso-home-scenes__label">${escapeHtml(scene.label)}</p>
+              <h3>${escapeHtml(scene.title)}</h3>
+              <p class="aso-home-scenes__lead">${escapeHtml(scene.lead)}</p>
+              <ul class="aso-home-scenes__apps">
+                ${scene.apps.map(([appId, label, ico]) => `
+                <li>
+                  <button type="button" data-enter-app="${escapeHtml(appId)}">
+                    <span>${icon(ico)}</span>
+                    <strong>${escapeHtml(label)}</strong>
+                    ${icon('chevron_right')}
+                  </button>
+                </li>`).join('')}
+              </ul>
+              <button type="button" class="aso-home-scenes__link" data-aso-nav="apps">查看相关应用 ${icon('arrow_forward')}</button>
+            </div>
+          </div>`).join('')}
+        </div>
+      </section>
+
+      <section class="aso-home-featured">
+        <div class="aso-container">
+          <header class="aso-home-section__head">
+            <div>
+              <h2>精选应用</h2>
+              <p>优先呈现高频业务入口，便于快速进入</p>
+            </div>
+            <button type="button" class="aso-home-section__more" data-aso-nav="apps">查看全部应用 ${icon('arrow_forward')}</button>
+          </header>
+          <div class="aso-home-featured__grid">
+            ${featured.map(([id, desc]) => renderHomeFeaturedCard(id, desc)).join('')}
+          </div>
+        </div>
+      </section>
+
+      <section class="aso-home-utils">
+        <div class="aso-container aso-home-utils__grid">
+          <button type="button" data-aso-nav="help">
+            <span>${icon('menu_book')}</span>
+            <strong>使用指南</strong>
+            <em>了解开通与使用方式</em>
+          </button>
+          <a href="/hardware/">
+            <span>${icon('dns')}</span>
+            <strong>智能硬件</strong>
+            <em>探索配套设备与接入</em>
+          </a>
+          <button type="button" data-aso-nav="about">
+            <span>${icon('support_agent')}</span>
+            <strong>方案咨询</strong>
+            <em>获取适合你的应用方案</em>
+          </button>
+        </div>
+      </section>
+
+      <footer class="aso-home-footer">
+        <div class="aso-container aso-home-footer__inner">
+          <div class="aso-home-footer__brand">
+            <img src="/assets/artink-logo.png" alt="Artink 安墨客" width="108" height="26" />
+            <p>AI 让空间更智能，让运营更简单</p>
+          </div>
+          <nav class="aso-home-footer__nav" aria-label="页脚导航">
+            <button type="button" data-aso-nav="apps">应用广场</button>
+            <button type="button" data-aso-nav="help">自助服务</button>
+            <button type="button" data-aso-nav="about">关于我们</button>
+          </nav>
+        </div>
+      </footer>
     </section>`
 }
 
@@ -1705,6 +1932,29 @@ export async function initAspaceOne() {
     if (navButton) {
       event.preventDefault()
       setShellView(root, navButton.dataset.asoNav, { portalMode: navButton.dataset.portalMode })
+      return
+    }
+    const homeScroll = event.target.closest('[data-home-scroll]')
+    if (homeScroll) {
+      const target = root.querySelector(`#aso-home-${homeScroll.dataset.homeScroll}`) || root.querySelector(`[data-home-${homeScroll.dataset.homeScroll}]`)
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+    const sceneTab = event.target.closest('[data-home-scene]')
+    if (sceneTab) {
+      const sceneId = sceneTab.dataset.homeScene
+      const scenesRoot = sceneTab.closest('[data-home-scenes]')
+      if (!scenesRoot) return
+      scenesRoot.querySelectorAll('[data-home-scene]').forEach((button) => {
+        const active = button === sceneTab
+        button.classList.toggle('is-active', active)
+        button.setAttribute('aria-selected', String(active))
+      })
+      scenesRoot.querySelectorAll('[data-home-scene-panel]').forEach((panel) => {
+        const active = panel.dataset.homeScenePanel === sceneId
+        panel.classList.toggle('is-active', active)
+        panel.hidden = !active
+      })
       return
     }
     if (event.target.closest('[data-login-prompt-close]')) {
