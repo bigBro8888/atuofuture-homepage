@@ -829,61 +829,91 @@ function renderAboutView() {
   const phoneDisplay = CONTACT.phoneDisplay || ''
   const addressZh = CONTACT.address || '杭州市余杭区阿里巴巴数字生态创新园 1 号楼 5 层'
   const addressEn = '5th Floor, Building 1, Alibaba Digital Ecological Innovation Park, Yuhang District, Hangzhou'
+  const channels = [
+    {
+      key: 'mail',
+      title: '邮箱',
+      href: mail || `mailto:${email1}`,
+      tag: 'Mail',
+      lines: [email1, email2].filter(Boolean),
+      icon: '<svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m4.5 7.5 7.5 6 7.5-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    },
+    phoneDisplay ? {
+      key: 'phone',
+      title: '电话',
+      href: tel || '',
+      tag: 'Phone',
+      lines: [phoneDisplay],
+      icon: '<svg viewBox="0 0 24 24"><path d="M7.4 4.8c.3-.8 1.2-1.2 2-.9l2.2.8c.7.2 1.1.9 1 1.6l-.4 2.2c-.1.6-.5 1-1.1 1.2l-1.3.4c.8 1.7 2.1 3.1 3.8 4l.4-1.3c.2-.6.6-1 1.2-1.1l2.2-.4c.7-.1 1.4.3 1.6 1l.8 2.2c.3.8-.1 1.7-.9 2A15.2 15.2 0 0 1 7.4 4.8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+    } : null,
+    {
+      key: 'address',
+      title: '地址',
+      href: '',
+      tag: 'Office',
+      lines: [addressZh, addressEn],
+      icon: '<svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="9.8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+    },
+  ].filter(Boolean)
+
   return `
     <section class="aso-about" data-aso-view="about" hidden>
-      <section class="ab-contact" id="contact">
+      <div class="aso-about__stage" id="contact">
+        <div class="aso-about__glow" aria-hidden="true"></div>
         <div class="aso-container">
-          <div class="ab-contact__head">
-            <div>
-              <p class="ab-label">联系我们</p>
-              <h2>Artink 在等你</h2>
+          <header class="aso-about__head">
+            <p class="aso-about__eyebrow">联系我们 · Contact</p>
+            <div class="aso-about__intro">
+              <h1>Artink <span>在等你</span></h1>
+              <p>杭州安托未来科技有限公司。校园招聘与社会招聘同步开放，也欢迎客户、伙伴与投资者来信。</p>
             </div>
-            <p class="ab-contact__lead">杭州安托未来科技有限公司。校园招聘与社会招聘同步开放，也欢迎客户、伙伴与投资者来信。</p>
-          </div>
-          <div class="ab-contact__panel">
-            <aside class="ab-contact__aside">
-              <span class="ab-contact__mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-              <h3>加入我们</h3>
+          </header>
+
+          <ul class="aso-about__pillars">
+            <li>
+              <em>01</em>
+              <strong>方案咨询</strong>
+              <span>空间智能落地与产品演示</span>
+            </li>
+            <li>
+              <em>02</em>
+              <strong>合作伙伴</strong>
+              <span>渠道共建与联合交付</span>
+            </li>
+            <li>
+              <em>03</em>
+              <strong>加入团队</strong>
+              <span>校园招聘与社会招聘同步开放</span>
+            </li>
+          </ul>
+
+          <div class="aso-about__panel">
+            <aside class="aso-about__join">
+              <div class="aso-about__join-orb" aria-hidden="true"></div>
+              <p class="aso-about__join-kicker">Join Artink</p>
+              <h2>一起把空间智能做成可用的业务能力</h2>
               <p>青春正好，我们在等你。你的经验与锋芒，值得更大的舞台。</p>
-              <button type="button" class="ab-contact__demo" data-demo-modal-open>预约方案演示</button>
+              <button type="button" class="aso-about__demo" data-demo-modal-open>预约方案演示 ${icon('north_east')}</button>
             </aside>
-            <div class="ab-contact__list">
-              <a class="ab-contact__row" href="${escapeHtml(mail || `mailto:${email1}`)}">
-                <span class="ab-contact__icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m4.5 7.5 7.5 6 7.5-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </span>
-                <div>
-                  <h3>邮箱</h3>
-                  <p>${escapeHtml(email1)}</p>
-                  ${email2 ? `<p>${escapeHtml(email2)}</p>` : ''}
-                </div>
-                <span class="ab-contact__go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              </a>
-              <a class="ab-contact__row"${phoneDisplay ? '' : ' hidden'}${tel ? ` href="${escapeHtml(tel)}"` : ''}>
-                <span class="ab-contact__icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M7.4 4.8c.3-.8 1.2-1.2 2-.9l2.2.8c.7.2 1.1.9 1 1.6l-.4 2.2c-.1.6-.5 1-1.1 1.2l-1.3.4c.8 1.7 2.1 3.1 3.8 4l.4-1.3c.2-.6.6-1 1.2-1.1l2.2-.4c.7-.1 1.4.3 1.6 1l.8 2.2c.3.8-.1 1.7-.9 2A15.2 15.2 0 0 1 7.4 4.8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-                </span>
-                <div>
-                  <h3>电话</h3>
-                  <p>${escapeHtml(phoneDisplay)}</p>
-                </div>
-                <span class="ab-contact__go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              </a>
-              <div class="ab-contact__row">
-                <span class="ab-contact__icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="9.8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-                </span>
-                <div>
-                  <h3>地址</h3>
-                  <p>${escapeHtml(addressZh)}</p>
-                  <p data-about-contact-address-en>${escapeHtml(addressEn)}</p>
-                </div>
-                <span class="ab-contact__go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              </div>
+            <div class="aso-about__channels">
+              ${channels.map((item) => {
+                const body = `
+                  <span class="aso-about__channel-icon" aria-hidden="true">${item.icon}</span>
+                  <div class="aso-about__channel-copy">
+                    <small>${escapeHtml(item.tag)}</small>
+                    <h3>${escapeHtml(item.title)}</h3>
+                    ${item.lines.map((line, index) => `<p class="${index > 0 ? 'is-sub' : ''}">${escapeHtml(line)}</p>`).join('')}
+                  </div>
+                  <span class="aso-about__channel-go" aria-hidden="true">${icon('north_east')}</span>`
+                if (item.href) {
+                  return `<a class="aso-about__channel" href="${escapeHtml(item.href)}">${body}</a>`
+                }
+                return `<div class="aso-about__channel">${body}</div>`
+              }).join('')}
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </section>`
 }
 
