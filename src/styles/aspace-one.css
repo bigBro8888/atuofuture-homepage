@@ -224,11 +224,16 @@ body.aso-standalone .back-to-top { display: none !important; }
   line-height: 1.75;
 }
 .aso-home-hero__cta {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  z-index: 3;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 12px;
-  margin-top: 28px;
+  margin: 0;
+  transform: translate(-50%, -50%);
 }
 .aso-home-hero__cta .aso-btn { min-height: 46px; padding: 0 20px; }
 .aso-page .aso-home-hero__cta .aso-btn--hero-ghost {

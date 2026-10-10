@@ -710,11 +710,11 @@ function renderHomeView() {
         <div class="aso-container aso-home-hero__content">
           <div class="aso-home-hero__copy">
             <h1>连接空间业务<br />让智能应用触手可及</h1>
-            <div class="aso-home-hero__cta">
-              <button type="button" class="aso-btn aso-btn--primary" data-aso-nav="apps">浏览应用广场 ${icon('arrow_forward')}</button>
-              <button type="button" class="aso-btn aso-btn--hero-ghost" data-home-scroll="scenes">探索业务场景</button>
-            </div>
           </div>
+        </div>
+        <div class="aso-home-hero__cta">
+          <button type="button" class="aso-btn aso-btn--primary" data-aso-nav="apps">浏览应用广场 ${icon('arrow_forward')}</button>
+          <button type="button" class="aso-btn aso-btn--hero-ghost" data-home-scroll="scenes">探索业务场景</button>
         </div>
       </section>
 
