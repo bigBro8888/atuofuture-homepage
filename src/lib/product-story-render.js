@@ -452,7 +452,7 @@ export function renderProductAlbum(story, { editable = false } = {}) {
                   width: 800,
                   height: 600,
                   alt: item.caption || '产品实拍',
-                  loading: 'lazy',
+                  loading: 'eager',
                 })}
               </div>
               ${
@@ -725,7 +725,7 @@ export function renderProductDetailImages(story, { editable = false } = {}) {
                   width: 1600,
                   height: 1000,
                   alt: item.caption || '商品详情图',
-                  loading: 'lazy',
+                  loading: 'eager',
                 })}
               </div>
               ${
@@ -812,6 +812,26 @@ export function bindProductStoryTabs(root = document) {
   const panels = [...host.querySelectorAll('[data-hpi-panel]')]
   if (!tabs.length || !panels.length) return
 
+  const hydratePanelMedia = (panel) => {
+    if (!panel) return
+    panel.querySelectorAll('img').forEach((img) => {
+      if (img.loading === 'lazy') img.loading = 'eager'
+      // 隐藏 Tab 内的懒加载图切过来后可能一直不请求，强制重触一次
+      if (!img.complete || !img.naturalWidth) {
+        const src = img.currentSrc || img.getAttribute('src') || ''
+        if (!src) return
+        img.setAttribute('src', src)
+      }
+    })
+    panel.querySelectorAll('iframe[data-hpi-hydrate], iframe.hpi-showcase__frame').forEach((frame) => {
+      const src = frame.getAttribute('src') || ''
+      if (src && !frame.dataset.hpiHydrated) {
+        frame.dataset.hpiHydrated = '1'
+        frame.setAttribute('src', src)
+      }
+    })
+  }
+
   const activate = (id) => {
     const next = tabs.some((tab) => tab.dataset.hpiTab === id) ? id : 'overview'
     tabs.forEach((tab) => {
@@ -823,6 +843,7 @@ export function bindProductStoryTabs(root = document) {
       const active = panel.dataset.hpiPanel === next
       panel.classList.toggle('is-active', active)
       panel.hidden = !active
+      if (active) hydratePanelMedia(panel)
     })
     if (!host.closest?.('.admin-vedit-canvas')) {
       const url = new URL(window.location.href)
