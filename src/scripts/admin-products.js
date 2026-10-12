@@ -2,8 +2,6 @@ import { HARDWARE_PRODUCTS, getLine } from '../data/hardware-catalog.js'
 import { bindProductStoryTabs, renderProductStory } from '../lib/product-story-render.js'
 
 const IMAGE_SIZE_GUIDE = [
-  { test: (path) => path === 'story.hero.backgroundImage', label: '首屏背景图', size: '1920×1080', tip: '横向全宽背景，建议 JPG/WebP' },
-  { test: (path) => path === 'story.hero.deviceImage', label: '首屏设备图', size: '800×640', tip: '右侧产品主图，透明底 PNG 更佳' },
   { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '功能架构图', size: '1760×900', tip: '整段单图铺满内容宽，标题与说明设计进图内' },
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
   { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '场景介绍配图', size: '860×560', tip: '卡片左侧大图，约占一半宽度' },
@@ -512,20 +510,6 @@ function collectProductFromCompose() {
       : (el.querySelector('img')?.getAttribute('src') || '')
     setNested(item, path, url || '')
   })
-  const hero = root.querySelector('.hpi-hero')
-  const bgBtn = root.querySelector('[data-edit-image="story.hero.backgroundImage"]')
-  if (bgBtn) {
-    if (bgBtn.dataset.editImageUrl != null) {
-      setNested(item, 'story.hero.backgroundImage', bgBtn.dataset.editImageUrl || '')
-    } else if (hero) {
-      const match = String(hero.style.getPropertyValue('--hpi-hero-image') || '').match(/url\(['"]?(.*?)['"]?\)/)
-      setNested(item, 'story.hero.backgroundImage', match?.[1] || '')
-    }
-  } else if (hero) {
-    const match = String(hero.style.getPropertyValue('--hpi-hero-image') || '').match(/url\(['"]?(.*?)['"]?\)/)
-    if (match?.[1]) setNested(item, 'story.hero.backgroundImage', match[1])
-  }
-
   item.linkedHardwareIds = [...root.querySelectorAll('[data-product-link]:checked')].map((input) => input.dataset.productLink)
   const splitLines = (value) =>
     String(value || '')
@@ -721,11 +705,6 @@ function currentImageUrl(imageEl) {
   if (imageEl.dataset.editImageUrl) return imageEl.dataset.editImageUrl
   const img = imageEl.querySelector('img')
   if (img?.getAttribute('src')) return img.getAttribute('src')
-  if (imageEl.dataset.editImage?.includes('backgroundImage')) {
-    const hero = imageEl.closest('.hpi-hero') || document.querySelector('.admin-vedit-canvas .hpi-hero')
-    const match = String(hero?.style.getPropertyValue('--hpi-hero-image') || '').match(/url\(['"]?(.*?)['"]?\)/)
-    if (match?.[1]) return match[1]
-  }
   return ''
 }
 
@@ -764,15 +743,14 @@ function applyVisualImage(composeView, path, url) {
       img.src = safeUrl
       const tip = target.querySelector('.hpi-edit-img__tip')
       if (tip) {
-        tip.textContent = path.includes('backgroundImage') ? '更换背景图' : '更换图片'
+        tip.textContent = '更换图片'
         tip.classList.remove('is-visible')
       }
-      if (target.matches('.hpi-edit-bg')) target.textContent = '更换背景图'
     } else {
       if (img) img.remove()
       target.classList.add('hpi-edit-img--empty')
       let tip = target.querySelector('.hpi-edit-img__tip')
-      if (!tip && !target.matches('.hpi-edit-bg')) {
+      if (!tip) {
         tip = document.createElement('span')
         tip.className = 'hpi-edit-img__tip is-visible'
         target.appendChild(tip)
@@ -781,24 +759,6 @@ function applyVisualImage(composeView, path, url) {
         tip.textContent = '添加图片'
         tip.classList.add('is-visible')
       }
-      if (target.matches('.hpi-edit-bg')) target.textContent = '添加背景图'
-    }
-  }
-  if (path.includes('backgroundImage')) {
-    const hero = canvas?.querySelector('.hpi-hero')
-    if (hero) {
-      if (safeUrl) {
-        hero.style.setProperty('--hpi-hero-image', `url('${safeUrl}')`)
-        hero.classList.remove('hpi-hero--no-bg')
-      } else {
-        hero.style.setProperty('--hpi-hero-image', 'none')
-        hero.classList.add('hpi-hero--no-bg')
-      }
-    }
-    const bgBtn = canvas?.querySelector('[data-edit-image="story.hero.backgroundImage"]')
-    if (bgBtn) {
-      bgBtn.dataset.editImageUrl = safeUrl
-      bgBtn.textContent = safeUrl ? '更换背景图' : '添加背景图'
     }
   }
 }
@@ -1089,7 +1049,7 @@ export function bindProductLibraryAdmin(helpers) {
       preview.hidden = !field.value.trim()
     }
     if (field.dataset.productField === 'name') {
-      const crumb = composeView.querySelector('.hpi-hero__crumb')
+      const crumb = composeView.querySelector('.hpi-head__crumb')
       if (crumb) {
         const parts = crumb.innerHTML.split(' / ')
         if (parts.length) {

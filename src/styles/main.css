@@ -17093,62 +17093,40 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 }
 .hpi .hwc-shell { width: var(--hpi-col); }
 .hpi-pad { padding: 110px 0 64px; }
-.hpi-crumb, .hpi-hero__crumb { margin: 0 0 18px; font-size: 13px; color: rgba(255,255,255,.72); }
-.hpi-hero__crumb a { color: rgba(255,255,255,.72); text-decoration: none; }
+.hpi-crumb { margin: 0 0 18px; font-size: 13px; color: #8b95a8; }
 .hpi-pad .hpi-crumb a { color: #8b95a8; }
 
-.hpi-hero {
-  position: relative;
-  min-height: min(61vh, 548px);
-  display: flex; align-items: center;
-  overflow: hidden;
-  background:
-    linear-gradient(90deg, rgba(5,8,47,.78) 0%, rgba(5,8,47,.45) 42%, rgba(5,8,47,.18) 100%),
-    var(--hpi-hero-image) center / cover no-repeat;
+/* 商品详情紧凑页头（无 Banner 大图） */
+.hpi-head {
+  padding: calc(4rem + 28px) 0 20px;
+  background: #fff;
+  border-bottom: 1px solid rgba(20, 32, 51, 0.06);
 }
-.hpi-hero__overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(5,8,47,.25) 0%, rgba(5,8,47,.08) 40%, rgba(5,8,47,.35) 100%);
-  pointer-events: none;
+.hpi-head__inner { width: var(--hpi-col); }
+.hpi-head__crumb {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #8b95a8;
 }
-.hpi-hero__grid {
-  position: relative; z-index: 1;
-  display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px;
-  align-items: center; padding: 80px 0 48px; width: var(--hpi-col);
+.hpi-head__crumb a {
+  color: inherit;
+  text-decoration: none;
 }
-.hpi-hero__copy h1 {
-  margin: 0 0 18px; max-width: 12em;
-  font-size: clamp(40px, 5vw, 64px); line-height: 1.12; letter-spacing: -.03em; color: #fff;
+.hpi-head__crumb a:hover { color: #0b7f82; }
+.hpi-head__title {
+  margin: 0;
+  max-width: 18em;
+  font-size: clamp(28px, 3.2vw, 40px);
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: #142033;
 }
-.hpi-hero__headline {
-  margin: 0 0 16px; max-width: 22em;
-  font-size: clamp(20px, 2.2vw, 28px); font-weight: 600; line-height: 1.45; color: #fff;
-}
-.hpi-hero__desc {
-  margin: 0 0 28px; max-width: 36em;
-  font-size: 16px; line-height: 1.75; color: rgba(255,255,255,.82);
-}
-.hpi-hero__link {
-  display: inline-flex; align-items: center; gap: 6px;
-  color: #fff; font-size: 16px; font-weight: 600; text-decoration: none;
-  border-bottom: 1px solid #00CFC3; padding-bottom: 4px;
-}
-button.hpi-hero__link {
-  background: transparent;
-  border-top: 0;
-  border-left: 0;
-  border-right: 0;
-  border-radius: 0;
-  cursor: pointer;
-  font: inherit;
-}
-.hpi-hero__link:hover { color: #00CFC3; }
-.hpi-hero__device {
-  display: flex; justify-content: flex-end; align-items: center;
-}
-.hpi-hero__device img {
-  width: min(100%, 580px); height: auto;
-  filter: drop-shadow(0 28px 48px rgba(0,0,0,.35));
+.hpi-head__desc {
+  margin: 10px 0 0;
+  max-width: 42em;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #5c6b7e;
 }
 
 .hpi-value { padding: 56px 0 48px; background: #fff; }
@@ -17840,6 +17818,7 @@ button.hpi-hero__link {
   color: #667085;
 }
 
+.hpi--editable .hpi-head { padding-top: 24px; }
 .hpi--editable .hpi-tabs { position: sticky; top: 0; z-index: 20; }
 .hpi--editable .hpi-specs__row { padding-right: 36px; }
 .hpi--editable .hpi-videos__card { padding-bottom: 16px; }
@@ -17877,7 +17856,6 @@ button.hpi-hero__link {
 .hpi-close__soft span { margin: 0 6px; color: rgba(255,255,255,.35); }
 
 @media (max-width: 1100px) {
-  .hpi-hero__grid { grid-template-columns: 1fr; }
   .hpi-scenes__card { grid-template-columns: 1fr; }
   .hpi-scenes__media { min-height: 220px; aspect-ratio: 16 / 10; }
   .hpi-scenes__list { gap: 24px; }
@@ -17886,16 +17864,14 @@ button.hpi-hero__link {
   .hpi-videos__grid { grid-template-columns: 1fr; }
   .hpi-how__stages { grid-template-columns: 1fr 1fr; }
   .hpi-how__stages::before { display: none; }
-  .hpi-hero__device { justify-content: center; }
 }
 @media (max-width: 720px) {
-  .hpi-hero { min-height: 0; }
-  .hpi-hero__grid { padding: 72px 0 36px; width: min(1680px, calc(100% - 24px)); }
+  .hpi-head { padding: calc(4rem + 20px) 0 16px; }
+  .hpi-head__title { font-size: 28px; }
   .hpi {
     --hpi-col: min(1680px, calc(100% - 24px));
     --hpi-col-wide: min(1760px, calc(100% - 16px));
   }
-  .hpi-hero__copy h1 { font-size: 34px; }
   .hpi-tabs__btn { padding: 0 16px; font-size: 14px; min-height: 44px; }
   .hpi-how__stages { grid-template-columns: 1fr; }
   .hpi-value, .hpi-scenes, .hpi-cases, .hpi-album, .hpi-detail, .hpi-specs, .hpi-videos, .hpi-close { padding-top: 72px; padding-bottom: 64px; }

@@ -1,41 +1,29 @@
 /** 商品详情叙事页渲染（前台与后台可视化编辑共用） */
 
-import { esc, textNode, imgNode, linkNode } from './vedit-nodes.js'
+import { esc, textNode, imgNode } from './vedit-nodes.js'
 
 export function renderProductHero(story, product, line, { editable = false } = {}) {
   const hero = story.hero || {}
-  const bg = String(hero.backgroundImage || '').trim()
-  const bgStyle = bg ? `--hpi-hero-image:url('${esc(bg)}')` : '--hpi-hero-image:none'
-  const bgEdit = editable
-    ? `<button type="button" class="hpi-edit-bg" data-edit-image="story.hero.backgroundImage" data-edit-image-url="${esc(bg)}" title="更换背景图">${bg ? '更换背景图' : '添加背景图'}</button>`
-    : ''
-  const device = imgNode('story.hero.deviceImage', hero.deviceImage, { editable, width: 520, height: 420 })
+  const title = hero.title || product.name || ''
+  const desc = hero.description || hero.headline || ''
   return `
-    <section class="hpi-hero${!bg ? ' hpi-hero--no-bg' : ''}${!device && !editable ? ' hpi-hero--no-device' : ''}" style="${bgStyle}">
-      <div class="hpi-hero__overlay" aria-hidden="true"></div>
-      ${bgEdit}
-      <div class="hwc-shell hpi-hero__grid">
-        <div class="hpi-hero__copy">
-          <p class="hpi-hero__crumb"><a href="/hardware/"${editable ? ' tabindex="-1"' : ''}>智能硬件</a>${line ? ` / <a href="/hardware/?line=${esc(line.id)}#hwc-browser"${editable ? ' tabindex="-1"' : ''}>${esc(line.name)}</a>` : ''} / ${esc(product.name)}</p>
-          ${textNode('story.hero.title', hero.title, { editable, tag: 'h1' })}
-          ${textNode('story.hero.headline', hero.headline, { editable, tag: 'p', className: 'hpi-hero__headline' })}
-          ${textNode('story.hero.description', hero.description, { editable, tag: 'p', className: 'hpi-hero__desc', multiline: true })}
-          ${linkNode({
-            className: 'hpi-hero__link',
-            href: hero.ctaHref || '#hpi-how',
-            label: hero.ctaLabel || '查看它如何工作',
-            labelPath: 'story.hero.ctaLabel',
-            hrefPath: 'story.hero.ctaHref',
-            editable,
-          })}
-        </div>
+    <header class="hpi-head">
+      <div class="hwc-shell hpi-head__inner">
+        <p class="hpi-head__crumb"><a href="/hardware/"${editable ? ' tabindex="-1"' : ''}>智能硬件</a>${line ? ` / <a href="/hardware/?line=${esc(line.id)}#hwc-browser"${editable ? ' tabindex="-1"' : ''}>${esc(line.name)}</a>` : ''} / ${esc(product.name)}</p>
+        ${textNode('story.hero.title', title, { editable, tag: 'h1', className: 'hpi-head__title' })}
         ${
-          device || editable
-            ? `<div class="hpi-hero__device" aria-hidden="${editable ? 'false' : 'true'}">${device}</div>`
+          desc || editable
+            ? textNode('story.hero.description', desc, {
+                editable,
+                tag: 'p',
+                className: 'hpi-head__desc',
+                multiline: true,
+                placeholder: '一句话产品介绍',
+              })
             : ''
         }
       </div>
-    </section>`
+    </header>`
 }
 
 export function renderProductValue(story, { editable = false } = {}) {
