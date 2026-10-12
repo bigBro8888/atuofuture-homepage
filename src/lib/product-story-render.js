@@ -173,7 +173,7 @@ export function renderProductAlbum(story, { editable = false } = {}) {
   return `
     <section class="hpi-album" id="hpi-album">
       <div class="hwc-shell">
-        ${textNode('story.album.title', block.title || (editable ? '产品相册' : ''), { editable, tag: 'h2', className: 'hpi-album__title' })}
+        ${textNode('story.album.title', block.title || (editable ? '产品图拍' : ''), { editable, tag: 'h2', className: 'hpi-album__title' })}
         <div class="hpi-album__grid">
           ${list
             .map(
@@ -223,6 +223,180 @@ export function renderProductAlbum(story, { editable = false } = {}) {
         </div>
       </div>
     </section>`
+}
+
+export function renderProductSpecs(story, { editable = false } = {}) {
+  const block = story.specs || {}
+  const rows = Array.isArray(block.rows) ? block.rows.slice(0, 24) : []
+  const visible = rows.filter((row) => row && (row.label || row.value))
+  if (!visible.length && !editable) {
+    return `
+      <section class="hpi-specs" id="hpi-specs">
+        <div class="hwc-shell">
+          <div class="hpi-empty">
+            <span class="material-symbols-outlined" aria-hidden="true">tune</span>
+            <b>暂无产品参数</b>
+            <p>参数信息完善后将在此展示。</p>
+          </div>
+        </div>
+      </section>`
+  }
+  const list = editable ? (rows.length ? rows : [{ label: '', value: '' }]) : visible
+  return `
+    <section class="hpi-specs" id="hpi-specs">
+      <div class="hwc-shell">
+        ${textNode('story.specs.title', block.title || (editable ? '产品参数' : ''), { editable, tag: 'h2', className: 'hpi-specs__title' })}
+        <div class="hpi-specs__table" role="table">
+          ${list
+            .map(
+              (row, index) => `
+            <div class="hpi-specs__row" role="row" data-spec-index="${index}">
+              ${
+                editable
+                  ? `<button type="button" class="hpi-specs__remove" data-spec-remove="${index}" title="删除参数" aria-label="删除参数">×</button>`
+                  : ''
+              }
+              ${textNode(`story.specs.rows.${index}.label`, row.label || '', {
+                editable,
+                tag: 'div',
+                className: 'hpi-specs__label',
+                placeholder: '参数名',
+              })}
+              ${textNode(`story.specs.rows.${index}.value`, row.value || '', {
+                editable,
+                tag: 'div',
+                className: 'hpi-specs__value',
+                placeholder: '参数值',
+              })}
+            </div>`
+            )
+            .join('')}
+        </div>
+        ${
+          editable
+            ? `<button type="button" class="hpi-specs__add" data-spec-add${list.length >= 24 ? ' disabled' : ''}>
+          <span class="material-symbols-outlined" aria-hidden="true">add</span>
+          <strong>添加参数行</strong>
+        </button>`
+            : ''
+        }
+      </div>
+    </section>`
+}
+
+export function renderProductVideos(story, { editable = false } = {}) {
+  const block = story.videos || {}
+  const items = Array.isArray(block.items) ? block.items.slice(0, 8) : []
+  const visible = items.filter((item) => item && (item.url || item.cover || item.title))
+  if (!visible.length && !editable) {
+    return `
+      <section class="hpi-videos" id="hpi-videos">
+        <div class="hwc-shell">
+          <div class="hpi-empty">
+            <span class="material-symbols-outlined" aria-hidden="true">play_circle</span>
+            <b>暂无使用视频</b>
+            <p>产品演示与使用说明视频完善后将在此展示。</p>
+          </div>
+        </div>
+      </section>`
+  }
+  const list = editable ? (items.length ? items : [{ title: '', url: '', cover: '', caption: '' }]) : visible
+  return `
+    <section class="hpi-videos" id="hpi-videos">
+      <div class="hwc-shell">
+        ${textNode('story.videos.title', block.title || (editable ? '使用视频' : ''), { editable, tag: 'h2', className: 'hpi-videos__title' })}
+        <div class="hpi-videos__grid">
+          ${list
+            .map((item, index) => {
+              const url = String(item.url || '').trim()
+              const cover = String(item.cover || '').trim()
+              const isDirectVideo = /\.(mp4|webm|ogg)(\?|$)/i.test(url)
+              return `
+            <article class="hpi-videos__card" data-video-index="${index}">
+              ${
+                editable
+                  ? `<button type="button" class="hpi-videos__remove" data-video-remove="${index}" title="删除视频" aria-label="删除视频">×</button>`
+                  : ''
+              }
+              <div class="hpi-videos__media">
+                ${
+                  editable
+                    ? `${imgNode(`story.videos.items.${index}.cover`, cover, {
+                        editable,
+                        width: 960,
+                        height: 540,
+                        alt: item.title || '视频封面',
+                        loading: 'lazy',
+                      })}
+                    <label class="hpi-videos__url-field"><span>视频链接</span>${textNode(`story.videos.items.${index}.url`, url, {
+                      editable,
+                      tag: 'span',
+                      className: 'hpi-videos__url',
+                      placeholder: 'https://... 或 /videos/demo.mp4',
+                    })}</label>`
+                    : url
+                      ? isDirectVideo
+                        ? `<video src="${esc(url)}" controls playsinline poster="${esc(cover)}" preload="metadata"></video>`
+                        : `<a class="hpi-videos__link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">
+                            ${cover ? `<img src="${esc(cover)}" alt="" loading="lazy" />` : '<span class="material-symbols-outlined">play_circle</span>'}
+                            <em>观看视频</em>
+                          </a>`
+                      : cover
+                        ? `<img src="${esc(cover)}" alt="" loading="lazy" />`
+                        : '<div class="hpi-videos__placeholder"><span class="material-symbols-outlined">play_circle</span></div>'
+                }
+              </div>
+              ${textNode(`story.videos.items.${index}.title`, item.title || '', {
+                editable,
+                tag: 'h3',
+                className: 'hpi-videos__name',
+                placeholder: '视频标题',
+              })}
+              ${
+                editable || item.caption
+                  ? textNode(`story.videos.items.${index}.caption`, item.caption || '', {
+                      editable,
+                      tag: 'p',
+                      className: 'hpi-videos__caption',
+                      placeholder: '视频说明（可选）',
+                    })
+                  : ''
+              }
+            </article>`
+            })
+            .join('')}
+          ${
+            editable
+              ? `<button type="button" class="hpi-videos__add" data-video-add${list.length >= 8 ? ' disabled' : ''}>
+            <span class="material-symbols-outlined" aria-hidden="true">video_library</span>
+            <strong>添加使用视频</strong>
+            <small>最多 8 个 · 可填外链或直链</small>
+          </button>`
+              : ''
+          }
+        </div>
+      </div>
+    </section>`
+}
+
+function renderProductTabs(active = 'overview') {
+  const tabs = [
+    ['overview', '商品首页'],
+    ['specs', '产品参数'],
+    ['photos', '产品图拍'],
+    ['videos', '使用视频'],
+  ]
+  return `
+    <nav class="hpi-tabs" aria-label="商品详情分区" data-hpi-tabs>
+      <div class="hwc-shell hpi-tabs__inner">
+        ${tabs
+          .map(
+            ([id, label]) => `
+          <button type="button" class="hpi-tabs__btn${id === active ? ' is-active' : ''}" data-hpi-tab="${id}" aria-selected="${id === active ? 'true' : 'false'}">${label}</button>`
+          )
+          .join('')}
+      </div>
+    </nav>`
 }
 
 export function renderProductClosing(story, { editable = false } = {}) {
@@ -324,16 +498,79 @@ export function renderProductDetailImages(story, { editable = false } = {}) {
     </section>`
 }
 
+function renderPhotosPanel(story, opts) {
+  const album = renderProductAlbum(story, opts)
+  const details = renderProductDetailImages(story, opts)
+  if (album || details) return `${album}${details}`
+  return `
+    <section class="hpi-album" id="hpi-album">
+      <div class="hwc-shell">
+        <div class="hpi-empty">
+          <span class="material-symbols-outlined" aria-hidden="true">photo_camera</span>
+          <b>暂无产品图拍</b>
+          <p>实拍与细节图完善后将在此展示。</p>
+        </div>
+      </div>
+    </section>`
+}
+
 export function renderProductStory(product, story, line, { editable = false } = {}) {
   const resolved = story || {}
   const opts = { editable }
   return `
-    <article class="hpi${editable ? ' hpi--editable' : ''}">
+    <article class="hpi${editable ? ' hpi--editable' : ''}" data-hpi-root>
       ${renderProductHero(resolved, product, line, opts)}
-      ${renderProductValue(resolved, opts)}
-      ${renderProductDetailImages(resolved, opts)}
-      ${renderProductCases(resolved, opts)}
-      ${renderProductAlbum(resolved, opts)}
-      ${renderProductClosing(resolved, opts)}
+      ${renderProductTabs('overview')}
+      <div class="hpi-panels">
+        <div class="hpi-panel is-active" data-hpi-panel="overview">
+          ${renderProductValue(resolved, opts)}
+          ${renderProductCases(resolved, opts)}
+          ${renderProductClosing(resolved, opts)}
+        </div>
+        <div class="hpi-panel" data-hpi-panel="specs" hidden>
+          ${renderProductSpecs(resolved, opts)}
+        </div>
+        <div class="hpi-panel" data-hpi-panel="photos" hidden>
+          ${renderPhotosPanel(resolved, opts)}
+        </div>
+        <div class="hpi-panel" data-hpi-panel="videos" hidden>
+          ${renderProductVideos(resolved, opts)}
+        </div>
+      </div>
     </article>`
+}
+
+export function bindProductStoryTabs(root = document) {
+  const host = root.querySelector?.('[data-hpi-root]') || root
+  if (!host?.querySelector) return
+  const tabs = [...host.querySelectorAll('[data-hpi-tab]')]
+  const panels = [...host.querySelectorAll('[data-hpi-panel]')]
+  if (!tabs.length || !panels.length) return
+
+  const activate = (id) => {
+    const next = tabs.some((tab) => tab.dataset.hpiTab === id) ? id : 'overview'
+    tabs.forEach((tab) => {
+      const active = tab.dataset.hpiTab === next
+      tab.classList.toggle('is-active', active)
+      tab.setAttribute('aria-selected', active ? 'true' : 'false')
+    })
+    panels.forEach((panel) => {
+      const active = panel.dataset.hpiPanel === next
+      panel.classList.toggle('is-active', active)
+      panel.hidden = !active
+    })
+    if (!host.closest?.('.admin-vedit-canvas')) {
+      const url = new URL(window.location.href)
+      if (next === 'overview') url.hash = ''
+      else url.hash = next
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+    }
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => activate(tab.dataset.hpiTab))
+  })
+
+  const hash = String(window.location.hash || '').replace(/^#/, '')
+  activate(['overview', 'specs', 'photos', 'videos'].includes(hash) ? hash : 'overview')
 }

@@ -1,5 +1,5 @@
 import { HARDWARE_PRODUCTS, getLine } from '../data/hardware-catalog.js'
-import { renderProductStory } from '../lib/product-story-render.js'
+import { bindProductStoryTabs, renderProductStory } from '../lib/product-story-render.js'
 
 const IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'story.hero.backgroundImage', label: '首屏背景图', size: '1920×1080', tip: '横向全宽背景，建议 JPG/WebP' },
@@ -103,8 +103,10 @@ function emptyProduct() {
         ],
       },
       cases: { title: '实际案例', items: [{}, {}, {}] },
-      album: { title: '产品相册', items: [] },
-      detailImages: { title: '商品详情', subtitle: '', items: [] },
+      specs: { title: '产品参数', rows: [{ label: '', value: '' }] },
+      album: { title: '产品图拍', items: [] },
+      detailImages: { title: '细节图', subtitle: '', items: [] },
+      videos: { title: '使用视频', items: [] },
       closing: { title: '', desc: '', primaryLabel: '预约方案演示', softLinks: [{ label: '查看技术资料' }, { label: '获取产品文档' }] },
     },
   }
@@ -292,9 +294,11 @@ function renderProductCompose(item) {
               <span>锚点板块</span>
               <select data-link-anchor>
                 <option value="#hpi-value">功能架构图</option>
-                <option value="#hpi-detail">商品详情</option>
                 <option value="#hpi-cases">实际案例</option>
-                <option value="#hpi-album">产品相册</option>
+                <option value="#hpi-specs">产品参数</option>
+                <option value="#hpi-album">产品图拍</option>
+                <option value="#hpi-detail">细节图</option>
+                <option value="#hpi-videos">使用视频</option>
                 <option value="#hpi-close">收尾预约</option>
               </select>
             </label>
@@ -344,6 +348,7 @@ function renderProductCompose(item) {
         </div>
       </div>
     </div>`
+  bindProductStoryTabs(body)
 }
 
 function setNested(target, path, value) {
@@ -403,7 +408,7 @@ function normalizeAlbumItems(item) {
       .map((key) => raw[key] || {})
   }
   item.story.album = {
-    title: album.title || '产品相册',
+    title: album.title || '产品图拍',
     items: items.slice(0, 12).map((entry) => ({
       url: String(entry?.url || '').trim(),
       caption: String(entry?.caption || '').trim(),
@@ -425,10 +430,56 @@ function normalizeDetailImages(item) {
       .map((key) => raw[key] || {})
   }
   item.story.detailImages = {
-    title: block.title || '商品详情',
+    title: block.title || '细节图',
     subtitle: String(block.subtitle || '').trim(),
     items: items.slice(0, 12).map((entry) => ({
       url: String(entry?.url || '').trim(),
+      caption: String(entry?.caption || '').trim(),
+    })),
+  }
+}
+
+function normalizeSpecs(item) {
+  if (!item.story) item.story = {}
+  const block = item.story.specs && typeof item.story.specs === 'object' ? item.story.specs : {}
+  const raw = block.rows
+  let rows = []
+  if (Array.isArray(raw)) {
+    rows = raw
+  } else if (raw && typeof raw === 'object') {
+    rows = Object.keys(raw)
+      .filter((key) => /^\d+$/.test(key))
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => raw[key] || {})
+  }
+  item.story.specs = {
+    title: block.title || '产品参数',
+    rows: rows.slice(0, 24).map((entry) => ({
+      label: String(entry?.label || '').trim(),
+      value: String(entry?.value || '').trim(),
+    })),
+  }
+}
+
+function normalizeVideos(item) {
+  if (!item.story) item.story = {}
+  const block = item.story.videos && typeof item.story.videos === 'object' ? item.story.videos : {}
+  const raw = block.items
+  let items = []
+  if (Array.isArray(raw)) {
+    items = raw
+  } else if (raw && typeof raw === 'object') {
+    items = Object.keys(raw)
+      .filter((key) => /^\d+$/.test(key))
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => raw[key] || {})
+  }
+  item.story.videos = {
+    title: block.title || '使用视频',
+    items: items.slice(0, 8).map((entry) => ({
+      title: String(entry?.title || '').trim(),
+      url: String(entry?.url || '').trim(),
+      cover: String(entry?.cover || '').trim(),
       caption: String(entry?.caption || '').trim(),
     })),
   }
@@ -495,6 +546,8 @@ function collectProductFromCompose() {
   if (item.story?.cases) ensureArray(item.story.cases, 'items', 3)
   normalizeAlbumItems(item)
   normalizeDetailImages(item)
+  normalizeSpecs(item)
+  normalizeVideos(item)
   if (item.story?.howItWorks) ensureArray(item.story.howItWorks, 'stages', 4)
   if (item.story?.scenarios) {
     ensureArray(item.story.scenarios, 'items', 3)
@@ -583,7 +636,7 @@ async function uploadImageFile(file) {
   return url
 }
 
-const ANCHOR_IDS = new Set(['#hpi-value', '#hpi-detail', '#hpi-cases', '#hpi-album', '#hpi-close'])
+const ANCHOR_IDS = new Set(['#hpi-value', '#hpi-detail', '#hpi-cases', '#hpi-album', '#hpi-specs', '#hpi-videos', '#hpi-close'])
 
 function isAnchorHref(href) {
   const value = String(href || '').trim()
@@ -903,6 +956,50 @@ export function bindProductLibraryAdmin(helpers) {
       const article = collectProductFromCompose()
       normalizeDetailImages(article)
       article.story.detailImages.items.splice(index, 1)
+      renderProductCompose(article)
+      return
+    }
+    if (event.target.closest('[data-spec-add]')) {
+      event.preventDefault()
+      const article = collectProductFromCompose()
+      normalizeSpecs(article)
+      if ((article.story.specs.rows || []).length >= 24) {
+        ctx.toast('最多添加 24 条参数', true)
+        return
+      }
+      article.story.specs.rows.push({ label: '', value: '' })
+      renderProductCompose(article)
+      return
+    }
+    const specRemove = event.target.closest('[data-spec-remove]')
+    if (specRemove) {
+      event.preventDefault()
+      const index = Number(specRemove.dataset.specRemove)
+      const article = collectProductFromCompose()
+      normalizeSpecs(article)
+      article.story.specs.rows.splice(index, 1)
+      renderProductCompose(article)
+      return
+    }
+    if (event.target.closest('[data-video-add]')) {
+      event.preventDefault()
+      const article = collectProductFromCompose()
+      normalizeVideos(article)
+      if ((article.story.videos.items || []).length >= 8) {
+        ctx.toast('最多添加 8 个视频', true)
+        return
+      }
+      article.story.videos.items.push({ title: '', url: '', cover: '', caption: '' })
+      renderProductCompose(article)
+      return
+    }
+    const videoRemove = event.target.closest('[data-video-remove]')
+    if (videoRemove) {
+      event.preventDefault()
+      const index = Number(videoRemove.dataset.videoRemove)
+      const article = collectProductFromCompose()
+      normalizeVideos(article)
+      article.story.videos.items.splice(index, 1)
       renderProductCompose(article)
       return
     }

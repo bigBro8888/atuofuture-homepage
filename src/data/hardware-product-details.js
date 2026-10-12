@@ -192,13 +192,30 @@ const CONTROL_SCREEN_STORY = {
       },
     ],
   },
+  specs: {
+    title: '产品参数',
+    rows: [
+      { label: '产品名称', value: '空间智能中控屏' },
+      { label: '产品定位', value: '连接人员、空间设备、智能体与管理平台的统一交互入口' },
+      { label: '核心能力 1', value: '场景一键执行' },
+      { label: '核心能力 2', value: '设备状态回读' },
+      { label: '核心能力 3', value: '本地与云端协同控制' },
+      { label: '接口 1', value: '蓝牙直连' },
+      { label: '接口 2', value: 'IoT 网关' },
+      { label: '接口 3', value: '平台 API' },
+    ],
+  },
   album: {
-    title: '产品相册',
-    items: [],
+    title: '产品图拍',
+    items: [{ url: '/images/hardware/control-screen.jpg', caption: '产品主图' }],
   },
   detailImages: {
-    title: '商品详情',
+    title: '细节图',
     subtitle: '',
+    items: [],
+  },
+  videos: {
+    title: '使用视频',
     items: [],
   },
   closing: {
@@ -210,6 +227,33 @@ const CONTROL_SCREEN_STORY = {
       { label: '获取产品文档', action: 'demo' },
     ],
   },
+}
+
+function buildDefaultSpecs(product, role) {
+  const rows = [
+    { label: '产品名称', value: product.name || '' },
+    { label: '产品定位', value: role.role || product.shortDescription || '' },
+  ]
+  ;(product.capabilities || []).forEach((cap, index) => {
+    rows.push({ label: `核心能力 ${index + 1}`, value: cap })
+  })
+  ;(product.interfaces || []).forEach((iface, index) => {
+    rows.push({ label: `接口 ${index + 1}`, value: iface })
+  })
+  ;(product.scenarios || []).slice(0, 3).forEach((scene, index) => {
+    const label = typeof scene === 'string' ? scene : scene?.title || ''
+    if (label) rows.push({ label: `适用场景 ${index + 1}`, value: label })
+  })
+  return { title: '产品参数', rows }
+}
+
+function buildDefaultAlbum(product) {
+  const urls = [...(product.gallery || []), product.coverImage].filter(Boolean)
+  const unique = [...new Set(urls)]
+  return {
+    title: '产品图拍',
+    items: unique.map((url, index) => ({ url, caption: index === 0 ? '产品主图' : '' })),
+  }
 }
 
 /**
@@ -411,13 +455,15 @@ export function buildProductStory(product) {
         },
       ],
     },
-    album: {
-      title: '产品相册',
+    specs: buildDefaultSpecs(product, role),
+    album: buildDefaultAlbum(product),
+    detailImages: {
+      title: '细节图',
+      subtitle: '',
       items: [],
     },
-    detailImages: {
-      title: '商品详情',
-      subtitle: '',
+    videos: {
+      title: '使用视频',
       items: [],
     },
     closing: {

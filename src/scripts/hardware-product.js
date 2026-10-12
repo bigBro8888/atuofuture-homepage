@@ -1,6 +1,6 @@
 import { applyHardwareSimpleCms, applyProductLibraryCms, getLine, getProductBySlug, getProductLibraryItem } from '../data/hardware-catalog.js'
 import { buildProductStory } from '../data/hardware-product-details.js'
-import { renderProductStory } from '../lib/product-story-render.js'
+import { bindProductStoryTabs, renderProductStory } from '../lib/product-story-render.js'
 import { loadProductLibraryContent, loadSimplePageContent } from '../services/site-settings-api.js'
 
 function esc(str = '') {
@@ -44,6 +44,10 @@ function productFromLibrary(item) {
     productLine: item.hardwareLine || catalog?.productLine || 'space',
     coverImage: item.coverImage || catalog?.coverImage || '',
     shortDescription: item.shortDescription || catalog?.shortDescription || '',
+    gallery: catalog?.gallery || [],
+    capabilities: catalog?.capabilities || [],
+    interfaces: catalog?.interfaces || [],
+    scenarios: catalog?.scenarios || [],
   }
 }
 
@@ -63,7 +67,16 @@ export async function initHardwareProductPage() {
     return
   }
   document.title = `${product.name} | 智能硬件产品介绍 | 安托未来`
-  const story = libItem?.story || buildProductStory(product)
+  const fallback = buildProductStory(product)
+  const story = {
+    ...fallback,
+    ...(libItem?.story || {}),
+    specs: libItem?.story?.specs?.rows?.length ? libItem.story.specs : fallback.specs,
+    album: libItem?.story?.album?.items?.length ? libItem.story.album : fallback.album,
+    videos: libItem?.story?.videos || fallback.videos,
+    detailImages: libItem?.story?.detailImages || fallback.detailImages,
+  }
   const line = getLine(product.productLine)
   root.innerHTML = renderProductStory(product, story, line, { editable: false })
+  bindProductStoryTabs(root)
 }
