@@ -2419,13 +2419,11 @@ body.aso-settings-open { overflow: hidden; }
 .aso-support-cta__icon {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, .12);
+  width: 40px;
+  height: 40px;
   color: #9fd0ff;
 }
-.aso-support-cta__icon .material-symbols-outlined { font-size: 30px; }
+.aso-support-cta__icon .material-symbols-outlined { font-size: 34px; }
 .aso-support-cta__copy { min-width: 0; color: #fff; }
 .aso-support-cta__copy b {
   display: block;
