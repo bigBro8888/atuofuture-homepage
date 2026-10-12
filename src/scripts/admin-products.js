@@ -2,7 +2,8 @@ import { HARDWARE_PRODUCTS, getLine } from '../data/hardware-catalog.js'
 import { bindProductStoryTabs, renderProductStory } from '../lib/product-story-render.js'
 
 const IMAGE_SIZE_GUIDE = [
-  { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '功能架构图', size: '1760×900', tip: '整段单图铺满内容宽，标题与说明设计进图内' },
+  { test: (path) => path === 'story.showcase.image', label: '产品主视觉', size: '960×720', tip: '白底/精修产品图，透明底 PNG 更佳' },
+  { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '原理链路图', size: '1760×900', tip: '整段单图铺满内容宽，标题与说明可设计进图内' },
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
   { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '场景介绍配图', size: '860×560', tip: '卡片左侧大图，约占一半宽度' },
   { test: (path) => /story\.scenarios\.items\.\d+\.logoImage/.test(path), label: '场景主图标', size: '128×128', tip: '标题前圆形小 logo，透明底 PNG 更佳' },
@@ -90,10 +91,25 @@ function emptyProduct() {
     releasedAt: '',
     story: {
       hero: { title: '', headline: '', description: '', ctaLabel: '查看它如何工作', ctaHref: '#hpi-how', backgroundImage: '', deviceImage: '' },
-      value: { diagramImage: '' },
+      showcase: {
+        title: '产品亮点',
+        subtitle: '',
+        image: '',
+        points: [{ title: '', desc: '' }, { title: '', desc: '' }, { title: '', desc: '' }, { title: '', desc: '' }],
+      },
+      capabilities: {
+        title: '核心能力',
+        items: [
+          { icon: 'sensors', title: '', desc: '' },
+          { icon: 'cloud_upload', title: '', desc: '' },
+          { icon: 'notifications_active', title: '', desc: '' },
+          { icon: 'bolt', title: '', desc: '' },
+        ],
+      },
+      value: { title: '原理与链路', subtitle: '', diagramImage: '' },
       howItWorks: { title: '', stages: [{}, {}, {}, {}] },
       scenarios: {
-        title: '场景介绍',
+        title: '应用场景',
         items: [
           { tags: [{}, {}, {}] },
           { tags: [{}, {}, {}] },
@@ -520,12 +536,38 @@ function collectProductFromCompose() {
   item.scenarios = splitLines(item.scenarios)
 
   if (item.story?.value) {
-    // 旧字段迁到单图：保存时只保留 diagramImage
     const diagram =
       item.story.value.diagramImage ||
       item.story.value.deviceImage ||
       ''
-    item.story.value = { diagramImage: diagram }
+    item.story.value = {
+      title: String(item.story.value.title || '').trim() || '原理与链路',
+      subtitle: String(item.story.value.subtitle || '').trim(),
+      diagramImage: diagram,
+    }
+  }
+  if (item.story?.showcase) {
+    ensureArray(item.story.showcase, 'points', 4)
+    item.story.showcase = {
+      title: String(item.story.showcase.title || '').trim() || '产品亮点',
+      subtitle: String(item.story.showcase.subtitle || '').trim(),
+      image: String(item.story.showcase.image || '').trim(),
+      points: (item.story.showcase.points || []).slice(0, 4).map((point) => ({
+        title: String(point?.title || '').trim(),
+        desc: String(point?.desc || '').trim(),
+      })),
+    }
+  }
+  if (item.story?.capabilities) {
+    ensureArray(item.story.capabilities, 'items', 4)
+    item.story.capabilities = {
+      title: String(item.story.capabilities.title || '').trim() || '核心能力',
+      items: (item.story.capabilities.items || []).slice(0, 4).map((cap, index) => ({
+        icon: String(cap?.icon || ['sensors', 'cloud_upload', 'notifications_active', 'bolt'][index] || 'check_circle').trim(),
+        title: String(cap?.title || '').trim(),
+        desc: String(cap?.desc || '').trim(),
+      })),
+    }
   }
   if (item.story?.cases) ensureArray(item.story.cases, 'items', 3)
   normalizeAlbumItems(item)

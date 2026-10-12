@@ -100,7 +100,29 @@ const CONTROL_SCREEN_STORY = {
     backgroundImage: '/images/agents/meeting.jpg',
     deviceImage: '/images/hardware/control-screen.jpg',
   },
+  showcase: {
+    title: '产品亮点',
+    subtitle: '让空间具备统一控制、场景联动与智能协同能力。',
+    image: '/images/hardware/control-screen.jpg',
+    points: [
+      { title: '统一交互入口', desc: '连接人员、空间设备、智能体与管理平台。' },
+      { title: '场景一键执行', desc: '会前就绪、会中协同、会后复位更高效。' },
+      { title: '设备状态回读', desc: '执行结果可追踪，减少人工巡场。' },
+      { title: '本地与云端协同', desc: '兼顾现场响应与平台统一管理。' },
+    ],
+  },
+  capabilities: {
+    title: '核心能力',
+    items: [
+      { icon: 'touch_app', title: '场景一键执行', desc: '按业务意图快速切换空间模式。' },
+      { icon: 'devices', title: '设备联动控制', desc: '照明、空调、窗帘等设备统一调度。' },
+      { icon: 'monitoring', title: '状态回读', desc: '现场执行结果同步可见。' },
+      { icon: 'hub', title: '平台协同', desc: '与智能体与管理系统协同工作。' },
+    ],
+  },
   value: {
+    title: '原理与链路',
+    subtitle: '从现场交互到设备执行与状态回传，形成可追踪的空间控制闭环。',
     diagramImage: '/images/hardware/control-screen.jpg',
   },
   howItWorks: {
@@ -229,6 +251,52 @@ const CONTROL_SCREEN_STORY = {
   },
 }
 
+function buildDefaultShowcase(product, role) {
+  const caps = (product.capabilities || []).filter(Boolean).slice(0, 4)
+  const fallbackPoints = [
+    { title: '可靠感知', desc: role.role || product.shortDescription || '面向真实空间场景稳定工作。' },
+    { title: '快速接入', desc: '支持项目化部署与系统对接，缩短落地周期。' },
+    { title: '状态可视', desc: '关键状态可回看、可追踪，便于运维与协同。' },
+    { title: '场景适配', desc: '覆盖机房、办公、门店等多种空间条件。' },
+  ]
+  const points = (caps.length
+    ? caps.map((title, index) => ({
+        title,
+        desc: fallbackPoints[index]?.desc || '',
+      }))
+    : fallbackPoints
+  ).slice(0, 4)
+  while (points.length < 4) points.push({ title: '', desc: '' })
+  return {
+    title: '产品亮点',
+    subtitle: role.headline || product.shortDescription || '',
+    image: product.coverImage || '',
+    points,
+  }
+}
+
+function buildDefaultCapabilities(product, role) {
+  const icons = ['sensors', 'cloud_upload', 'notifications_active', 'bolt']
+  const caps = (product.capabilities || []).filter(Boolean).slice(0, 4)
+  const items = (caps.length
+    ? caps.map((title, index) => ({
+        icon: icons[index] || 'check_circle',
+        title,
+        desc: '',
+      }))
+    : [
+        { icon: 'sensors', title: '现场感知', desc: role.role || '持续采集现场关键状态。' },
+        { icon: 'cloud_upload', title: '数据上云', desc: '关键信息汇聚至平台，便于统一查看。' },
+        { icon: 'notifications_active', title: '异常告警', desc: '异常状态主动提醒，缩短处置时间。' },
+        { icon: 'bolt', title: '快速落地', desc: '适配多种空间条件，支持项目化部署。' },
+      ]
+  ).slice(0, 4)
+  while (items.length < 4) {
+    items.push({ icon: icons[items.length] || 'check_circle', title: '', desc: '' })
+  }
+  return { title: '核心能力', items }
+}
+
 function buildDefaultSpecs(product, role) {
   const rows = [
     { label: '产品名称', value: product.name || '' },
@@ -287,7 +355,11 @@ export function buildProductStory(product) {
           : '/images/agents/exhibition.jpg',
       deviceImage: product.coverImage,
     },
+    showcase: buildDefaultShowcase(product, role),
+    capabilities: buildDefaultCapabilities(product, role),
     value: {
+      title: isRetail ? '运营与更新链路' : isSpace ? '监测与控制链路' : '内容与呈现链路',
+      subtitle: role.description || role.headline || product.shortDescription || '',
       diagramImage: product.coverImage,
     },
     howItWorks: {

@@ -26,6 +26,112 @@ export function renderProductHero(story, product, line, { editable = false } = {
     </header>`
 }
 
+export function renderProductShowcase(story, product, { editable = false } = {}) {
+  const block = story.showcase || {}
+  const image = block.image || product?.coverImage || story.hero?.deviceImage || ''
+  const points = [...(block.points || []), {}, {}, {}, {}].slice(0, 4)
+  const hasPoints = points.some((p) => p.title || p.desc)
+  if (!image && !hasPoints && !editable) return ''
+  return `
+    <section class="hpi-showcase" id="hpi-showcase">
+      <div class="hwc-shell hpi-showcase__grid">
+        <div class="hpi-showcase__visual">
+          ${imgNode('story.showcase.image', image, {
+            editable,
+            width: 960,
+            height: 720,
+            alt: product?.name || '产品主图',
+            loading: 'eager',
+          })}
+        </div>
+        <div class="hpi-showcase__copy">
+          ${textNode('story.showcase.title', block.title || (editable ? '产品亮点' : ''), {
+            editable,
+            tag: 'h2',
+            className: 'hpi-showcase__title',
+            placeholder: '主视觉标题',
+          })}
+          ${textNode('story.showcase.subtitle', block.subtitle || '', {
+            editable,
+            tag: 'p',
+            className: 'hpi-showcase__subtitle',
+            multiline: true,
+            placeholder: '一句话说明（可选）',
+          })}
+          <ul class="hpi-showcase__points">
+            ${points
+              .map(
+                (point, index) => `
+              <li class="hpi-showcase__point"${!editable && !point.title && !point.desc ? ' hidden' : ''}>
+                <span class="hpi-showcase__index" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span>
+                <div>
+                  ${textNode(`story.showcase.points.${index}.title`, point.title || '', {
+                    editable,
+                    tag: 'strong',
+                    className: 'hpi-showcase__point-title',
+                    placeholder: '卖点标题',
+                  })}
+                  ${textNode(`story.showcase.points.${index}.desc`, point.desc || '', {
+                    editable,
+                    tag: 'p',
+                    className: 'hpi-showcase__point-desc',
+                    multiline: true,
+                    placeholder: '卖点说明（可选）',
+                  })}
+                </div>
+              </li>`
+              )
+              .join('')}
+          </ul>
+        </div>
+      </div>
+    </section>`
+}
+
+export function renderProductCapabilities(story, { editable = false } = {}) {
+  const block = story.capabilities || {}
+  const items = [...(block.items || []), {}, {}, {}, {}].slice(0, 4)
+  const visible = items.filter((item) => item && (item.title || item.desc))
+  if (!visible.length && !editable) return ''
+  const list = editable ? items : visible
+  const defaultIcons = ['sensors', 'cloud_upload', 'notifications_active', 'bolt']
+  return `
+    <section class="hpi-caps" id="hpi-caps">
+      <div class="hwc-shell">
+        ${textNode('story.capabilities.title', block.title || (editable ? '核心能力' : ''), {
+          editable,
+          tag: 'h2',
+          className: 'hpi-caps__title',
+          placeholder: '能力区标题',
+        })}
+        <div class="hpi-caps__grid">
+          ${list
+            .map((item, index) => {
+              const icon = item.icon || defaultIcons[index] || 'check_circle'
+              return `
+            <article class="hpi-caps__item">
+              <span class="hpi-caps__icon material-symbols-outlined" aria-hidden="true">${esc(icon)}</span>
+              ${textNode(`story.capabilities.items.${index}.title`, item.title || '', {
+                editable,
+                tag: 'h3',
+                className: 'hpi-caps__name',
+                placeholder: '能力标题',
+              })}
+              ${textNode(`story.capabilities.items.${index}.desc`, item.desc || '', {
+                editable,
+                tag: 'p',
+                className: 'hpi-caps__desc',
+                multiline: true,
+                placeholder: '能力说明（可选）',
+              })}
+            </article>`
+            })
+            .join('')}
+        </div>
+      </div>
+    </section>`
+}
+
 export function renderProductValue(story, { editable = false } = {}) {
   const v = story.value
   if (!v && !editable) return ''
@@ -34,14 +140,31 @@ export function renderProductValue(story, { editable = false } = {}) {
   if (!diagram && !editable) return ''
   return `
     <section class="hpi-value" id="hpi-value">
-      <div class="hwc-shell hpi-value__shell">
-        ${imgNode('story.value.diagramImage', diagram, {
-          editable,
-          width: 1760,
-          height: 900,
-          alt: value.title || '功能架构图',
-          loading: 'lazy',
-        })}
+      <div class="hwc-shell">
+        <div class="hpi-value__head">
+          ${textNode('story.value.title', value.title || (editable ? '原理与链路' : ''), {
+            editable,
+            tag: 'h2',
+            className: 'hpi-value__title',
+            placeholder: '链路区标题',
+          })}
+          ${textNode('story.value.subtitle', value.subtitle || '', {
+            editable,
+            tag: 'p',
+            className: 'hpi-value__subtitle',
+            multiline: true,
+            placeholder: '链路区说明（可选）',
+          })}
+        </div>
+        <div class="hpi-value__shell">
+          ${imgNode('story.value.diagramImage', diagram, {
+            editable,
+            width: 1760,
+            height: 900,
+            alt: value.title || '功能架构图',
+            loading: 'lazy',
+          })}
+        </div>
       </div>
     </section>`
 }
@@ -92,7 +215,99 @@ function normalizeSceneTags(rawTags = [], fallbackTags = []) {
 }
 
 export function renderProductScenarios(story, { editable = false } = {}) {
-  return ''
+  const block = story.scenarios
+  if (!block?.items?.length && !editable) return ''
+  const items = [...(block?.items || []), {}, {}, {}].slice(0, 3)
+  const hasContent = items.some((item) => item.sceneImage || item.title || item.desc || item.subtitle)
+  if (!hasContent && !editable) return ''
+  const defaultIcons = ['groups', 'apartment', 'diamond']
+  const defaultTagIcons = [
+    ['touch_app', 'link', 'restart_alt'],
+    ['eco', 'deployed_code', 'monitoring'],
+    ['login', 'play_circle', 'desktop_windows'],
+  ]
+  return `
+    <section class="hpi-scenes" id="hpi-scenes">
+      <div class="hwc-shell">
+        ${textNode('story.scenarios.title', block?.title || (editable ? '应用场景' : ''), {
+          editable,
+          tag: 'h2',
+          className: 'hpi-scenes__title',
+          placeholder: '场景区标题',
+        })}
+        <div class="hpi-scenes__list">
+          ${items
+            .map((item, index) => {
+              const icon = item.icon || defaultIcons[index] || 'category'
+              const tags = normalizeSceneTags(
+                item.tags,
+                (defaultTagIcons[index] || []).map((sym) => ({ label: '', icon: sym, logoImage: '' })),
+              ).map((tag, ti) => ({
+                ...tag,
+                icon: tag.icon || defaultTagIcons[index]?.[ti] || 'circle',
+              }))
+              const tagNodes = tags
+                .map((tag, ti) => {
+                  if (!editable && !tag.label && !tag.logoImage) return ''
+                  return `<li class="hpi-scenes__tag">
+                    ${sceneLogoNode(`story.scenarios.items.${index}.tags.${ti}.logoImage`, tag.logoImage, tag.icon, {
+                      editable,
+                      size: 'sm',
+                    })}
+                    ${textNode(`story.scenarios.items.${index}.tags.${ti}.label`, tag.label || '', {
+                      editable,
+                      tag: 'span',
+                      className: 'hpi-scenes__tag-label',
+                      placeholder: '能力标签',
+                    })}
+                  </li>`
+                })
+                .join('')
+              return `
+            <article class="hpi-scenes__card">
+              <div class="hpi-scenes__media">
+                ${imgNode(`story.scenarios.items.${index}.sceneImage`, item.sceneImage, {
+                  editable,
+                  width: 860,
+                  height: 560,
+                  alt: item.title || '',
+                  loading: 'lazy',
+                })}
+              </div>
+              <div class="hpi-scenes__body">
+                <div class="hpi-scenes__head">
+                  ${sceneLogoNode(`story.scenarios.items.${index}.logoImage`, item.logoImage, icon, {
+                    editable,
+                    size: 'lg',
+                  })}
+                  ${textNode(`story.scenarios.items.${index}.title`, item.title || '', {
+                    editable,
+                    tag: 'h3',
+                    className: 'hpi-scenes__name',
+                    placeholder: '场景标题',
+                  })}
+                </div>
+                ${textNode(`story.scenarios.items.${index}.subtitle`, item.subtitle || '', {
+                  editable,
+                  tag: 'p',
+                  className: 'hpi-scenes__subtitle',
+                  placeholder: '副标题',
+                })}
+                ${textNode(`story.scenarios.items.${index}.desc`, item.desc || '', {
+                  editable,
+                  tag: 'p',
+                  className: 'hpi-scenes__desc',
+                  multiline: true,
+                  placeholder: '场景介绍',
+                })}
+                ${tagNodes ? `<ul class="hpi-scenes__tags">${tagNodes}</ul>` : ''}
+              </div>
+            </article>`
+            })
+            .join('')}
+        </div>
+      </div>
+    </section>`
 }
 
 export function renderProductCases(story, { editable = false } = {}) {
@@ -511,7 +726,10 @@ export function renderProductStory(product, story, line, { editable = false } = 
       ${renderProductTabs('overview')}
       <div class="hpi-panels">
         <div class="hpi-panel is-active" data-hpi-panel="overview">
+          ${renderProductShowcase(resolved, product, opts)}
+          ${renderProductCapabilities(resolved, opts)}
           ${renderProductValue(resolved, opts)}
+          ${renderProductScenarios(resolved, opts)}
           ${renderProductCases(resolved, opts)}
           ${renderProductClosing(resolved, opts)}
         </div>

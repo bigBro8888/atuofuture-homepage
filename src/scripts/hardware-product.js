@@ -68,13 +68,30 @@ export async function initHardwareProductPage() {
   }
   document.title = `${product.name} | 智能硬件产品介绍 | 安托未来`
   const fallback = buildProductStory(product)
+  const libStory = libItem?.story || {}
   const story = {
     ...fallback,
-    ...(libItem?.story || {}),
-    specs: libItem?.story?.specs?.rows?.length ? libItem.story.specs : fallback.specs,
-    album: libItem?.story?.album?.items?.length ? libItem.story.album : fallback.album,
-    videos: libItem?.story?.videos || fallback.videos,
-    detailImages: libItem?.story?.detailImages || fallback.detailImages,
+    ...libStory,
+    showcase:
+      libStory.showcase?.image || libStory.showcase?.points?.some((p) => p?.title)
+        ? { ...fallback.showcase, ...libStory.showcase, points: libStory.showcase.points?.length ? libStory.showcase.points : fallback.showcase.points }
+        : fallback.showcase,
+    capabilities:
+      libStory.capabilities?.items?.some((item) => item?.title)
+        ? { ...fallback.capabilities, ...libStory.capabilities }
+        : fallback.capabilities,
+    scenarios: libStory.scenarios?.items?.length ? libStory.scenarios : fallback.scenarios,
+    value: {
+      ...fallback.value,
+      ...(libStory.value || {}),
+      title: libStory.value?.title || fallback.value?.title,
+      subtitle: libStory.value?.subtitle || fallback.value?.subtitle,
+      diagramImage: libStory.value?.diagramImage || libStory.value?.deviceImage || fallback.value?.diagramImage,
+    },
+    specs: libStory.specs?.rows?.length ? libStory.specs : fallback.specs,
+    album: libStory.album?.items?.length ? libStory.album : fallback.album,
+    videos: libStory.videos || fallback.videos,
+    detailImages: libStory.detailImages || fallback.detailImages,
   }
   const line = getLine(product.productLine)
   root.innerHTML = renderProductStory(product, story, line, { editable: false })
