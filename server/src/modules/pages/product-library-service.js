@@ -159,7 +159,7 @@ function emptyStory(product = {}) {
       items: [],
     },
     detailImages: {
-      title: '商品详情',
+      title: '产品详情信息',
       subtitle: '',
       items: [],
     },
@@ -313,7 +313,7 @@ function cleanDetailImages(value = {}, fallback = {}) {
     .map((item, index) => cleanAlbumItem(item || {}, fallback.items?.[index] || {}))
     .filter((item) => item.url)
   return {
-    title: cleanText(value.title, fallback.title || '商品详情', 80),
+    title: cleanText(value.title, fallback.title || '产品详情信息', 80),
     subtitle: cleanText(value.subtitle, fallback.subtitle || '', 160),
     items,
   }

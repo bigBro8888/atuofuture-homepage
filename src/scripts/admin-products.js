@@ -121,7 +121,7 @@ function emptyProduct() {
       cases: { title: '实际案例', items: [{}, {}, {}] },
       specs: { title: '产品参数', rows: [{ label: '', value: '' }] },
       album: { title: '产品图拍', items: [] },
-      detailImages: { title: '细节图', subtitle: '', items: [] },
+      detailImages: { title: '产品详情信息', subtitle: '', items: [] },
       videos: { title: '使用视频', items: [] },
       closing: { title: '', desc: '', primaryLabel: '预约方案演示', softLinks: [{ label: '查看技术资料' }, { label: '获取产品文档' }] },
     },
@@ -309,11 +309,10 @@ function renderProductCompose(item) {
             <label class="admin-news-field is-wide" data-link-anchor-wrap>
               <span>锚点板块</span>
               <select data-link-anchor>
-                <option value="#hpi-value">功能架构图</option>
+                <option value="#hpi-detail">产品详情信息</option>
                 <option value="#hpi-cases">实际案例</option>
                 <option value="#hpi-specs">产品参数</option>
                 <option value="#hpi-album">产品图拍</option>
-                <option value="#hpi-detail">细节图</option>
                 <option value="#hpi-videos">使用视频</option>
                 <option value="#hpi-close">收尾预约</option>
               </select>

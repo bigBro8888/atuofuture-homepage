@@ -17730,29 +17730,31 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 }
 
 .hpi-detail {
-  padding: 72px 0 88px;
-  background: #fff;
+  padding: 56px 0 72px;
+  background: #f7f9fc;
 }
 .hpi-detail__head {
   max-width: 720px;
-  margin: 0 auto 36px;
+  margin: 0 auto 28px;
   text-align: center;
 }
 .hpi-detail__title {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   font-size: clamp(24px, 2.6vw, 32px);
-  color: var(--hwc-text, #172033);
+  letter-spacing: -0.02em;
+  color: #142033;
 }
 .hpi-detail__subtitle {
   margin: 0;
   font-size: 15px;
   line-height: 1.7;
-  color: var(--hwc-muted, #667085);
+  color: #5c6b7e;
 }
 .hpi-detail__list {
   display: grid;
-  gap: 28px;
-  max-width: 1120px;
+  gap: 20px;
+  width: var(--hpi-col-wide, var(--hpi-col));
+  max-width: none;
   margin: 0 auto;
 }
 .hpi-detail__item {

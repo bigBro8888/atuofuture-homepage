@@ -691,15 +691,18 @@ export function renderProductDetailImages(story, { editable = false } = {}) {
   const visible = items.filter((item) => item && item.url)
   if (!visible.length && !editable) return ''
   const list = editable ? items : visible
+  const rawTitle = String(block.title || '').trim()
+  const title =
+    !rawTitle || rawTitle === '商品详情' || rawTitle === '细节图' ? '产品详情信息' : rawTitle
   return `
     <section class="hpi-detail" id="hpi-detail">
       <div class="hwc-shell">
         <div class="hpi-detail__head">
-          ${textNode('story.detailImages.title', block.title || (editable ? '商品详情' : ''), {
+          ${textNode('story.detailImages.title', title, {
             editable,
             tag: 'h2',
             className: 'hpi-detail__title',
-            placeholder: '板块标题',
+            placeholder: '产品详情信息',
           })}
           ${textNode('story.detailImages.subtitle', block.subtitle || '', {
             editable,
@@ -762,16 +765,36 @@ export function renderProductDetailImages(story, { editable = false } = {}) {
 
 function renderPhotosPanel(story, opts) {
   const album = renderProductAlbum(story, opts)
-  const details = renderProductDetailImages(story, opts)
-  if (album || details) return `${album}${details}`
+  if (album) return album
   return `
     <section class="hpi-album" id="hpi-album">
       <div class="hwc-shell">
         <div class="hpi-empty">
           <span class="material-symbols-outlined" aria-hidden="true">photo_camera</span>
           <b>暂无产品图拍</b>
-          <p>实拍与细节图完善后将在此展示。</p>
+          <p>实拍照片完善后将在此展示。</p>
         </div>
+      </div>
+    </section>`
+}
+
+function renderOverviewDetails(story, opts) {
+  const details = renderProductDetailImages(story, opts)
+  if (details) return details
+  if (!opts.editable) return ''
+  return `
+    <section class="hpi-detail" id="hpi-detail">
+      <div class="hwc-shell">
+        <div class="hpi-empty">
+          <span class="material-symbols-outlined" aria-hidden="true">photo_library</span>
+          <b>暂无产品详情信息</b>
+          <p>点击下方添加详情长图，将展示在商品首页此处。</p>
+        </div>
+        <button type="button" class="hpi-detail__add" data-detail-add>
+          <span class="material-symbols-outlined" aria-hidden="true">add_photo_alternate</span>
+          <strong>添加详情图</strong>
+          <small>最多 12 张 · 建议 1600×1000</small>
+        </button>
       </div>
     </section>`
 }
@@ -787,7 +810,7 @@ export function renderProductStory(product, story, line, { editable = false } = 
         <div class="hpi-panel is-active" data-hpi-panel="overview">
           ${renderProductShowcase(resolved, product, opts)}
           ${renderProductCapabilities(resolved, opts)}
-          ${renderProductValue(resolved, opts)}
+          ${renderOverviewDetails(resolved, opts)}
           ${renderProductScenarios(resolved, opts)}
           ${renderProductCases(resolved, opts)}
           ${renderProductClosing(resolved, opts)}

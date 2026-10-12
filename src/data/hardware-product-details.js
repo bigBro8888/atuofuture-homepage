@@ -234,7 +234,7 @@ const CONTROL_SCREEN_STORY = {
     items: [{ url: '/images/hardware/control-screen.jpg', caption: '产品主图' }],
   },
   detailImages: {
-    title: '细节图',
+    title: '产品详情信息',
     subtitle: '',
     items: [],
   },
@@ -546,7 +546,7 @@ export function buildProductStory(product) {
     specs: buildDefaultSpecs(product, role),
     album: buildDefaultAlbum(product),
     detailImages: {
-      title: '细节图',
+      title: '产品详情信息',
       subtitle: '',
       items: [],
     },
