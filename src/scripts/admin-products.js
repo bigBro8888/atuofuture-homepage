@@ -2,7 +2,7 @@ import { HARDWARE_PRODUCTS, getLine } from '../data/hardware-catalog.js'
 import { bindProductStoryTabs, renderProductStory } from '../lib/product-story-render.js'
 
 const IMAGE_SIZE_GUIDE = [
-  { test: (path) => path === 'story.showcase.image', label: '产品主视觉', size: '960×720', tip: '白底/精修产品图，透明底 PNG 更佳' },
+  { test: (path) => path === 'story.showcase.image', label: '产品主视觉图', size: '960×720', tip: '静态图模式用；也可作 3D 封面。透明底 PNG 更佳' },
   { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '原理链路图', size: '1760×900', tip: '整段单图铺满内容宽，标题与说明可设计进图内' },
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
   { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '场景介绍配图', size: '860×560', tip: '卡片左侧大图，约占一半宽度' },
@@ -94,7 +94,9 @@ function emptyProduct() {
       showcase: {
         title: '产品亮点',
         subtitle: '',
+        mediaType: 'image',
         image: '',
+        model3d: { src: '', title: '', poster: '' },
         points: [{ title: '', desc: '' }, { title: '', desc: '' }, { title: '', desc: '' }, { title: '', desc: '' }],
       },
       capabilities: {
@@ -548,10 +550,20 @@ function collectProductFromCompose() {
   }
   if (item.story?.showcase) {
     ensureArray(item.story.showcase, 'points', 4)
+    const mediaType = item.story.showcase.mediaType === 'model3d' ? 'model3d' : 'image'
+    const model3d = item.story.showcase.model3d && typeof item.story.showcase.model3d === 'object'
+      ? item.story.showcase.model3d
+      : {}
     item.story.showcase = {
       title: String(item.story.showcase.title || '').trim() || '产品亮点',
       subtitle: String(item.story.showcase.subtitle || '').trim(),
+      mediaType,
       image: String(item.story.showcase.image || '').trim(),
+      model3d: {
+        src: String(model3d.src || '').trim(),
+        title: String(model3d.title || '').trim(),
+        poster: String(model3d.poster || '').trim(),
+      },
       points: (item.story.showcase.points || []).slice(0, 4).map((point) => ({
         title: String(point?.title || '').trim(),
         desc: String(point?.desc || '').trim(),
@@ -1106,6 +1118,15 @@ export function bindProductLibraryAdmin(helpers) {
 
   composeView.addEventListener('change', async (event) => {
     if (event.target.closest('[data-link-type]')) return
+
+    const mediaField = event.target.closest('[data-product-field]')
+    if (
+      mediaField &&
+      /^(story\.showcase\.mediaType|story\.showcase\.model3d\.(src|title|poster))$/.test(mediaField.dataset.productField || '')
+    ) {
+      renderProductCompose(collectProductFromCompose())
+      return
+    }
 
     const modalFile = event.target.closest('[data-image-modal-file]')
     if (modalFile) {

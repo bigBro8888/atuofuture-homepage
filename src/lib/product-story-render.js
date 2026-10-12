@@ -26,24 +26,78 @@ export function renderProductHero(story, product, line, { editable = false } = {
     </header>`
 }
 
+function renderShowcaseVisual(block, product, { editable = false } = {}) {
+  const image = block.image || product?.coverImage || ''
+  const model = block.model3d || {}
+  const modelSrc = String(model.src || '').trim()
+  const mediaType = block.mediaType === 'model3d' || (!block.mediaType && modelSrc) ? 'model3d' : 'image'
+  const use3d = mediaType === 'model3d' && Boolean(modelSrc)
+  const poster = String(model.poster || image || '').trim()
+  const modelTitle = model.title || `${product?.name || '产品'} 3D`
+
+  const imageBlock = imgNode('story.showcase.image', image || poster, {
+    editable,
+    width: 960,
+    height: 720,
+    alt: product?.name || '产品主图',
+    loading: 'eager',
+  })
+
+  const modelBlock = use3d
+    ? `<iframe
+        class="hpi-showcase__frame"
+        src="${esc(modelSrc)}"
+        title="${esc(modelTitle)}"
+        loading="lazy"
+        allow="fullscreen"
+        referrerpolicy="no-referrer"
+      ></iframe>`
+    : ''
+
+  const editPanel = editable
+    ? `<div class="hpi-showcase__media-edit">
+        <label class="hpi-showcase__media-field">
+          <span>主视觉类型</span>
+          <select data-product-field="story.showcase.mediaType">
+            <option value="image"${mediaType === 'image' ? ' selected' : ''}>静态图片</option>
+            <option value="model3d"${mediaType === 'model3d' ? ' selected' : ''}>3D 模型</option>
+          </select>
+        </label>
+        <label class="hpi-showcase__media-field">
+          <span>3D 嵌入地址</span>
+          <input type="text" data-product-field="story.showcase.model3d.src" value="${esc(modelSrc)}" placeholder="/models/xxx/embed.html" />
+        </label>
+        <label class="hpi-showcase__media-field">
+          <span>3D 标题</span>
+          <input type="text" data-product-field="story.showcase.model3d.title" value="${esc(model.title || '')}" placeholder="产品 3D 体验" />
+        </label>
+        <label class="hpi-showcase__media-field">
+          <span>3D 封面图（可选）</span>
+          <input type="text" data-product-field="story.showcase.model3d.poster" value="${esc(model.poster || '')}" placeholder="/models/xxx/poster.png" />
+        </label>
+        <p class="hpi-showcase__media-tip">选「静态图片」时点上方图片可更换；选「3D 模型」时填嵌入页地址（如 /models/water-sensor-3d/embed.html）。</p>
+      </div>`
+    : ''
+
+  return `
+    <div class="hpi-showcase__visual${use3d ? ' hpi-showcase__visual--3d' : ''}">
+      ${use3d ? modelBlock : imageBlock}
+      ${editable && use3d ? `<div class="hpi-showcase__poster-edit" hidden>${imageBlock}</div>` : ''}
+      ${editPanel}
+    </div>`
+}
+
 export function renderProductShowcase(story, product, { editable = false } = {}) {
   const block = story.showcase || {}
   const image = block.image || product?.coverImage || story.hero?.deviceImage || ''
+  const modelSrc = String(block.model3d?.src || '').trim()
   const points = [...(block.points || []), {}, {}, {}, {}].slice(0, 4)
   const hasPoints = points.some((p) => p.title || p.desc)
-  if (!image && !hasPoints && !editable) return ''
+  if (!image && !modelSrc && !hasPoints && !editable) return ''
   return `
     <section class="hpi-showcase" id="hpi-showcase">
       <div class="hwc-shell hpi-showcase__grid">
-        <div class="hpi-showcase__visual">
-          ${imgNode('story.showcase.image', image, {
-            editable,
-            width: 960,
-            height: 720,
-            alt: product?.name || '产品主图',
-            loading: 'eager',
-          })}
-        </div>
+        ${renderShowcaseVisual(block, product, { editable })}
         <div class="hpi-showcase__copy">
           ${textNode('story.showcase.title', block.title || (editable ? '产品亮点' : ''), {
             editable,

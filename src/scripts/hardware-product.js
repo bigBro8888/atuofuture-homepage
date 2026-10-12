@@ -72,10 +72,34 @@ export async function initHardwareProductPage() {
   const story = {
     ...fallback,
     ...libStory,
-    showcase:
-      libStory.showcase?.image || libStory.showcase?.points?.some((p) => p?.title)
-        ? { ...fallback.showcase, ...libStory.showcase, points: libStory.showcase.points?.length ? libStory.showcase.points : fallback.showcase.points }
-        : fallback.showcase,
+    showcase: (() => {
+      const lib = libStory.showcase || {}
+      const base = fallback.showcase || {}
+      const hasLib =
+        lib.image ||
+        lib.model3d?.src ||
+        lib.points?.some((p) => p?.title) ||
+        lib.title ||
+        lib.subtitle
+      if (!hasLib) return base
+      const model3d = {
+        ...(base.model3d || {}),
+        ...(lib.model3d || {}),
+      }
+      const mediaType =
+        lib.mediaType ||
+        (model3d.src ? 'model3d' : '') ||
+        base.mediaType ||
+        'image'
+      return {
+        ...base,
+        ...lib,
+        mediaType,
+        model3d,
+        points: lib.points?.length ? lib.points : base.points,
+        image: lib.image || base.image || '',
+      }
+    })(),
     capabilities:
       libStory.capabilities?.items?.some((item) => item?.title)
         ? { ...fallback.capabilities, ...libStory.capabilities }

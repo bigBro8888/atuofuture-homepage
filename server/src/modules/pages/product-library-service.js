@@ -114,7 +114,31 @@ function emptyStory(product = {}) {
       backgroundImage: '',
       deviceImage: cover,
     },
+    showcase: {
+      title: '产品亮点',
+      subtitle: '',
+      mediaType: 'image',
+      image: cover,
+      model3d: { src: '', title: '', poster: '' },
+      points: [
+        { title: '', desc: '' },
+        { title: '', desc: '' },
+        { title: '', desc: '' },
+        { title: '', desc: '' },
+      ],
+    },
+    capabilities: {
+      title: '核心能力',
+      items: [
+        { icon: 'sensors', title: '', desc: '' },
+        { icon: 'cloud_upload', title: '', desc: '' },
+        { icon: 'notifications_active', title: '', desc: '' },
+        { icon: 'bolt', title: '', desc: '' },
+      ],
+    },
     value: {
+      title: '原理与链路',
+      subtitle: '',
       diagramImage: '',
     },
     howItWorks: {
@@ -126,13 +150,21 @@ function emptyStory(product = {}) {
         { title: '', caption: '', image: '' },
       ],
     },
+    specs: {
+      title: '产品参数',
+      rows: [{ label: '', value: '' }],
+    },
+    videos: {
+      title: '使用视频',
+      items: [],
+    },
     detailImages: {
       title: '商品详情',
       subtitle: '',
       items: [],
     },
     scenarios: {
-      title: '场景介绍',
+      title: '应用场景',
       items: [
         {
           title: '',
@@ -287,13 +319,96 @@ function cleanDetailImages(value = {}, fallback = {}) {
   }
 }
 
+function cleanShowcase(value = {}, fallback = {}) {
+  const modelIn = value.model3d && typeof value.model3d === 'object' ? value.model3d : {}
+  const modelFb = fallback.model3d && typeof fallback.model3d === 'object' ? fallback.model3d : {}
+  const model3d = {
+    src: cleanUrl(modelIn.src !== undefined ? modelIn.src : undefined, modelFb.src || ''),
+    title: cleanText(modelIn.title, modelFb.title || '', 80),
+    poster: cleanUrl(modelIn.poster !== undefined ? modelIn.poster : undefined, modelFb.poster || ''),
+  }
+  const mediaType =
+    value.mediaType === 'model3d' || value.mediaType === 'image'
+      ? value.mediaType
+      : model3d.src
+        ? 'model3d'
+        : fallback.mediaType === 'model3d'
+          ? 'model3d'
+          : 'image'
+  const points = padList(value.points, 4, () => ({ title: '', desc: '' })).map((point, index) => ({
+    title: cleanText(point?.title, fallback.points?.[index]?.title || '', 40),
+    desc: cleanText(point?.desc, fallback.points?.[index]?.desc || '', 160),
+  }))
+  return {
+    title: cleanText(value.title, fallback.title || '产品亮点', 80),
+    subtitle: cleanText(value.subtitle, fallback.subtitle || '', 240),
+    mediaType,
+    image: cleanUrl(value.image !== undefined ? value.image : undefined, fallback.image || ''),
+    model3d,
+    points,
+  }
+}
+
+function cleanCapabilities(value = {}, fallback = {}) {
+  const icons = ['sensors', 'cloud_upload', 'notifications_active', 'bolt']
+  const items = padList(value.items, 4, () => ({ icon: '', title: '', desc: '' })).map((item, index) => ({
+    icon: cleanText(item?.icon, fallback.items?.[index]?.icon || icons[index] || 'check_circle', 40) || icons[index] || 'check_circle',
+    title: cleanText(item?.title, fallback.items?.[index]?.title || '', 40),
+    desc: cleanText(item?.desc, fallback.items?.[index]?.desc || '', 160),
+  }))
+  return {
+    title: cleanText(value.title, fallback.title || '核心能力', 80),
+    items,
+  }
+}
+
+function cleanSpecs(value = {}, fallback = {}) {
+  const source = Array.isArray(value.rows) ? value.rows : (Array.isArray(fallback.rows) ? fallback.rows : [])
+  const rows = source
+    .slice(0, 24)
+    .map((row, index) => ({
+      label: cleanText(row?.label, fallback.rows?.[index]?.label || '', 40),
+      value: cleanText(row?.value, fallback.rows?.[index]?.value || '', 120),
+    }))
+    .filter((row) => row.label || row.value)
+  return {
+    title: cleanText(value.title, fallback.title || '产品参数', 80),
+    rows: rows.length ? rows : [{ label: '', value: '' }],
+  }
+}
+
+function cleanVideos(value = {}, fallback = {}) {
+  const source = Array.isArray(value.items) ? value.items : (Array.isArray(fallback.items) ? fallback.items : [])
+  const items = source
+    .slice(0, 8)
+    .map((item, index) => ({
+      title: cleanText(item?.title, fallback.items?.[index]?.title || '', 80),
+      url: cleanUrl(item?.url !== undefined ? item.url : undefined, fallback.items?.[index]?.url || ''),
+      cover: cleanUrl(item?.cover !== undefined ? item.cover : undefined, fallback.items?.[index]?.cover || ''),
+      caption: cleanText(item?.caption, fallback.items?.[index]?.caption || '', 160),
+    }))
+    .filter((item) => item.url || item.cover || item.title)
+  return {
+    title: cleanText(value.title, fallback.title || '使用视频', 80),
+    items,
+  }
+}
+
 function cleanStory(value = {}, fallback = {}) {
   const heroIn = value.hero || {}
   const heroFb = fallback.hero || {}
+  const showcaseIn = value.showcase || {}
+  const showcaseFb = fallback.showcase || {}
+  const capsIn = value.capabilities || {}
+  const capsFb = fallback.capabilities || {}
   const valueIn = value.value || {}
   const valueFb = fallback.value || {}
   const howIn = value.howItWorks || {}
   const howFb = fallback.howItWorks || {}
+  const specsIn = value.specs || {}
+  const specsFb = fallback.specs || {}
+  const videosIn = value.videos || {}
+  const videosFb = fallback.videos || {}
   const scenesIn = value.scenarios || {}
   const scenesFb = fallback.scenarios || {}
   const casesIn = value.cases || {}
@@ -336,7 +451,11 @@ function cleanStory(value = {}, fallback = {}) {
       backgroundImage: cleanUrl(heroIn.backgroundImage, heroFb.backgroundImage || ''),
       deviceImage: cleanUrl(heroIn.deviceImage, heroFb.deviceImage || ''),
     },
+    showcase: cleanShowcase(showcaseIn, showcaseFb),
+    capabilities: cleanCapabilities(capsIn, capsFb),
     value: {
+      title: cleanText(valueIn.title, valueFb.title || '原理与链路', 80),
+      subtitle: cleanText(valueIn.subtitle, valueFb.subtitle || '', 240),
       // 兼容旧数据：原 deviceImage / 拼装文案区 → 单张功能架构图
       diagramImage: cleanUrl(
         valueIn.diagramImage !== undefined ? valueIn.diagramImage : valueIn.deviceImage,
@@ -347,6 +466,8 @@ function cleanStory(value = {}, fallback = {}) {
       title: cleanText(howIn.title, howFb.title || '', 80),
       stages,
     },
+    specs: cleanSpecs(specsIn, specsFb),
+    videos: cleanVideos(videosIn, videosFb),
     scenarios: {
       title: cleanText(scenesIn.title, scenesFb.title || '', 80),
       items: scenes,

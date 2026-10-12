@@ -103,7 +103,9 @@ const CONTROL_SCREEN_STORY = {
   showcase: {
     title: '产品亮点',
     subtitle: '让空间具备统一控制、场景联动与智能协同能力。',
+    mediaType: 'image',
     image: '/images/hardware/control-screen.jpg',
+    model3d: { src: '', title: '', poster: '' },
     points: [
       { title: '统一交互入口', desc: '连接人员、空间设备、智能体与管理平台。' },
       { title: '场景一键执行', desc: '会前就绪、会中协同、会后复位更高效。' },
@@ -251,6 +253,11 @@ const CONTROL_SCREEN_STORY = {
   },
 }
 
+function isWaterSensorProduct(product = {}) {
+  const key = `${product.id || ''} ${product.slug || ''} ${product.name || ''}`
+  return /(?:^|\s)4g(?:\s|$)|水浸|water[\s_-]?sensor/i.test(key)
+}
+
 function buildDefaultShowcase(product, role) {
   const caps = (product.capabilities || []).filter(Boolean).slice(0, 4)
   const fallbackPoints = [
@@ -267,10 +274,19 @@ function buildDefaultShowcase(product, role) {
     : fallbackPoints
   ).slice(0, 4)
   while (points.length < 4) points.push({ title: '', desc: '' })
+  const water3d = isWaterSensorProduct(product)
   return {
     title: '产品亮点',
     subtitle: role.headline || product.shortDescription || '',
-    image: product.coverImage || '',
+    mediaType: water3d ? 'model3d' : 'image',
+    image: water3d ? '/models/water-sensor-3d/poster.png' : product.coverImage || '',
+    model3d: water3d
+      ? {
+          src: '/models/water-sensor-3d/embed.html',
+          title: `${product.name || '水浸传感器'} 3D`,
+          poster: '/models/water-sensor-3d/poster.png',
+        }
+      : { src: '', title: '', poster: '' },
     points,
   }
 }
