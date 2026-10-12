@@ -573,7 +573,43 @@ function validateItem(value = {}, fallback = {}) {
     || `p-${randomUUID().slice(0, 8)}`
   const slug = cleanSlug(value.slug, fallback.slug || base.slug || id)
   const hardwareLine = LINE_IDS.has(value.hardwareLine) ? value.hardwareLine : (fallback.hardwareLine || base.hardwareLine || 'space')
-  const storyFallback = fallback.story || base.story || emptyStory({ name, coverImage: value.coverImage || base.coverImage, shortDescription: value.shortDescription, fullDescription: value.fullDescription })
+  let storyFallback = fallback.story || base.story || emptyStory({ name, coverImage: value.coverImage || base.coverImage, shortDescription: value.shortDescription, fullDescription: value.fullDescription })
+  // 水浸等产品：用叙事默认补齐 3D 主视觉，避免 CMS 旧数据把 model3d 洗成空
+  try {
+    const built = buildProductStory({
+      id,
+      slug,
+      name,
+      productLine: hardwareLine,
+      coverImage: value.coverImage || base.coverImage || '',
+      shortDescription: value.shortDescription || base.shortDescription || '',
+      fullDescription: value.fullDescription || base.fullDescription || '',
+      capabilities: value.capabilities || base.capabilities || [],
+      scenarios: value.scenarios || base.scenarios || [],
+    })
+    if (built?.showcase?.model3d?.src) {
+      storyFallback = {
+        ...storyFallback,
+        showcase: {
+          ...(storyFallback.showcase || {}),
+          ...(built.showcase || {}),
+          points: Array.isArray(storyFallback.showcase?.points) && storyFallback.showcase.points.some((p) => p?.title)
+            ? storyFallback.showcase.points
+            : built.showcase.points,
+          model3d: {
+            ...(built.showcase.model3d || {}),
+            ...(storyFallback.showcase?.model3d || {}),
+            src: storyFallback.showcase?.model3d?.src || built.showcase.model3d.src,
+          },
+          mediaType: storyFallback.showcase?.mediaType === 'image' && !storyFallback.showcase?.model3d?.src
+            ? 'model3d'
+            : storyFallback.showcase?.mediaType || built.showcase.mediaType || 'model3d',
+        },
+      }
+    }
+  } catch {
+    // ignore story enrich errors
+  }
   return {
     id,
     slug,

@@ -30,8 +30,13 @@ function renderShowcaseVisual(block, product, { editable = false } = {}) {
   const image = block.image || product?.coverImage || ''
   const model = block.model3d || {}
   const modelSrc = String(model.src || '').trim()
-  const mediaType = block.mediaType === 'model3d' || (!block.mediaType && modelSrc) ? 'model3d' : 'image'
-  const use3d = mediaType === 'model3d' && Boolean(modelSrc)
+  const mediaType =
+    block.mediaType === 'model3d' || (Boolean(modelSrc) && block.mediaType !== 'image')
+      ? 'model3d'
+      : modelSrc && !block.mediaType
+        ? 'model3d'
+        : 'image'
+  const use3d = Boolean(modelSrc) && mediaType === 'model3d'
   const poster = String(model.poster || image || '').trim()
   const modelTitle = model.title || `${product?.name || '产品'} 3D`
 

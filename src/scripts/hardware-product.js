@@ -82,21 +82,26 @@ export async function initHardwareProductPage() {
         lib.title ||
         lib.subtitle
       if (!hasLib) return base
+      // CMS 清洗后常带空 model3d.src / mediaType=image，不能覆盖产品默认 3D
+      const libModel = lib.model3d || {}
+      const baseModel = base.model3d || {}
+      const libSrc = String(libModel.src || '').trim()
       const model3d = {
-        ...(base.model3d || {}),
-        ...(lib.model3d || {}),
+        src: libSrc || String(baseModel.src || '').trim(),
+        title: String(libModel.title || baseModel.title || '').trim(),
+        poster: String(libModel.poster || baseModel.poster || '').trim(),
       }
+      // 有 3D 地址就优先 3D（产品默认或后台配置）；仅当后台显式填了 3D 地址又选「静态图片」时才强制图片
       const mediaType =
-        lib.mediaType ||
-        (model3d.src ? 'model3d' : '') ||
-        base.mediaType ||
-        'image'
+        model3d.src && !(lib.mediaType === 'image' && libSrc)
+          ? 'model3d'
+          : lib.mediaType || base.mediaType || (model3d.src ? 'model3d' : 'image')
       return {
         ...base,
         ...lib,
         mediaType,
         model3d,
-        points: lib.points?.length ? lib.points : base.points,
+        points: lib.points?.some((p) => p?.title) ? lib.points : base.points,
         image: lib.image || base.image || '',
       }
     })(),
