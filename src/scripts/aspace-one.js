@@ -375,14 +375,6 @@ const updates = [
   ['2026-09-03', '电子相册发布流程优化', '支持定时发布与多屏同步。'],
 ]
 
-const supportCards = [
-  ['monitor_heart', '系统状态查询', '查看各产品服务状态'],
-  ['manage_accounts', '账号与权限', '账号绑定、权限申请'],
-  ['support', '提交服务工单', '遇到问题？提交工单', true],
-  ['contact_page', '联系客户经理', '获取一对一服务支持'],
-  ['rate_review', '功能建议', '告诉我们您的想法'],
-]
-
 const defaultQuickActions = [
   { id: 'energy', icon: 'bar_chart', label: '查看今日能耗', url: 'app:energy' },
   { id: 'poster', icon: 'add_photo_alternate', label: '新建AI画报', url: 'app:poster' },
@@ -1018,22 +1010,14 @@ function renderPortal() {
               </ol>
             </aside>
           </div>
-          <div class="aso-support" id="support">
-            <div class="aso-support__head">
-              ${icon('headset_mic')}
-              <div><b>获取帮助</b><small>多种方式为您提供支持</small></div>
-            </div>
-            <div class="aso-support__list">
-              ${supportCards
-                .map(
-                  ([ico, title, desc, primary]) => `
-              <button class="aso-support__card${primary ? ' is-primary' : ''}" type="button" data-support="${title}">
-                ${icon(ico)}<span><b>${title}</b><small>${desc}</small></span>${icon('chevron_right')}
-              </button>`
-                )
-                .join('')}
-            </div>
-          </div>
+          <button class="aso-support-cta" id="support" type="button" data-contact-open>
+            <span class="aso-support-cta__icon">${icon('headset_mic')}</span>
+            <span class="aso-support-cta__copy">
+              <b>有任何问题，请联系我们的客服人员</b>
+              <small>留下手机号，客服将尽快与您联系</small>
+            </span>
+            <span class="aso-support-cta__action">立即联系 ${icon('arrow_forward')}</span>
+          </button>
         </div>
       </section>
       </div>
@@ -1112,6 +1096,33 @@ function renderPortal() {
             <div class="aso-invite-modal__actions">
               <button type="button" class="aso-invite-modal__ghost" data-invite-modal-close>取消</button>
               <button type="submit" class="aso-invite-modal__submit">${icon('send')} 发送邀约</button>
+            </div>
+          </form>
+        </section>
+      </div>
+      <div class="aso-contact-modal" data-contact-modal hidden aria-hidden="true">
+        <div class="aso-contact-modal__backdrop" data-contact-modal-close></div>
+        <section class="aso-contact-modal__panel" role="dialog" aria-modal="true" aria-labelledby="aso-contact-modal-title">
+          <button type="button" class="aso-contact-modal__close" data-contact-modal-close aria-label="关闭">${icon('close')}</button>
+          <div class="aso-contact-modal__badge">${icon('support_agent')}</div>
+          <h2 id="aso-contact-modal-title">联系客服</h2>
+          <p>请留下您的手机用户信息，客服人员将尽快与您联系。</p>
+          <form class="aso-contact-modal__form" data-contact-form>
+            <label>
+              <span>姓名</span>
+              <input name="contactName" type="text" required maxlength="40" placeholder="请输入姓名" autocomplete="name" />
+            </label>
+            <label>
+              <span>手机号</span>
+              <input name="contactPhone" type="tel" required maxlength="11" pattern="1[3-9]\\d{9}" placeholder="11 位手机号" inputmode="numeric" autocomplete="tel" />
+            </label>
+            <label>
+              <span>问题描述（选填）</span>
+              <textarea name="contactNote" rows="3" maxlength="200" placeholder="简单描述您遇到的问题，便于客服更快处理"></textarea>
+            </label>
+            <div class="aso-contact-modal__actions">
+              <button type="button" class="aso-btn aso-btn--muted" data-contact-modal-close>取消</button>
+              <button type="submit" class="aso-btn aso-btn--primary">${icon('send')} 提交联系方式</button>
             </div>
           </form>
         </section>
@@ -1580,6 +1591,45 @@ function submitVisitorInvite(root, form) {
   }
   setInviteModalOpen(root, false)
   showToast(`已向 ${guestName} 发送访客邀约（${visitDate} ${visitTime}）`)
+}
+
+function setContactModalOpen(root, open) {
+  const modal = root.querySelector('[data-contact-modal]')
+  if (!modal) return
+  modal.hidden = !open
+  modal.setAttribute('aria-hidden', String(!open))
+  document.body.classList.toggle('aso-contact-modal-open', open)
+  if (open) {
+    const form = modal.querySelector('[data-contact-form]')
+    form?.reset()
+    const user = window.ASPACE_CURRENT_USER
+    const nameInput = form?.querySelector('[name="contactName"]')
+    if (nameInput && (user?.name || user?.displayName)) {
+      nameInput.value = user.name || user.displayName
+    }
+    modal.classList.remove('is-open')
+    void modal.offsetWidth
+    modal.classList.add('is-open')
+    window.setTimeout(() => form?.querySelector('[name="contactPhone"]')?.focus(), 20)
+  } else {
+    modal.classList.remove('is-open')
+  }
+}
+
+function submitContactRequest(root, form) {
+  const data = new FormData(form)
+  const name = String(data.get('contactName') || '').trim()
+  const phone = String(data.get('contactPhone') || '').trim()
+  if (!name || !phone) {
+    showToast('请填写姓名和手机号')
+    return
+  }
+  if (!/^1[3-9]\d{9}$/.test(phone)) {
+    showToast('请输入正确的 11 位手机号')
+    return
+  }
+  setContactModalOpen(root, false)
+  showToast('已提交联系方式，客服将尽快与您联系')
 }
 
 function setLoginPromptOpen(root, open, message = '') {
@@ -2396,9 +2446,13 @@ export async function initAspaceOne() {
       return
     }
 
-    const support = event.target.closest('[data-support]')
-    if (support) {
-      showToast(`${support.dataset.support}：服务流程待接入`)
+    if (event.target.closest('[data-contact-open]')) {
+      setContactModalOpen(root, true)
+      return
+    }
+
+    if (event.target.closest('[data-contact-modal-close]')) {
+      setContactModalOpen(root, false)
       return
     }
 
@@ -2409,6 +2463,11 @@ export async function initAspaceOne() {
     if (event.target.matches('[data-invite-form]')) {
       event.preventDefault()
       submitVisitorInvite(root, event.target)
+      return
+    }
+    if (event.target.matches('[data-contact-form]')) {
+      event.preventDefault()
+      submitContactRequest(root, event.target)
       return
     }
     if (!event.target.matches('[data-quick-settings-form]')) return
@@ -2451,7 +2510,8 @@ export async function initAspaceOne() {
   root.querySelector('[data-embed-close]')?.addEventListener('click', () => closeAppEmbed(root))
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return
-    if (!root.querySelector('[data-invite-modal]')?.hidden) setInviteModalOpen(root, false)
+    if (!root.querySelector('[data-contact-modal]')?.hidden) setContactModalOpen(root, false)
+    else if (!root.querySelector('[data-invite-modal]')?.hidden) setInviteModalOpen(root, false)
     else if (!root.querySelector('[data-device-modal]')?.hidden) setDeviceModalOpen(root, false)
     else if (!root.querySelector('[data-login-prompt]')?.hidden) setLoginPromptOpen(root, false)
     else if (!root.querySelector('[data-quick-settings]')?.hidden) setQuickSettingsOpen(root, false)
