@@ -2392,7 +2392,7 @@ body.aso-settings-open { overflow: hidden; }
 .aso-updates__list b { display: block; color: var(--aso-text); font-size: 14px; font-weight: 720; }
 .aso-updates__list p { margin: 7px 0 0; color: var(--aso-muted); font-size: 12.5px; line-height: 1.65; }
 
-.aso-support-cta {
+.aso-page .aso-support-cta {
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr) auto;
   align-items: center;
@@ -2411,7 +2411,8 @@ body.aso-settings-open { overflow: hidden; }
   cursor: pointer;
   transition: transform .28s var(--aso-spring), box-shadow .28s ease;
 }
-.aso-support-cta:hover {
+.aso-page .aso-support-cta:hover {
+  color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 20px 48px rgba(12, 42, 96, .26);
 }
@@ -2425,9 +2426,10 @@ body.aso-settings-open { overflow: hidden; }
   color: #9fd0ff;
 }
 .aso-support-cta__icon .material-symbols-outlined { font-size: 30px; }
-.aso-support-cta__copy { min-width: 0; }
+.aso-support-cta__copy { min-width: 0; color: #fff; }
 .aso-support-cta__copy b {
   display: block;
+  color: #fff;
   font-size: clamp(18px, 2.2vw, 24px);
   font-weight: 800;
   letter-spacing: -.03em;
@@ -2436,10 +2438,10 @@ body.aso-settings-open { overflow: hidden; }
 .aso-support-cta__copy small {
   display: block;
   margin-top: 6px;
-  color: rgba(210, 228, 255, .82);
+  color: rgba(210, 228, 255, .9);
   font-size: 13px;
 }
-.aso-support-cta__action {
+.aso-page .aso-support-cta__action {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -3407,8 +3409,9 @@ body.aso-embed-open { overflow: hidden; }
   .aso-updates__list li { grid-template-columns: 1fr; padding-bottom: 18px; }
   .aso-updates__list time { grid-area: auto; text-align: left; }
   .aso-updates__list div { grid-area: auto; margin-top: 5px; }
-  .aso-support { margin-top: 22px; padding: 12px; }
-  .aso-support__list { grid-template-columns: 1fr; gap: 8px; }
+  .aso-support-cta { margin-top: 22px; }
+  .aso-contact-modal__actions { flex-direction: column-reverse; }
+  .aso-contact-modal__actions .aso-btn { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
