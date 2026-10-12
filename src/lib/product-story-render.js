@@ -94,7 +94,6 @@ export function renderProductCapabilities(story, { editable = false } = {}) {
   const visible = items.filter((item) => item && (item.title || item.desc))
   if (!visible.length && !editable) return ''
   const list = editable ? items : visible
-  const defaultIcons = ['sensors', 'cloud_upload', 'notifications_active', 'bolt']
   return `
     <section class="hpi-caps" id="hpi-caps">
       <div class="hwc-shell">
@@ -106,26 +105,27 @@ export function renderProductCapabilities(story, { editable = false } = {}) {
         })}
         <div class="hpi-caps__grid">
           ${list
-            .map((item, index) => {
-              const icon = item.icon || defaultIcons[index] || 'check_circle'
-              return `
+            .map(
+              (item, index) => `
             <article class="hpi-caps__item">
-              <span class="hpi-caps__icon material-symbols-outlined" aria-hidden="true">${esc(icon)}</span>
-              ${textNode(`story.capabilities.items.${index}.title`, item.title || '', {
-                editable,
-                tag: 'h3',
-                className: 'hpi-caps__name',
-                placeholder: '能力标题',
-              })}
-              ${textNode(`story.capabilities.items.${index}.desc`, item.desc || '', {
-                editable,
-                tag: 'p',
-                className: 'hpi-caps__desc',
-                multiline: true,
-                placeholder: '能力说明（可选）',
-              })}
+              <span class="hpi-caps__num" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span>
+              <div class="hpi-caps__body">
+                ${textNode(`story.capabilities.items.${index}.title`, item.title || '', {
+                  editable,
+                  tag: 'h3',
+                  className: 'hpi-caps__name',
+                  placeholder: '能力标题',
+                })}
+                ${textNode(`story.capabilities.items.${index}.desc`, item.desc || '', {
+                  editable,
+                  tag: 'p',
+                  className: 'hpi-caps__desc',
+                  multiline: true,
+                  placeholder: '能力说明（可选）',
+                })}
+              </div>
             </article>`
-            })
+            )
             .join('')}
         </div>
       </div>
