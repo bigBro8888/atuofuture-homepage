@@ -91,13 +91,31 @@ export async function initHardwareProductPage() {
         lib.title ||
         lib.subtitle
       if (!hasLib) return base
+      const baseGallery = Array.isArray(base.gallery)
+        ? base.gallery
+            .map((item) =>
+              typeof item === 'string'
+                ? { url: item.trim(), caption: '' }
+                : { url: String(item?.url || '').trim(), caption: String(item?.caption || '').trim() }
+            )
+            .filter((item) => item.url)
+        : []
+      // CMS 若只配了 1 张，用默认图补齐，保证前台可左右切换
+      const gallery = []
+      const seen = new Set()
+      for (const item of [...libGallery, ...baseGallery]) {
+        if (!item.url || seen.has(item.url)) continue
+        seen.add(item.url)
+        gallery.push(item)
+        if (gallery.length >= 5) break
+      }
       return {
         ...base,
         ...lib,
         mediaType: 'image',
-        gallery: libGallery.length ? libGallery.slice(0, 5) : base.gallery || [],
+        gallery,
         points: lib.points?.some((p) => p?.title) ? lib.points : base.points,
-        image: lib.image || libGallery[0]?.url || base.image || '',
+        image: lib.image || gallery[0]?.url || base.image || '',
       }
     })(),
     capabilities:

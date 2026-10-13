@@ -86,28 +86,27 @@ function normalizeGalleryItem(item) {
 
 function collectIntroGallery(story, product) {
   const showcase = story?.showcase || {}
-  const fromGallery = (Array.isArray(showcase.gallery) ? showcase.gallery : [])
-    .map(normalizeGalleryItem)
-    .filter((item) => item.url)
-  if (fromGallery.length) return fromGallery.slice(0, 5)
-
-  const fromAlbum = (story?.album?.items || [])
-    .map(normalizeGalleryItem)
-    .filter((item) => item.url)
-  if (fromAlbum.length) return fromAlbum.slice(0, 5)
-
-  const singles = [
+  const pools = [
+    ...(Array.isArray(showcase.gallery) ? showcase.gallery : []),
+    ...(story?.album?.items || []),
     showcase.image,
     showcase.model3d?.poster,
     ...(product?.gallery || []),
     product?.coverImage,
   ]
-    .map((url) => String(url || '').trim())
-    .filter(Boolean)
-  return [...new Set(singles)].slice(0, 5).map((url, index) => ({
-    url,
-    caption: index === 0 ? '产品主图' : '',
-  }))
+  const seen = new Set()
+  const items = []
+  for (const entry of pools) {
+    const item = normalizeGalleryItem(entry)
+    if (!item.url || seen.has(item.url)) continue
+    seen.add(item.url)
+    items.push({
+      url: item.url,
+      caption: item.caption || (items.length === 0 ? '产品主图' : ''),
+    })
+    if (items.length >= 5) break
+  }
+  return items
 }
 
 function renderShowcaseVisual(story, product, { editable = false } = {}) {
@@ -121,9 +120,9 @@ function renderShowcaseVisual(story, product, { editable = false } = {}) {
   const first = visible.find((item) => item.url) || visible[0] || { url: '', caption: '' }
   const productName = product?.name || '产品'
   const slideCount = visible.filter((item) => item.url).length
-  const showNav = slideCount > 1 || editable
+  const canSwitch = slideCount > 1
 
-  // 前台不展示缩略图，用隐藏 slide 数据 + 圆点切换；后台保留小缩略图方便换图
+  // 前台：隐藏 slide 数据源 + 圆点；后台保留小缩略图换图
   const slides = visible
     .map((item, index) => {
       if (!item.url && !editable) return ''
@@ -131,19 +130,17 @@ function renderShowcaseVisual(story, product, { editable = false } = {}) {
     })
     .join('')
 
-  const dots =
-    !editable && slideCount > 1
-      ? `<div class="hpi-gallery__dots" role="tablist" aria-label="商品图切换">
+  const dots = canSwitch
+    ? `<div class="hpi-gallery__dots" role="tablist" aria-label="商品图切换">
           ${visible
-            .map(
-              (item, index) =>
-                item.url
-                  ? `<button type="button" class="hpi-gallery__dot${index === 0 ? ' is-active' : ''}" data-hpi-gallery-dot="${index}" aria-label="第 ${index + 1} 张"></button>`
-                  : ''
+            .map((item, index) =>
+              item.url
+                ? `<button type="button" class="hpi-gallery__dot${index === 0 ? ' is-active' : ''}" data-hpi-gallery-dot="${index}" aria-label="第 ${index + 1} 张"></button>`
+                : ''
             )
             .join('')}
         </div>`
-      : ''
+    : ''
 
   const editThumbs = editable
     ? `<ul class="hpi-gallery__thumbs hpi-gallery__thumbs--edit">
@@ -170,29 +167,21 @@ function renderShowcaseVisual(story, product, { editable = false } = {}) {
     : ''
 
   const mainInner = first.url
-    ? `<img data-hpi-gallery-main src="${esc(first.url)}" alt="${esc(first.caption || productName)}" width="960" height="960" />`
+    ? `<img data-hpi-gallery-main src="${esc(first.url)}" alt="${esc(first.caption || productName)}" width="960" height="960" draggable="false" />`
     : editable
       ? `<span class="hpi-gallery__main-empty">请从下方添加商品图</span>`
       : `<span class="hpi-gallery__main-empty">暂无商品图</span>`
 
   return `
-    <div class="hpi-gallery" data-hpi-gallery>
+    <div class="hpi-gallery${canSwitch ? ' hpi-gallery--switchable' : ''}" data-hpi-gallery tabindex="0" aria-roledescription="carousel" aria-label="${esc(productName)} 商品图">
       <div class="hpi-gallery__stage">
-        ${
-          showNav
-            ? `<button type="button" class="hpi-gallery__nav hpi-gallery__nav--prev" data-hpi-gallery-prev aria-label="上一张"${editable ? ' tabindex="-1"' : ''}>
-          <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
-        </button>`
-            : ''
-        }
+        <button type="button" class="hpi-gallery__nav hpi-gallery__nav--prev" data-hpi-gallery-prev aria-label="上一张"${canSwitch || editable ? '' : ' hidden disabled'}${editable ? ' tabindex="-1"' : ''}>
+          <span aria-hidden="true">‹</span>
+        </button>
         <div class="hpi-gallery__main">${mainInner}</div>
-        ${
-          showNav
-            ? `<button type="button" class="hpi-gallery__nav hpi-gallery__nav--next" data-hpi-gallery-next aria-label="下一张"${editable ? ' tabindex="-1"' : ''}>
-          <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
-        </button>`
-            : ''
-        }
+        <button type="button" class="hpi-gallery__nav hpi-gallery__nav--next" data-hpi-gallery-next aria-label="下一张"${canSwitch || editable ? '' : ' hidden disabled'}${editable ? ' tabindex="-1"' : ''}>
+          <span aria-hidden="true">›</span>
+        </button>
         ${dots}
         <div class="hpi-gallery__slides" hidden>${slides}</div>
       </div>
@@ -907,6 +896,8 @@ export function bindProductGallery(root = document) {
   const host = root.querySelector?.('[data-hpi-root]') || root
   if (!host?.querySelectorAll) return
   host.querySelectorAll('[data-hpi-gallery]').forEach((gallery) => {
+    if (gallery.dataset.hpiGalleryBound === '1') return
+    gallery.dataset.hpiGalleryBound = '1'
     const mainBox = gallery.querySelector('.hpi-gallery__main')
     const dots = [...gallery.querySelectorAll('[data-hpi-gallery-dot]')]
     const thumbs = [...gallery.querySelectorAll('[data-hpi-gallery-thumb]')].filter((thumb) => {
@@ -928,7 +919,7 @@ export function bindProductGallery(root = document) {
     }
 
     const activate = (next) => {
-      if (!thumbs.length) return
+      if (thumbs.length < 2) return
       index = ((next % thumbs.length) + thumbs.length) % thumbs.length
       thumbs.forEach((thumb, i) => thumb.classList.toggle('is-active', i === index))
       dots.forEach((dot) => {
@@ -943,30 +934,74 @@ export function bindProductGallery(root = document) {
           main.alt = tip || main.alt || ''
           main.hidden = false
         } else if (mainBox) {
-          mainBox.innerHTML = `<img data-hpi-gallery-main src="${esc(src)}" alt="${esc(tip)}" width="960" height="960" />`
+          mainBox.innerHTML = `<img data-hpi-gallery-main src="${esc(src)}" alt="${esc(tip)}" width="960" height="960" draggable="false" />`
         }
       }
     }
 
     thumbs.forEach((thumb, i) => {
-      thumb.addEventListener('mouseenter', () => activate(i))
-      thumb.addEventListener('focusin', () => activate(i))
       thumb.addEventListener('click', (event) => {
         if (event.target.closest('[data-edit-image]')) return
         activate(i)
       })
     })
     dots.forEach((dot) => {
-      dot.addEventListener('click', () => activate(Number(dot.dataset.hpiGalleryDot) || 0))
+      dot.addEventListener('click', (event) => {
+        event.preventDefault()
+        activate(Number(dot.dataset.hpiGalleryDot) || 0)
+      })
     })
     gallery.querySelector('[data-hpi-gallery-prev]')?.addEventListener('click', (event) => {
       event.preventDefault()
+      event.stopPropagation()
       activate(index - 1)
     })
     gallery.querySelector('[data-hpi-gallery-next]')?.addEventListener('click', (event) => {
       event.preventDefault()
+      event.stopPropagation()
       activate(index + 1)
     })
+    gallery.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        activate(index - 1)
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        activate(index + 1)
+      }
+    })
+
+    // 点击主图左右半区切换（淘宝习惯）
+    mainBox?.addEventListener('click', (event) => {
+      if (thumbs.length < 2) return
+      if (event.target.closest('[data-hpi-gallery-prev], [data-hpi-gallery-next], [data-hpi-gallery-dot]')) return
+      const rect = mainBox.getBoundingClientRect()
+      const x = event.clientX - rect.left
+      activate(x < rect.width / 2 ? index - 1 : index + 1)
+    })
+
+    // 触摸滑动
+    let touchX = null
+    gallery.addEventListener(
+      'touchstart',
+      (event) => {
+        touchX = event.changedTouches?.[0]?.clientX ?? null
+      },
+      { passive: true }
+    )
+    gallery.addEventListener(
+      'touchend',
+      (event) => {
+        if (touchX == null || thumbs.length < 2) return
+        const endX = event.changedTouches?.[0]?.clientX ?? touchX
+        const delta = endX - touchX
+        touchX = null
+        if (Math.abs(delta) < 40) return
+        activate(delta > 0 ? index - 1 : index + 1)
+      },
+      { passive: true }
+    )
+
     activate(index)
   })
 }
