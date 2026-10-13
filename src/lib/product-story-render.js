@@ -69,7 +69,7 @@ export function renderProductHero(story, product, line, { editable = false } = {
           ${bulletNodes ? `<ul class="hpi-intro__bullets">${bulletNodes}</ul>` : ''}
           <div class="hpi-intro__actions">
             <button type="button" class="hpi-intro__cta"${editable ? '' : ' data-demo-modal-open'}>预约方案演示</button>
-            <a class="hpi-intro__link" href="#hpi-highlights"${editable ? ' tabindex="-1"' : ''}>查看产品亮点</a>
+            <a class="hpi-intro__link" href="#hpi-detail"${editable ? ' tabindex="-1"' : ''}>查看产品亮点</a>
           </div>
         </div>
       </div>
@@ -741,16 +741,15 @@ export function renderProductDetailImages(story, { editable = false } = {}) {
   const list = editable ? items : visible
   const rawTitle = String(block.title || '').trim()
   const title =
-    !rawTitle || rawTitle === '商品详情' || rawTitle === '细节图' ? '产品详情信息' : rawTitle
-  return `
-    <section class="hpi-detail" id="hpi-detail">
-      <div class="hwc-shell">
-        <div class="hpi-detail__head">
+    !rawTitle || rawTitle === '商品详情' || rawTitle === '细节图' ? '商品详情' : rawTitle
+  // 前台亮点区只铺详情长图；标题说明留给后台编辑
+  const head = editable
+    ? `<div class="hpi-detail__head">
           ${textNode('story.detailImages.title', title, {
             editable,
             tag: 'h2',
             className: 'hpi-detail__title',
-            placeholder: '产品详情信息',
+            placeholder: '商品详情',
           })}
           ${textNode('story.detailImages.subtitle', block.subtitle || '', {
             editable,
@@ -759,7 +758,12 @@ export function renderProductDetailImages(story, { editable = false } = {}) {
             multiline: true,
             placeholder: '一句话说明（可选）',
           })}
-        </div>
+        </div>`
+    : ''
+  return `
+    <section class="hpi-detail" id="hpi-detail">
+      <div class="hwc-shell hpi-detail__shell">
+        ${head}
         <div class="hpi-detail__list">
           ${list
             .map(
@@ -802,7 +806,7 @@ export function renderProductDetailImages(story, { editable = false } = {}) {
               ? `<button type="button" class="hpi-detail__add" data-detail-add${list.length >= 12 ? ' disabled' : ''}>
             <span class="material-symbols-outlined" aria-hidden="true">add_photo_alternate</span>
             <strong>添加详情图</strong>
-            <small>最多 12 张 · 建议 1600×1000</small>
+            <small>最多 12 张 · 建议宽度 1200–1600</small>
           </button>`
               : ''
           }
@@ -856,10 +860,7 @@ export function renderProductStory(product, story, line, { editable = false } = 
       ${renderProductTabs('overview')}
       <div class="hpi-panels">
         <div class="hpi-panel is-active" data-hpi-panel="overview">
-          ${renderHighlightMasthead(resolved, product, opts)}
-          ${renderProductCapabilities(resolved, opts)}
           ${renderOverviewDetails(resolved, opts)}
-          ${renderProductScenarios(resolved, opts)}
           ${renderProductClosing(resolved, opts)}
         </div>
         <div class="hpi-panel" data-hpi-panel="photos" hidden>
@@ -1042,11 +1043,11 @@ export function bindProductStoryTabs(root = document) {
   const hashMap = { highlights: 'overview', overview: 'overview', photos: 'photos', videos: 'videos', specs: 'specs' }
   activate(hashMap[hash] || 'overview')
 
-  host.querySelectorAll('a[href="#hpi-highlights"]').forEach((link) => {
+  host.querySelectorAll('a[href="#hpi-detail"], a[href="#hpi-highlights"]').forEach((link) => {
     link.addEventListener('click', (event) => {
       event.preventDefault()
       activate('overview')
-      host.querySelector('#hpi-highlights')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      host.querySelector('#hpi-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
   })
 }

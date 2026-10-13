@@ -18037,13 +18037,17 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   color: var(--hwc-muted, #667085);
 }
 
+/* 亮点 = 后台商品详情长图，通栏堆叠展示 */
 .hpi-detail {
-  padding: 48px 0 64px;
-  background: #f7f9fc;
+  padding: 32px 0 56px;
+  background: #fff;
+}
+.hpi-detail__shell {
+  width: min(960px, var(--hpi-col));
 }
 .hpi-detail__head {
   max-width: 40rem;
-  margin: 0 auto 24px;
+  margin: 0 auto 28px;
   text-align: center;
 }
 .hpi-detail__title {
@@ -18060,9 +18064,8 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 }
 .hpi-detail__list {
   display: grid;
-  gap: 16px;
-  /* 收窄内容轨，避免低清图被拉满屏发糊、发笨 */
-  width: min(760px, var(--hpi-col));
+  gap: 20px;
+  width: 100%;
   max-width: 100%;
   margin: 0 auto;
 }
@@ -18071,37 +18074,37 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   margin: 0;
   display: grid;
   gap: 8px;
-  justify-items: center;
+  justify-items: stretch;
 }
 .hpi-detail__media {
   margin: 0;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  border-radius: 10px;
+  display: block;
+  border-radius: 16px;
   overflow: hidden;
-  background: transparent;
+  background: #f5f7fa;
   box-shadow: none;
 }
 .hpi-detail__media > img,
 .hpi-detail__media > .hpi-edit-img {
   display: block;
-  width: auto;
+  width: 100%;
   max-width: 100%;
   height: auto;
 }
 .hpi-detail__media > img,
 .hpi-detail__media > .hpi-edit-img img {
-  width: auto;
+  width: 100%;
   max-width: 100%;
   height: auto;
   display: block;
+  vertical-align: top;
 }
 .hpi-detail__media > .hpi-edit-img--empty {
   width: 100%;
-  min-height: 220px;
+  min-height: 280px;
   border: 1px dashed #c9d5e6;
-  border-radius: 10px;
+  border-radius: 16px;
   background: #f4f7fb;
 }
 .hpi-detail__caption {
