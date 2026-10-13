@@ -17096,37 +17096,207 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .hpi-crumb { margin: 0 0 18px; font-size: 13px; color: #8b95a8; }
 .hpi-pad .hpi-crumb a { color: #8b95a8; }
 
-/* 商品详情紧凑页头（无 Banner 大图） */
-.hpi-head {
-  padding: calc(4rem + 28px) 0 20px;
+/* Vigi 风格：顶部产品介绍（左媒体 / 右卖点） */
+.hpi-intro {
+  padding: calc(4rem + 24px) 0 28px;
   background: #fff;
-  border-bottom: 1px solid rgba(20, 32, 51, 0.06);
 }
-.hpi-head__inner { width: var(--hpi-col); }
-.hpi-head__crumb {
+.hpi-intro__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  gap: 40px;
+  align-items: start;
+}
+.hpi-intro__media { min-width: 0; }
+.hpi-intro__media .hpi-showcase__visual {
+  min-height: 420px;
+  border-radius: 16px;
+}
+.hpi-intro__media .hpi-showcase__frame {
+  min-height: 420px;
+  height: min(520px, 58vw);
+}
+.hpi-intro__meta { padding-top: 8px; }
+.hpi-intro__crumb {
   margin: 0 0 10px;
   font-size: 13px;
   color: #8b95a8;
 }
-.hpi-head__crumb a {
+.hpi-intro__crumb a {
   color: inherit;
   text-decoration: none;
 }
-.hpi-head__crumb a:hover { color: #0b7f82; }
-.hpi-head__title {
-  margin: 0;
-  max-width: 18em;
-  font-size: clamp(28px, 3.2vw, 40px);
-  line-height: 1.2;
+.hpi-intro__crumb a:hover { color: #0b7f82; }
+.hpi-intro__model {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0b7f82;
+}
+.hpi-intro__title {
+  margin: 0 0 12px;
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1.25;
   letter-spacing: -0.03em;
   color: #142033;
 }
-.hpi-head__desc {
-  margin: 10px 0 0;
-  max-width: 42em;
+.hpi-intro__desc {
+  margin: 0 0 20px;
   font-size: 15px;
   line-height: 1.7;
   color: #5c6b7e;
+}
+.hpi-intro__bullets {
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.hpi-intro__bullet {
+  position: relative;
+  padding-left: 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #334155;
+}
+.hpi-intro__bullet::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00CFC3;
+}
+.hpi-intro__bullet-title {
+  display: inline;
+  font-weight: 700;
+  color: #142033;
+}
+.hpi-intro__bullet-desc {
+  display: inline;
+  color: #5c6b7e;
+}
+.hpi-intro__bullet-title:not(:empty) + .hpi-intro__bullet-desc::before {
+  content: '：';
+}
+.hpi-intro__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+.hpi-intro__cta {
+  appearance: none;
+  border: 0;
+  min-height: 44px;
+  padding: 0 22px;
+  border-radius: 4px;
+  background: #0b7f82;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hpi-intro__cta:hover { background: #096b6e; }
+.hpi-intro__link {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0b7f82;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.hpi-intro__link:hover { border-bottom-color: #0b7f82; }
+
+/* 亮点主视觉条（Vigi Highlights 顶区） */
+.hpi-hl {
+  padding: 72px 0 48px;
+  background: #05082F;
+  color: #fff;
+  text-align: center;
+}
+.hpi-hl__title {
+  margin: 0 0 10px;
+  font-size: clamp(28px, 3.4vw, 42px);
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+.hpi-hl__sub {
+  margin: 0 0 28px;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+.hpi-hl__chips {
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 920px;
+}
+.hpi-hl__chip {
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* 亮点叙事块（大标题 + 说明，左右交替） */
+.hpi-features__row {
+  padding: 64px 0;
+  background: #fff;
+  border-bottom: 1px solid rgba(20, 32, 51, 0.06);
+}
+.hpi-features__row:nth-child(even) { background: #f7f9fc; }
+.hpi-features__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 48px;
+  align-items: center;
+}
+.hpi-features__row--flip .hpi-features__grid {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+}
+.hpi-features__row--flip .hpi-features__copy { order: 2; }
+.hpi-features__row--flip .hpi-features__visual { order: 1; }
+.hpi-features__name {
+  margin: 0 0 14px;
+  font-size: clamp(26px, 3vw, 36px);
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  color: #142033;
+}
+.hpi-features__desc {
+  margin: 0;
+  max-width: 34em;
+  font-size: 16px;
+  line-height: 1.75;
+  color: #5c6b7e;
+}
+.hpi-features__visual {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(0, 207, 195, 0.16), transparent 60%),
+    linear-gradient(160deg, #e8eef6, #f8fafc);
+}
+.hpi-features__index {
+  font-size: clamp(64px, 8vw, 96px);
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  color: rgba(11, 127, 130, 0.18);
 }
 
 .hpi-showcase {
@@ -18049,7 +18219,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   color: #667085;
 }
 
-.hpi--editable .hpi-head { padding-top: 24px; }
+.hpi--editable .hpi-intro { padding-top: 24px; }
 .hpi--editable .hpi-tabs { position: sticky; top: 0; z-index: 20; }
 .hpi--editable .hpi-specs__row { padding-right: 36px; }
 .hpi--editable .hpi-videos__card { padding-bottom: 16px; }
@@ -18087,8 +18257,12 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .hpi-close__soft span { margin: 0 6px; color: rgba(255,255,255,.35); }
 
 @media (max-width: 1100px) {
-  .hpi-showcase__stage { width: var(--hpi-col); }
-  .hpi-showcase__frame { min-height: 400px; height: min(520px, 70vw); }
+  .hpi-intro__grid { grid-template-columns: 1fr; gap: 24px; }
+  .hpi-intro__media .hpi-showcase__frame { min-height: 360px; height: min(440px, 70vw); }
+  .hpi-features__grid,
+  .hpi-features__row--flip .hpi-features__grid { grid-template-columns: 1fr; gap: 24px; }
+  .hpi-features__row--flip .hpi-features__copy,
+  .hpi-features__row--flip .hpi-features__visual { order: initial; }
   .hpi-caps__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hpi-caps__item {
     padding: 24px 20px 20px 0;
@@ -18108,8 +18282,10 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   .hpi-how__stages::before { display: none; }
 }
 @media (max-width: 720px) {
-  .hpi-head { padding: calc(4rem + 20px) 0 16px; }
-  .hpi-head__title { font-size: 28px; }
+  .hpi-intro { padding: calc(4rem + 16px) 0 20px; }
+  .hpi-intro__title { font-size: 26px; }
+  .hpi-hl { padding: 56px 0 36px; }
+  .hpi-features__row { padding: 48px 0; }
   .hpi {
     --hpi-col: min(1680px, calc(100% - 24px));
     --hpi-col-wide: min(1760px, calc(100% - 16px));

@@ -1102,7 +1102,7 @@ export function bindProductLibraryAdmin(helpers) {
       preview.hidden = !field.value.trim()
     }
     if (field.dataset.productField === 'name') {
-      const crumb = composeView.querySelector('.hpi-head__crumb')
+      const crumb = composeView.querySelector('.hpi-intro__crumb, .hpi-head__crumb')
       if (crumb) {
         const parts = crumb.innerHTML.split(' / ')
         if (parts.length) {

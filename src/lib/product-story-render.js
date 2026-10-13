@@ -2,28 +2,78 @@
 
 import { esc, textNode, imgNode } from './vedit-nodes.js'
 
+function collectIntroBullets(story, product) {
+  const fromCaps = (story.capabilities?.items || [])
+    .filter((item) => item && (item.title || item.desc))
+    .slice(0, 8)
+  if (fromCaps.length) return fromCaps.map((item) => ({ title: item.title || '', desc: item.desc || '' }))
+  const fromPoints = (story.showcase?.points || [])
+    .filter((item) => item && (item.title || item.desc))
+    .slice(0, 8)
+  if (fromPoints.length) return fromPoints
+  const fromProduct = (product?.capabilities || []).filter(Boolean).slice(0, 8)
+  return fromProduct.map((title) => ({ title, desc: '' }))
+}
+
 export function renderProductHero(story, product, line, { editable = false } = {}) {
   const hero = story.hero || {}
   const title = hero.title || product.name || ''
-  const desc = hero.description || hero.headline || ''
+  const desc = hero.description || hero.headline || product.shortDescription || ''
+  const bullets = collectIntroBullets(story, product)
+  const bulletNodes = (editable ? [...bullets, {}, {}, {}].slice(0, Math.max(bullets.length, 3)) : bullets)
+    .map((item, index) => {
+      if (!editable && !item.title && !item.desc) return ''
+      return `
+        <li class="hpi-intro__bullet">
+          ${textNode(`story.capabilities.items.${index}.title`, item.title || '', {
+            editable,
+            tag: 'strong',
+            className: 'hpi-intro__bullet-title',
+            placeholder: '卖点标题',
+          })}
+          ${
+            editable || item.desc
+              ? textNode(`story.capabilities.items.${index}.desc`, item.desc || '', {
+                  editable,
+                  tag: 'span',
+                  className: 'hpi-intro__bullet-desc',
+                  placeholder: '卖点说明',
+                })
+              : ''
+          }
+        </li>`
+    })
+    .join('')
+
   return `
-    <header class="hpi-head">
-      <div class="hwc-shell hpi-head__inner">
-        <p class="hpi-head__crumb"><a href="/hardware/"${editable ? ' tabindex="-1"' : ''}>智能硬件</a>${line ? ` / <a href="/hardware/?line=${esc(line.id)}#hwc-browser"${editable ? ' tabindex="-1"' : ''}>${esc(line.name)}</a>` : ''} / ${esc(product.name)}</p>
-        ${textNode('story.hero.title', title, { editable, tag: 'h1', className: 'hpi-head__title' })}
-        ${
-          desc || editable
-            ? textNode('story.hero.description', desc, {
-                editable,
-                tag: 'p',
-                className: 'hpi-head__desc',
-                multiline: true,
-                placeholder: '一句话产品介绍',
-              })
-            : ''
-        }
+    <section class="hpi-intro" id="hpi-intro">
+      <div class="hwc-shell hpi-intro__grid">
+        <div class="hpi-intro__media">
+          ${renderShowcaseVisual(story.showcase || {}, product, { editable })}
+        </div>
+        <div class="hpi-intro__meta">
+          <p class="hpi-intro__crumb"><a href="/hardware/"${editable ? ' tabindex="-1"' : ''}>智能硬件</a>${line ? ` / <a href="/hardware/?line=${esc(line.id)}#hwc-browser"${editable ? ' tabindex="-1"' : ''}>${esc(line.name)}</a>` : ''} / ${esc(product.name)}</p>
+          <p class="hpi-intro__model">${esc(product.name || '')}</p>
+          ${textNode('story.hero.title', title, { editable, tag: 'h1', className: 'hpi-intro__title' })}
+          ${
+            desc || editable
+              ? textNode('story.hero.description', desc, {
+                  editable,
+                  tag: 'p',
+                  className: 'hpi-intro__desc',
+                  multiline: true,
+                  placeholder: '一句话产品介绍',
+                })
+              : ''
+          }
+          ${bulletNodes ? `<ul class="hpi-intro__bullets">${bulletNodes}</ul>` : ''}
+          <div class="hpi-intro__actions">
+            <button type="button" class="hpi-intro__cta"${editable ? '' : ' data-demo-modal-open'}>预约方案演示</button>
+            <a class="hpi-intro__link" href="#hpi-highlights"${editable ? ' tabindex="-1"' : ''}>查看产品亮点</a>
+          </div>
+        </div>
       </div>
-    </header>`
+    </section>`
 }
 
 function renderShowcaseVisual(block, product, { editable = false } = {}) {
@@ -93,14 +143,28 @@ function renderShowcaseVisual(block, product, { editable = false } = {}) {
 }
 
 export function renderProductShowcase(story, product, { editable = false } = {}) {
-  const block = story.showcase || {}
-  const image = block.image || product?.coverImage || story.hero?.deviceImage || ''
-  const modelSrc = String(block.model3d?.src || '').trim()
-  if (!image && !modelSrc && !editable) return ''
+  // 3D / 主图已并入顶部 intro，保留函数供兼容调用
+  return ''
+}
+
+export function renderHighlightMasthead(story, product, { editable = false } = {}) {
+  const caps = story.capabilities || {}
+  const items = (caps.items || []).filter((item) => item && item.title).slice(0, 12)
+  const chips = items
+    .map((item) => `<li class="hpi-hl__chip"><span>${esc(item.title)}</span></li>`)
+    .join('')
+  const title = caps.title || `${product?.name || '产品'}核心能力`
   return `
-    <section class="hpi-showcase" id="hpi-showcase">
-      <div class="hwc-shell hpi-showcase__stage">
-        ${renderShowcaseVisual(block, product, { editable })}
+    <section class="hpi-hl" id="hpi-highlights">
+      <div class="hwc-shell hpi-hl__inner">
+        ${textNode('story.capabilities.title', title, {
+          editable,
+          tag: 'h2',
+          className: 'hpi-hl__title',
+          placeholder: '亮点区主标题',
+        })}
+        <p class="hpi-hl__sub">${esc(product?.name || '')}</p>
+        ${chips ? `<ul class="hpi-hl__chips">${chips}</ul>` : ''}
       </div>
     </section>`
 }
@@ -112,40 +176,36 @@ export function renderProductCapabilities(story, { editable = false } = {}) {
   if (!visible.length && !editable) return ''
   const list = editable ? items : visible
   return `
-    <section class="hpi-caps" id="hpi-caps">
-      <div class="hwc-shell">
-        ${textNode('story.capabilities.title', block.title || (editable ? '核心能力' : ''), {
-          editable,
-          tag: 'h2',
-          className: 'hpi-caps__title',
-          placeholder: '能力区标题',
-        })}
-        <div class="hpi-caps__grid">
-          ${list
-            .map(
-              (item, index) => `
-            <article class="hpi-caps__item">
-              <span class="hpi-caps__num" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span>
-              <div class="hpi-caps__body">
-                ${textNode(`story.capabilities.items.${index}.title`, item.title || '', {
-                  editable,
-                  tag: 'h3',
-                  className: 'hpi-caps__name',
-                  placeholder: '能力标题',
-                })}
-                ${textNode(`story.capabilities.items.${index}.desc`, item.desc || '', {
-                  editable,
-                  tag: 'p',
-                  className: 'hpi-caps__desc',
-                  multiline: true,
-                  placeholder: '能力说明（可选）',
-                })}
-              </div>
-            </article>`
-            )
-            .join('')}
-        </div>
-      </div>
+    <section class="hpi-features" id="hpi-caps">
+      ${list
+        .map((item, index) => {
+          if (!editable && !item.title && !item.desc) return ''
+          const flip = index % 2 === 1 ? ' hpi-features__row--flip' : ''
+          return `
+        <article class="hpi-features__row${flip}">
+          <div class="hwc-shell hpi-features__grid">
+            <div class="hpi-features__copy">
+              ${textNode(`story.capabilities.items.${index}.title`, item.title || '', {
+                editable,
+                tag: 'h3',
+                className: 'hpi-features__name',
+                placeholder: '能力标题',
+              })}
+              ${textNode(`story.capabilities.items.${index}.desc`, item.desc || '', {
+                editable,
+                tag: 'p',
+                className: 'hpi-features__desc',
+                multiline: true,
+                placeholder: '能力说明',
+              })}
+            </div>
+            <div class="hpi-features__visual" aria-hidden="true">
+              <span class="hpi-features__index">${String(index + 1).padStart(2, '0')}</span>
+            </div>
+          </div>
+        </article>`
+        })
+        .join('')}
     </section>`
 }
 
@@ -601,10 +661,10 @@ export function renderProductVideos(story, { editable = false } = {}) {
 
 function renderProductTabs(active = 'overview') {
   const tabs = [
-    ['overview', '商品首页'],
-    ['specs', '产品参数'],
+    ['overview', '亮点'],
     ['photos', '产品图拍'],
     ['videos', '使用视频'],
+    ['specs', '规格参数'],
   ]
   return `
     <nav class="hpi-tabs" aria-label="商品详情分区" data-hpi-tabs>
@@ -766,21 +826,20 @@ export function renderProductStory(product, story, line, { editable = false } = 
       ${renderProductTabs('overview')}
       <div class="hpi-panels">
         <div class="hpi-panel is-active" data-hpi-panel="overview">
-          ${renderProductShowcase(resolved, product, opts)}
+          ${renderHighlightMasthead(resolved, product, opts)}
           ${renderProductCapabilities(resolved, opts)}
           ${renderOverviewDetails(resolved, opts)}
           ${renderProductScenarios(resolved, opts)}
-          ${renderProductCases(resolved, opts)}
           ${renderProductClosing(resolved, opts)}
-        </div>
-        <div class="hpi-panel" data-hpi-panel="specs" hidden>
-          ${renderProductSpecs(resolved, opts)}
         </div>
         <div class="hpi-panel" data-hpi-panel="photos" hidden>
           ${renderPhotosPanel(resolved, opts)}
         </div>
         <div class="hpi-panel" data-hpi-panel="videos" hidden>
           ${renderProductVideos(resolved, opts)}
+        </div>
+        <div class="hpi-panel" data-hpi-panel="specs" hidden>
+          ${renderProductSpecs(resolved, opts)}
         </div>
       </div>
     </article>`
@@ -839,5 +898,14 @@ export function bindProductStoryTabs(root = document) {
   })
 
   const hash = String(window.location.hash || '').replace(/^#/, '')
-  activate(['overview', 'specs', 'photos', 'videos'].includes(hash) ? hash : 'overview')
+  const hashMap = { highlights: 'overview', overview: 'overview', photos: 'photos', videos: 'videos', specs: 'specs' }
+  activate(hashMap[hash] || 'overview')
+
+  host.querySelectorAll('a[href="#hpi-highlights"]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault()
+      activate('overview')
+      host.querySelector('#hpi-highlights')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  })
 }
