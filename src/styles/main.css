@@ -17174,24 +17174,22 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   font-size: 10px;
   color: #94a3b8;
 }
+/* 强制 1:1 方框；图用 cover 填满，超出部分裁掉 */
 .hpi-gallery__stage {
   position: relative;
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1 / 1;
   width: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 4px;
-  background: #fff;
+  background: #f5f7fa;
   border: 1px solid rgba(20, 32, 51, 0.06);
   overflow: hidden;
 }
 .hpi-gallery__main {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  padding: 0;
+  position: absolute;
+  inset: 0;
   margin: 0;
+  padding: 0;
+  overflow: hidden;
   cursor: default;
 }
 .hpi-gallery--switchable .hpi-gallery__main { cursor: ew-resize; }
@@ -17201,12 +17199,17 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   display: block;
   width: 100%;
   height: 100%;
-  max-width: none;
-  max-height: none;
   object-fit: cover;
   object-position: center;
   user-select: none;
   -webkit-user-drag: none;
+}
+.hpi-gallery__main > .hpi-edit-img {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
 }
 .hpi-gallery__main-empty {
   color: #94a3b8;
