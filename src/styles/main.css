@@ -17103,31 +17103,33 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 }
 .hpi-intro__grid {
   display: grid;
-  grid-template-columns: minmax(0, 540px) minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 28px;
   align-items: start;
   max-width: 1180px;
   margin: 0 auto;
 }
-.hpi-intro__media { min-width: 0; max-width: 540px; }
+.hpi-intro__media { min-width: 0; width: max-content; max-width: 100%; }
 .hpi-intro__meta { min-width: 0; padding-top: 4px; }
 
-/* 淘宝式图集：左竖排缩略图 + 右大图 */
+/* 淘宝式图集：左竖排缩略图 + 右 1:1 大方图 */
 .hpi-gallery {
+  --hpi-gallery-size: 400px;
   display: grid;
   gap: 8px;
 }
 .hpi-gallery__inner {
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
+  display: flex;
+  align-items: flex-start;
   gap: 10px;
-  align-items: start;
 }
 .hpi-gallery__thumbs {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 460px;
+  width: 56px;
+  flex: 0 0 56px;
+  max-height: var(--hpi-gallery-size);
   overflow: hidden;
 }
 .hpi-gallery__thumb {
@@ -17174,14 +17176,20 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   font-size: 10px;
   color: #94a3b8;
 }
-/* 强制 1:1 方框；图用 cover 填满，超出部分裁掉 */
+/* 强制正方形：宽高同为 --hpi-gallery-size，图 cover 裁切填满 */
 .hpi-gallery__stage {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
+  flex: 0 0 var(--hpi-gallery-size);
+  width: var(--hpi-gallery-size);
+  height: var(--hpi-gallery-size);
+  min-width: var(--hpi-gallery-size);
+  min-height: var(--hpi-gallery-size);
+  max-width: var(--hpi-gallery-size);
+  max-height: var(--hpi-gallery-size);
   border-radius: 4px;
   background: #f5f7fa;
-  border: 1px solid rgba(20, 32, 51, 0.06);
+  border: 1px solid rgba(20, 32, 51, 0.08);
   overflow: hidden;
 }
 .hpi-gallery__main {
@@ -17196,11 +17204,13 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .hpi-gallery__main img,
 .hpi-gallery__main > .hpi-edit-img,
 .hpi-gallery__main > .hpi-edit-img img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -18392,8 +18402,10 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
     gap: 20px;
     max-width: none;
   }
-  .hpi-intro__media { max-width: 480px; margin: 0 auto; }
-  .hpi-gallery__inner { grid-template-columns: 48px minmax(0, 1fr); gap: 8px; }
+  .hpi-intro__media { width: 100%; max-width: 100%; margin: 0 auto; }
+  .hpi-gallery { --hpi-gallery-size: min(360px, calc(100vw - 88px)); }
+  .hpi-gallery__inner { gap: 8px; }
+  .hpi-gallery__thumbs { width: 48px; flex-basis: 48px; }
   .hpi-gallery__thumb { width: 48px; height: 48px; }
   .hpi-gallery__nav { opacity: 0.9; width: 30px; height: 30px; font-size: 22px; }
   .hpi-features__grid,

@@ -149,7 +149,7 @@ function renderShowcaseVisual(story, product, { editable = false } = {}) {
     .join('')
 
   const mainInner = first.url
-    ? `<img data-hpi-gallery-main src="${esc(first.url)}" alt="${esc(first.caption || productName)}" width="960" height="960" draggable="false" />`
+    ? `<img data-hpi-gallery-main src="${esc(first.url)}" alt="${esc(first.caption || productName)}" width="800" height="800" draggable="false" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block" />`
     : editable
       ? `<span class="hpi-gallery__main-empty">请从左侧缩略图添加</span>`
       : `<span class="hpi-gallery__main-empty">暂无商品图</span>`
@@ -158,8 +158,8 @@ function renderShowcaseVisual(story, product, { editable = false } = {}) {
     <div class="hpi-gallery${canSwitch ? ' hpi-gallery--switchable' : ''}" data-hpi-gallery tabindex="0" aria-roledescription="carousel" aria-label="${esc(productName)} 商品图">
       <div class="hpi-gallery__inner">
         <div class="hpi-gallery__thumbs" role="tablist" aria-label="商品缩略图">${thumbs}</div>
-        <div class="hpi-gallery__stage">
-          <div class="hpi-gallery__main">${mainInner}</div>
+        <div class="hpi-gallery__stage" style="width:var(--hpi-gallery-size,400px);height:var(--hpi-gallery-size,400px);overflow:hidden;position:relative">
+          <div class="hpi-gallery__main" style="position:absolute;inset:0;overflow:hidden">${mainInner}</div>
           <button type="button" class="hpi-gallery__nav hpi-gallery__nav--prev" data-hpi-gallery-prev aria-label="上一张"${canSwitch || editable ? '' : ' hidden disabled'}${editable ? ' tabindex="-1"' : ''}>
             <span aria-hidden="true">‹</span>
           </button>
@@ -917,7 +917,7 @@ export function bindProductGallery(root = document) {
           main.alt = tip || main.alt || ''
           main.hidden = false
         } else if (mainBox) {
-          mainBox.innerHTML = `<img data-hpi-gallery-main src="${esc(src)}" alt="${esc(tip)}" width="960" height="960" draggable="false" />`
+          mainBox.innerHTML = `<img data-hpi-gallery-main src="${esc(src)}" alt="${esc(tip)}" width="800" height="800" draggable="false" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block" />`
         }
       }
     }
