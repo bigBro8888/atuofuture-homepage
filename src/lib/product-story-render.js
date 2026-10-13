@@ -120,59 +120,83 @@ function renderShowcaseVisual(story, product, { editable = false } = {}) {
   const visible = editable ? slots : slots.filter((item) => item.url)
   const first = visible.find((item) => item.url) || visible[0] || { url: '', caption: '' }
   const productName = product?.name || '产品'
+  const slideCount = visible.filter((item) => item.url).length
+  const showNav = slideCount > 1 || editable
 
-  const thumbs = visible
+  // 前台不展示缩略图，用隐藏 slide 数据 + 圆点切换；后台保留小缩略图方便换图
+  const slides = visible
     .map((item, index) => {
-      if (!editable && !item.url) return ''
-      const active = index === 0 ? ' is-active' : ''
-      const attrs = `class="hpi-gallery__thumb${active}" data-hpi-gallery-thumb="${index}" data-src="${esc(item.url)}" data-caption="${esc(item.caption || '')}" aria-label="商品图 ${index + 1}"`
-      if (editable) {
-        return `
-        <li class="hpi-gallery__thumb-wrap">
-          <div ${attrs}>
-            ${imgNode(`story.showcase.gallery.${index}.url`, item.url, {
-              editable: true,
-              width: 120,
-              height: 120,
-              alt: item.caption || `${productName} 图${index + 1}`,
-              loading: index === 0 ? 'eager' : 'lazy',
-              className: 'hpi-gallery__thumb-img',
-            })}
-          </div>
-        </li>`
-      }
-      return `
-        <li class="hpi-gallery__thumb-wrap">
-          <button type="button" ${attrs}>
-            <img src="${esc(item.url)}" alt="${esc(item.caption || `${productName} 图${index + 1}`)}" width="120" height="120" loading="${index === 0 ? 'eager' : 'lazy'}" />
-          </button>
-        </li>`
+      if (!item.url && !editable) return ''
+      return `<button type="button" class="hpi-gallery__slide${index === 0 ? ' is-active' : ''}" data-hpi-gallery-thumb="${index}" data-src="${esc(item.url)}" data-caption="${esc(item.caption || '')}" aria-label="商品图 ${index + 1}" hidden></button>`
     })
     .join('')
+
+  const dots =
+    !editable && slideCount > 1
+      ? `<div class="hpi-gallery__dots" role="tablist" aria-label="商品图切换">
+          ${visible
+            .map(
+              (item, index) =>
+                item.url
+                  ? `<button type="button" class="hpi-gallery__dot${index === 0 ? ' is-active' : ''}" data-hpi-gallery-dot="${index}" aria-label="第 ${index + 1} 张"></button>`
+                  : ''
+            )
+            .join('')}
+        </div>`
+      : ''
+
+  const editThumbs = editable
+    ? `<ul class="hpi-gallery__thumbs hpi-gallery__thumbs--edit">
+        ${visible
+          .map((item, index) => {
+            const active = index === 0 ? ' is-active' : ''
+            return `
+          <li class="hpi-gallery__thumb-wrap">
+            <div class="hpi-gallery__thumb${active}" data-hpi-gallery-thumb="${index}" data-src="${esc(item.url)}" data-caption="${esc(item.caption || '')}" aria-label="商品图 ${index + 1}">
+              ${imgNode(`story.showcase.gallery.${index}.url`, item.url, {
+                editable: true,
+                width: 72,
+                height: 72,
+                alt: item.caption || `${productName} 图${index + 1}`,
+                loading: index === 0 ? 'eager' : 'lazy',
+                className: 'hpi-gallery__thumb-img',
+              })}
+            </div>
+          </li>`
+          })
+          .join('')}
+      </ul>
+      <p class="hpi-gallery__tip">最多 5 张商品图；点缩略图更换，左右箭头切换预览。</p>`
+    : ''
 
   const mainInner = first.url
     ? `<img data-hpi-gallery-main src="${esc(first.url)}" alt="${esc(first.caption || productName)}" width="960" height="960" />`
     : editable
-      ? `<span class="hpi-gallery__main-empty">请从下方缩略图添加商品图</span>`
+      ? `<span class="hpi-gallery__main-empty">请从下方添加商品图</span>`
       : `<span class="hpi-gallery__main-empty">暂无商品图</span>`
 
   return `
     <div class="hpi-gallery" data-hpi-gallery>
       <div class="hpi-gallery__stage">
-        <button type="button" class="hpi-gallery__nav hpi-gallery__nav--prev" data-hpi-gallery-prev aria-label="上一张"${editable ? ' tabindex="-1"' : ''}>
+        ${
+          showNav
+            ? `<button type="button" class="hpi-gallery__nav hpi-gallery__nav--prev" data-hpi-gallery-prev aria-label="上一张"${editable ? ' tabindex="-1"' : ''}>
           <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
-        </button>
+        </button>`
+            : ''
+        }
         <div class="hpi-gallery__main">${mainInner}</div>
-        <button type="button" class="hpi-gallery__nav hpi-gallery__nav--next" data-hpi-gallery-next aria-label="下一张"${editable ? ' tabindex="-1"' : ''}>
+        ${
+          showNav
+            ? `<button type="button" class="hpi-gallery__nav hpi-gallery__nav--next" data-hpi-gallery-next aria-label="下一张"${editable ? ' tabindex="-1"' : ''}>
           <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
-        </button>
+        </button>`
+            : ''
+        }
+        ${dots}
+        <div class="hpi-gallery__slides" hidden>${slides}</div>
       </div>
-      <ul class="hpi-gallery__thumbs">${thumbs}</ul>
-      ${
-        editable
-          ? `<p class="hpi-gallery__tip">淘宝式商品图：最多 5 张，悬停/点击缩略图切换主图；点缩略图可更换图片。</p>`
-          : `<p class="hpi-gallery__caption" data-hpi-gallery-caption>${esc(first.caption || '')}</p>`
-      }
+      ${editThumbs}
     </div>`
 }
 
@@ -883,10 +907,12 @@ export function bindProductGallery(root = document) {
   const host = root.querySelector?.('[data-hpi-root]') || root
   if (!host?.querySelectorAll) return
   host.querySelectorAll('[data-hpi-gallery]').forEach((gallery) => {
-    const main = gallery.querySelector('[data-hpi-gallery-main]')
     const mainBox = gallery.querySelector('.hpi-gallery__main')
-    const caption = gallery.querySelector('[data-hpi-gallery-caption]')
-    const thumbs = [...gallery.querySelectorAll('[data-hpi-gallery-thumb]')]
+    const dots = [...gallery.querySelectorAll('[data-hpi-gallery-dot]')]
+    const thumbs = [...gallery.querySelectorAll('[data-hpi-gallery-thumb]')].filter((thumb) => {
+      const img = thumb.querySelector('img')
+      return String(thumb.dataset.src || img?.getAttribute('src') || '').trim() || thumb.querySelector('[data-edit-image]')
+    })
     if (!thumbs.length) return
     let index = Math.max(
       0,
@@ -905,7 +931,12 @@ export function bindProductGallery(root = document) {
       if (!thumbs.length) return
       index = ((next % thumbs.length) + thumbs.length) % thumbs.length
       thumbs.forEach((thumb, i) => thumb.classList.toggle('is-active', i === index))
+      dots.forEach((dot) => {
+        const i = Number(dot.dataset.hpiGalleryDot)
+        dot.classList.toggle('is-active', i === index)
+      })
       const { src, caption: tip } = readThumb(thumbs[index])
+      const main = gallery.querySelector('[data-hpi-gallery-main]')
       if (src) {
         if (main) {
           main.src = src
@@ -915,7 +946,6 @@ export function bindProductGallery(root = document) {
           mainBox.innerHTML = `<img data-hpi-gallery-main src="${esc(src)}" alt="${esc(tip)}" width="960" height="960" />`
         }
       }
-      if (caption) caption.textContent = tip
     }
 
     thumbs.forEach((thumb, i) => {
@@ -925,6 +955,9 @@ export function bindProductGallery(root = document) {
         if (event.target.closest('[data-edit-image]')) return
         activate(i)
       })
+    })
+    dots.forEach((dot) => {
+      dot.addEventListener('click', () => activate(Number(dot.dataset.hpiGalleryDot) || 0))
     })
     gallery.querySelector('[data-hpi-gallery-prev]')?.addEventListener('click', (event) => {
       event.preventDefault()
