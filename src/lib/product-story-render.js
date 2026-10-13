@@ -96,53 +96,11 @@ export function renderProductShowcase(story, product, { editable = false } = {})
   const block = story.showcase || {}
   const image = block.image || product?.coverImage || story.hero?.deviceImage || ''
   const modelSrc = String(block.model3d?.src || '').trim()
-  const points = [...(block.points || []), {}, {}, {}, {}].slice(0, 4)
-  const hasPoints = points.some((p) => p.title || p.desc)
-  if (!image && !modelSrc && !hasPoints && !editable) return ''
+  if (!image && !modelSrc && !editable) return ''
   return `
     <section class="hpi-showcase" id="hpi-showcase">
-      <div class="hwc-shell hpi-showcase__grid">
+      <div class="hwc-shell hpi-showcase__stage">
         ${renderShowcaseVisual(block, product, { editable })}
-        <div class="hpi-showcase__copy">
-          ${textNode('story.showcase.title', block.title || (editable ? '产品亮点' : ''), {
-            editable,
-            tag: 'h2',
-            className: 'hpi-showcase__title',
-            placeholder: '主视觉标题',
-          })}
-          ${textNode('story.showcase.subtitle', block.subtitle || '', {
-            editable,
-            tag: 'p',
-            className: 'hpi-showcase__subtitle',
-            multiline: true,
-            placeholder: '一句话说明（可选）',
-          })}
-          <ul class="hpi-showcase__points">
-            ${points
-              .map(
-                (point, index) => `
-              <li class="hpi-showcase__point"${!editable && !point.title && !point.desc ? ' hidden' : ''}>
-                <span class="hpi-showcase__index" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span>
-                <div>
-                  ${textNode(`story.showcase.points.${index}.title`, point.title || '', {
-                    editable,
-                    tag: 'strong',
-                    className: 'hpi-showcase__point-title',
-                    placeholder: '卖点标题',
-                  })}
-                  ${textNode(`story.showcase.points.${index}.desc`, point.desc || '', {
-                    editable,
-                    tag: 'p',
-                    className: 'hpi-showcase__point-desc',
-                    multiline: true,
-                    placeholder: '卖点说明（可选）',
-                  })}
-                </div>
-              </li>`
-              )
-              .join('')}
-          </ul>
-        </div>
       </div>
     </section>`
 }
