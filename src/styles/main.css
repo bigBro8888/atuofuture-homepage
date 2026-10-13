@@ -17111,10 +17111,17 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .hpi-intro__media .hpi-showcase__visual {
   min-height: 420px;
   border-radius: 16px;
+  padding: 20px;
 }
+.hpi-intro__media .hpi-showcase__visual--3d { padding: 0; }
 .hpi-intro__media .hpi-showcase__frame {
   min-height: 420px;
   height: min(520px, 58vw);
+}
+.hpi-intro__media .hpi-showcase__visual > img,
+.hpi-intro__media .hpi-showcase__visual > .hpi-edit-img,
+.hpi-intro__media .hpi-showcase__visual > .hpi-edit-img img {
+  width: min(100%, 640px);
 }
 .hpi-intro__meta { padding-top: 8px; }
 .hpi-intro__crumb {
