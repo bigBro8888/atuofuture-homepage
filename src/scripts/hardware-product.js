@@ -75,34 +75,29 @@ export async function initHardwareProductPage() {
     showcase: (() => {
       const lib = libStory.showcase || {}
       const base = fallback.showcase || {}
+      const libGallery = Array.isArray(lib.gallery)
+        ? lib.gallery
+            .map((item) =>
+              typeof item === 'string'
+                ? { url: item.trim(), caption: '' }
+                : { url: String(item?.url || '').trim(), caption: String(item?.caption || '').trim() }
+            )
+            .filter((item) => item.url)
+        : []
       const hasLib =
         lib.image ||
-        lib.model3d?.src ||
+        libGallery.length ||
         lib.points?.some((p) => p?.title) ||
         lib.title ||
         lib.subtitle
       if (!hasLib) return base
-      // CMS 清洗后常带空 model3d.src / mediaType=image，不能覆盖产品默认 3D
-      const libModel = lib.model3d || {}
-      const baseModel = base.model3d || {}
-      const libSrc = String(libModel.src || '').trim()
-      const model3d = {
-        src: libSrc || String(baseModel.src || '').trim(),
-        title: String(libModel.title || baseModel.title || '').trim(),
-        poster: String(libModel.poster || baseModel.poster || '').trim(),
-      }
-      // 有 3D 地址就优先 3D（产品默认或后台配置）；仅当后台显式填了 3D 地址又选「静态图片」时才强制图片
-      const mediaType =
-        model3d.src && !(lib.mediaType === 'image' && libSrc)
-          ? 'model3d'
-          : lib.mediaType || base.mediaType || (model3d.src ? 'model3d' : 'image')
       return {
         ...base,
         ...lib,
-        mediaType,
-        model3d,
+        mediaType: 'image',
+        gallery: libGallery.length ? libGallery.slice(0, 5) : base.gallery || [],
         points: lib.points?.some((p) => p?.title) ? lib.points : base.points,
-        image: lib.image || base.image || '',
+        image: lib.image || libGallery[0]?.url || base.image || '',
       }
     })(),
     capabilities:

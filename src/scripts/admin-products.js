@@ -2,7 +2,8 @@ import { HARDWARE_PRODUCTS, getLine } from '../data/hardware-catalog.js'
 import { bindProductStoryTabs, renderProductStory } from '../lib/product-story-render.js'
 
 const IMAGE_SIZE_GUIDE = [
-  { test: (path) => path === 'story.showcase.image', label: '产品主视觉图', size: '960×720', tip: '静态图模式用；也可作 3D 封面。透明底 PNG 更佳' },
+  { test: (path) => path === 'story.showcase.image', label: '产品主视觉图', size: '960×960', tip: '兼容旧字段；优先用下方 5 张商品轮播图' },
+  { test: (path) => /story\.showcase\.gallery\.\d+\.url/.test(path), label: '商品轮播图', size: '960×960', tip: '淘宝式主图，最多 5 张，建议白底或透明底' },
   { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '原理链路图', size: '1760×900', tip: '整段单图铺满内容宽，标题与说明可设计进图内' },
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
   { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '场景介绍配图', size: '860×560', tip: '卡片左侧大图，约占一半宽度' },
@@ -96,6 +97,7 @@ function emptyProduct() {
         subtitle: '',
         mediaType: 'image',
         image: '',
+        gallery: [{ url: '', caption: '' }, { url: '', caption: '' }, { url: '', caption: '' }, { url: '', caption: '' }, { url: '', caption: '' }],
         model3d: { src: '', title: '', poster: '' },
         points: [{ title: '', desc: '' }, { title: '', desc: '' }, { title: '', desc: '' }, { title: '', desc: '' }],
       },
@@ -549,15 +551,24 @@ function collectProductFromCompose() {
   }
   if (item.story?.showcase) {
     ensureArray(item.story.showcase, 'points', 4)
-    const mediaType = item.story.showcase.mediaType === 'model3d' ? 'model3d' : 'image'
+    ensureArray(item.story.showcase, 'gallery', 5)
     const model3d = item.story.showcase.model3d && typeof item.story.showcase.model3d === 'object'
       ? item.story.showcase.model3d
       : {}
+    const gallery = (item.story.showcase.gallery || [])
+      .slice(0, 5)
+      .map((entry) => ({
+        url: String(typeof entry === 'string' ? entry : entry?.url || '').trim(),
+        caption: String(typeof entry === 'string' ? '' : entry?.caption || '').trim(),
+      }))
+    while (gallery.length < 5) gallery.push({ url: '', caption: '' })
+    const image = String(item.story.showcase.image || '').trim() || gallery.find((g) => g.url)?.url || ''
     item.story.showcase = {
       title: String(item.story.showcase.title || '').trim() || '产品亮点',
       subtitle: String(item.story.showcase.subtitle || '').trim(),
-      mediaType,
-      image: String(item.story.showcase.image || '').trim(),
+      mediaType: 'image',
+      image,
+      gallery,
       model3d: {
         src: String(model3d.src || '').trim(),
         title: String(model3d.title || '').trim(),
@@ -811,6 +822,22 @@ function applyVisualImage(composeView, path, url) {
       if (tip) {
         tip.textContent = '添加图片'
         tip.classList.add('is-visible')
+      }
+    }
+    const thumb = target.closest('[data-hpi-gallery-thumb]')
+    if (thumb) {
+      thumb.dataset.src = safeUrl
+      const main = canvas?.querySelector('[data-hpi-gallery-main]')
+      const mainBox = canvas?.querySelector('.hpi-gallery__main')
+      if (thumb.classList.contains('is-active') || !main) {
+        if (main && safeUrl) {
+          main.src = safeUrl
+          main.hidden = false
+        } else if (mainBox && safeUrl) {
+          mainBox.innerHTML = `<img data-hpi-gallery-main src="${esc(safeUrl)}" alt="" width="960" height="960" />`
+        } else if (mainBox && !safeUrl) {
+          mainBox.innerHTML = '<span class="hpi-gallery__main-empty">请从下方缩略图添加商品图</span>'
+        }
       }
     }
   }
@@ -1119,14 +1146,6 @@ export function bindProductLibraryAdmin(helpers) {
     if (event.target.closest('[data-link-type]')) return
 
     const mediaField = event.target.closest('[data-product-field]')
-    if (
-      mediaField &&
-      /^(story\.showcase\.mediaType|story\.showcase\.model3d\.(src|title|poster))$/.test(mediaField.dataset.productField || '')
-    ) {
-      renderProductCompose(collectProductFromCompose())
-      return
-    }
-
     const modalFile = event.target.closest('[data-image-modal-file]')
     if (modalFile) {
       const file = modalFile.files?.[0]

@@ -105,6 +105,13 @@ const CONTROL_SCREEN_STORY = {
     subtitle: '让空间具备统一控制、场景联动与智能协同能力。',
     mediaType: 'image',
     image: '/images/hardware/control-screen.jpg',
+    gallery: [
+      { url: '/images/hardware/control-screen.jpg', caption: '产品主图' },
+      { url: '/images/hardware/desk-screen.jpg', caption: '' },
+      { url: '/images/hardware/e-table-sign.jpg', caption: '' },
+      { url: '/images/hardware/smart-meeting.jpg', caption: '' },
+      { url: '/images/hardware/office-device.jpg', caption: '' },
+    ],
     model3d: { src: '', title: '', poster: '' },
     points: [
       { title: '统一交互入口', desc: '连接人员、空间设备、智能体与管理平台。' },
@@ -274,19 +281,28 @@ function buildDefaultShowcase(product, role) {
     : fallbackPoints
   ).slice(0, 4)
   while (points.length < 4) points.push({ title: '', desc: '' })
-  const water3d = isWaterSensorProduct(product)
+  const water = isWaterSensorProduct(product)
+  const cover = water ? '/models/water-sensor-3d/poster.png' : product.coverImage || ''
+  const galleryUrls = water
+    ? [
+        '/models/water-sensor-3d/poster.png',
+        '/models/water-sensor-3d/white.png',
+        '/models/water-sensor-3d/transparent.png',
+        '/images/hardware/sensor.jpg',
+        product.coverImage,
+      ]
+    : [cover, ...(product.gallery || []), product.coverImage]
+  const gallery = [...new Set(galleryUrls.filter(Boolean))].slice(0, 5).map((url, index) => ({
+    url,
+    caption: index === 0 ? '产品主图' : '',
+  }))
   return {
     title: '产品亮点',
     subtitle: role.headline || product.shortDescription || '',
-    mediaType: water3d ? 'model3d' : 'image',
-    image: water3d ? '/models/water-sensor-3d/poster.png' : product.coverImage || '',
-    model3d: water3d
-      ? {
-          src: '/models/water-sensor-3d/embed.html',
-          title: `${product.name || '水浸传感器'} 3D`,
-          poster: '/models/water-sensor-3d/poster.png',
-        }
-      : { src: '', title: '', poster: '' },
+    mediaType: 'image',
+    image: gallery[0]?.url || cover || '',
+    gallery,
+    model3d: { src: '', title: '', poster: '' },
     points,
   }
 }

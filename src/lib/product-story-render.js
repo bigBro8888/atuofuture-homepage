@@ -49,7 +49,7 @@ export function renderProductHero(story, product, line, { editable = false } = {
     <section class="hpi-intro" id="hpi-intro">
       <div class="hwc-shell hpi-intro__grid">
         <div class="hpi-intro__media">
-          ${renderShowcaseVisual(story.showcase || {}, product, { editable })}
+          ${renderShowcaseVisual(story, product, { editable })}
         </div>
         <div class="hpi-intro__meta">
           <p class="hpi-intro__crumb"><a href="/hardware/"${editable ? ' tabindex="-1"' : ''}>智能硬件</a>${line ? ` / <a href="/hardware/?line=${esc(line.id)}#hwc-browser"${editable ? ' tabindex="-1"' : ''}>${esc(line.name)}</a>` : ''} / ${esc(product.name)}</p>
@@ -76,69 +76,103 @@ export function renderProductHero(story, product, line, { editable = false } = {
     </section>`
 }
 
-function renderShowcaseVisual(block, product, { editable = false } = {}) {
-  const image = block.image || product?.coverImage || ''
-  const model = block.model3d || {}
-  const modelSrc = String(model.src || '').trim()
-  const mediaType =
-    block.mediaType === 'model3d' || (Boolean(modelSrc) && block.mediaType !== 'image')
-      ? 'model3d'
-      : modelSrc && !block.mediaType
-        ? 'model3d'
-        : 'image'
-  const use3d = Boolean(modelSrc) && mediaType === 'model3d'
-  const poster = String(model.poster || image || '').trim()
-  const modelTitle = model.title || `${product?.name || '产品'} 3D`
+function normalizeGalleryItem(item) {
+  if (typeof item === 'string') return { url: item.trim(), caption: '' }
+  return {
+    url: String(item?.url || '').trim(),
+    caption: String(item?.caption || '').trim(),
+  }
+}
 
-  const imageBlock = imgNode('story.showcase.image', image || poster, {
-    editable,
-    width: 960,
-    height: 720,
-    alt: product?.name || '产品主图',
-    loading: 'eager',
-  })
+function collectIntroGallery(story, product) {
+  const showcase = story?.showcase || {}
+  const fromGallery = (Array.isArray(showcase.gallery) ? showcase.gallery : [])
+    .map(normalizeGalleryItem)
+    .filter((item) => item.url)
+  if (fromGallery.length) return fromGallery.slice(0, 5)
 
-  const modelBlock = use3d
-    ? `<iframe
-        class="hpi-showcase__frame"
-        src="${esc(modelSrc)}"
-        title="${esc(modelTitle)}"
-        loading="lazy"
-        allow="fullscreen"
-        referrerpolicy="no-referrer"
-      ></iframe>`
-    : ''
+  const fromAlbum = (story?.album?.items || [])
+    .map(normalizeGalleryItem)
+    .filter((item) => item.url)
+  if (fromAlbum.length) return fromAlbum.slice(0, 5)
 
-  const editPanel = editable
-    ? `<div class="hpi-showcase__media-edit">
-        <label class="hpi-showcase__media-field">
-          <span>主视觉类型</span>
-          <select data-product-field="story.showcase.mediaType">
-            <option value="image"${mediaType === 'image' ? ' selected' : ''}>静态图片</option>
-            <option value="model3d"${mediaType === 'model3d' ? ' selected' : ''}>3D 模型</option>
-          </select>
-        </label>
-        <label class="hpi-showcase__media-field">
-          <span>3D 嵌入地址</span>
-          <input type="text" data-product-field="story.showcase.model3d.src" value="${esc(modelSrc)}" placeholder="/models/xxx/embed.html" />
-        </label>
-        <label class="hpi-showcase__media-field">
-          <span>3D 标题</span>
-          <input type="text" data-product-field="story.showcase.model3d.title" value="${esc(model.title || '')}" placeholder="产品 3D 体验" />
-        </label>
-        <label class="hpi-showcase__media-field">
-          <span>3D 封面图（可选）</span>
-          <input type="text" data-product-field="story.showcase.model3d.poster" value="${esc(model.poster || '')}" placeholder="/models/xxx/poster.png" />
-        </label>
-        <p class="hpi-showcase__media-tip">选「静态图片」时点上方图片可更换；选「3D 模型」时填嵌入页地址（如 /models/water-sensor-3d/embed.html）。</p>
-      </div>`
-    : ''
+  const singles = [
+    showcase.image,
+    showcase.model3d?.poster,
+    ...(product?.gallery || []),
+    product?.coverImage,
+  ]
+    .map((url) => String(url || '').trim())
+    .filter(Boolean)
+  return [...new Set(singles)].slice(0, 5).map((url, index) => ({
+    url,
+    caption: index === 0 ? '产品主图' : '',
+  }))
+}
+
+function renderShowcaseVisual(story, product, { editable = false } = {}) {
+  const collected = collectIntroGallery(story, product)
+  const slots = editable
+    ? [...collected, ...Array.from({ length: 5 }, () => ({ url: '', caption: '' }))].slice(0, 5)
+    : collected.length
+      ? collected
+      : [{ url: '', caption: '' }]
+  const visible = editable ? slots : slots.filter((item) => item.url)
+  const first = visible.find((item) => item.url) || visible[0] || { url: '', caption: '' }
+  const productName = product?.name || '产品'
+
+  const thumbs = visible
+    .map((item, index) => {
+      if (!editable && !item.url) return ''
+      const active = index === 0 ? ' is-active' : ''
+      const attrs = `class="hpi-gallery__thumb${active}" data-hpi-gallery-thumb="${index}" data-src="${esc(item.url)}" data-caption="${esc(item.caption || '')}" aria-label="商品图 ${index + 1}"`
+      if (editable) {
+        return `
+        <li class="hpi-gallery__thumb-wrap">
+          <div ${attrs}>
+            ${imgNode(`story.showcase.gallery.${index}.url`, item.url, {
+              editable: true,
+              width: 120,
+              height: 120,
+              alt: item.caption || `${productName} 图${index + 1}`,
+              loading: index === 0 ? 'eager' : 'lazy',
+              className: 'hpi-gallery__thumb-img',
+            })}
+          </div>
+        </li>`
+      }
+      return `
+        <li class="hpi-gallery__thumb-wrap">
+          <button type="button" ${attrs}>
+            <img src="${esc(item.url)}" alt="${esc(item.caption || `${productName} 图${index + 1}`)}" width="120" height="120" loading="${index === 0 ? 'eager' : 'lazy'}" />
+          </button>
+        </li>`
+    })
+    .join('')
+
+  const mainInner = first.url
+    ? `<img data-hpi-gallery-main src="${esc(first.url)}" alt="${esc(first.caption || productName)}" width="960" height="960" />`
+    : editable
+      ? `<span class="hpi-gallery__main-empty">请从下方缩略图添加商品图</span>`
+      : `<span class="hpi-gallery__main-empty">暂无商品图</span>`
 
   return `
-    <div class="hpi-showcase__visual${use3d ? ' hpi-showcase__visual--3d' : ''}">
-      ${use3d ? modelBlock : imageBlock}
-      ${editable && use3d ? `<div class="hpi-showcase__poster-edit" hidden>${imageBlock}</div>` : ''}
-      ${editPanel}
+    <div class="hpi-gallery" data-hpi-gallery>
+      <div class="hpi-gallery__stage">
+        <button type="button" class="hpi-gallery__nav hpi-gallery__nav--prev" data-hpi-gallery-prev aria-label="上一张"${editable ? ' tabindex="-1"' : ''}>
+          <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+        </button>
+        <div class="hpi-gallery__main">${mainInner}</div>
+        <button type="button" class="hpi-gallery__nav hpi-gallery__nav--next" data-hpi-gallery-next aria-label="下一张"${editable ? ' tabindex="-1"' : ''}>
+          <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+        </button>
+      </div>
+      <ul class="hpi-gallery__thumbs">${thumbs}</ul>
+      ${
+        editable
+          ? `<p class="hpi-gallery__tip">淘宝式商品图：最多 5 张，悬停/点击缩略图切换主图；点缩略图可更换图片。</p>`
+          : `<p class="hpi-gallery__caption" data-hpi-gallery-caption>${esc(first.caption || '')}</p>`
+      }
     </div>`
 }
 
@@ -845,7 +879,67 @@ export function renderProductStory(product, story, line, { editable = false } = 
     </article>`
 }
 
+export function bindProductGallery(root = document) {
+  const host = root.querySelector?.('[data-hpi-root]') || root
+  if (!host?.querySelectorAll) return
+  host.querySelectorAll('[data-hpi-gallery]').forEach((gallery) => {
+    const main = gallery.querySelector('[data-hpi-gallery-main]')
+    const mainBox = gallery.querySelector('.hpi-gallery__main')
+    const caption = gallery.querySelector('[data-hpi-gallery-caption]')
+    const thumbs = [...gallery.querySelectorAll('[data-hpi-gallery-thumb]')]
+    if (!thumbs.length) return
+    let index = Math.max(
+      0,
+      thumbs.findIndex((thumb) => thumb.classList.contains('is-active'))
+    )
+
+    const readThumb = (thumb) => {
+      const img = thumb.querySelector('img')
+      return {
+        src: String(thumb.dataset.src || img?.currentSrc || img?.getAttribute('src') || '').trim(),
+        caption: String(thumb.dataset.caption || img?.getAttribute('alt') || '').trim(),
+      }
+    }
+
+    const activate = (next) => {
+      if (!thumbs.length) return
+      index = ((next % thumbs.length) + thumbs.length) % thumbs.length
+      thumbs.forEach((thumb, i) => thumb.classList.toggle('is-active', i === index))
+      const { src, caption: tip } = readThumb(thumbs[index])
+      if (src) {
+        if (main) {
+          main.src = src
+          main.alt = tip || main.alt || ''
+          main.hidden = false
+        } else if (mainBox) {
+          mainBox.innerHTML = `<img data-hpi-gallery-main src="${esc(src)}" alt="${esc(tip)}" width="960" height="960" />`
+        }
+      }
+      if (caption) caption.textContent = tip
+    }
+
+    thumbs.forEach((thumb, i) => {
+      thumb.addEventListener('mouseenter', () => activate(i))
+      thumb.addEventListener('focusin', () => activate(i))
+      thumb.addEventListener('click', (event) => {
+        if (event.target.closest('[data-edit-image]')) return
+        activate(i)
+      })
+    })
+    gallery.querySelector('[data-hpi-gallery-prev]')?.addEventListener('click', (event) => {
+      event.preventDefault()
+      activate(index - 1)
+    })
+    gallery.querySelector('[data-hpi-gallery-next]')?.addEventListener('click', (event) => {
+      event.preventDefault()
+      activate(index + 1)
+    })
+    activate(index)
+  })
+}
+
 export function bindProductStoryTabs(root = document) {
+  bindProductGallery(root)
   const host = root.querySelector?.('[data-hpi-root]') || root
   if (!host?.querySelector) return
   const tabs = [...host.querySelectorAll('[data-hpi-tab]')]

@@ -119,6 +119,15 @@ function emptyStory(product = {}) {
       subtitle: '',
       mediaType: 'image',
       image: cover,
+      gallery: cover
+        ? [{ url: cover, caption: '产品主图' }, { url: '', caption: '' }, { url: '', caption: '' }, { url: '', caption: '' }, { url: '', caption: '' }]
+        : [
+            { url: '', caption: '' },
+            { url: '', caption: '' },
+            { url: '', caption: '' },
+            { url: '', caption: '' },
+            { url: '', caption: '' },
+          ],
       model3d: { src: '', title: '', poster: '' },
       points: [
         { title: '', desc: '' },
@@ -319,6 +328,15 @@ function cleanDetailImages(value = {}, fallback = {}) {
   }
 }
 
+function cleanGalleryItem(item = {}, fallback = {}) {
+  const raw = typeof item === 'string' ? { url: item, caption: '' } : item || {}
+  const fb = typeof fallback === 'string' ? { url: fallback, caption: '' } : fallback || {}
+  return {
+    url: cleanUrl(raw.url !== undefined ? raw.url : undefined, fb.url || ''),
+    caption: cleanText(raw.caption, fb.caption || '', 80),
+  }
+}
+
 function cleanShowcase(value = {}, fallback = {}) {
   const modelIn = value.model3d && typeof value.model3d === 'object' ? value.model3d : {}
   const modelFb = fallback.model3d && typeof fallback.model3d === 'object' ? fallback.model3d : {}
@@ -327,14 +345,18 @@ function cleanShowcase(value = {}, fallback = {}) {
     title: cleanText(modelIn.title, modelFb.title || '', 80),
     poster: cleanUrl(modelIn.poster !== undefined ? modelIn.poster : undefined, modelFb.poster || ''),
   }
-  const mediaType =
-    value.mediaType === 'model3d' || value.mediaType === 'image'
-      ? value.mediaType
-      : model3d.src
-        ? 'model3d'
-        : fallback.mediaType === 'model3d'
-          ? 'model3d'
-          : 'image'
+  const gallerySource = Array.isArray(value.gallery)
+    ? value.gallery
+    : Array.isArray(fallback.gallery)
+      ? fallback.gallery
+      : []
+  const gallery = padList(gallerySource, 5, () => ({ url: '', caption: '' })).map((item, index) =>
+    cleanGalleryItem(item || {}, fallback.gallery?.[index] || {})
+  )
+  const image =
+    cleanUrl(value.image !== undefined ? value.image : undefined, fallback.image || '') ||
+    gallery.find((item) => item.url)?.url ||
+    ''
   const points = padList(value.points, 4, () => ({ title: '', desc: '' })).map((point, index) => ({
     title: cleanText(point?.title, fallback.points?.[index]?.title || '', 40),
     desc: cleanText(point?.desc, fallback.points?.[index]?.desc || '', 160),
@@ -342,8 +364,9 @@ function cleanShowcase(value = {}, fallback = {}) {
   return {
     title: cleanText(value.title, fallback.title || '产品亮点', 80),
     subtitle: cleanText(value.subtitle, fallback.subtitle || '', 240),
-    mediaType,
-    image: cleanUrl(value.image !== undefined ? value.image : undefined, fallback.image || ''),
+    mediaType: 'image',
+    image,
+    gallery,
     model3d,
     points,
   }
@@ -574,7 +597,7 @@ function validateItem(value = {}, fallback = {}) {
   const slug = cleanSlug(value.slug, fallback.slug || base.slug || id)
   const hardwareLine = LINE_IDS.has(value.hardwareLine) ? value.hardwareLine : (fallback.hardwareLine || base.hardwareLine || 'space')
   let storyFallback = fallback.story || base.story || emptyStory({ name, coverImage: value.coverImage || base.coverImage, shortDescription: value.shortDescription, fullDescription: value.fullDescription })
-  // 水浸等产品：用叙事默认补齐 3D 主视觉，避免 CMS 旧数据把 model3d 洗成空
+  // 用叙事默认补齐商品轮播图，避免 CMS 旧数据缺少 gallery
   try {
     const built = buildProductStory({
       id,
@@ -586,24 +609,21 @@ function validateItem(value = {}, fallback = {}) {
       fullDescription: value.fullDescription || base.fullDescription || '',
       capabilities: value.capabilities || base.capabilities || [],
       scenarios: value.scenarios || base.scenarios || [],
+      gallery: value.gallery || base.gallery || [],
     })
-    if (built?.showcase?.model3d?.src) {
+    const hasGallery = Array.isArray(storyFallback.showcase?.gallery) && storyFallback.showcase.gallery.some((g) => g?.url)
+    if (!hasGallery && built?.showcase?.gallery?.some((g) => g?.url)) {
       storyFallback = {
         ...storyFallback,
         showcase: {
           ...(storyFallback.showcase || {}),
           ...(built.showcase || {}),
+          mediaType: 'image',
+          gallery: built.showcase.gallery,
+          image: storyFallback.showcase?.image || built.showcase.image || '',
           points: Array.isArray(storyFallback.showcase?.points) && storyFallback.showcase.points.some((p) => p?.title)
             ? storyFallback.showcase.points
             : built.showcase.points,
-          model3d: {
-            ...(built.showcase.model3d || {}),
-            ...(storyFallback.showcase?.model3d || {}),
-            src: storyFallback.showcase?.model3d?.src || built.showcase.model3d.src,
-          },
-          mediaType: storyFallback.showcase?.mediaType === 'image' && !storyFallback.showcase?.model3d?.src
-            ? 'model3d'
-            : storyFallback.showcase?.mediaType || built.showcase.mediaType || 'model3d',
         },
       }
     }
