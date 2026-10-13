@@ -17112,9 +17112,9 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .hpi-intro__media { min-width: 0; width: max-content; max-width: 100%; }
 .hpi-intro__meta { min-width: 0; padding-top: 4px; }
 
-/* 淘宝式图集：左竖排缩略图 + 右 1:1 大方图 */
+/* 淘宝式图集：左竖排缩略图 + 右 4:3 主图 */
 .hpi-gallery {
-  --hpi-gallery-size: 400px;
+  --hpi-gallery-w: 480px;
   display: grid;
   gap: 8px;
 }
@@ -17129,7 +17129,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   gap: 8px;
   width: 56px;
   flex: 0 0 56px;
-  max-height: var(--hpi-gallery-size);
+  max-height: calc(var(--hpi-gallery-w) * 3 / 4);
   overflow: hidden;
 }
 .hpi-gallery__thumb {
@@ -17176,17 +17176,15 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   font-size: 10px;
   color: #94a3b8;
 }
-/* 强制正方形：宽高同为 --hpi-gallery-size，图 cover 裁切填满 */
+/* 强制 4:3 框；图 cover 填满且不变形，超出裁切 */
 .hpi-gallery__stage {
   position: relative;
   box-sizing: border-box;
-  flex: 0 0 var(--hpi-gallery-size);
-  width: var(--hpi-gallery-size);
-  height: var(--hpi-gallery-size);
-  min-width: var(--hpi-gallery-size);
-  min-height: var(--hpi-gallery-size);
-  max-width: var(--hpi-gallery-size);
-  max-height: var(--hpi-gallery-size);
+  flex: 0 0 var(--hpi-gallery-w);
+  width: var(--hpi-gallery-w);
+  max-width: var(--hpi-gallery-w);
+  aspect-ratio: 4 / 3;
+  height: auto;
   border-radius: 4px;
   background: #f5f7fa;
   border: 1px solid rgba(20, 32, 51, 0.08);
@@ -18079,7 +18077,9 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .hpi-detail__media {
   margin: 0;
   width: 100%;
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   border-radius: 16px;
   overflow: hidden;
   background: #f5f7fa;
@@ -18088,17 +18088,17 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .hpi-detail__media > img,
 .hpi-detail__media > .hpi-edit-img {
   display: block;
-  width: 100%;
+  width: auto;
   max-width: 100%;
   height: auto;
 }
 .hpi-detail__media > img,
 .hpi-detail__media > .hpi-edit-img img {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important;
   display: block;
-  vertical-align: top;
 }
 .hpi-detail__media > .hpi-edit-img--empty {
   width: 100%;
@@ -18406,7 +18406,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
     max-width: none;
   }
   .hpi-intro__media { width: 100%; max-width: 100%; margin: 0 auto; }
-  .hpi-gallery { --hpi-gallery-size: min(360px, calc(100vw - 88px)); }
+  .hpi-gallery { --hpi-gallery-w: min(420px, calc(100vw - 88px)); }
   .hpi-gallery__inner { gap: 8px; }
   .hpi-gallery__thumbs { width: 48px; flex-basis: 48px; }
   .hpi-gallery__thumb { width: 48px; height: 48px; }
