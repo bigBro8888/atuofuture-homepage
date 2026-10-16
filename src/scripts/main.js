@@ -746,11 +746,40 @@ export function initDemoRequestModal() {
 // 根据页面 data-page 属性自动初始化
 const page = document.body.dataset.page
 
+function markPageReady() {
+  document.documentElement.classList.add('is-page-ready')
+}
+
+/** 主内容到位后再显示页脚，避免空壳瞬间页脚顶到导航下 */
+function armPageReady() {
+  const main = document.querySelector('body > main, body > #news-root')
+  if (!main) {
+    markPageReady()
+    return
+  }
+  const hasContent = () => main.childElementCount > 0 || Boolean(main.textContent?.trim())
+  if (hasContent()) {
+    markPageReady()
+    return
+  }
+  const observer = new MutationObserver(() => {
+    if (!hasContent()) return
+    observer.disconnect()
+    markPageReady()
+  })
+  observer.observe(main, { childList: true, subtree: true, characterData: true })
+  window.setTimeout(() => {
+    observer.disconnect()
+    markPageReady()
+  }, 4000)
+}
+
 function bootstrap() {
   // 空间智能门户独立运行，不挂载官网头尾与智能体浮层；预约演示弹窗与主站共用
   if (page === 'aspace-one') {
     void initAspaceOne()
     initDemoRequestModal()
+    markPageReady()
     return
   }
 
@@ -764,63 +793,55 @@ function bootstrap() {
 
   initSiteNav()
   initNavScroll('.site-header, header')
+
+  // 先启动页面内容，再挂页脚，缩短「仅头尾」空窗
+  if (page === 'agent-detail') {
+    void initAgentDetail()
+  }
+  if (page === 'order') {
+    initOrder()
+  }
+  if (page === 'agents') {
+    void initAgentsPage()
+    initAgentCardHover()
+  }
+  if (page === 'solutions') {
+    void initSolutionsPage()
+  }
+  if (page === 'news') {
+    void initNewsPage()
+  }
+  if (page === 'news-detail') {
+    void initNewsDetailPage()
+  }
+  if (page === 'home') {
+    initSiemensHome()
+    initButtonHover()
+    initHeroVideoSound()
+  }
+  if (page === 'hardware') {
+    void initHardwareStore()
+  }
+  if (page === 'hardware-product') {
+    void initHardwareProductPage()
+  }
+  if (page === 'hardware-products') {
+    void initHardwareProductsPage()
+  }
+  if (page === 'ai-token') {
+    void initAiTokenStore()
+  }
+
   initSiteFooter()
+  armPageReady()
   void loadAndApplySiteSettings()
   initMobileDrawer()
   initAppDownloadModal()
   if (page !== 'app-download') initAgentChat()
   initDemoRequestModal()
   initTokenLinks()
-
-  if (page === 'agent-detail') {
-    initAgentDetail()
-  }
-
-  if (page === 'order') {
-    initOrder()
-  }
-
   initScrollReveal()
   initBackToTop()
-
-  if (page === 'agents') {
-    initAgentsPage()
-    initAgentCardHover()
-  }
-
-  if (page === 'solutions') {
-    initSolutionsPage()
-  }
-
-  if (page === 'news') {
-    initNewsPage()
-  }
-
-  if (page === 'news-detail') {
-    initNewsDetailPage()
-  }
-
-  if (page === 'home') {
-    initSiemensHome()
-    initButtonHover()
-    initHeroVideoSound()
-  }
-
-  if (page === 'hardware') {
-    initHardwareStore()
-  }
-
-  if (page === 'hardware-product') {
-    initHardwareProductPage()
-  }
-
-  if (page === 'hardware-products') {
-    initHardwareProductsPage()
-  }
-
-  if (page === 'ai-token') {
-    initAiTokenStore()
-  }
 }
 
 bootstrap()

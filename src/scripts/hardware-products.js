@@ -86,6 +86,19 @@ function filterItems(items, categoryId) {
 export async function initHardwareProductsPage() {
   const root = document.getElementById('hardware-products-root')
   if (!root) return
+  // 先占位，避免等接口时页脚顶到导航下方
+  if (!root.childElementCount) {
+    root.innerHTML = `
+      <section class="hwp" aria-busy="true">
+        <div class="hwc-shell hwp__inner">
+          <header class="hwp__head">
+            <p class="hwp__crumb"><a href="/hardware/">智能硬件</a> / 全部产品</p>
+            <h1>全部产品</h1>
+            <p class="hwp__lead">加载产品列表…</p>
+          </header>
+        </div>
+      </section>`
+  }
   const library = await loadProductLibraryContent()
   applyProductLibraryCms(library)
   const items = getProductLibraryItems()

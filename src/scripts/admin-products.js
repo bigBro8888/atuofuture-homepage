@@ -1,4 +1,10 @@
 import { HARDWARE_PRODUCTS, getLine } from '../data/hardware-catalog.js'
+import { mergeProductBulletItems, parseProductBulletsText } from '../lib/parse-product-bullets.js'
+import {
+  MAX_PRODUCT_SPEC_ROWS,
+  mergeProductSpecRows,
+  parseProductSpecsText,
+} from '../lib/parse-product-specs.js'
 import { bindProductStoryTabs, renderProductStory } from '../lib/product-story-render.js'
 
 const IMAGE_SIZE_GUIDE = [
@@ -143,19 +149,29 @@ function renderProductList(content) {
   const editor = document.querySelector('[data-products-editor]')
   if (!editor) return
   editor.classList.add('admin-news-editor')
+  const catsOpen = Boolean(ctx.state.productCatsOpen)
   editor.innerHTML = `
     <div class="admin-news-toolbar">
-      <p class="admin-form-section__hint" style="margin:0">点「编辑」进入可视化详情页，直接在预览上改文案和图片。</p>
+      <p class="admin-form-section__hint" style="margin:0">点「编辑」进入可视化详情页。列表可用左侧序号或拖拽把手调整顺序，保存后同步前台。</p>
       <div class="admin-news-toolbar__actions">
+        <button type="button" class="admin-news-toolbar__link" data-product-cats-toggle>${catsOpen ? '收起分类' : '管理分类'}</button>
         <button type="button" class="admin-add-slide" data-product-add>+ 新建产品</button>
       </div>
+    </div>
+    <div class="admin-product-cats" data-product-cats-panel ${catsOpen ? '' : 'hidden'}>
+      ${renderCategoryManager(categories)}
     </div>
     <div class="admin-home-list" data-products-list>${items.map((item, index) => {
       const category = categories.find((c) => c.id === item.category)
       return `
       <div class="admin-item-row" data-product-index="${index}">
+        <button type="button" class="admin-item-row__drag" data-product-drag-handle draggable="true" title="拖拽排序" aria-label="拖拽排序">⋮⋮</button>
+        <label class="admin-item-row__sort">
+          <span>序号</span>
+          <input type="number" min="1" max="${items.length}" step="1" value="${index + 1}" data-product-sort="${index}" title="改成第几位，其余会自动顺延" />
+        </label>
         ${item.coverImage ? `<img class="admin-simple-item__thumb" src="${esc(item.coverImage)}" alt="" />` : '<span class="admin-simple-item__thumb is-empty"></span>'}
-        <div>
+        <div class="admin-item-row__copy">
           <strong>${esc(item.name || '未命名产品')}</strong>
           <small>${esc(item.slug || '')}${item.tag ? ` · ${esc(item.tag)}` : ''}${category ? ` · ${esc(category.name)}` : ''} · ${(item.linkedHardwareIds || []).length} 个硬件关联${item.published === false ? ' · 未发布' : ''}</small>
         </div>
@@ -166,6 +182,97 @@ function renderProductList(content) {
         </span>
       </div>`
     }).join('') || '<p class="admin-form-section__hint">还没有产品，先点上面的新建。</p>'}</div>`
+  bindProductListDrag(editor)
+}
+
+async function moveProductToRank(fromIndex, rawRank) {
+  const draft = ctx.state.productLibrary?.draftContent || {}
+  const items = [...(draft.items || [])]
+  if (!items[fromIndex]) return
+  let rank = Math.round(Number(rawRank))
+  if (!Number.isFinite(rank)) rank = fromIndex + 1
+  rank = Math.min(Math.max(rank, 1), items.length)
+  if (rank === fromIndex + 1) {
+    const input = document.querySelector(`[data-product-sort="${fromIndex}"]`)
+    if (input) input.value = String(fromIndex + 1)
+    return
+  }
+  const next = items.filter((_, index) => index !== fromIndex)
+  next.splice(rank - 1, 0, items[fromIndex])
+  await persistProductLibrary({ ...draft, items: next }, `已排到第 ${rank} 位，其余已自动顺延`)
+}
+
+function bindProductListDrag(editor) {
+  const list = editor.querySelector('[data-products-list]')
+  if (!list || list.dataset.dragBound === '1') return
+  list.dataset.dragBound = '1'
+
+  let dragIndex = -1
+
+  const clearState = () => {
+    list.querySelectorAll('.admin-item-row.is-dragging, .admin-item-row.is-drop-target').forEach((row) => {
+      row.classList.remove('is-dragging', 'is-drop-target')
+    })
+  }
+
+  list.addEventListener('dragstart', (event) => {
+    const handle = event.target.closest('[data-product-drag-handle]')
+    if (!handle || !list.contains(handle)) return
+    const row = handle.closest('[data-product-index]')
+    if (!row) return
+    dragIndex = Number(row.dataset.productIndex)
+    if (Number.isNaN(dragIndex)) {
+      dragIndex = -1
+      return
+    }
+    row.classList.add('is-dragging')
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', String(dragIndex))
+    try {
+      event.dataTransfer.setDragImage(row, 24, 24)
+    } catch {
+      /* ignore */
+    }
+  })
+
+  list.addEventListener('dragend', () => {
+    clearState()
+    dragIndex = -1
+  })
+
+  list.addEventListener('dragover', (event) => {
+    const row = event.target.closest('[data-product-index]')
+    if (!row || !list.contains(row) || dragIndex < 0) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    list.querySelectorAll('.admin-item-row.is-drop-target').forEach((el) => {
+      if (el !== row) el.classList.remove('is-drop-target')
+    })
+    row.classList.add('is-drop-target')
+  })
+
+  list.addEventListener('dragleave', (event) => {
+    const row = event.target.closest('[data-product-index]')
+    if (!row) return
+    if (event.relatedTarget && row.contains(event.relatedTarget)) return
+    row.classList.remove('is-drop-target')
+  })
+
+  list.addEventListener('drop', async (event) => {
+    event.preventDefault()
+    const row = event.target.closest('[data-product-index]')
+    clearState()
+    if (!row || !list.contains(row) || dragIndex < 0) return
+    const toIndex = Number(row.dataset.productIndex)
+    if (Number.isNaN(toIndex) || toIndex === dragIndex) return
+    try {
+      await moveProductToRank(dragIndex, toIndex + 1)
+    } catch (error) {
+      ctx.toast(error.message, true)
+    } finally {
+      dragIndex = -1
+    }
+  })
 }
 
 function previewProduct(item) {
@@ -179,16 +286,187 @@ function previewProduct(item) {
   }
 }
 
-function categoryOptions(lineId) {
-  const categories = ctx.state.productLibrary?.draftContent?.categories || []
+function currentCategories() {
+  return [...(ctx.state.productLibrary?.draftContent?.categories || [])]
+}
+
+function categoryOptions(lineId, extraValue = '') {
+  const categories = currentCategories()
   const filtered = lineId
     ? categories.filter((item) => !item.lineId || item.lineId === lineId)
     : categories
-  const options = [['', '未分类']]
-  // 三类业务分类对空间智能商品始终可见；其它产品线也能选（lineId 为空时）
   const source = filtered.length ? filtered : categories
+  const options = [['', '未分类']]
   source.forEach((item) => options.push([item.id, item.name]))
+  if (extraValue && !options.some(([id]) => id === extraValue)) {
+    const hit = categories.find((item) => item.id === extraValue)
+    if (hit) options.push([extraValue, hit.name])
+  }
   return options
+}
+
+function renderCategoryLineOptions(selected = '') {
+  return [['', '全部产品线'], ...LINE_OPTIONS]
+    .map(([id, name]) => `<option value="${esc(id)}"${String(selected) === String(id) ? ' selected' : ''}>${esc(name)}</option>`)
+    .join('')
+}
+
+function renderCategoryManager(categories = []) {
+  return `
+    <p class="admin-form-section__hint" style="margin:0 0 10px">分类会出现在前台「全部产品」页签。改名、排序、新增后会立即发布。</p>
+    <div class="admin-product-cats__list" data-product-cats-list>
+      ${(categories.length ? categories : []).map((item, index) => `
+        <div class="admin-product-cats__row" data-product-cat-row data-product-cat-id="${esc(item.id)}">
+          <label>
+            <span>分类名称</span>
+            <input type="text" maxlength="40" value="${esc(item.name || '')}" data-product-cat-name placeholder="例如 毫米波雷达" />
+          </label>
+          <label>
+            <span>适用产品线</span>
+            <select data-product-cat-line>${renderCategoryLineOptions(item.lineId || '')}</select>
+          </label>
+          <div class="admin-product-cats__tools">
+            <button type="button" data-product-cat-move="-1" ${index === 0 ? 'disabled' : ''} title="上移">↑</button>
+            <button type="button" data-product-cat-move="1" ${index === categories.length - 1 ? 'disabled' : ''} title="下移">↓</button>
+            <button type="button" data-product-cat-remove title="删除分类">删除</button>
+          </div>
+        </div>`).join('') || '<p class="admin-form-section__hint">还没有分类，点下面添加。</p>'}
+    </div>
+    <button type="button" class="admin-add-slide" data-product-cat-add>+ 添加分类</button>`
+}
+
+function collectCategoriesFrom(root) {
+  return [...(root?.querySelectorAll('[data-product-cat-row]') || [])]
+    .map((row) => ({
+      id: row.dataset.productCatId || '',
+      name: row.querySelector('[data-product-cat-name]')?.value.trim() || '',
+      lineId: row.querySelector('[data-product-cat-line]')?.value.trim() || '',
+    }))
+    .filter((item) => item.name)
+}
+
+async function persistCategories(next, message) {
+  const draft = ctx.state.productLibrary?.draftContent || {}
+  await persistProductLibrary({ ...draft, categories: next }, message)
+}
+
+function refreshComposeCategorySelect(composeView, selected) {
+  if (!composeView) return
+  const select = composeView.querySelector('[data-product-field="category"]')
+  if (!select) return
+  const lineId = composeView.querySelector('[data-product-field="hardwareLine"]')?.value || 'space'
+  const value = selected !== undefined ? selected : select.value
+  const options = categoryOptions(lineId, value)
+  select.innerHTML = options.map(([key, text]) => `<option value="${esc(key)}"${String(value) === String(key) ? ' selected' : ''}>${esc(text)}</option>`).join('')
+}
+
+function openProductCatsModal(composeView) {
+  const modal = composeView.querySelector('[data-product-cats-modal]')
+  if (!modal) return
+  const body = modal.querySelector('[data-product-cats-modal-body]')
+  if (body) body.innerHTML = renderCategoryManager(currentCategories())
+  modal.hidden = false
+}
+
+function closeProductCatsModal(composeView) {
+  const modal = composeView.querySelector('[data-product-cats-modal]')
+  if (modal) modal.hidden = true
+}
+
+function categoryManagerRoot(event, scope) {
+  return event.target.closest('[data-product-cats-panel], [data-product-cats-modal-body]') || scope?.querySelector?.('[data-product-cats-panel], [data-product-cats-modal-body]')
+}
+
+async function handleProductCategoryClick(event, scope) {
+  const add = event.target.closest('[data-product-cat-add]')
+  const remove = event.target.closest('[data-product-cat-remove]')
+  const move = event.target.closest('[data-product-cat-move]')
+  if (!add && !remove && !move) return false
+  event.preventDefault()
+  const root = categoryManagerRoot(event, scope)
+  if (!root) return true
+  let next = collectCategoriesFrom(root)
+  if (add) {
+    if (next.length >= 24) {
+      ctx.toast('最多 24 个分类', true)
+      return true
+    }
+    next.push({ id: '', name: '新分类', lineId: '' })
+    ctx.state.productCatsOpen = true
+    try {
+      await persistCategories(next, '已添加分类')
+      refreshAfterCategorySave(scope)
+    } catch (error) {
+      ctx.toast(error.message, true)
+    }
+    return true
+  }
+  if (remove) {
+    const row = remove.closest('[data-product-cat-row]')
+    const id = row?.dataset.productCatId || ''
+    const name = row?.querySelector('[data-product-cat-name]')?.value.trim() || '该分类'
+    const used = (ctx.state.productLibrary?.draftContent?.items || []).filter((item) => item.category === id).length
+    const extra = used ? ` 当前有 ${used} 个商品使用它，删除后这些商品会变成未分类。` : ''
+    if (!window.confirm(`确定删除分类「${name}」吗？${extra}`)) return true
+    next = next.filter((item) => item.id !== id)
+    const draft = ctx.state.productLibrary?.draftContent || {}
+    const items = (draft.items || []).map((item) => (item.category === id ? { ...item, category: '' } : item))
+    try {
+      await persistProductLibrary({ ...draft, categories: next, items }, '分类已删除')
+      refreshAfterCategorySave(scope)
+    } catch (error) {
+      ctx.toast(error.message, true)
+    }
+    return true
+  }
+  if (move) {
+    const row = move.closest('[data-product-cat-row]')
+    const id = row?.dataset.productCatId || ''
+    const index = next.findIndex((item) => item.id === id)
+    const target = index + Number(move.dataset.productCatMove)
+    if (index < 0 || target < 0 || target >= next.length) return true
+    const [cat] = next.splice(index, 1)
+    next.splice(target, 0, cat)
+    try {
+      await persistCategories(next, '分类顺序已更新')
+      refreshAfterCategorySave(scope)
+    } catch (error) {
+      ctx.toast(error.message, true)
+    }
+    return true
+  }
+  return false
+}
+
+async function handleProductCategoryChange(event, scope) {
+  const name = event.target.closest('[data-product-cat-name]')
+  const line = event.target.closest('[data-product-cat-line]')
+  if (!name && !line) return false
+  const root = categoryManagerRoot(event, scope)
+  if (!root) return true
+  const next = collectCategoriesFrom(root)
+  if (!next.length && currentCategories().length) {
+    ctx.toast('分类名称不能为空', true)
+    return true
+  }
+  try {
+    await persistCategories(next, '分类已更新')
+    refreshAfterCategorySave(scope)
+  } catch (error) {
+    ctx.toast(error.message, true)
+  }
+  return true
+}
+
+function refreshAfterCategorySave(scope) {
+  const compose = document.querySelector('[data-products-compose-view]')
+  if (compose && !compose.hidden) {
+    const modal = compose.querySelector('[data-product-cats-modal]')
+    const body = modal?.querySelector('[data-product-cats-modal-body]')
+    if (modal && !modal.hidden && body) body.innerHTML = renderCategoryManager(currentCategories())
+    refreshComposeCategorySelect(compose)
+  }
+  void scope
 }
 
 function renderBasicsBar(item) {
@@ -204,7 +482,16 @@ function renderBasicsBar(item) {
         <div class="admin-form-grid">
           ${productField('name', '产品名称', item.name, { wide: true, placeholder: '例如 智能门锁' })}
           ${productField('hardwareLine', '所属产品线', item.hardwareLine || 'space', { type: 'select', options: LINE_OPTIONS })}
-          ${productField('category', '商品分类', item.category || '', { type: 'select', options: categoryOptions(item.hardwareLine || 'space') })}
+          <label class="admin-news-field">
+            <span>商品分类</span>
+            <div class="admin-product-cat-field">
+              <select data-product-field="category">
+                ${categoryOptions(item.hardwareLine || 'space', item.category || '').map(([key, text]) => `<option value="${esc(key)}"${String(item.category || '') === String(key) ? ' selected' : ''}>${esc(text)}</option>`).join('')}
+              </select>
+              <button type="button" class="admin-news-toolbar__link" data-product-cats-open>管理分类</button>
+            </div>
+            <small>出现在前台「全部产品」页签；可新增、改名、排序或删除。</small>
+          </label>
           ${productField('coverImage', '列表封面图', item.coverImage, {
             image: true,
             wide: true,
@@ -284,12 +571,16 @@ function renderProductCompose(item) {
   const product = previewProduct(item)
   const line = getLine(product.productLine)
   const story = item.story || emptyProduct().story
+  const activeTab =
+    body.querySelector('[data-hpi-tab].is-active')?.dataset.hpiTab ||
+    body.querySelector('[data-hpi-panel].is-active')?.dataset.hpiPanel ||
+    'overview'
   body.innerHTML = `
     <div class="admin-vedit">
       ${renderBasicsBar(item)}
       <div class="admin-vedit-hint">详情页正文请在下方预览里直接改（点文字/图片即可）。上方基础设置只管名称、分类和列表封面。</div>
       <div class="admin-vedit-canvas" data-product-visual>
-        ${renderProductStory(product, story, line, { editable: true })}
+        ${renderProductStory(product, story, line, { editable: true, activeTab })}
       </div>
       <input type="file" accept="image/jpeg,image/png,image/webp" hidden data-product-visual-file />
       <div class="admin-link-modal" data-link-modal hidden>
@@ -364,8 +655,122 @@ function renderProductCompose(item) {
           </footer>
         </div>
       </div>
+      <div class="admin-link-modal" data-product-cats-modal hidden>
+        <div class="admin-link-modal__backdrop" data-product-cats-modal-close></div>
+        <div class="admin-link-modal__panel admin-product-cats-modal" role="dialog" aria-modal="true" aria-labelledby="admin-product-cats-title">
+          <header>
+            <h3 id="admin-product-cats-title">管理商品分类</h3>
+            <button type="button" data-product-cats-modal-close aria-label="关闭">×</button>
+          </header>
+          <div class="admin-link-modal__body" data-product-cats-modal-body></div>
+          <footer>
+            <button type="button" data-product-cats-modal-close>完成</button>
+          </footer>
+        </div>
+      </div>
     </div>`
   bindProductStoryTabs(body)
+  bindGalleryThumbReorder(body)
+}
+
+function reorderGallerySlots(gallery, fromIndex, toIndex) {
+  const next = (Array.isArray(gallery) ? gallery : []).slice(0, 5).map((entry) => ({
+    url: String(typeof entry === 'string' ? entry : entry?.url || '').trim(),
+    caption: String(typeof entry === 'string' ? '' : entry?.caption || '').trim(),
+  }))
+  while (next.length < 5) next.push({ url: '', caption: '' })
+  if (fromIndex < 0 || toIndex < 0 || fromIndex >= next.length || toIndex >= next.length || fromIndex === toIndex) {
+    return next
+  }
+  const [moved] = next.splice(fromIndex, 1)
+  next.splice(toIndex, 0, moved)
+  return next
+}
+
+function bindGalleryThumbReorder(root) {
+  const thumbsHost = root.querySelector('.hpi--editable [data-hpi-gallery] .hpi-gallery__thumbs')
+  if (!thumbsHost || thumbsHost.dataset.reorderBound === '1') return
+  thumbsHost.dataset.reorderBound = '1'
+
+  let dragIndex = -1
+  let didReorderDrag = false
+
+  const clearDropState = () => {
+    thumbsHost.querySelectorAll('.hpi-gallery__thumb.is-drop-target, .hpi-gallery__thumb.is-dragging').forEach((el) => {
+      el.classList.remove('is-drop-target', 'is-dragging')
+    })
+  }
+
+  thumbsHost.addEventListener('dragstart', (event) => {
+    const thumb = event.target.closest('[data-hpi-gallery-thumb]')
+    if (!thumb || !thumbsHost.contains(thumb)) return
+    dragIndex = Number(thumb.dataset.hpiGalleryThumb)
+    if (Number.isNaN(dragIndex)) {
+      dragIndex = -1
+      return
+    }
+    didReorderDrag = false
+    thumb.classList.add('is-dragging')
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', String(dragIndex))
+    try {
+      event.dataTransfer.setDragImage(thumb, 28, 28)
+    } catch {
+      /* ignore */
+    }
+  })
+
+  thumbsHost.addEventListener('dragend', () => {
+    clearDropState()
+    dragIndex = -1
+    // 避免拖拽结束后误触发「更换图片」点击
+    if (didReorderDrag) {
+      window.setTimeout(() => {
+        didReorderDrag = false
+      }, 0)
+    }
+  })
+
+  thumbsHost.addEventListener('dragover', (event) => {
+    const thumb = event.target.closest('[data-hpi-gallery-thumb]')
+    if (!thumb || !thumbsHost.contains(thumb) || dragIndex < 0) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    thumbsHost.querySelectorAll('.hpi-gallery__thumb.is-drop-target').forEach((el) => {
+      if (el !== thumb) el.classList.remove('is-drop-target')
+    })
+    thumb.classList.add('is-drop-target')
+  })
+
+  thumbsHost.addEventListener('dragleave', (event) => {
+    const thumb = event.target.closest('[data-hpi-gallery-thumb]')
+    if (!thumb) return
+    if (event.relatedTarget && thumb.contains(event.relatedTarget)) return
+    thumb.classList.remove('is-drop-target')
+  })
+
+  thumbsHost.addEventListener('drop', (event) => {
+    event.preventDefault()
+    const thumb = event.target.closest('[data-hpi-gallery-thumb]')
+    clearDropState()
+    if (!thumb || !thumbsHost.contains(thumb) || dragIndex < 0) return
+    const toIndex = Number(thumb.dataset.hpiGalleryThumb)
+    if (Number.isNaN(toIndex) || toIndex === dragIndex) return
+    didReorderDrag = true
+    const article = collectProductFromCompose()
+    if (!article.story) article.story = emptyProduct().story
+    if (!article.story.showcase || typeof article.story.showcase !== 'object') {
+      article.story.showcase = { title: '产品亮点', subtitle: '', mediaType: 'image', image: '', gallery: [], points: [] }
+    }
+    const gallery = reorderGallerySlots(article.story.showcase.gallery, dragIndex, toIndex)
+    article.story.showcase.gallery = gallery
+    article.story.showcase.image = gallery.find((item) => item.url)?.url || ''
+    renderProductCompose(article)
+    ctx.toast('图片顺序已更新')
+  })
+
+  // 供点击换图逻辑查询：刚完成拖拽则忽略本次 click
+  thumbsHost._galleryJustReordered = () => didReorderDrag
 }
 
 function setNested(target, path, value) {
@@ -384,7 +789,21 @@ function setNested(target, path, value) {
 }
 
 function readEditableText(el) {
-  return (el.innerText || '').replace(/\u00a0/g, ' ').trim()
+  // 单行字段去掉 contenteditable 残留换行，避免卖点标题/说明被拆到两行
+  return (el.innerText || '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s*\n+\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function sanitizeSingleLineEditable(el) {
+  if (!el || el.dataset.editMultiline === 'true') return
+  const text = readEditableText(el)
+  if (el.innerText.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim() === text && !el.querySelector('br, div, p')) {
+    return
+  }
+  el.textContent = text
 }
 
 function packIndexed(obj, key) {
@@ -471,7 +890,7 @@ function normalizeSpecs(item) {
   }
   item.story.specs = {
     title: block.title || '产品参数',
-    rows: rows.slice(0, 24).map((entry) => ({
+    rows: rows.slice(0, MAX_PRODUCT_SPEC_ROWS).map((entry) => ({
       label: String(entry?.label || '').trim(),
       value: String(entry?.value || '').trim(),
     })),
@@ -586,8 +1005,14 @@ function collectProductFromCompose() {
       title: String(item.story.capabilities.title || '').trim() || '核心能力',
       items: (item.story.capabilities.items || []).slice(0, 4).map((cap, index) => ({
         icon: String(cap?.icon || ['sensors', 'cloud_upload', 'notifications_active', 'bolt'][index] || 'check_circle').trim(),
-        title: String(cap?.title || '').trim(),
-        desc: String(cap?.desc || '').trim(),
+        title: String(cap?.title || '')
+          .replace(/\s*\n+\s*/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim(),
+        desc: String(cap?.desc || '')
+          .replace(/\s*\n+\s*/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim(),
       })),
     }
   }
@@ -902,12 +1327,24 @@ export function bindProductLibraryAdmin(helpers) {
   if (!listView || !composeView) return
 
   listView.addEventListener('submit', (event) => event.preventDefault())
-  document.querySelector('[data-products-editor]')?.addEventListener('click', async (event) => {
+  const productsEditor = document.querySelector('[data-products-editor]')
+  productsEditor?.addEventListener('click', async (event) => {
+    if (event.target.closest('[data-product-drag-handle]')) {
+      event.preventDefault()
+      return
+    }
+    if (event.target.closest('[data-product-cats-toggle]')) {
+      event.preventDefault()
+      ctx.state.productCatsOpen = !ctx.state.productCatsOpen
+      renderProductList(ctx.state.productLibrary?.draftContent || { items: [], categories: [] })
+      return
+    }
     if (event.target.closest('[data-product-add]')) {
       event.preventDefault()
       openProductCompose(-1)
       return
     }
+    if (await handleProductCategoryClick(event, productsEditor)) return
     const edit = event.target.closest('[data-product-edit]')
     if (edit) {
       event.preventDefault()
@@ -926,6 +1363,20 @@ export function bindProductLibraryAdmin(helpers) {
       } catch (error) {
         ctx.toast(error.message, true)
       }
+    }
+  })
+  productsEditor?.addEventListener('change', async (event) => {
+    if (await handleProductCategoryChange(event, productsEditor)) return
+    const input = event.target.closest('[data-product-sort]')
+    if (!input) return
+    input.disabled = true
+    try {
+      await moveProductToRank(Number(input.dataset.productSort), input.value)
+    } catch (error) {
+      ctx.toast(error.message, true)
+      renderProductList(ctx.state.productLibrary?.draftContent || { items: [] })
+    } finally {
+      input.disabled = false
     }
   })
 
@@ -955,6 +1406,18 @@ export function bindProductLibraryAdmin(helpers) {
       closeProductCompose()
       return
     }
+    if (event.target.closest('[data-product-cats-open]')) {
+      event.preventDefault()
+      openProductCatsModal(composeView)
+      return
+    }
+    if (event.target.closest('[data-product-cats-modal-close]')) {
+      event.preventDefault()
+      closeProductCatsModal(composeView)
+      refreshComposeCategorySelect(composeView)
+      return
+    }
+    if (await handleProductCategoryClick(event, composeView)) return
     if (event.target.closest('[data-album-add]')) {
       event.preventDefault()
       const article = collectProductFromCompose()
@@ -999,16 +1462,149 @@ export function bindProductLibraryAdmin(helpers) {
       renderProductCompose(article)
       return
     }
+    if (event.target.closest('[data-bullet-import-toggle]')) {
+      event.preventDefault()
+      const panel = composeView.querySelector('[data-bullet-import-panel]')
+      if (!panel) return
+      panel.hidden = !panel.hidden
+      if (!panel.hidden) panel.querySelector('[data-bullet-import-text]')?.focus()
+      return
+    }
+    if (event.target.closest('[data-bullet-import-cancel]')) {
+      event.preventDefault()
+      const panel = composeView.querySelector('[data-bullet-import-panel]')
+      if (!panel) return
+      panel.hidden = true
+      const textarea = panel.querySelector('[data-bullet-import-text]')
+      if (textarea) textarea.value = ''
+      return
+    }
+    if (event.target.closest('[data-bullet-import-apply]')) {
+      event.preventDefault()
+      const textarea = composeView.querySelector('[data-bullet-import-text]')
+      const parsed = parseProductBulletsText(textarea?.value || '', { maxRows: 4 })
+      if (!parsed.length) {
+        ctx.toast('未能解析出卖点，请检查粘贴内容', true)
+        return
+      }
+      const article = collectProductFromCompose()
+      if (!article.story) article.story = {}
+      if (!article.story.capabilities || typeof article.story.capabilities !== 'object') {
+        article.story.capabilities = { title: '核心能力', items: [] }
+      }
+      const before = Array.isArray(article.story.capabilities.items) ? article.story.capabilities.items : []
+      const beforeKeys = new Set(
+        before.map((item) => String(item?.title || '').replace(/\s+/g, '').toLowerCase()).filter(Boolean),
+      )
+      let updated = 0
+      let added = 0
+      for (const item of parsed) {
+        const key = String(item.title || '').replace(/\s+/g, '').toLowerCase()
+        if (!key) continue
+        if (beforeKeys.has(key)) updated += 1
+        else added += 1
+      }
+      const icons = ['sensors', 'cloud_upload', 'notifications_active', 'bolt']
+      const merged = mergeProductBulletItems(before, parsed, { maxRows: 4 }).map((item, index) => ({
+        icon: String(item.icon || before[index]?.icon || icons[index] || 'check_circle').trim(),
+        title: item.title,
+        desc: item.desc,
+      }))
+      article.story.capabilities = {
+        title: String(article.story.capabilities.title || '').trim() || '核心能力',
+        items: merged,
+      }
+      renderProductCompose(article)
+      const parts = []
+      if (updated) parts.push(`更新 ${updated} 条`)
+      if (added) parts.push(`新增 ${added} 条`)
+      ctx.toast(parts.length ? `已解析卖点：${parts.join('，')}（同名以最新为准）` : `已解析并填入 ${parsed.length} 条卖点`)
+      return
+    }
+    if (event.target.closest('[data-spec-import-toggle]')) {
+      event.preventDefault()
+      const panel = composeView.querySelector('[data-spec-import-panel]')
+      if (!panel) return
+      panel.hidden = !panel.hidden
+      if (!panel.hidden) panel.querySelector('[data-spec-import-text]')?.focus()
+      return
+    }
+    if (event.target.closest('[data-spec-import-cancel]')) {
+      event.preventDefault()
+      const panel = composeView.querySelector('[data-spec-import-panel]')
+      if (!panel) return
+      panel.hidden = true
+      const textarea = panel.querySelector('[data-spec-import-text]')
+      if (textarea) textarea.value = ''
+      return
+    }
+    if (event.target.closest('[data-spec-import-apply]')) {
+      event.preventDefault()
+      const textarea = composeView.querySelector('[data-spec-import-text]')
+      const raw = textarea?.value || ''
+      const parsed = parseProductSpecsText(raw)
+      if (!parsed.length) {
+        ctx.toast('未能解析出参数，请检查粘贴内容', true)
+        return
+      }
+      const article = collectProductFromCompose()
+      normalizeSpecs(article)
+      const before = article.story.specs.rows || []
+      const beforeKeys = new Set(before.map((row) => String(row.label || '').replace(/\s+/g, '').toLowerCase()).filter(Boolean))
+      let updated = 0
+      let added = 0
+      for (const row of parsed) {
+        const key = String(row.label || '').replace(/\s+/g, '').toLowerCase()
+        if (!key) continue
+        if (beforeKeys.has(key)) updated += 1
+        else added += 1
+      }
+      article.story.specs.rows = mergeProductSpecRows(before, parsed, {
+        maxRows: MAX_PRODUCT_SPEC_ROWS,
+        preferIncoming: parsed.length >= 3,
+      })
+      renderProductCompose(article)
+      const parts = []
+      if (updated) parts.push(`更新 ${updated} 条`)
+      if (added) parts.push(`新增 ${added} 条`)
+      ctx.toast(
+        parsed.length >= 3
+          ? `已整表替换为 ${parsed.length} 条参数`
+          : parts.length
+            ? `已解析：${parts.join('，')}（同名以最新为准）`
+            : `已解析并填入 ${parsed.length} 条参数`,
+      )
+      return
+    }
     if (event.target.closest('[data-spec-add]')) {
       event.preventDefault()
       const article = collectProductFromCompose()
       normalizeSpecs(article)
-      if ((article.story.specs.rows || []).length >= 24) {
-        ctx.toast('最多添加 24 条参数', true)
+      if ((article.story.specs.rows || []).length >= MAX_PRODUCT_SPEC_ROWS) {
+        ctx.toast(`最多添加 ${MAX_PRODUCT_SPEC_ROWS} 条参数`, true)
         return
       }
       article.story.specs.rows.push({ label: '', value: '' })
       renderProductCompose(article)
+      return
+    }
+    if (event.target.closest('[data-spec-clear-all]')) {
+      event.preventDefault()
+      const article = collectProductFromCompose()
+      normalizeSpecs(article)
+      const count = (article.story.specs.rows || []).filter(
+        (row) => String(row?.label || '').trim() || String(row?.value || '').trim(),
+      ).length
+      if (!count) {
+        ctx.toast('当前没有可删除的参数', true)
+        return
+      }
+      if (!window.confirm(`确定删除全部 ${count} 条产品参数吗？此操作不可撤销（需保存后才会同步到前台）。`)) {
+        return
+      }
+      article.story.specs.rows = [{ label: '', value: '' }]
+      renderProductCompose(article)
+      ctx.toast(`已清空 ${count} 条参数`)
       return
     }
     const specRemove = event.target.closest('[data-spec-remove]')
@@ -1080,6 +1676,11 @@ export function bindProductLibraryAdmin(helpers) {
 
     const imageBtn = event.target.closest('[data-edit-image]')
     if (imageBtn) {
+      const thumbsHost = imageBtn.closest('.hpi-gallery__thumbs')
+      if (thumbsHost?._galleryJustReordered?.()) {
+        event.preventDefault()
+        return
+      }
       event.preventDefault()
       openImageModal(composeView, imageBtn)
       return
@@ -1105,14 +1706,39 @@ export function bindProductLibraryAdmin(helpers) {
         closeLinkModal(composeView)
         return
       }
+      if (composeView.querySelector('[data-product-cats-modal]:not([hidden])')) {
+        closeProductCatsModal(composeView)
+        return
+      }
     }
     const editable = event.target.closest('[data-edit-path]')
     if (!editable) return
     if (event.key === 'Enter' && !editable.dataset.editMultiline) {
       event.preventDefault()
+      sanitizeSingleLineEditable(editable)
       editable.blur()
     }
   })
+
+  composeView.addEventListener('paste', (event) => {
+    const editable = event.target.closest('[data-edit-path]')
+    if (!editable || editable.dataset.editMultiline === 'true') return
+    event.preventDefault()
+    const text = (event.clipboardData || window.clipboardData)?.getData('text/plain') || ''
+    const clean = String(text).replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim()
+    document.execCommand('insertText', false, clean)
+    sanitizeSingleLineEditable(editable)
+  })
+
+  composeView.addEventListener(
+    'blur',
+    (event) => {
+      const editable = event.target.closest?.('[data-edit-path]')
+      if (!editable) return
+      sanitizeSingleLineEditable(editable)
+    },
+    true,
+  )
 
   composeView.addEventListener('input', (event) => {
     const imageUrl = event.target.closest('[data-image-modal-url]')
@@ -1144,6 +1770,12 @@ export function bindProductLibraryAdmin(helpers) {
 
   composeView.addEventListener('change', async (event) => {
     if (event.target.closest('[data-link-type]')) return
+    if (await handleProductCategoryChange(event, composeView)) return
+    const hardwareLine = event.target.closest('[data-product-field="hardwareLine"]')
+    if (hardwareLine) {
+      refreshComposeCategorySelect(composeView)
+      return
+    }
 
     const mediaField = event.target.closest('[data-product-field]')
     const modalFile = event.target.closest('[data-image-modal-file]')

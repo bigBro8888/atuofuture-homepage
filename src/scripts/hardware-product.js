@@ -136,6 +136,6 @@ export async function initHardwareProductPage() {
     detailImages: libStory.detailImages || fallback.detailImages,
   }
   const line = getLine(product.productLine)
-  root.innerHTML = renderProductStory(product, story, line, { editable: false })
+  root.innerHTML = renderProductStory(product, story, line, { editable: false, activeTab: 'photos' })
   bindProductStoryTabs(root)
 }

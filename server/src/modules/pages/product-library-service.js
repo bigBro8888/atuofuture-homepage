@@ -388,7 +388,7 @@ function cleanCapabilities(value = {}, fallback = {}) {
 function cleanSpecs(value = {}, fallback = {}) {
   const source = Array.isArray(value.rows) ? value.rows : (Array.isArray(fallback.rows) ? fallback.rows : [])
   const rows = source
-    .slice(0, 24)
+    .slice(0, 48)
     .map((row, index) => ({
       label: cleanText(row?.label, fallback.rows?.[index]?.label || '', 40),
       value: cleanText(row?.value, fallback.rows?.[index]?.value || '', 120),
@@ -564,31 +564,56 @@ export function defaultProductLibraryContent() {
   }
 }
 
-function allowedCategoryIds() {
-  return new Set(defaultCategories().map((item) => item.id))
+function normalizeLibraryCategory(value, id, slug, fallback = {}, allowed = new Set()) {
+  const raw = cleanCategoryId(value, '')
+  if (raw && allowed.has(raw)) return raw
+  const mapped = LEGACY_CATEGORY_TO_LIBRARY[raw]
+  if (mapped && allowed.has(mapped)) return mapped
+  const fb = cleanCategoryId(fallback.category || '', '')
+  if (fb && allowed.has(fb)) return fb
+  const mappedFb = LEGACY_CATEGORY_TO_LIBRARY[fb]
+  if (mappedFb && allowed.has(mappedFb)) return mappedFb
+  const seeded = PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID[id] || PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID[slug] || ''
+  if (seeded && allowed.has(seeded)) return seeded
+  return ''
 }
 
-function normalizeLibraryCategory(value, id, slug, fallback = {}) {
-  const allowed = allowedCategoryIds()
-  const raw = cleanCategoryId(value, '')
-  if (allowed.has(raw)) return raw
-  if (LEGACY_CATEGORY_TO_LIBRARY[raw]) return LEGACY_CATEGORY_TO_LIBRARY[raw]
-  const fb = cleanCategoryId(fallback.category || '', '')
-  if (allowed.has(fb)) return fb
-  if (LEGACY_CATEGORY_TO_LIBRARY[fb]) return LEGACY_CATEGORY_TO_LIBRARY[fb]
-  return PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID[id]
-    || PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID[slug]
-    || ''
+function uniqueCategoryId(preferred, used) {
+  let base = cleanCategoryId(preferred, '')
+  if (!base) base = `c-${randomUUID().slice(0, 8)}`
+  let id = base
+  let n = 2
+  while (used.has(id)) {
+    id = `${base}-${n}`.slice(0, 40)
+    n += 1
+    if (n > 80) {
+      id = `c-${randomUUID().slice(0, 8)}`
+      break
+    }
+  }
+  return id
 }
 
 function validateCategories(value, fallback) {
-  // 商品库固定使用业务分类表中的三类；忽略历史杂项分类
-  void value
-  void fallback
-  return defaultCategories()
+  const source = Array.isArray(value)
+    ? value
+    : Array.isArray(fallback)
+      ? fallback
+      : defaultCategories()
+  const used = new Set()
+  const next = []
+  for (const raw of source.slice(0, 24)) {
+    const name = cleanText(raw?.name, '', 40)
+    if (!name) continue
+    const lineId = LINE_IDS.has(raw?.lineId) ? raw.lineId : ''
+    const id = uniqueCategoryId(raw?.id, used)
+    used.add(id)
+    next.push({ id, name, lineId })
+  }
+  return next
 }
 
-function validateItem(value = {}, fallback = {}) {
+function validateItem(value = {}, fallback = {}, allowedCategories = new Set()) {
   const catalog = catalogProduct(value.id || value.slug || fallback.id)
   const base = catalog ? seedItem(catalog) : fallback
   const name = cleanText(value.name, fallback.name || base.name || '未命名产品', 80)
@@ -636,7 +661,7 @@ function validateItem(value = {}, fallback = {}) {
     name,
     tag: cleanText(value.tag, fallback.tag || base.tag || '', 20),
     hardwareLine,
-    category: normalizeLibraryCategory(value.category, id, slug, fallback.category ? fallback : base),
+    category: normalizeLibraryCategory(value.category, id, slug, fallback.category ? fallback : base, allowedCategories),
     coverImage: cleanUrl(value.coverImage, fallback.coverImage || base.coverImage || ''),
     shortDescription: cleanText(value.shortDescription, fallback.shortDescription || base.shortDescription || '', 240),
     fullDescription: cleanText(value.fullDescription, fallback.fullDescription || base.fullDescription || '', 600),
@@ -655,10 +680,11 @@ function validateItem(value = {}, fallback = {}) {
 export function validateProductLibraryContent(value = {}) {
   const fallback = defaultProductLibraryContent()
   const categories = validateCategories(value.categories, fallback.categories)
+  const allowedCategories = new Set(categories.map((item) => item.id))
   const source = Array.isArray(value.items) ? value.items : fallback.items
   const usedSlugs = new Set()
   const items = source.slice(0, 80).map((item, index) => {
-    const next = validateItem(item, {})
+    const next = validateItem(item, {}, allowedCategories)
     let slug = next.slug
     if (usedSlugs.has(slug)) slug = `${slug}-${index + 1}`.slice(0, 60)
     usedSlugs.add(slug)

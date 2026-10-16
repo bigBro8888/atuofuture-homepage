@@ -1,5 +1,6 @@
 /** 商品详情叙事页渲染（前台与后台可视化编辑共用） */
 
+import { MAX_PRODUCT_SPEC_ROWS } from './parse-product-specs.js'
 import { esc, textNode, imgNode } from './vedit-nodes.js'
 
 function collectIntroBullets(story, product) {
@@ -15,6 +16,35 @@ function collectIntroBullets(story, product) {
   return fromProduct.map((title) => ({ title, desc: '' }))
 }
 
+/** 是否从智能硬件频道页进入详情（query / referrer） */
+function cameFromHardwareChannel() {
+  if (typeof window === 'undefined') return false
+  try {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('from') === 'hardware') return true
+    if (!document.referrer) return false
+    const ref = new URL(document.referrer)
+    if (ref.origin !== window.location.origin) return false
+    const path = ref.pathname.replace(/\/index\.html$/i, '/').replace(/\/+$/, '') || '/'
+    return path === '/hardware'
+  } catch {
+    return false
+  }
+}
+
+function renderProductBreadcrumb({ editable = false } = {}) {
+  const tab = editable ? ' tabindex="-1"' : ''
+  const fromHardware = !editable && cameFromHardwareChannel()
+  const sep = '<span class="hpi-breadcrumb__sep" aria-hidden="true">/</span>'
+  const hardware = fromHardware
+    ? `<a href="/hardware/"${tab}>智能硬件</a>${sep}`
+    : ''
+  return `
+    <nav class="hpi-breadcrumb" aria-label="面包屑">
+      ${hardware}<a href="/hardware/products/"${tab}>全部商品</a>${sep}<span aria-current="page">商品详情</span>
+    </nav>`
+}
+
 export function renderProductHero(story, product, line, { editable = false } = {}) {
   const hero = story.hero || {}
   const title = hero.title || product.name || ''
@@ -24,52 +54,75 @@ export function renderProductHero(story, product, line, { editable = false } = {
     .map((item, index) => {
       if (!editable && !item.title && !item.desc) return ''
       return `
-        <li class="hpi-intro__bullet">
-          ${textNode(`story.capabilities.items.${index}.title`, item.title || '', {
+        <li class="hpi-intro__bullet">${textNode(`story.capabilities.items.${index}.title`, String(item.title || '').replace(/\s+/g, ' ').trim(), {
             editable,
-            tag: 'strong',
+            tag: 'span',
             className: 'hpi-intro__bullet-title',
             placeholder: '卖点标题',
-          })}
-          ${
+          })}${
             editable || item.desc
-              ? textNode(`story.capabilities.items.${index}.desc`, item.desc || '', {
+              ? textNode(`story.capabilities.items.${index}.desc`, String(item.desc || '').replace(/\s+/g, ' ').trim(), {
                   editable,
                   tag: 'span',
                   className: 'hpi-intro__bullet-desc',
                   placeholder: '卖点说明',
                 })
               : ''
-          }
-        </li>`
+          }</li>`
     })
     .join('')
+  const bulletImport = editable
+    ? `<div class="hpi-intro__bullets-import">
+          <button type="button" class="hpi-intro__bullets-import-toggle" data-bullet-import-toggle>
+            <span class="material-symbols-outlined" aria-hidden="true">content_paste</span>
+            粘贴解析
+          </button>
+          <div class="hpi-intro__bullets-import-panel" data-bullet-import-panel hidden>
+            <label class="hpi-intro__bullets-import-label" for="hpi-bullet-import-text">粘贴卖点文本</label>
+            <textarea id="hpi-bullet-import-text" class="hpi-intro__bullets-import-text" data-bullet-import-text rows="5" placeholder="例如：&#10;现场感知：实时监测管网压力…&#10;数据上云：关键信息汇聚至平台…&#10;也支持一行标题、一行说明，或 Excel 复制"></textarea>
+            <div class="hpi-intro__bullets-import-actions">
+              <button type="button" class="hpi-intro__bullets-import-apply" data-bullet-import-apply>解析并填入</button>
+              <button type="button" class="hpi-intro__bullets-import-cancel" data-bullet-import-cancel>取消</button>
+            </div>
+            <p class="hpi-intro__bullets-import-hint">同名卖点以本次为准并更新，其余保留；新卖点追加。最多 4 条。</p>
+          </div>
+        </div>`
+    : ''
 
   return `
     <section class="hpi-intro" id="hpi-intro">
-      <div class="hwc-shell hpi-intro__grid">
-        <div class="hpi-intro__media">
-          ${renderShowcaseVisual(story, product, { editable })}
-        </div>
-        <div class="hpi-intro__meta">
-          <p class="hpi-intro__crumb"><a href="/hardware/"${editable ? ' tabindex="-1"' : ''}>智能硬件</a>${line ? ` / <a href="/hardware/?line=${esc(line.id)}#hwc-browser"${editable ? ' tabindex="-1"' : ''}>${esc(line.name)}</a>` : ''} / ${esc(product.name)}</p>
-          <p class="hpi-intro__model">${esc(product.name || '')}</p>
-          ${textNode('story.hero.title', title, { editable, tag: 'h1', className: 'hpi-intro__title' })}
-          ${
-            desc || editable
-              ? textNode('story.hero.description', desc, {
-                  editable,
-                  tag: 'p',
-                  className: 'hpi-intro__desc',
-                  multiline: true,
-                  placeholder: '一句话产品介绍',
-                })
-              : ''
-          }
-          ${bulletNodes ? `<ul class="hpi-intro__bullets">${bulletNodes}</ul>` : ''}
-          <div class="hpi-intro__actions">
-            <button type="button" class="hpi-intro__cta"${editable ? '' : ' data-demo-modal-open'}>预约方案演示</button>
-            <a class="hpi-intro__link" href="#hpi-detail"${editable ? ' tabindex="-1"' : ''}>查看产品亮点</a>
+      <div class="hwc-shell hpi-intro__shell">
+        ${renderProductBreadcrumb({ editable })}
+        <div class="hpi-intro__grid">
+          <div class="hpi-intro__media">
+            ${renderShowcaseVisual(story, product, { editable })}
+          </div>
+          <div class="hpi-intro__meta">
+            <p class="hpi-intro__model">${esc(product.name || '')}</p>
+            ${textNode('story.hero.title', title, { editable, tag: 'h1', className: 'hpi-intro__title' })}
+            ${
+              desc || editable
+                ? textNode('story.hero.description', desc, {
+                    editable,
+                    tag: 'p',
+                    className: 'hpi-intro__desc',
+                    multiline: true,
+                    placeholder: '一句话产品介绍',
+                  })
+                : ''
+            }
+            ${
+              bulletNodes || editable
+                ? `<div class="hpi-intro__bullets-block">
+                    ${bulletImport}
+                    ${bulletNodes ? `<ul class="hpi-intro__bullets">${bulletNodes}</ul>` : ''}
+                  </div>`
+                : ''
+            }
+            <div class="hpi-intro__actions">
+              <button type="button" class="hpi-intro__cta"${editable ? '' : ' data-demo-modal-open'}>预约方案演示</button>
+              <a class="hpi-intro__link" href="#hpi-detail"${editable ? ' tabindex="-1"' : ''}>查看产品亮点</a>
+            </div>
           </div>
         </div>
       </div>
@@ -130,7 +183,7 @@ function renderShowcaseVisual(story, product, { editable = false } = {}) {
       const attrs = `class="hpi-gallery__thumb${active}" data-hpi-gallery-thumb="${index}" data-src="${esc(item.url)}" data-caption="${esc(item.caption || '')}" aria-label="商品图 ${index + 1}"`
       if (editable) {
         return `
-          <div ${attrs}>
+          <div ${attrs} draggable="true" data-gallery-reorder title="拖拽调整顺序">
             ${imgNode(`story.showcase.gallery.${index}.url`, item.url, {
               editable: true,
               width: 64,
@@ -168,7 +221,7 @@ function renderShowcaseVisual(story, product, { editable = false } = {}) {
           </button>
         </div>
       </div>
-      ${editable ? `<p class="hpi-gallery__tip">淘宝式图集：左侧最多 5 张缩略图，悬停切换；点缩略图可换图。</p>` : ''}
+      ${editable ? `<p class="hpi-gallery__tip">淘宝式图集：左侧最多 5 张；拖拽缩略图可调顺序，点击可换图。</p>` : ''}
     </div>`
 }
 
@@ -488,21 +541,32 @@ export function renderProductAlbum(story, { editable = false } = {}) {
           ${list
             .map(
               (item, index) => `
-            <figure class="hpi-album__item" data-album-index="${index}">
+            <figure class="hpi-album__item" data-album-index="${index}" data-album-src="${esc(item.url || '')}" data-album-caption="${esc(item.caption || '')}">
               ${
                 editable
                   ? `<button type="button" class="hpi-album__remove" data-album-remove="${index}" title="删除这张照片" aria-label="删除这张照片">×</button>`
                   : ''
               }
-              <div class="hpi-album__media">
+              ${
+                editable
+                  ? `<div class="hpi-album__media">
                 ${imgNode(`story.album.items.${index}.url`, item.url || '', {
-                  editable,
+                  editable: true,
                   width: 800,
                   height: 600,
                   alt: item.caption || '产品实拍',
                   loading: 'eager',
                 })}
-              </div>
+              </div>`
+                  : item.url
+                    ? `<button type="button" class="hpi-album__media hpi-album__media--zoom" data-album-lightbox aria-label="查看大图${item.caption ? `：${esc(item.caption)}` : ''}">
+                <img src="${esc(item.url)}" alt="${esc(item.caption || '产品实拍')}" width="800" height="600" loading="eager" draggable="false" />
+                <span class="hpi-album__zoom-hint" aria-hidden="true">
+                  <span class="material-symbols-outlined">zoom_in</span>
+                </span>
+              </button>`
+                    : `<div class="hpi-album__media"></div>`
+              }
               ${
                 editable
                   ? `<div class="hpi-album__field">
@@ -537,7 +601,7 @@ export function renderProductAlbum(story, { editable = false } = {}) {
 
 export function renderProductSpecs(story, { editable = false } = {}) {
   const block = story.specs || {}
-  const rows = Array.isArray(block.rows) ? block.rows.slice(0, 24) : []
+  const rows = Array.isArray(block.rows) ? block.rows.slice(0, MAX_PRODUCT_SPEC_ROWS) : []
   const visible = rows.filter((row) => row && (row.label || row.value))
   if (!visible.length && !editable) {
     return `
@@ -552,10 +616,37 @@ export function renderProductSpecs(story, { editable = false } = {}) {
       </section>`
   }
   const list = editable ? (rows.length ? rows : [{ label: '', value: '' }]) : visible
+  const filledCount = rows.filter((row) => row && (String(row.label || '').trim() || String(row.value || '').trim())).length
+  const importPanel = editable
+    ? `<div class="hpi-specs__import">
+          <div class="hpi-specs__toolbar">
+            <button type="button" class="hpi-specs__import-toggle" data-spec-import-toggle>
+              <span class="material-symbols-outlined" aria-hidden="true">content_paste</span>
+              粘贴解析
+            </button>
+            <button type="button" class="hpi-specs__clear-all" data-spec-clear-all${filledCount ? '' : ' disabled'} title="清空全部参数行">
+              <span class="material-symbols-outlined" aria-hidden="true">delete_sweep</span>
+              全部删除
+            </button>
+          </div>
+          <div class="hpi-specs__import-panel" data-spec-import-panel hidden>
+            <label class="hpi-specs__import-label" for="hpi-spec-import-text">粘贴参数表文本</label>
+            <textarea id="hpi-spec-import-text" class="hpi-specs__import-text" data-spec-import-text rows="6" placeholder="例如：参数名称建议填写内容产品名称4G水浸传感器检测方式…&#10;也支持每行「参数名：参数值」或 Excel 复制"></textarea>
+            <div class="hpi-specs__import-actions">
+              <button type="button" class="hpi-specs__import-apply" data-spec-import-apply>解析并填入</button>
+              <button type="button" class="hpi-specs__import-cancel" data-spec-import-cancel>取消</button>
+            </div>
+            <p class="hpi-specs__import-hint">批量粘贴（≥3 行）整表替换；少量粘贴时同名以最新为准。最多 ${MAX_PRODUCT_SPEC_ROWS} 条。</p>
+          </div>
+        </div>`
+    : ''
   return `
     <section class="hpi-specs" id="hpi-specs">
       <div class="hwc-shell">
-        ${textNode('story.specs.title', block.title || (editable ? '产品参数' : ''), { editable, tag: 'h2', className: 'hpi-specs__title' })}
+        <div class="hpi-specs__head">
+          ${textNode('story.specs.title', block.title || (editable ? '产品参数' : ''), { editable, tag: 'h2', className: 'hpi-specs__title' })}
+          ${importPanel}
+        </div>
         <div class="hpi-specs__table" role="table">
           ${list
             .map(
@@ -584,7 +675,7 @@ export function renderProductSpecs(story, { editable = false } = {}) {
         </div>
         ${
           editable
-            ? `<button type="button" class="hpi-specs__add" data-spec-add${list.length >= 24 ? ' disabled' : ''}>
+            ? `<button type="button" class="hpi-specs__add" data-spec-add${list.length >= MAX_PRODUCT_SPEC_ROWS ? ' disabled' : ''}>
           <span class="material-symbols-outlined" aria-hidden="true">add</span>
           <strong>添加参数行</strong>
         </button>`
@@ -851,25 +942,27 @@ function renderOverviewDetails(story, opts) {
     </section>`
 }
 
-export function renderProductStory(product, story, line, { editable = false } = {}) {
+export function renderProductStory(product, story, line, { editable = false, activeTab = 'overview' } = {}) {
   const resolved = story || {}
   const opts = { editable }
+  const tabIds = new Set(['overview', 'photos', 'videos', 'specs'])
+  const active = tabIds.has(activeTab) ? activeTab : 'overview'
   return `
     <article class="hpi${editable ? ' hpi--editable' : ''}" data-hpi-root>
       ${renderProductHero(resolved, product, line, opts)}
-      ${renderProductTabs('overview')}
+      ${renderProductTabs(active)}
       <div class="hpi-panels">
-        <div class="hpi-panel is-active" data-hpi-panel="overview">
+        <div class="hpi-panel${active === 'overview' ? ' is-active' : ''}" data-hpi-panel="overview"${active === 'overview' ? '' : ' hidden'}>
           ${renderOverviewDetails(resolved, opts)}
           ${renderProductClosing(resolved, opts)}
         </div>
-        <div class="hpi-panel" data-hpi-panel="photos" hidden>
+        <div class="hpi-panel${active === 'photos' ? ' is-active' : ''}" data-hpi-panel="photos"${active === 'photos' ? '' : ' hidden'}>
           ${renderPhotosPanel(resolved, opts)}
         </div>
-        <div class="hpi-panel" data-hpi-panel="videos" hidden>
+        <div class="hpi-panel${active === 'videos' ? ' is-active' : ''}" data-hpi-panel="videos"${active === 'videos' ? '' : ' hidden'}>
           ${renderProductVideos(resolved, opts)}
         </div>
-        <div class="hpi-panel" data-hpi-panel="specs" hidden>
+        <div class="hpi-panel${active === 'specs' ? ' is-active' : ''}" data-hpi-panel="specs"${active === 'specs' ? '' : ' hidden'}>
           ${renderProductSpecs(resolved, opts)}
         </div>
       </div>
@@ -986,8 +1079,128 @@ export function bindProductGallery(root = document) {
   })
 }
 
+export function bindProductAlbumLightbox(root = document) {
+  const host = root.querySelector?.('[data-hpi-root]') || root
+  if (!host?.querySelector) return
+  if (host.classList.contains('hpi--editable') || host.querySelector('.hpi--editable')) return
+  const album = host.querySelector('.hpi-album')
+  if (!album || album.dataset.lightboxBound === '1') return
+  album.dataset.lightboxBound = '1'
+
+  const items = [...album.querySelectorAll('.hpi-album__item[data-album-src]')]
+    .map((el) => ({
+      src: String(el.dataset.albumSrc || '').trim(),
+      caption: String(el.dataset.albumCaption || '').trim(),
+    }))
+    .filter((item) => item.src)
+  if (!items.length) return
+
+  let layer = document.querySelector('[data-hpi-album-lightbox]')
+  if (!layer) {
+    layer = document.createElement('div')
+    layer.className = 'hpi-album-lightbox'
+    layer.hidden = true
+    layer.dataset.hpiAlbumLightbox = '1'
+    layer.innerHTML = `
+      <div class="hpi-album-lightbox__backdrop" data-album-lb-close></div>
+      <div class="hpi-album-lightbox__dialog" role="dialog" aria-modal="true" aria-label="产品相册大图">
+        <button type="button" class="hpi-album-lightbox__close" data-album-lb-close aria-label="关闭">×</button>
+        <button type="button" class="hpi-album-lightbox__nav hpi-album-lightbox__nav--prev" data-album-lb-prev aria-label="上一张">‹</button>
+        <figure class="hpi-album-lightbox__figure">
+          <img class="hpi-album-lightbox__img" alt="" />
+          <figcaption class="hpi-album-lightbox__caption" hidden></figcaption>
+        </figure>
+        <button type="button" class="hpi-album-lightbox__nav hpi-album-lightbox__nav--next" data-album-lb-next aria-label="下一张">›</button>
+        <p class="hpi-album-lightbox__counter" data-album-lb-counter></p>
+      </div>`
+    document.body.appendChild(layer)
+  }
+
+  const imgEl = layer.querySelector('.hpi-album-lightbox__img')
+  const captionEl = layer.querySelector('.hpi-album-lightbox__caption')
+  const counterEl = layer.querySelector('[data-album-lb-counter]')
+  const prevBtn = layer.querySelector('[data-album-lb-prev]')
+  const nextBtn = layer.querySelector('[data-album-lb-next]')
+  let index = 0
+
+  const render = () => {
+    const item = items[index]
+    if (!item || !imgEl) return
+    imgEl.src = item.src
+    imgEl.alt = item.caption || '产品实拍'
+    if (captionEl) {
+      captionEl.textContent = item.caption || ''
+      captionEl.hidden = !item.caption
+    }
+    if (counterEl) counterEl.textContent = `${index + 1} / ${items.length}`
+    const multi = items.length > 1
+    if (prevBtn) prevBtn.hidden = !multi
+    if (nextBtn) nextBtn.hidden = !multi
+  }
+
+  const open = (startIndex = 0) => {
+    index = ((startIndex % items.length) + items.length) % items.length
+    render()
+    layer.hidden = false
+    document.body.classList.add('hpi-album-lightbox-open')
+    layer.querySelector('[data-album-lb-close]')?.focus?.()
+  }
+
+  const close = () => {
+    layer.hidden = true
+    document.body.classList.remove('hpi-album-lightbox-open')
+    if (imgEl) imgEl.removeAttribute('src')
+  }
+
+  const step = (delta) => {
+    if (items.length < 2) return
+    index = (index + delta + items.length) % items.length
+    render()
+  }
+
+  album.addEventListener('click', (event) => {
+    const trigger = event.target.closest('[data-album-lightbox]')
+    if (!trigger || !album.contains(trigger)) return
+    event.preventDefault()
+    const figure = trigger.closest('.hpi-album__item')
+    const src = figure?.dataset.albumSrc || ''
+    const start = Math.max(
+      0,
+      items.findIndex((item) => item.src === src),
+    )
+    open(start)
+  })
+
+  if (layer.dataset.controlsBound !== '1') {
+    layer.dataset.controlsBound = '1'
+    layer.addEventListener('click', (event) => {
+      if (event.target.closest('[data-album-lb-close]')) {
+        event.preventDefault()
+        close()
+        return
+      }
+      if (event.target.closest('[data-album-lb-prev]')) {
+        event.preventDefault()
+        step(-1)
+        return
+      }
+      if (event.target.closest('[data-album-lb-next]')) {
+        event.preventDefault()
+        step(1)
+      }
+    })
+    document.addEventListener('keydown', (event) => {
+      if (layer.hidden) return
+      if (event.key === 'Escape') close()
+      else if (event.key === 'ArrowLeft') step(-1)
+      else if (event.key === 'ArrowRight') step(1)
+    })
+  }
+}
+
 export function bindProductStoryTabs(root = document) {
   bindProductGallery(root)
+  bindProductAlbumLightbox(root)
   const host = root.querySelector?.('[data-hpi-root]') || root
   if (!host?.querySelector) return
   const tabs = [...host.querySelectorAll('[data-hpi-tab]')]
@@ -1029,7 +1242,8 @@ export function bindProductStoryTabs(root = document) {
     })
     if (!host.closest?.('.admin-vedit-canvas')) {
       const url = new URL(window.location.href)
-      if (next === 'overview') url.hash = ''
+      // 产品图拍为前台默认 tab，不写 hash，保持地址干净
+      if (next === 'photos') url.hash = ''
       else url.hash = next
       window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
     }
@@ -1039,9 +1253,12 @@ export function bindProductStoryTabs(root = document) {
     tab.addEventListener('click', () => activate(tab.dataset.hpiTab))
   })
 
+  const activeFromDom = tabs.find((tab) => tab.classList.contains('is-active'))?.dataset.hpiTab
+  const isAdminCanvas = !!host.closest?.('.admin-vedit-canvas')
   const hash = String(window.location.hash || '').replace(/^#/, '')
   const hashMap = { highlights: 'overview', overview: 'overview', photos: 'photos', videos: 'videos', specs: 'specs' }
-  activate(hashMap[hash] || 'overview')
+  // 前台默认「产品图拍」；后台可视化编辑不写 URL hash，重渲染后以 DOM 当前 tab 为准
+  activate(isAdminCanvas ? activeFromDom || 'overview' : hashMap[hash] || activeFromDom || 'photos')
 
   host.querySelectorAll('a[href="#hpi-detail"], a[href="#hpi-highlights"]').forEach((link) => {
     link.addEventListener('click', (event) => {

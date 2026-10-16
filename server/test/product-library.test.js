@@ -35,3 +35,27 @@ test('product library keeps custom association and links', () => {
   assert.equal(item.story.hero.title, '定制标题')
   assert.equal(item.story.howItWorks.stages.length, 4)
 })
+
+test('product library keeps custom categories and assigned items', () => {
+  const content = validateProductLibraryContent({
+    categories: [
+      { id: 'control-interaction', name: '控制与交互', lineId: 'space' },
+      { id: '', name: '毫米波雷达' },
+    ],
+    items: [{
+      id: 'radar',
+      slug: 'radar',
+      name: '毫米波雷达',
+      category: 'c-placeholder',
+    }],
+  })
+  assert.equal(content.categories[0].name, '控制与交互')
+  assert.equal(content.categories[1].name, '毫米波雷达')
+  assert.ok(content.categories[1].id)
+  const radarCat = content.categories.find((item) => item.name === '毫米波雷达')
+  const assigned = validateProductLibraryContent({
+    categories: content.categories,
+    items: [{ id: 'radar', slug: 'radar', name: '毫米波雷达', category: radarCat.id }],
+  })
+  assert.equal(assigned.items[0].category, radarCat.id)
+})

@@ -57,7 +57,10 @@ function overlaySimpleItem(product, items, resolveItemIndex) {
 }
 
 function productHref(product) {
-  return getProductDetailHref(product)
+  const href = getProductDetailHref(product)
+  if (!href || href === '#') return href
+  const joiner = href.includes('?') ? '&' : '?'
+  return `${href}${joiner}from=hardware`
 }
 
 const RETAIL_META = [
