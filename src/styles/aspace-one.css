@@ -1150,6 +1150,15 @@ body.aso-standalone .back-to-top { display: none !important; }
     overscroll-behavior: contain;
     padding-right: 4px;
   }
+  [data-aso-view="apps"] .aso-app-grid {
+    align-content: start;
+    align-items: start;
+    grid-auto-rows: max-content;
+  }
+  [data-aso-view="apps"] .aso-app-card {
+    align-self: start;
+    height: auto;
+  }
 }
 .aso-app-sidebar__heading {
   display: flex;
