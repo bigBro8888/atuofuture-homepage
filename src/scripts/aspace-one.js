@@ -270,7 +270,7 @@ let apps = [
     time: '2026-10-10 17:30',
     image: '/images/aspace-one/app-visitor.jpg',
     alt: '访客邀约与到访接待场景',
-    requireInvite: true,
+    url: 'http://47.103.102.65:18181/admin/qrcode',
   },
 ]
 
