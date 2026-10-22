@@ -69,7 +69,7 @@ export function renderAgentTaskStory({ selectedId }) {
     <section class="ag-story" id="agent-story">
       <div class="ag-shell ag-shell--1280">
         <header class="ag-section-head">
-          <h2>看一次智能体如何完成真实任务</h2>
+          <h2>看一次会议智能体如何完成真实任务</h2>
           <p>从现场变化开始，到系统与设备执行，再到结果回读，让智能体真正进入业务现场。</p>
         </header>
 
