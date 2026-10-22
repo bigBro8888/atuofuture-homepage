@@ -627,8 +627,8 @@ function renderShellHeader(activeView = 'home') {
   return `
     <header class="aso-shell">
       <div class="aso-shell__inner">
-        <a class="aso-shell__brand" href="/aspace-one/" data-aso-nav="home">
-          <img src="/assets/artink-logo-light.png" alt="" width="120" height="28" />
+        <a class="aso-shell__brand" href="/" title="返回官网首页">
+          <img src="/assets/artink-logo-light.png" alt="Artink 安墨客" width="120" height="28" />
           <span>空间智能开放平台</span>
         </a>
         <nav class="aso-shell__nav" aria-label="门户导航">
