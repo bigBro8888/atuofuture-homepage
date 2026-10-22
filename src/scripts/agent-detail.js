@@ -54,226 +54,39 @@ function renderRelated(currentId) {
     .join('')
 }
 
+function renderSpaceHotspot(spot) {
+  const style = `left:${spot.left}%;top:${spot.top}%;width:${spot.width}%;height:${spot.height}%;`
+  if (spot.action === 'demo') {
+    return `<button type="button" class="space-ad__hotspot" style="${style}" data-demo-modal-open aria-label="${esc(spot.label)}"></button>`
+  }
+  return `<a class="space-ad__hotspot" style="${style}" href="${esc(spot.href)}" aria-label="${esc(spot.label)}"></a>`
+}
+
 function renderSpaceAgentDetail(a) {
   const p = SPACE_AGENT_PAGE
   return `
     <article class="space-ad">
-      <section class="space-ad__hero">
-        <div class="max-w-max-width mx-auto px-margin-desktop">
-          <nav class="agent-detail-breadcrumb">
-            <a href="../">首页</a>
-            <span class="material-symbols-outlined">chevron_right</span>
-            <a href="../agents/">空间智能体</a>
-            <span class="material-symbols-outlined">chevron_right</span>
-            <span>${esc(a.name)}</span>
-          </nav>
-          <div class="space-ad__hero-grid">
-            <div class="space-ad__hero-copy">
-              <p class="space-ad__eyebrow">${esc(a.name)}</p>
-              <h1>${esc(p.heroTitle)}</h1>
-              <p class="space-ad__lead">${esc(p.heroDesc)}</p>
-              <div class="space-ad__actions">
-                <a class="space-ad__btn space-ad__btn--primary" href="${esc(p.heroPrimary.href)}">
-                  <span class="material-symbols-outlined">play_circle</span>
-                  ${esc(p.heroPrimary.label)}
-                </a>
-                <button type="button" class="space-ad__btn space-ad__btn--ghost" data-demo-modal-open>${esc(p.heroSecondary.label)}</button>
-              </div>
-              <ul class="space-ad__venues">
-                ${p.venues
-                  .map(
-                    (v) => `
-                  <li>
-                    <span class="material-symbols-outlined">${v.icon}</span>
-                    <span>${esc(v.label)}</span>
-                  </li>`
-                  )
-                  .join('')}
-              </ul>
-            </div>
-            <div class="space-ad__hero-visual" aria-hidden="true">
-              <img src="${esc(p.heroImage)}" alt="" width="960" height="720" loading="eager" />
-              <div class="space-ad__chips">
-                ${p.heroChips
-                  .map((chip, i) => `<span class="space-ad__chip space-ad__chip--${chip.tone}" style="--i:${i}">${esc(chip.text)}</span>`)
-                  .join('')}
-              </div>
-            </div>
-          </div>
+      <div class="space-ad__shell">
+        <nav class="agent-detail-breadcrumb space-ad__crumb">
+          <a href="../">首页</a>
+          <span class="material-symbols-outlined">chevron_right</span>
+          <a href="../agents/">空间智能体</a>
+          <span class="material-symbols-outlined">chevron_right</span>
+          <span>${esc(a.name)}</span>
+        </nav>
+        <div class="space-ad__canvas" style="--sad-w:${p.canvasWidth};--sad-h:${p.canvasHeight}">
+          <img
+            class="space-ad__canvas-img"
+            src="${esc(p.canvas)}"
+            alt="${esc(a.name)}产品介绍：让空间自动完成每天的运营任务"
+            width="${p.canvasWidth}"
+            height="${p.canvasHeight}"
+            decoding="async"
+            fetchpriority="high"
+          />
+          ${p.hotspots.map(renderSpaceHotspot).join('')}
         </div>
-      </section>
-
-      <section class="space-ad__section" id="space-flow">
-        <div class="max-w-max-width mx-auto px-margin-desktop">
-          <header class="space-ad__head">
-            <h2>${esc(p.flowTitle)}</h2>
-            <p>${esc(p.flowDesc)}</p>
-          </header>
-          <ol class="space-ad__flow">
-            ${p.flowSteps
-              .map(
-                (step, i) => `
-              <li>
-                <div class="space-ad__flow-index">${String(i + 1).padStart(2, '0')}</div>
-                <h3>${esc(step.title)}</h3>
-                <p>${esc(step.desc)}</p>
-                <figure>
-                  <img src="${esc(step.image)}" alt="" width="320" height="200" loading="lazy" />
-                  <figcaption>${esc(step.caption)}</figcaption>
-                </figure>
-              </li>`
-              )
-              .join('')}
-          </ol>
-        </div>
-      </section>
-
-      <section class="space-ad__contrast">
-        <div class="max-w-max-width mx-auto px-margin-desktop space-ad__contrast-grid">
-          <figure class="space-ad__contrast-media">
-            <img src="${esc(p.contrastImage)}" alt="" width="720" height="480" loading="lazy" />
-            <span class="space-ad__contrast-badge">${esc(p.contrastBadge)}</span>
-          </figure>
-          <div class="space-ad__contrast-copy">
-            <h2>${esc(p.contrastTitle)}</h2>
-            <p>${esc(p.contrastDesc)}</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="space-ad__section space-ad__section--soft">
-        <div class="max-w-max-width mx-auto px-margin-desktop space-ad__scenarios">
-          ${p.scenarios
-            .map(
-              (s) => `
-            <article class="space-ad__scenario${s.reverse ? ' is-reverse' : ''}">
-              <div class="space-ad__scenario-copy">
-                <span class="space-ad__scenario-icon material-symbols-outlined">${s.icon}</span>
-                <h3>${esc(s.title)}</h3>
-                <p>${esc(s.desc)}</p>
-                <ul>
-                  ${s.checks.map((c) => `<li><span class="material-symbols-outlined">check_circle</span>${esc(c)}</li>`).join('')}
-                </ul>
-              </div>
-              <figure class="space-ad__scenario-media">
-                <img src="${esc(s.image)}" alt="" width="640" height="420" loading="lazy" />
-                ${s.badge ? `<span class="space-ad__scenario-badge">${esc(s.badge)}</span>` : ''}
-              </figure>
-              <ol class="space-ad__scenario-actions">
-                ${s.actions
-                  .map(
-                    (act, i) => `
-                  <li>
-                    <span>${String(i + 1).padStart(2, '0')}</span>
-                    <em>${esc(act)}</em>
-                  </li>`
-                  )
-                  .join('')}
-              </ol>
-            </article>`
-            )
-            .join('')}
-        </div>
-      </section>
-
-      <section class="space-ad__section">
-        <div class="max-w-max-width mx-auto px-margin-desktop">
-          <header class="space-ad__head space-ad__head--center">
-            <h2>${esc(p.archTitle)}</h2>
-            <p>${esc(p.archDesc)}</p>
-          </header>
-          <div class="space-ad__arch">
-            <ul class="space-ad__arch-side">
-              <li class="space-ad__arch-label">现有系统</li>
-              ${p.archLeft
-                .map(
-                  (item) => `
-                <li>
-                  <span class="material-symbols-outlined">${item.icon}</span>
-                  <span>${esc(item.label)}</span>
-                </li>`
-                )
-                .join('')}
-            </ul>
-            <div class="space-ad__arch-core">
-              <span class="material-symbols-outlined">${a.icon}</span>
-              <strong>${esc(a.name)}</strong>
-            </div>
-            <ul class="space-ad__arch-side space-ad__arch-side--right">
-              <li class="space-ad__arch-label">执行与联动</li>
-              ${p.archRight
-                .map(
-                  (item) => `
-                <li>
-                  <span class="material-symbols-outlined">${item.icon}</span>
-                  <span>${esc(item.label)}</span>
-                </li>`
-                )
-                .join('')}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section class="space-ad__section space-ad__section--soft">
-        <div class="max-w-max-width mx-auto px-margin-desktop">
-          <header class="space-ad__head space-ad__head--center">
-            <h2>${esc(p.outcomesTitle)}</h2>
-          </header>
-          <div class="space-ad__outcomes">
-            ${p.outcomes
-              .map(
-                (item) => `
-              <article class="space-ad__outcome space-ad__outcome--${item.tone}">
-                <span class="material-symbols-outlined">${item.icon}</span>
-                <h3>${esc(item.title)}</h3>
-                <p>${esc(item.desc)}</p>
-              </article>`
-              )
-              .join('')}
-          </div>
-        </div>
-      </section>
-
-      <section class="space-ad__section">
-        <div class="max-w-max-width mx-auto px-margin-desktop">
-          <header class="space-ad__head space-ad__head--center">
-            <h2>${esc(p.collabTitle)}</h2>
-            <p>${esc(p.collabDesc)}</p>
-          </header>
-          <div class="space-ad__collab">
-            <div class="space-ad__collab-core">
-              <span class="material-symbols-outlined">${a.icon}</span>
-              <strong>${esc(a.name)}</strong>
-            </div>
-            <div class="space-ad__collab-peers">
-              ${p.collabPeers
-                .map(
-                  (peer) => `
-                <a class="space-ad__collab-peer" href="./?id=${peer.id}">
-                  <span class="material-symbols-outlined">${peer.icon}</span>
-                  <strong>${esc(peer.name)}</strong>
-                  <small>${esc(peer.desc)}</small>
-                </a>`
-                )
-                .join('')}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="space-ad__cta">
-        <div class="max-w-max-width mx-auto px-margin-desktop space-ad__cta-inner">
-          <div>
-            <h2>${esc(p.ctaTitle)}</h2>
-            <p>${esc(p.ctaDesc)}</p>
-          </div>
-          <div class="space-ad__actions">
-            <a class="space-ad__btn space-ad__btn--primary" href="../agents/#agent-story">观看自动运行</a>
-            <button type="button" class="space-ad__btn space-ad__btn--light" data-demo-modal-open>预约场景演示</button>
-          </div>
-        </div>
-      </section>
+      </div>
     </article>
   `
 }
