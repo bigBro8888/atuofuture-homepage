@@ -5820,21 +5820,24 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 }
 .space-ad__contrast-inner {
   display: grid;
-  grid-template-columns: 0.92fr 1.08fr;
+  grid-template-columns: 0.95fr 1.05fr;
   gap: 0;
   align-items: stretch;
   /* 设计稿为矮宽横幅，限制总高，左右同高 */
   height: clamp(200px, 22vw, 248px);
   border-radius: 16px;
   overflow: hidden;
-  background: #f3f7fc;
+  /* 斜切缺口露出的底色 = 右侧文案区，形成缺一角 */
+  background: #fff;
 }
 .space-ad__contrast-media {
   position: relative;
+  z-index: 0;
   margin: 0;
   min-height: 0;
   height: 100%;
-  clip-path: polygon(0 0, 88% 0, 100% 100%, 0 100%);
+  /* 上宽下窄：任意矩形图/视频都会被裁成右下缺角 */
+  clip-path: polygon(0 0, 100% 0, 78% 100%, 0 100%);
   border-radius: 16px 0 0 16px;
 }
 .space-ad__contrast-media-el {
@@ -5862,11 +5865,13 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   color: var(--sad-muted);
 }
 .space-ad__contrast-copy {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 20px 28px 20px 20px;
-  background: linear-gradient(180deg, #f7faff 0%, #fff 100%);
+  padding: 20px 28px 20px 8px;
+  background: #fff;
   min-width: 0;
 }
 .space-ad__contrast-copy h2 {
