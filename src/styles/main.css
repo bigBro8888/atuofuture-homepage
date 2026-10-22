@@ -15633,6 +15633,34 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   object-fit: cover;
   min-height: 520px;
 }
+.ag-story__scene.is-3d img {
+  display: none;
+}
+.ag-story__scene-3d {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 20% 10%, #edf4fb 0%, #d5e3f0 55%, #c5d4e4 100%);
+}
+.ag-story__scene-3d[hidden] {
+  display: none !important;
+}
+.ag-story__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+  touch-action: none;
+  cursor: grab;
+}
+.ag-story__canvas:active {
+  cursor: grabbing;
+}
+.ag-story__scene.is-3d .ag-story__actor {
+  display: none !important;
+}
 .ag-story__states {
   display: none;
 }

@@ -27,7 +27,8 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "oidc-provider": "^9.12.2",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "three": "^0.170.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",

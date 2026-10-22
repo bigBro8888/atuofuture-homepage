@@ -19,6 +19,7 @@ import {
   bindStoryPins,
   playStoryEnterCue,
   resetStoryEnterCue,
+  applyStorySceneMode,
 } from '../components/agents/task-story.js'
 import {
   renderIndustryAgentComposition,
@@ -96,11 +97,36 @@ function renderNotFound(rawId) {
     </section>`
 }
 
+async function ensureMeetingRoom3D(root, state) {
+  const host = root.querySelector('[data-ag-scene-3d]')
+  if (!host) return null
+  if (state.selectedAgent !== 'space') {
+    state.room3d?.setActive(false)
+    state.room3d?.resetPerson()
+    return null
+  }
+  if (!state.room3d) {
+    const { mountMeetingRoom3D, syncStoryPinsTo3D } = await import('../components/agents/meeting-room-3d.js')
+    state.room3d = mountMeetingRoom3D(host)
+    if (state.room3d) {
+      state.room3d._onFrame = (api) => {
+        if (state.selectedAgent !== 'space') return
+        syncStoryPinsTo3D(root, api)
+      }
+    }
+  }
+  state.room3d?.setActive(true)
+  applyStorySceneMode(root, 'space')
+  return state.room3d
+}
+
 function setSelectedAgent(root, state, id, { scrollStory = false } = {}) {
   if (!resolveAgentOverviewId(id)) return
   state.selectedAgent = id
   syncAgentEcosystemMap(root, id)
   syncAgentTaskStory(root, id)
+  void ensureMeetingRoom3D(root, state)
+  if (id !== 'space') resetStoryEnterCue(root)
 
   const url = new URL(window.location.href)
   url.searchParams.set('agent', id)
@@ -158,11 +184,17 @@ function bindInteractions(root, state) {
 
   bindStoryPins(root, {
     onPinActivate: ({ step: pinStep, cue }) => {
-      pauseAutoUntil = Date.now() + 5200
+      pauseAutoUntil = Date.now() + 5600
       step = pinStep
       syncStoryFlowStep(root, pinStep)
-      if (cue === 'enter') playStoryEnterCue(root)
-      else resetStoryEnterCue(root)
+      if (cue === 'enter') {
+        void ensureMeetingRoom3D(root, state).then((room) => {
+          playStoryEnterCue(root, room)
+        })
+      } else {
+        resetStoryEnterCue(root)
+        state.room3d?.resetPerson()
+      }
     },
   })
 }
@@ -200,6 +232,7 @@ export async function initAgentsPage() {
   const state = {
     selectedAgent: resolved || AGENTS_OVERVIEW[0].id,
     selectedIndustry: 'building',
+    room3d: null,
   }
 
   root.innerHTML = `
@@ -210,9 +243,19 @@ export async function initAgentsPage() {
     ${renderCta()}
   `
 
+  applyStorySceneMode(root, state.selectedAgent)
+  void ensureMeetingRoom3D(root, state)
   bindInteractions(root, state)
   layoutAgentOrbitLinks(root)
   window.addEventListener('resize', () => layoutAgentOrbitLinks(root))
+  window.addEventListener(
+    'pagehide',
+    () => {
+      state.room3d?.dispose()
+      state.room3d = null
+    },
+    { once: true }
+  )
 
   const hash = window.location.hash.replace(/^#/, '')
   const hashMap = {

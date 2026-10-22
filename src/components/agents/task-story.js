@@ -96,7 +96,7 @@ export function renderAgentTaskStory({ selectedId }) {
         </div>
 
         <div class="ag-story__stage" data-ag-story-stage>
-          <div class="ag-story__scene" data-ag-scene>
+          <div class="ag-story__scene${selected.id === 'space' ? ' is-3d' : ''}" data-ag-scene>
             <img
               src="${esc(selected.sceneImage)}"
               alt="${esc(selected.name)}业务场景"
@@ -105,6 +105,7 @@ export function renderAgentTaskStory({ selectedId }) {
               loading="lazy"
               data-ag-scene-img
             />
+            <div class="ag-story__scene-3d" data-ag-scene-3d hidden></div>
             ${actorMarkup()}
             <div class="ag-story__pins" data-ag-pins>
               ${sceneNodesMarkup(selected.sceneNodes, 0)}
@@ -164,6 +165,7 @@ export function syncAgentTaskStory(root, selectedId) {
   const stage = root.querySelector('[data-ag-story-stage]')
   const aside = root.querySelector('[data-ag-aside]')
   const scene = root.querySelector('[data-ag-scene]')
+  const use3d = selected.id === 'space'
 
   ;[stage, aside, scene].forEach((el) => {
     if (!el) return
@@ -171,6 +173,8 @@ export function syncAgentTaskStory(root, selectedId) {
     void el.offsetWidth
     el.classList.add('is-animating')
   })
+
+  scene?.classList.toggle('is-3d', use3d)
 
   root.querySelectorAll('.ag-story__tab').forEach((btn) => {
     const on = btn.dataset.agSelect === selected.id
@@ -182,7 +186,12 @@ export function syncAgentTaskStory(root, selectedId) {
   if (img) {
     img.src = selected.sceneImage
     img.alt = `${selected.name}业务场景`
+    img.hidden = use3d
   }
+  const host3d = root.querySelector('[data-ag-scene-3d]')
+  if (host3d) host3d.hidden = !use3d
+  const actor = root.querySelector('[data-ag-actor]')
+  if (actor) actor.hidden = use3d
 
   const pins = root.querySelector('[data-ag-pins]')
   if (pins) pins.innerHTML = sceneNodesMarkup(selected.sceneNodes, 0)
@@ -248,10 +257,17 @@ export function resetStoryEnterCue(root) {
 
 /**
  * 人员进入：从门口走进来 → 环顾会议室 → 望向左侧窗外
+ * @param {ParentNode} root
+ * @param {{ playEnter?: () => void } | null} room3d
  */
-export function playStoryEnterCue(root) {
+export function playStoryEnterCue(root, room3d = null) {
+  if (room3d?.playEnter) {
+    resetStoryEnterCue(root)
+    room3d.playEnter()
+    return
+  }
   const actor = root.querySelector('[data-ag-actor]')
-  if (!actor) return
+  if (!actor || actor.hidden) return
   clearEnterTimers(root)
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   actor.setAttribute('aria-hidden', 'false')
@@ -274,6 +290,17 @@ export function playStoryEnterCue(root) {
     }, 3200),
   ]
   enterTimers.set(root, timers)
+}
+
+export function applyStorySceneMode(root, selectedId) {
+  const use3d = selectedId === 'space'
+  root.querySelector('[data-ag-scene]')?.classList.toggle('is-3d', use3d)
+  const img = root.querySelector('[data-ag-scene-img]')
+  if (img) img.hidden = use3d
+  const host3d = root.querySelector('[data-ag-scene-3d]')
+  if (host3d) host3d.hidden = !use3d
+  const actor = root.querySelector('[data-ag-actor]')
+  if (actor) actor.hidden = use3d
 }
 
 export function bindStoryPins(root, { onPinActivate } = {}) {
