@@ -260,12 +260,15 @@ export async function initAgentsPage() {
     if (hit.imageUrl) agent.sceneImage = hit.imageUrl
   }
 
+  const DEFAULT_AGENT = 'space'
+  const pageHashes = new Set(['agent-story', 'agent-ecosystem', 'agent-matrix', 'agent-stage', ''])
+  const hashRaw = window.location.hash.replace(/^#/, '')
   const raw =
     new URLSearchParams(window.location.search).get('id') ||
     new URLSearchParams(window.location.search).get('agent') ||
-    window.location.hash.replace(/^#/, '')
+    (hashRaw && !pageHashes.has(hashRaw) ? hashRaw : null)
   const requested = raw ? (raw.startsWith('agent-') ? raw.slice(6) : raw) : null
-  const resolved = requested ? resolveAgentOverviewId(requested) : AGENTS_OVERVIEW[0].id
+  const resolved = requested ? resolveAgentOverviewId(requested) : DEFAULT_AGENT
 
   if (requested && !resolved) {
     root.innerHTML = renderNotFound(requested)
@@ -273,7 +276,7 @@ export async function initAgentsPage() {
   }
 
   const state = {
-    selectedAgent: resolved || AGENTS_OVERVIEW[0].id,
+    selectedAgent: resolved || DEFAULT_AGENT,
     selectedIndustry: 'building',
     room3d: null,
   }
