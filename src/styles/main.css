@@ -15691,12 +15691,12 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   left: 44%;
   top: 96%;
   z-index: 2;
-  width: 72px;
-  height: 136px;
+  width: 118px;
+  height: 222px;
   margin: 0;
   opacity: 0;
   pointer-events: none;
-  transform: translate(-50%, -92%) scale(0.92);
+  transform: translate(-50%, -92%) scale(1.05);
   transform-origin: 50% 100%;
   transition:
     left 1.45s cubic-bezier(0.22, 1, 0.36, 1),
@@ -15710,7 +15710,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .ag-story__actor.is-entering {
   left: 34%;
   top: 70%;
-  transform: translate(-50%, -92%) scale(0.78);
+  transform: translate(-50%, -92%) scale(0.96);
 }
 .ag-story__actor.is-entering .ag-story__actor-figure {
   animation: agActorWalk 0.55s ease-in-out infinite;
@@ -15731,7 +15731,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .ag-story__actor.is-looking-room {
   left: 38%;
   top: 64%;
-  transform: translate(-50%, -92%) scale(0.72) rotate(0deg);
+  transform: translate(-50%, -92%) scale(0.9) rotate(0deg);
 }
 .ag-story__actor.is-looking-room .ag-story__actor-figure {
   animation: agActorLookAround 1.4s ease-in-out both;
@@ -15739,7 +15739,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 .ag-story__actor.is-at-window {
   left: 18%;
   top: 58%;
-  transform: translate(-50%, -92%) scale(0.68) scaleX(-1);
+  transform: translate(-50%, -92%) scale(0.86) scaleX(-1);
 }
 .ag-story__actor.is-at-window .ag-story__actor-figure {
   animation: agActorGaze 2.4s ease-in-out infinite;
