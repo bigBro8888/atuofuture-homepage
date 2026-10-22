@@ -11,7 +11,7 @@ const CONTENT_KINDS = [
 const AGENT_IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'archCoreImage', label: '接入区中心图', size: '400×400', tip: '中间蓝块整图替换' },
   { test: (path) => path === 'sceneImage', label: '场景图', size: '1200×800', tip: '详情页场景配图' },
-  { test: (path) => path === 'spacePage.heroImage', label: '首屏配图', size: '1200×760', tip: '空间服务详情首屏' },
+  { test: (path) => path === 'spacePage.heroImage' || path === 'spacePage.heroVideo', label: '首屏媒体', size: '1200×760', tip: '可上传图片或视频；视频建议 mp4' },
   { test: (path) => path === 'spacePage.contrastImage', label: '对比区配图', size: '1200×600', tip: '斜切媒体图' },
   { test: (path) => /spacePage\.scenarios\.\d+\.image/.test(path), label: '场景区配图', size: '960×640', tip: '中间斜切图' },
   { test: (path) => /spacePage\.flowSteps\.\d+\.image/.test(path), label: '流程步骤图', size: '640×480', tip: '流程卡片图' },
@@ -500,7 +500,7 @@ function renderAgentCompose(rawItem) {
         <div class="admin-link-modal__backdrop" data-agents-detail-image-modal-close></div>
         <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="agents-detail-image-title">
           <header>
-            <h3 id="agents-detail-image-title">更换图片</h3>
+            <h3 id="agents-detail-image-title" data-agents-detail-media-title>更换图片</h3>
             <button type="button" data-agents-detail-image-modal-close aria-label="关闭">×</button>
           </header>
           <div class="admin-link-modal__body">
@@ -509,18 +509,34 @@ function renderAgentCompose(rawItem) {
               <em data-agents-detail-image-size-value>1200×800</em>
               <span data-agents-detail-image-size-tip>上传前请按建议尺寸准备素材</span>
             </div>
+            <fieldset class="admin-link-modal__type" data-agents-detail-media-type-wrap hidden>
+              <legend>媒体类型</legend>
+              <div class="admin-link-modal__type-list">
+                <label><input type="radio" name="agents-detail-media-type" value="image" data-agents-detail-media-type checked /><em>图片</em></label>
+                <label><input type="radio" name="agents-detail-media-type" value="video" data-agents-detail-media-type /><em>视频</em></label>
+              </div>
+            </fieldset>
             <div class="admin-image-modal__preview">
               <img data-agents-detail-image-preview src="" alt="" hidden />
+              <video data-agents-detail-video-preview src="" muted playsinline controls hidden></video>
               <span data-agents-detail-image-empty>暂无预览</span>
             </div>
-            <label class="admin-news-field is-wide">
-              <span>图片链接</span>
+            <label class="admin-news-field is-wide" data-agents-detail-image-url-wrap>
+              <span data-agents-detail-url-label>图片链接</span>
               <input type="text" data-agents-detail-image-url placeholder="/images/... 或 https://..." />
             </label>
+            <label class="admin-news-field is-wide" data-agents-detail-poster-wrap hidden>
+              <span>视频封面图（可选）</span>
+              <input type="text" data-agents-detail-poster-url placeholder="/images/... 封面图地址" />
+            </label>
             <div class="admin-image-modal__or">或</div>
-            <label class="admin-image-modal__upload">
-              上传本地图片
+            <label class="admin-image-modal__upload" data-agents-detail-image-upload-wrap>
+              <span data-agents-detail-upload-label>上传本地图片</span>
               <input type="file" accept="image/jpeg,image/png,image/webp" data-agents-detail-image-file />
+            </label>
+            <label class="admin-image-modal__upload" data-agents-detail-video-upload-wrap hidden>
+              上传本地视频
+              <input type="file" accept="video/mp4,video/webm,video/quicktime" data-agents-detail-video-file />
             </label>
           </div>
           <footer>
@@ -549,6 +565,12 @@ function collectAgentArticle(compose) {
     const url = el.dataset.editImageUrl != null ? el.dataset.editImageUrl : el.querySelector('img')?.getAttribute('src') || ''
     setNested(article, path, String(url || '').trim())
   })
+  canvas.querySelectorAll('[data-edit-video]').forEach((el) => {
+    const path = el.dataset.editVideo
+    if (!path) return
+    const url = el.dataset.editVideoUrl != null ? el.dataset.editVideoUrl : el.querySelector('video')?.getAttribute('src') || ''
+    setNested(article, path, String(url || '').trim())
+  })
   if (Array.isArray(article.scenarios)) {
     article.scenarios = article.scenarios.map((s) => String(s || '').trim()).filter(Boolean)
   } else if (typeof article.scenarios === 'string') {
@@ -569,24 +591,110 @@ function collectAgentArticle(compose) {
   return article
 }
 
-function setAgentsDetailImagePreview(modal, url) {
+function setAgentsDetailMediaType(modal, type) {
+  const next = type === 'video' ? 'video' : 'image'
+  modal.dataset.mediaType = next
+  modal.querySelectorAll('[data-agents-detail-media-type]').forEach((input) => {
+    input.checked = input.value === next
+  })
+  const posterWrap = modal.querySelector('[data-agents-detail-poster-wrap]')
+  const videoUpload = modal.querySelector('[data-agents-detail-video-upload-wrap]')
+  const imageUpload = modal.querySelector('[data-agents-detail-image-upload-wrap]')
+  const urlLabel = modal.querySelector('[data-agents-detail-url-label]')
+  const uploadLabel = modal.querySelector('[data-agents-detail-upload-label]')
+  const urlInput = modal.querySelector('[data-agents-detail-image-url]')
+  if (posterWrap) posterWrap.hidden = next !== 'video'
+  if (videoUpload) videoUpload.hidden = next !== 'video'
+  if (imageUpload) imageUpload.hidden = false
+  if (urlLabel) urlLabel.textContent = next === 'video' ? '视频链接' : '图片链接'
+  if (uploadLabel) uploadLabel.textContent = next === 'video' ? '上传封面图（可选）' : '上传本地图片'
+  if (urlInput) {
+    urlInput.placeholder = next === 'video' ? '/videos/... 或 https://....mp4' : '/images/... 或 https://...'
+  }
+}
+
+function setAgentsDetailImagePreview(modal, url, type = 'image') {
   const preview = modal.querySelector('[data-agents-detail-image-preview]')
+  const videoPreview = modal.querySelector('[data-agents-detail-video-preview]')
   const empty = modal.querySelector('[data-agents-detail-image-empty]')
-  if (!preview) return
-  if (url) {
-    preview.src = url
-    preview.hidden = false
-    if (empty) empty.hidden = true
-  } else {
-    preview.removeAttribute('src')
+  const safeUrl = String(url || '').trim()
+  if (preview) {
     preview.hidden = true
+    preview.removeAttribute('src')
+  }
+  if (videoPreview) {
+    videoPreview.hidden = true
+    videoPreview.removeAttribute('src')
+  }
+  if (!safeUrl) {
     if (empty) empty.hidden = false
+    return
+  }
+  if (empty) empty.hidden = true
+  if (type === 'video' && videoPreview) {
+    videoPreview.src = safeUrl
+    videoPreview.hidden = false
+    return
+  }
+  if (preview) {
+    preview.src = safeUrl
+    preview.hidden = false
+  }
+}
+
+function applyAgentsDetailHeroMedia(compose, { imageUrl = '', videoUrl = '' } = {}) {
+  const canvas = compose.querySelector('[data-agents-detail-visual]')
+  const target = canvas?.querySelector('[data-edit-hero-media]')
+  if (!target) return
+  const safeImage = String(imageUrl || '').trim()
+  const safeVideo = String(videoUrl || '').trim()
+  target.dataset.editImageUrl = safeImage
+  target.dataset.editVideoUrl = safeVideo
+  target.querySelectorAll('img, video').forEach((el) => el.remove())
+  const tip = target.querySelector('.hpi-edit-img__tip')
+  if (safeVideo || safeImage) {
+    target.classList.remove('hpi-edit-img--empty')
+    if (safeVideo) {
+      const video = document.createElement('video')
+      video.className = 'space-ad__hero-media'
+      video.src = safeVideo
+      video.muted = true
+      video.playsInline = true
+      if (safeImage) video.poster = safeImage
+      target.prepend(video)
+    } else {
+      const img = document.createElement('img')
+      img.className = 'space-ad__hero-media'
+      img.alt = ''
+      img.src = safeImage
+      target.prepend(img)
+    }
+    if (tip) {
+      tip.textContent = '更换媒体'
+      tip.classList.remove('is-visible')
+    }
+  } else {
+    target.classList.add('hpi-edit-img--empty')
+    if (tip) {
+      tip.textContent = '添加图片或视频'
+      tip.classList.add('is-visible')
+    }
   }
 }
 
 function applyAgentsDetailImage(compose, path, url) {
   const canvas = compose.querySelector('[data-agents-detail-visual]')
   if (!canvas || !path) return
+  if (path === 'spacePage.heroImage' || path === 'spacePage.heroVideo') {
+    const hero = canvas.querySelector('[data-edit-hero-media]')
+    if (hero) {
+      applyAgentsDetailHeroMedia(compose, {
+        imageUrl: path === 'spacePage.heroImage' ? url : hero.dataset.editImageUrl || '',
+        videoUrl: path === 'spacePage.heroVideo' ? url : hero.dataset.editVideoUrl || '',
+      })
+      return
+    }
+  }
   const target =
     canvas.querySelector(`[data-edit-image="${CSS.escape(path)}"]`) || canvas.querySelector(`[data-edit-image="${path}"]`)
   const safeUrl = String(url || '').trim()
@@ -740,28 +848,54 @@ function bindKind(kind) {
       if (canvasLink) {
         event.preventDefault()
       }
-      const imageBtn = event.target.closest('[data-agents-detail-visual] [data-edit-image]')
+      const heroBtn = event.target.closest('[data-agents-detail-visual] [data-edit-hero-media]')
+      const imageBtn = heroBtn || event.target.closest('[data-agents-detail-visual] [data-edit-image]')
       if (imageBtn) {
         event.preventDefault()
+        const isHero = Boolean(imageBtn.matches('[data-edit-hero-media]'))
         const path = imageBtn.dataset.editImage || ''
         const modal = compose.querySelector('[data-agents-detail-image-modal]')
-        if (!modal || !path) return
-        const guide = resolveAgentImageGuide(path)
+        if (!modal || (!path && !isHero)) return
+        const guide = resolveAgentImageGuide(isHero ? 'spacePage.heroImage' : path)
         modal.dataset.imagePath = path
+        modal.dataset.heroMode = isHero ? '1' : ''
+        const typeWrap = modal.querySelector('[data-agents-detail-media-type-wrap]')
+        const title = modal.querySelector('[data-agents-detail-media-title]')
+        if (typeWrap) typeWrap.hidden = !isHero
+        if (title) title.textContent = isHero ? '更换图片或视频' : '更换图片'
         const label = modal.querySelector('[data-agents-detail-image-size-label]')
         const value = modal.querySelector('[data-agents-detail-image-size-value]')
         const tip = modal.querySelector('[data-agents-detail-image-size-tip]')
         if (label) label.textContent = guide.label
         if (value) value.textContent = guide.size
         if (tip) tip.textContent = guide.tip
-        const url =
+        const imageUrl =
           imageBtn.dataset.editImageUrl != null
             ? imageBtn.dataset.editImageUrl
             : imageBtn.querySelector('img')?.getAttribute('src') || ''
+        const videoUrl = imageBtn.dataset.editVideoUrl || imageBtn.querySelector('video')?.getAttribute('src') || ''
+        const mediaType = isHero && videoUrl ? 'video' : 'image'
+        setAgentsDetailMediaType(modal, mediaType)
         const urlInput = modal.querySelector('[data-agents-detail-image-url]')
-        if (urlInput) urlInput.value = url
-        setAgentsDetailImagePreview(modal, url)
+        const posterInput = modal.querySelector('[data-agents-detail-poster-url]')
+        if (urlInput) urlInput.value = mediaType === 'video' ? videoUrl : imageUrl
+        if (posterInput) posterInput.value = imageUrl
+        setAgentsDetailImagePreview(modal, mediaType === 'video' ? videoUrl : imageUrl, mediaType)
         modal.hidden = false
+        return
+      }
+      const mediaType = event.target.closest('[data-agents-detail-media-type]')
+      if (mediaType) {
+        const modal = compose.querySelector('[data-agents-detail-image-modal]')
+        if (!modal) return
+        setAgentsDetailMediaType(modal, mediaType.value)
+        const urlInput = modal.querySelector('[data-agents-detail-image-url]')
+        const posterInput = modal.querySelector('[data-agents-detail-poster-url]')
+        if (mediaType.value === 'video') {
+          setAgentsDetailImagePreview(modal, urlInput?.value.trim() || '', 'video')
+        } else {
+          setAgentsDetailImagePreview(modal, urlInput?.value.trim() || posterInput?.value.trim() || '', 'image')
+        }
         return
       }
       if (event.target.closest('[data-agents-detail-image-modal-close]')) {
@@ -774,8 +908,19 @@ function bindKind(kind) {
         event.preventDefault()
         const modal = compose.querySelector('[data-agents-detail-image-modal]')
         const path = modal?.dataset.imagePath || ''
+        const isHero = modal?.dataset.heroMode === '1'
+        const mediaType = modal?.dataset.mediaType || 'image'
         const url = modal?.querySelector('[data-agents-detail-image-url]')?.value.trim() || ''
-        applyAgentsDetailImage(compose, path, url)
+        const poster = modal?.querySelector('[data-agents-detail-poster-url]')?.value.trim() || ''
+        if (isHero) {
+          if (mediaType === 'video') {
+            applyAgentsDetailHeroMedia(compose, { imageUrl: poster, videoUrl: url })
+          } else {
+            applyAgentsDetailHeroMedia(compose, { imageUrl: url, videoUrl: '' })
+          }
+        } else {
+          applyAgentsDetailImage(compose, path, url)
+        }
         if (modal) modal.hidden = true
         return
       }
@@ -896,6 +1041,28 @@ function bindKind(kind) {
   })
   compose.addEventListener('change', async (event) => {
     if (kind === 'agents') {
+      const modal = compose.querySelector('[data-agents-detail-image-modal]')
+      const videoFile = event.target.closest('[data-agents-detail-video-file]')
+      if (videoFile?.files?.[0]) {
+        const file = videoFile.files[0]
+        videoFile.disabled = true
+        try {
+          const formData = new FormData()
+          formData.append('video', file)
+          const { url } = await ctx.api('/pages/media/video', { method: 'POST', body: formData })
+          setAgentsDetailMediaType(modal, 'video')
+          const urlInput = modal?.querySelector('[data-agents-detail-image-url]')
+          if (urlInput) urlInput.value = url
+          setAgentsDetailImagePreview(modal, url, 'video')
+          ctx.toast('视频已上传，点确定应用')
+        } catch (error) {
+          ctx.toast(error.message, true)
+        } finally {
+          videoFile.disabled = false
+          videoFile.value = ''
+        }
+        return
+      }
       const modalFile = event.target.closest('[data-agents-detail-image-file]')
       if (modalFile?.files?.[0]) {
         const file = modalFile.files[0]
@@ -904,11 +1071,18 @@ function bindKind(kind) {
           const formData = new FormData()
           formData.append('image', file)
           const { url } = await ctx.api('/pages/media/image', { method: 'POST', body: formData })
-          const modal = compose.querySelector('[data-agents-detail-image-modal]')
-          const urlInput = modal?.querySelector('[data-agents-detail-image-url]')
-          if (urlInput) urlInput.value = url
-          setAgentsDetailImagePreview(modal, url)
-          ctx.toast('图片已上传，点确定应用')
+          const mediaType = modal?.dataset.mediaType || 'image'
+          if (mediaType === 'video') {
+            const posterInput = modal?.querySelector('[data-agents-detail-poster-url]')
+            if (posterInput) posterInput.value = url
+            setAgentsDetailImagePreview(modal, modal.querySelector('[data-agents-detail-image-url]')?.value.trim() || '', 'video')
+            ctx.toast('封面图已上传，点确定应用')
+          } else {
+            const urlInput = modal?.querySelector('[data-agents-detail-image-url]')
+            if (urlInput) urlInput.value = url
+            setAgentsDetailImagePreview(modal, url, 'image')
+            ctx.toast('图片已上传，点确定应用')
+          }
         } catch (error) {
           ctx.toast(error.message, true)
         } finally {

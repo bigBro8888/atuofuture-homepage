@@ -104,6 +104,35 @@ function renderFlowCard(step, index, { editable = false } = {}) {
     </div>`
 }
 
+function renderHeroMedia(p, { editable = false } = {}) {
+  const image = String(p.heroImage || '').trim()
+  const video = String(p.heroVideo || '').trim()
+  if (editable) {
+    const hasMedia = Boolean(video || image)
+    const preview = video
+      ? `<video class="space-ad__hero-media" src="${esc(video)}"${image ? ` poster="${esc(image)}"` : ''} muted playsinline></video>`
+      : image
+        ? `<img class="space-ad__hero-media" src="${esc(image)}" alt="" width="900" height="560" />`
+        : ''
+    return `
+      <button type="button" class="hpi-edit-img${hasMedia ? '' : ' hpi-edit-img--empty'} space-ad__hero-edit-media"
+        data-edit-hero-media
+        data-edit-image="spacePage.heroImage"
+        data-edit-image-url="${esc(image)}"
+        data-edit-video="spacePage.heroVideo"
+        data-edit-video-url="${esc(video)}"
+        title="更换图片或视频">
+        ${preview}
+        <span class="hpi-edit-img__tip${hasMedia ? '' : ' is-visible'}">${hasMedia ? '更换媒体' : '添加图片或视频'}</span>
+      </button>`
+  }
+  if (video) {
+    return `<video class="space-ad__hero-media" src="${esc(video)}"${image ? ` poster="${esc(image)}"` : ''} autoplay muted loop playsinline></video>`
+  }
+  if (!image) return ''
+  return `<img class="space-ad__hero-media" src="${esc(image)}" alt="" width="900" height="560" fetchpriority="high" />`
+}
+
 function renderArchWires(dir) {
   const ys = [48, 144, 240, 336, 432]
   const mid = 240
@@ -179,11 +208,7 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
               </ul>
             </div>
             <div class="space-ad__hero-visual">
-              ${
-                editable
-                  ? imgNode('spacePage.heroImage', p.heroImage, { editable, width: 900, height: 560 })
-                  : `<img class="space-ad__hero-media" src="${esc(p.heroImage || '')}" alt="" width="900" height="560" fetchpriority="high" />`
-              }
+              ${renderHeroMedia(p, { editable })}
               <div class="space-ad__chips">
                 ${(p.heroChips || [])
                   .map(

@@ -1786,6 +1786,7 @@ body.admin-agents-fullscreen {
   background: #d8e2ef;
 }
 .admin-vedit--agent-detail .space-ad__hero-visual > .hpi-edit-img img,
+.admin-vedit--agent-detail .space-ad__hero-visual > .hpi-edit-img video,
 .admin-vedit--agent-detail .space-ad__contrast-media > .hpi-edit-img img,
 .admin-vedit--agent-detail .space-ad__scenario-media > .hpi-edit-img img,
 .admin-vedit--agent-detail .space-ad__arch-core--image > .hpi-edit-img img,
@@ -1794,6 +1795,12 @@ body.admin-agents-fullscreen {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+.admin-vedit--agent-detail [data-agents-detail-video-preview] {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  background: #0f172a;
 }
 .admin-vedit--agent-detail .space-ad__flow-card--media,
 .admin-vedit--agent-detail .space-ad__hero-visual,
