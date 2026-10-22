@@ -2178,6 +2178,22 @@ const LEAD_SOURCE_LABEL = {
   materials: '获取资料',
 }
 
+function leadSourceLabel(source) {
+  return LEAD_SOURCE_LABEL[source] || source || '官网'
+}
+
+function leadPagePath(pageUrl) {
+  const raw = String(pageUrl || '').trim()
+  if (!raw) return ''
+  try {
+    const url = new URL(raw, window.location.origin)
+    const path = `${url.pathname}${url.search}${url.hash}` || '/'
+    return path.length > 64 ? `${path.slice(0, 61)}…` : path
+  } catch {
+    return raw.length > 64 ? `${raw.slice(0, 61)}…` : raw
+  }
+}
+
 function updateLeadsBadge(unread) {
   const badge = document.querySelector('[data-leads-badge]')
   if (!badge) return
@@ -2198,25 +2214,37 @@ async function loadLeads() {
       list.innerHTML = '<div class="admin-empty">暂无线索。客户提交「预约方案演示 / 获取资料」后会出现在这里。</div>'
       return
     }
-    list.innerHTML = data.items.map((item) => `
+    list.innerHTML = data.items.map((item) => {
+      const channel = leadSourceLabel(item.source)
+      const path = leadPagePath(item.pageUrl)
+      const sourceText = path ? `${channel} · ${path}` : channel
+      return `
       <article class="admin-lead-item ${item.status === 'done' ? 'is-done' : 'is-new'}">
         <header>
           <div>
             <strong>${escapeHtml(item.name)}</strong>
-            <span class="admin-lead-item__source">${escapeHtml(LEAD_SOURCE_LABEL[item.source] || item.source || '官网')}</span>
+            <span class="admin-lead-item__source">${escapeHtml(channel)}</span>
           </div>
           <time datetime="${escapeHtml(item.createdAt)}">${dateTime(item.createdAt)}</time>
         </header>
-        <p class="admin-lead-item__contact"><span class="material-symbols-outlined">call</span>${escapeHtml(item.contact)}</p>
+        <div class="admin-lead-item__meta">
+          <p class="admin-lead-item__contact"><span class="material-symbols-outlined">call</span>${escapeHtml(item.contact)}</p>
+          <p class="admin-lead-item__origin" title="${escapeHtml(item.pageUrl || channel)}">
+            <span class="material-symbols-outlined">place</span>
+            <span>来源 ${item.pageUrl
+              ? `<a href="${escapeHtml(item.pageUrl)}" target="_blank" rel="noopener">${escapeHtml(sourceText)}</a>`
+              : escapeHtml(sourceText)}</span>
+          </p>
+        </div>
         ${item.requirement ? `<p class="admin-lead-item__req">${escapeHtml(item.requirement)}</p>` : ''}
-        ${item.pageUrl ? `<p class="admin-lead-item__page"><a href="${escapeHtml(item.pageUrl)}" target="_blank" rel="noopener">来源页面</a></p>` : ''}
         <footer>
           ${item.status === 'done'
             ? `<button type="button" data-lead-status="${escapeHtml(item.id)}" data-next="new">标为待处理</button>`
             : `<button type="button" class="is-primary" data-lead-status="${escapeHtml(item.id)}" data-next="done">标为已处理</button>`}
           <button type="button" class="is-danger" data-lead-delete="${escapeHtml(item.id)}">删除</button>
         </footer>
-      </article>`).join('')
+      </article>`
+    }).join('')
   } catch (error) {
     toast(error.message, true)
   }

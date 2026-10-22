@@ -1110,6 +1110,13 @@ body.admin-modal-open { overflow: hidden; }
   font-weight: 600;
   vertical-align: middle;
 }
+.admin-lead-item__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 .admin-lead-item__contact {
   display: flex;
   align-items: center;
@@ -1120,6 +1127,25 @@ body.admin-modal-open { overflow: hidden; }
   font-weight: 600;
 }
 .admin-lead-item__contact .material-symbols-outlined { font-size: 16px; color: #1769ff; }
+.admin-lead-item__origin {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  max-width: min(100%, 420px);
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.admin-lead-item__origin .material-symbols-outlined { font-size: 15px; color: #98a2b3; }
+.admin-lead-item__origin a {
+  color: #1769ff;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-lead-item__origin a:hover { text-decoration: underline; }
 .admin-lead-item__req {
   margin: 0;
   padding: 10px 12px;
@@ -1130,8 +1156,6 @@ body.admin-modal-open { overflow: hidden; }
   line-height: 1.65;
   white-space: pre-wrap;
 }
-.admin-lead-item__page { margin: 0; font-size: 11px; }
-.admin-lead-item__page a { color: #1769ff; text-decoration: none; }
 .admin-lead-item > footer { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
 .admin-lead-item > footer button {
   padding: 7px 12px;
