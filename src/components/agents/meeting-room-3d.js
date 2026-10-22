@@ -4,6 +4,8 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 
 const ROOM = { w: 8.6, d: 11.2, h: 3.35 }
+/** 会议桌 + 两侧座椅占位，行人必须绕行 */
+const TABLE_BLOCK = { minX: -1.62, maxX: 1.62, minZ: -2.92, maxZ: 1.62 }
 const PIN_WORLD = {
   0: new THREE.Vector3(-3.2, 1.35, 2.4),
   1: new THREE.Vector3(-1.6, 2.55, -0.4),
@@ -11,6 +13,49 @@ const PIN_WORLD = {
   '3b': new THREE.Vector3(3.1, 1.55, 0.2),
   '3c': new THREE.Vector3(0.2, 0.95, -0.6),
   4: new THREE.Vector3(-2.6, 0.55, 3.2),
+}
+
+function pushOutOfTable(pos) {
+  const { minX, maxX, minZ, maxZ } = TABLE_BLOCK
+  if (pos.x <= minX || pos.x >= maxX || pos.z <= minZ || pos.z >= maxZ) return pos
+  const toL = pos.x - minX
+  const toR = maxX - pos.x
+  const toB = pos.z - minZ
+  const toF = maxZ - pos.z
+  const nearest = Math.min(toL, toR, toB, toF)
+  if (nearest === toL) pos.x = minX
+  else if (nearest === toR) pos.x = maxX
+  else if (nearest === toB) pos.z = minZ
+  else pos.z = maxZ
+  return pos
+}
+
+/** 门口进出、沿桌侧环绕的闭环路径（绝不切穿桌面） */
+function makeTableOrbitPath(index) {
+  const side = index % 2 === 0 ? -1 : 1
+  const lane = 2.05 + (index % 2) * 0.22 + Math.floor(index / 2) * 0.08
+  const x = side * lane
+  const ox = -side * lane
+  const doorX = side * (0.25 + index * 0.12)
+  return [
+    new THREE.Vector3(doorX, 0, 5.55),
+    new THREE.Vector3(side * 0.95, 0, 3.4),
+    new THREE.Vector3(x, 0, 2.25),
+    new THREE.Vector3(x, 0, 0.4),
+    new THREE.Vector3(x, 0, -1.4),
+    new THREE.Vector3(x, 0, -2.8),
+    new THREE.Vector3(x, 0, -3.2),
+    new THREE.Vector3(side * 0.4, 0, -3.2),
+    new THREE.Vector3(-side * 0.4, 0, -3.2),
+    new THREE.Vector3(ox, 0, -3.2),
+    new THREE.Vector3(ox, 0, -2.6),
+    new THREE.Vector3(ox, 0, -0.7),
+    new THREE.Vector3(ox, 0, 1.15),
+    new THREE.Vector3(ox, 0, 2.3),
+    new THREE.Vector3(-side * 0.55, 0, 2.95),
+    new THREE.Vector3(doorX * 0.35, 0, 3.95),
+    new THREE.Vector3(doorX * 0.15, 0, 5.6),
+  ]
 }
 
 function makeCanvasTexture(draw, size = 512) {
@@ -827,16 +872,9 @@ export function mountMeetingRoom3D(host) {
     return {
       mesh: npc,
       progress: index / coatPalette.length,
-      speed: 0.045 + index * 0.008,
+      speed: 0.038 + index * 0.007,
       inRoom: false,
-      path: [
-        new THREE.Vector3(-0.4 + index * 0.25, 0, 5.5),
-        new THREE.Vector3(-0.8 + index * 0.35, 0, 2.2),
-        new THREE.Vector3(0.6 - index * 0.2, 0, 0.4),
-        new THREE.Vector3(1.4 - index * 0.15, 0, -1.2),
-        new THREE.Vector3(-0.2 + index * 0.1, 0, 1.0),
-        new THREE.Vector3(0.3, 0, 5.6),
-      ],
+      path: makeTableOrbitPath(index),
     }
   })
 
@@ -947,11 +985,12 @@ export function mountMeetingRoom3D(host) {
       setPersonPose(person, now * 0.001, p < 0.85)
       if (u >= 1) enter = null
     }
+    pushOutOfTable(person.position)
   }
 
   const tickNpcs = (dt, now) => {
     let inside = 0
-    npcs.forEach((npc) => {
+    npcs.forEach((npc, index) => {
       npc.progress = (npc.progress + dt * npc.speed) % 1
       const segs = npc.path.length - 1
       const f = npc.progress * segs
@@ -961,11 +1000,12 @@ export function mountMeetingRoom3D(host) {
       const to = npc.path[i + 1]
       npc.mesh.visible = true
       npc.mesh.position.lerpVectors(from, to, local)
+      pushOutOfTable(npc.mesh.position)
       const dx = to.x - from.x
       const dz = to.z - from.z
       if (Math.abs(dx) + Math.abs(dz) > 0.001) npc.mesh.rotation.y = Math.atan2(dx, dz)
-      setPersonPose(npc.mesh, now * 0.001 + i, true)
-      const inZ = npc.mesh.position.z < 4.2 && npc.mesh.position.z > -2.6
+      setPersonPose(npc.mesh, now * 0.001 + index, true)
+      const inZ = npc.mesh.position.z < 4.2 && npc.mesh.position.z > -3.4
       const inX = Math.abs(npc.mesh.position.x) < 3.6
       npc.inRoom = inZ && inX
       if (npc.inRoom) inside += 1
@@ -1121,10 +1161,10 @@ export function mountMeetingRoom3D(host) {
       person.rotation.y = Math.PI
       enter = {
         startedAt: performance.now(),
-        duration: 4800,
+        duration: 5200,
         from: new THREE.Vector3(0.2, 0, 5.4),
-        mid: new THREE.Vector3(-0.15, 0, 2.1),
-        look: new THREE.Vector3(0.35, 0, 0.6),
+        mid: new THREE.Vector3(-2.05, 0, 2.35),
+        look: new THREE.Vector3(-2.15, 0, 0.15),
         window: new THREE.Vector3(-2.55, 0, 0.85),
       }
     },
