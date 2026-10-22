@@ -297,12 +297,18 @@ function renderSpaceAgentDetail(a) {
                 .join('')}
             </div>
             ${renderArchWires('in')}
-            <div class="space-ad__arch-core">
+            ${
+              a.archCoreImage || p.archCoreImage
+                ? `<div class="space-ad__arch-core space-ad__arch-core--image">
+              <img src="${esc(a.archCoreImage || p.archCoreImage)}" alt="${esc(a.name)}" loading="lazy" />
+            </div>`
+                : `<div class="space-ad__arch-core">
               <div class="space-ad__arch-core-badge">
                 <span class="material-symbols-outlined">${a.icon}</span>
               </div>
               <strong>${esc(a.name)}</strong>
-            </div>
+            </div>`
+            }
             ${renderArchWires('out')}
             <div class="space-ad__arch-col space-ad__arch-col--right">
               ${p.archRight

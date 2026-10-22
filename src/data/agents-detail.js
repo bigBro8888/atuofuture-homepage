@@ -257,6 +257,8 @@ export function applyAgentsLibraryCms(content) {
       workflow: item.workflow?.length ? item.workflow : current.workflow,
       metrics: item.metrics?.length ? item.metrics : current.metrics,
       scenarios: item.scenarios?.length ? item.scenarios : current.scenarios,
+      sceneImage: item.sceneImage || current.sceneImage || '',
+      archCoreImage: item.archCoreImage || current.archCoreImage || '',
       published: true,
     }
     if (!AGENT_ORDER.includes(item.id)) AGENT_ORDER.push(item.id)

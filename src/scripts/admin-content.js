@@ -193,6 +193,7 @@ function emptyAgent() {
     action: '',
     result: '',
     sceneImage: '',
+    archCoreImage: '',
     capabilities: [{}, {}, {}, {}],
     workflow: [{}, {}, {}, {}],
     metrics: [{}, {}, {}],
@@ -425,6 +426,12 @@ function renderAgentCompose(item) {
       ${field('agents', 'action', '动作', item.action, { type: 'textarea', rows: 2 })}
       ${field('agents', 'result', '结果', item.result, { type: 'textarea', rows: 2 })}
       ${field('agents', 'sceneImage', '场景图', item.sceneImage, { image: true, wide: true, size: '1200×800' })}
+      ${field('agents', 'archCoreImage', '接入区中心图', item.archCoreImage, {
+        image: true,
+        wide: true,
+        size: '400×400',
+        help: '空间服务详情页「接入现有系统」中间蓝块；上传后整块换成图片，留空则显示图标+名称',
+      })}
       ${field('agents', 'scenarios', '适用场景', lines(item.scenarios), { type: 'textarea', rows: 3, wide: true, help: '每行一条' })}
       ${caps.map((row, index) => `
         <div class="admin-product-card admin-form-wide">

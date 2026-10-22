@@ -126,6 +126,8 @@ export const SPACE_AGENT_PAGE = {
   archTitle: '接入现有系统，不改变原来的使用方式',
   archDesc:
     '打通办公、楼宇、会议、安防等现有系统，在统一的空间服务智能体中进行协同，无需替换原有系统，就能让空间自动运行。',
+  /** 接入区中心图；后台 archCoreImage 优先，留空则用图标+名称 */
+  archCoreImage: '',
   archLeft: [
     { icon: 'apartment', label: '楼宇自控系统' },
     { icon: 'calendar_month', label: '会议预约系统' },
