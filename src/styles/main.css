@@ -5895,7 +5895,8 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   display: grid;
   grid-template-columns: minmax(220px, 0.92fr) minmax(280px, 1.2fr) minmax(180px, 0.78fr);
   gap: 28px 36px;
-  align-items: center;
+  /* 图片高度跟左右文案区对齐，由文字内容决定行高 */
+  align-items: stretch;
   padding: 12px 0 36px;
   border-bottom: 1px solid var(--sad-line);
 }
@@ -5948,24 +5949,25 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   font-size: 18px;
   margin-top: 1px;
 }
-/* 仅左侧斜切、右侧竖直：上左内收、下左外伸；矩形图也会缺左上角 */
+/* 仅左侧斜切、右侧竖直；高度随左右文案拉伸，不单独撑高 */
 .space-ad__scenario-media {
   position: relative;
   z-index: 0;
   margin: 0;
-  border-radius: 0 18px 18px 0;
+  min-height: 0;
+  height: 100%;
+  border-radius: 0 16px 16px 0;
   overflow: hidden;
-  min-height: 248px;
-  aspect-ratio: 16 / 11;
   background: #d8e2ef;
   clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%);
 }
 .space-ad__scenario-media-el,
 .space-ad__scenario-media img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 248px;
   object-fit: cover;
   object-position: center;
 }
@@ -6254,7 +6256,13 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   .space-ad__scenario-media {
     clip-path: none;
     border-radius: 16px;
+    height: auto;
     aspect-ratio: 16 / 10;
+    min-height: 180px;
+  }
+  .space-ad__scenario-media-el,
+  .space-ad__scenario-media img {
+    position: absolute;
   }
   .space-ad__outcomes,
   .space-ad__collab-peers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
