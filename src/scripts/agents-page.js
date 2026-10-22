@@ -117,10 +117,17 @@ async function ensureMeetingRoom3D(root, state) {
   }
   state.room3d?.setActive(true)
   applyStorySceneMode(root, 'space')
-  const lightPin = root.querySelector('[data-ag-pin-cue="lights"]')
-  if (lightPin && state.room3d?.isLightsOn) {
-    lightPin.textContent = state.room3d.isLightsOn() ? '灯全关' : '灯全亮'
-    lightPin.setAttribute('aria-label', lightPin.textContent)
+  const syncPinLabel = (cue, onText, offText, isOn) => {
+    const el = root.querySelector(`[data-ag-pin-cue="${cue}"]`)
+    if (!el) return
+    el.textContent = isOn ? onText : offText
+    el.setAttribute('aria-label', el.textContent)
+  }
+  if (state.room3d) {
+    syncPinLabel('lights', '灯全关', '灯全亮', state.room3d.isLightsOn?.())
+    syncPinLabel('screen', '信息屏关闭', '信息屏更新', state.room3d.isScreenOn?.())
+    syncPinLabel('ac', '停止送风', '空调舒适模式', state.room3d.isAcOn?.())
+    syncPinLabel('env', '恢复环境', '环境已更新', state.room3d.isEnvOn?.())
   }
   return state.room3d
 }
@@ -202,11 +209,29 @@ function bindInteractions(root, state) {
         })
         return
       }
-      if (cue === 'lights') {
+      if (cue === 'lights' || cue === 'screen' || cue === 'ac' || cue === 'env') {
         void ensureMeetingRoom3D(root, state).then((room) => {
-          if (!room?.toggleLights) return
-          const on = room.toggleLights()
-          pin.textContent = on ? '灯全关' : '灯全亮'
+          if (!room) return
+          if (cue === 'lights' && room.toggleLights) {
+            const on = room.toggleLights()
+            pin.textContent = on ? '灯全关' : '灯全亮'
+          } else if (cue === 'screen' && room.toggleScreen) {
+            const on = room.toggleScreen()
+            pin.textContent = on ? '信息屏关闭' : '信息屏更新'
+          } else if (cue === 'ac' && room.toggleAc) {
+            const on = room.toggleAc()
+            pin.textContent = on ? '停止送风' : '空调舒适模式'
+          } else if (cue === 'env' && room.toggleEnv) {
+            const on = room.toggleEnv()
+            pin.textContent = on ? '恢复环境' : '环境已更新'
+            const lightPin = root.querySelector('[data-ag-pin-cue="lights"]')
+            if (lightPin && room.isLightsOn) {
+              // 半亮时灯光按钮仍显示「灯全亮」，避免语义冲突
+              if (room.getLightLevel?.() >= 0.99) lightPin.textContent = '灯全关'
+              else lightPin.textContent = '灯全亮'
+              lightPin.setAttribute('aria-label', lightPin.textContent)
+            }
+          }
           pin.setAttribute('aria-label', pin.textContent)
         })
         return

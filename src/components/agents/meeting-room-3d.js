@@ -298,11 +298,78 @@ function makePerson() {
   return root
 }
 
+function makeMeetingScreenTexture() {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1024
+  canvas.height = 576
+  const ctx = canvas.getContext('2d')
+  const paint = () => {
+    ctx.fillStyle = '#0b1528'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = '#12233f'
+    ctx.fillRect(0, 0, canvas.width, 48)
+    ctx.fillStyle = '#7ef0e4'
+    ctx.font = '600 22px sans-serif'
+    ctx.fillText('多人会议 · Aspace Room', 28, 32)
+    ctx.fillStyle = '#8aa0bd'
+    ctx.font = '14px sans-serif'
+    ctx.fillText('进行中  00:24:18', canvas.width - 170, 30)
+    const names = ['张明', '李华', '王芳', '陈晨', '赵磊', '周雨']
+    const cols = 3
+    const rows = 2
+    const gap = 16
+    const top = 64
+    const cellW = (canvas.width - gap * (cols + 1)) / cols
+    const cellH = (canvas.height - top - gap * (rows + 1)) / rows
+    for (let i = 0; i < names.length; i += 1) {
+      const c = i % cols
+      const r = Math.floor(i / cols)
+      const x = gap + c * (cellW + gap)
+      const y = top + gap + r * (cellH + gap)
+      const g = ctx.createLinearGradient(x, y, x + cellW, y + cellH)
+      g.addColorStop(0, '#1a3a66')
+      g.addColorStop(1, '#0f2748')
+      ctx.fillStyle = g
+      ctx.fillRect(x, y, cellW, cellH)
+      ctx.fillStyle = '#3d6aa3'
+      ctx.beginPath()
+      ctx.arc(x + cellW / 2, y + cellH * 0.42, Math.min(cellW, cellH) * 0.18, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#d7e6ff'
+      ctx.font = '600 28px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(names[i].slice(0, 1), x + cellW / 2, y + cellH * 0.42 + 10)
+      ctx.fillStyle = 'rgba(7,20,40,0.72)'
+      ctx.fillRect(x, y + cellH - 36, cellW, 36)
+      ctx.fillStyle = '#fff'
+      ctx.font = '600 18px sans-serif'
+      ctx.textAlign = 'left'
+      ctx.fillText(names[i], x + 14, y + cellH - 14)
+      if (i === 0) {
+        ctx.fillStyle = '#00d5c7'
+        ctx.beginPath()
+        ctx.arc(x + cellW - 18, y + 18, 6, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    ctx.textAlign = 'left'
+  }
+  paint()
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 8
+  return { texture: tex, canvas, paint }
+}
+
 function buildRoom(scene, tex) {
   /** @type {{ light: THREE.PointLight, glow: THREE.Mesh, on: number }[]} */
   const pendants = []
   /** @type {{ light: THREE.SpotLight, glow: THREE.Mesh, on: number }[]} */
   const cans = []
+  /** @type {THREE.Points[]} */
+  const airflow = []
+  /** @type {THREE.Mesh[]} */
+  const curtains = []
 
   const floor = addShadow(
     new THREE.Mesh(
@@ -409,6 +476,25 @@ function buildRoom(scene, tex) {
   skyR.rotation.y = -Math.PI / 2
   scene.add(skyR)
 
+  // 左右窗纱帘：默认收起，关闭 50% 时展开覆盖半窗
+  const curtainMat = new THREE.MeshStandardMaterial({
+    color: 0xe8eef6,
+    roughness: 0.88,
+    metalness: 0,
+    transparent: true,
+    opacity: 0.82,
+    side: THREE.DoubleSide,
+  })
+  ;[-1, 1].forEach((side) => {
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.d * 0.92, ROOM.h * 0.9, 1, 1), curtainMat.clone())
+    panel.position.set(side * (ROOM.w / 2 - 0.06), ROOM.h * 0.52, 0)
+    panel.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2
+    panel.scale.set(1, 0.04, 1)
+    panel.visible = true
+    scene.add(panel)
+    curtains.push(panel)
+  })
+
   const duct = addShadow(
     new THREE.Mesh(
       new RoundedBoxGeometry(1.15, 0.45, ROOM.d * 0.78, 2, 0.04),
@@ -432,7 +518,8 @@ function buildRoom(scene, tex) {
     pipe.position.set(-1.4 + i * 0.08, ROOM.h - 0.18, -0.2)
     scene.add(pipe)
   }
-  for (const z of [-3.2, -0.6, 2.2]) {
+  const diffuserZs = [-3.2, -0.6, 2.2]
+  for (const z of diffuserZs) {
     const diffuser = addShadow(
       new THREE.Mesh(
         new THREE.CylinderGeometry(0.28, 0.28, 0.06, 32),
@@ -443,6 +530,31 @@ function buildRoom(scene, tex) {
     )
     diffuser.position.set(-2.2, ROOM.h - 0.05, z)
     scene.add(diffuser)
+
+    const count = 90
+    const positions = new Float32Array(count * 3)
+    for (let i = 0; i < count; i += 1) {
+      positions[i * 3] = (Math.random() - 0.5) * 0.45
+      positions[i * 3 + 1] = -Math.random() * 1.8
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 0.45
+    }
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    const points = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({
+        color: 0xd9eefc,
+        size: 0.045,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        sizeAttenuation: true,
+      })
+    )
+    points.position.set(-2.2, ROOM.h - 0.12, z)
+    points.visible = false
+    scene.add(points)
+    airflow.push(points)
   }
 
   const woodMat = mat(0xffffff, {
@@ -500,18 +612,28 @@ function buildRoom(scene, tex) {
   )
   tv.position.set(0, 1.85, -ROOM.d / 2 + 0.12)
   scene.add(tv)
-  const screen = new THREE.Mesh(
-    new THREE.PlaneGeometry(2.0, 1.0),
-    new THREE.MeshStandardMaterial({
-      color: 0x071428,
-      emissive: 0x0a2a55,
-      emissiveIntensity: 0.35,
-      roughness: 0.15,
-      metalness: 0.4,
-    })
-  )
+  const meeting = makeMeetingScreenTexture()
+  const screenOffMat = new THREE.MeshStandardMaterial({
+    color: 0x071428,
+    emissive: 0x0a2a55,
+    emissiveIntensity: 0.2,
+    roughness: 0.15,
+    metalness: 0.4,
+  })
+  const screenOnMat = new THREE.MeshStandardMaterial({
+    map: meeting.texture,
+    emissiveMap: meeting.texture,
+    emissive: 0xffffff,
+    emissiveIntensity: 0.55,
+    roughness: 0.35,
+    metalness: 0.1,
+  })
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 1.0), screenOffMat)
   screen.position.set(0, 1.85, -ROOM.d / 2 + 0.17)
   scene.add(screen)
+  screen.userData.meeting = meeting
+  screen.userData.offMat = screenOffMat
+  screen.userData.onMat = screenOnMat
 
   ;[-1.1, 1.1].forEach((z) => {
     const cord = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.85, 8), mat(0x111111)), false, false)
@@ -568,7 +690,7 @@ function buildRoom(scene, tex) {
     cans.push({ light: spot, glow, on: 1.8 })
   }
 
-  return { pendants, cans }
+  return { pendants, cans, airflow, curtains, screen }
 }
 
 /**
@@ -640,7 +762,7 @@ export function mountMeetingRoom3D(host) {
   scene.add(bounce)
 
   const textures = createTextures()
-  const { pendants, cans } = buildRoom(scene, textures)
+  const { pendants, cans, airflow, curtains, screen } = buildRoom(scene, textures)
   const person = makePerson()
   scene.add(person)
 
@@ -648,27 +770,48 @@ export function mountMeetingRoom3D(host) {
   let raf = 0
   let disposed = false
   let enter = null
-  let lightsOn = false
+  /** @type {0 | 0.5 | 1} */
+  let lightLevel = 0
+  let screenOn = false
+  let acOn = false
+  let envOn = false
+  let curtainTarget = 0.04
+  let curtainCurrent = 0.04
 
-  const applyLights = (on) => {
-    lightsOn = on
+  const applyLights = (level) => {
+    const next = level === true ? 1 : level === false ? 0 : level
+    lightLevel = next
+    const lamp = next
     pendants.forEach((item) => {
-      item.light.intensity = on ? item.on : 0
-      item.glow.material.opacity = on ? 1 : 0
+      item.light.intensity = item.on * lamp
+      item.glow.material.opacity = lamp > 0.05 ? Math.min(1, lamp) : 0
     })
     cans.forEach((item) => {
-      item.light.intensity = on ? item.on : 0
-      item.glow.material.opacity = on ? 0.95 : 0
+      item.light.intensity = item.on * lamp
+      item.glow.material.opacity = lamp > 0.05 ? 0.95 * lamp : 0
     })
-    // 关灯：只留窗外余光；开灯：吊灯+筒灯全亮
-    ambient.intensity = on ? 0.42 : 0.12
-    hemi.intensity = on ? 0.48 : 0.28
-    sun.intensity = on ? 1.05 : 0.55
-    fill.intensity = on ? 0.4 : 0.12
-    bounce.intensity = on ? 0.55 : 0.06
-    renderer.toneMappingExposure = on ? 1.32 : 0.78
+    ambient.intensity = 0.12 + 0.3 * lamp
+    hemi.intensity = 0.28 + 0.2 * lamp
+    sun.intensity = 0.55 + 0.5 * lamp
+    fill.intensity = 0.12 + 0.28 * lamp
+    bounce.intensity = 0.06 + 0.49 * lamp
+    renderer.toneMappingExposure = 0.78 + 0.54 * lamp
   }
-  applyLights(false)
+  applyLights(0)
+
+  const applyScreen = (on) => {
+    screenOn = on
+    screen.material = on ? screen.userData.onMat : screen.userData.offMat
+    if (on) screen.userData.meeting.texture.needsUpdate = true
+  }
+
+  const applyAc = (on) => {
+    acOn = on
+    airflow.forEach((points) => {
+      points.visible = on
+      points.material.opacity = on ? 0.55 : 0
+    })
+  }
 
   const resize = () => {
     const w = host.clientWidth || 640
@@ -724,11 +867,42 @@ export function mountMeetingRoom3D(host) {
     }
   }
 
+  const tickAirflow = (dt) => {
+    if (!acOn) return
+    airflow.forEach((points) => {
+      const pos = points.geometry.attributes.position
+      for (let i = 0; i < pos.count; i += 1) {
+        let y = pos.getY(i) - dt * (1.2 + (i % 5) * 0.15)
+        let x = pos.getX(i) + Math.sin(clock.elapsedTime * 4 + i) * dt * 0.08
+        if (y < -2.1) {
+          y = -0.02 - Math.random() * 0.1
+          x = (Math.random() - 0.5) * 0.45
+          pos.setZ(i, (Math.random() - 0.5) * 0.45)
+        }
+        pos.setY(i, y)
+        pos.setX(i, x)
+      }
+      pos.needsUpdate = true
+    })
+  }
+
+  const tickCurtains = (dt) => {
+    curtainCurrent += (curtainTarget - curtainCurrent) * Math.min(1, dt * 3.2)
+    const H = ROOM.h * 0.9
+    curtains.forEach((panel) => {
+      panel.scale.y = Math.max(0.04, curtainCurrent)
+      panel.position.y = ROOM.h - 0.08 - (H * panel.scale.y) / 2
+    })
+  }
+
   const loop = () => {
     if (disposed) return
     raf = requestAnimationFrame(loop)
     const now = performance.now()
+    const dt = Math.min(0.05, clock.getDelta())
     tickEnter(now)
+    tickAirflow(dt)
+    tickCurtains(dt)
     if (!enter && person.visible) setPersonPose(clock.elapsedTime, false)
     controls.update()
     renderer.render(scene, camera)
@@ -744,14 +918,33 @@ export function mountMeetingRoom3D(host) {
     host,
     canvas,
     projectPin,
-    isLightsOn: () => lightsOn,
+    isLightsOn: () => lightLevel >= 0.99,
+    getLightLevel: () => lightLevel,
+    isScreenOn: () => screenOn,
+    isAcOn: () => acOn,
+    isEnvOn: () => envOn,
     setLightsOn(on) {
-      applyLights(Boolean(on))
-      return lightsOn
+      applyLights(on ? 1 : 0)
+      return lightLevel >= 0.99
     },
     toggleLights() {
-      applyLights(!lightsOn)
-      return lightsOn
+      applyLights(lightLevel >= 0.99 ? 0 : 1)
+      return lightLevel >= 0.99
+    },
+    toggleScreen() {
+      applyScreen(!screenOn)
+      return screenOn
+    },
+    toggleAc() {
+      applyAc(!acOn)
+      return acOn
+    },
+    toggleEnv() {
+      const next = !envOn
+      envOn = next
+      curtainTarget = next ? 0.5 : 0.04
+      applyLights(next ? 0.5 : 0)
+      return envOn
     },
     playEnter() {
       person.visible = true
@@ -783,6 +976,7 @@ export function mountMeetingRoom3D(host) {
       window.removeEventListener('resize', onResize)
       controls.dispose()
       Object.values(textures).forEach((t) => t.dispose())
+      screen.userData.meeting?.texture.dispose()
       env.dispose()
       renderer.dispose()
       scene.traverse((obj) => {
@@ -804,11 +998,14 @@ export function syncStoryPinsTo3D(root, roomApi) {
   const byLabel = {
     人员进入: 0,
     环境已更新: 1,
+    恢复环境: 1,
     照明开启: 3,
     灯全亮: 3,
     灯全关: 3,
     空调舒适模式: '3b',
+    停止送风: '3b',
     信息屏更新: '3c',
+    信息屏关闭: '3c',
     执行成功: 4,
   }
   root.querySelectorAll('[data-ag-pin-step]').forEach((pin) => {

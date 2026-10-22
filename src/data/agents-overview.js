@@ -1,7 +1,7 @@
 /** 空间智能体总览：八大智能体与行业协同配置 */
 
 /**
- * @typedef {{ label: string, x: number, y: number, step: number, cue?: 'enter' | 'lights' }} AgentSceneNode
+ * @typedef {{ label: string, x: number, y: number, step: number, cue?: 'enter' | 'lights' | 'screen' | 'ac' | 'env' }} AgentSceneNode
  * @typedef {{
  *   id: string,
  *   aliases?: string[],
@@ -61,10 +61,10 @@ export const AGENTS_OVERVIEW = [
     sceneImage: '/images/agents/space.jpg',
     sceneNodes: [
       { label: '人员进入', x: 18, y: 62, step: 0, cue: 'enter' },
-      { label: '环境已更新', x: 42, y: 22, step: 1 },
+      { label: '环境已更新', x: 42, y: 22, step: 1, cue: 'env' },
       { label: '灯全亮', x: 68, y: 28, step: 3, cue: 'lights' },
-      { label: '空调舒适模式', x: 78, y: 48, step: 3 },
-      { label: '信息屏更新', x: 52, y: 70, step: 3 },
+      { label: '空调舒适模式', x: 78, y: 48, step: 3, cue: 'ac' },
+      { label: '信息屏更新', x: 52, y: 70, step: 3, cue: 'screen' },
       { label: '执行成功', x: 30, y: 78, step: 4 },
     ],
     detailUrl: '../agent-detail/?id=space',
