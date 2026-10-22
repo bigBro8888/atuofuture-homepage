@@ -1,4 +1,4 @@
-/** 空间智能体频道页 · 与前台同构预览（生态图 / 任务故事 / 行业组合 / CTA） */
+/** 空间智能体频道页 · 与前台同构预览（生态图 / 任务故事 / CTA） */
 
 import { AGENTS_CAPABILITY_CHAIN } from '../data/agents-overview.js'
 import { esc, textNode } from './vedit-nodes.js'
@@ -11,11 +11,6 @@ import {
   renderAgentTaskStory,
   syncAgentTaskStory,
 } from '../components/agents/task-story.js'
-import {
-  renderIndustryAgentComposition,
-  syncIndustryAgentComposition,
-  bindIndustryPinHover,
-} from '../components/agents/industry-composition.js'
 
 function renderHero(hero, { editable }) {
   const banner = hero.bannerUrl || '/images/agents/hero-bleed.jpg'
@@ -115,7 +110,6 @@ function renderEditableAgentStrip(agents, resolveItemIndex) {
  *   agents: object[],
  *   resolveItemIndex: (id: string) => number,
  *   selectedAgent?: string,
- *   selectedIndustry?: string,
  * }} model
  * @param {{ editable?: boolean }} options
  */
@@ -125,7 +119,6 @@ export function renderAgentsChannel(model, { editable = false } = {}) {
     agents = [],
     resolveItemIndex = () => -1,
     selectedAgent = agents[0]?.id || 'space',
-    selectedIndustry = 'building',
   } = model
 
   return `
@@ -133,23 +126,20 @@ export function renderAgentsChannel(model, { editable = false } = {}) {
   ${renderHero(hero, { editable })}
   ${renderAgentEcosystemMap({ selectedId: selectedAgent })}
   ${renderAgentTaskStory({ selectedId: selectedAgent })}
-  ${renderIndustryAgentComposition({ selectedIndustryId: selectedIndustry })}
   ${renderCta({ editable })}
   ${editable ? renderEditableAgentStrip(agents, resolveItemIndex) : ''}
 </div>`
 }
 
 /** 预览画布挂载后：排线 + 点选切换（与前台一致） */
-export function bindAgentsChannelPreview(root, { selectedAgent, selectedIndustry } = {}) {
-  if (!root) return { selectedAgent, selectedIndustry }
+export function bindAgentsChannelPreview(root, { selectedAgent } = {}) {
+  if (!root) return { selectedAgent }
 
   const state = {
     selectedAgent: selectedAgent || root.querySelector('[data-ag-select].is-selected')?.dataset.agSelect || 'space',
-    selectedIndustry: selectedIndustry || root.querySelector('[data-ag-industry].is-selected')?.dataset.agIndustry || 'building',
   }
 
   layoutAgentOrbitLinks(root)
-  bindIndustryPinHover(root)
 
   root.addEventListener('click', (event) => {
     const agentBtn = event.target.closest('[data-ag-select]')
@@ -160,16 +150,6 @@ export function bindAgentsChannelPreview(root, { selectedAgent, selectedIndustry
       state.selectedAgent = id
       syncAgentEcosystemMap(root, id)
       syncAgentTaskStory(root, id)
-      return
-    }
-
-    const industryBtn = event.target.closest('[data-ag-industry]')
-    if (industryBtn && root.contains(industryBtn)) {
-      event.preventDefault()
-      const id = industryBtn.dataset.agIndustry
-      if (!id || id === state.selectedIndustry) return
-      state.selectedIndustry = id
-      syncIndustryAgentComposition(root, id)
       return
     }
 
@@ -185,9 +165,6 @@ export function bindAgentsChannelPreview(root, { selectedAgent, selectedIndustry
   return {
     get selectedAgent() {
       return state.selectedAgent
-    },
-    get selectedIndustry() {
-      return state.selectedIndustry
     },
     destroy() {
       window.removeEventListener('resize', onResize)

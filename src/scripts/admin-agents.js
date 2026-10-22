@@ -87,7 +87,6 @@ function buildModel(content) {
     })),
     resolveItemIndex,
     selectedAgent: AGENTS_OVERVIEW[0]?.id || 'space',
-    selectedIndustry: 'building',
   }
 }
 
@@ -352,7 +351,7 @@ export function bindAgentsVisualAdmin(helpers) {
     }
     // 允许生态图 / 任务故事 / 行业切换；拦截其它跳转
     if (
-      event.target.closest('[data-ag-select], [data-ag-industry], [data-ag-jump-story], [data-edit-path], [data-edit-image]')
+      event.target.closest('[data-ag-select], [data-ag-jump-story], [data-edit-path], [data-edit-image]')
     ) {
       return
     }

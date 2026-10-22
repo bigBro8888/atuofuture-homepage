@@ -22,12 +22,6 @@ import {
   applyStorySceneMode,
   syncTwinStats,
 } from '../components/agents/task-story.js'
-import {
-  renderIndustryAgentComposition,
-  syncIndustryAgentComposition,
-  bindIndustryPinHover,
-} from '../components/agents/industry-composition.js'
-
 function esc(str = '') {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -151,11 +145,6 @@ function setSelectedAgent(root, state, id, { scrollStory = false } = {}) {
   }
 }
 
-function setSelectedIndustry(root, state, id) {
-  state.selectedIndustry = id
-  syncIndustryAgentComposition(root, id)
-}
-
 function bindInteractions(root, state) {
   root.querySelectorAll('[data-ag-select]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -173,16 +162,6 @@ function bindInteractions(root, state) {
   root.querySelector('[data-ag-jump-story]')?.addEventListener('click', () => {
     document.getElementById('agent-story')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   })
-
-  root.querySelectorAll('[data-ag-industry]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.agIndustry
-      if (!id || id === state.selectedIndustry) return
-      setSelectedIndustry(root, state, id)
-    })
-  })
-
-  bindIndustryPinHover(root)
 
   let step = 0
   let pauseAutoUntil = 0
@@ -271,7 +250,6 @@ export async function initAgentsPage() {
 
   const state = {
     selectedAgent: resolved || STORY_AGENT_ID,
-    selectedIndustry: 'building',
     room3d: null,
   }
 
@@ -279,7 +257,6 @@ export async function initAgentsPage() {
     ${renderHero()}
     ${renderAgentEcosystemMap({ selectedId: state.selectedAgent })}
     ${renderAgentTaskStory({ selectedId: STORY_AGENT_ID })}
-    ${renderIndustryAgentComposition({ selectedIndustryId: state.selectedIndustry })}
     ${renderCta()}
   `
 
