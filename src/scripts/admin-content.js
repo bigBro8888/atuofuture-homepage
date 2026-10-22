@@ -1,9 +1,31 @@
+import { AGENT_DETAILS } from '../data/agents-detail.js'
+import { renderAgentDetail } from '../lib/agent-detail-render.js'
+
 const CONTENT_KINDS = [
   { id: 'news', label: '新闻', desc: '新闻稿件' },
   { id: 'solutions', label: '行业解决方案', desc: '方案详情页' },
   { id: 'agents', label: '空间智能体', desc: '智能体详情页' },
   { id: 'products', label: '商品详情', desc: '硬件商品详情页' },
 ]
+
+const AGENT_IMAGE_SIZE_GUIDE = [
+  { test: (path) => path === 'archCoreImage', label: '接入区中心图', size: '400×400', tip: '中间蓝块整图替换' },
+  { test: (path) => path === 'sceneImage', label: '场景图', size: '1200×800', tip: '详情页场景配图' },
+  { test: (path) => path === 'spacePage.heroImage', label: '首屏配图', size: '1200×760', tip: '空间服务详情首屏' },
+  { test: (path) => path === 'spacePage.contrastImage', label: '对比区配图', size: '1200×600', tip: '斜切媒体图' },
+  { test: (path) => /spacePage\.scenarios\.\d+\.image/.test(path), label: '场景区配图', size: '960×640', tip: '中间斜切图' },
+  { test: (path) => /spacePage\.flowSteps\.\d+\.image/.test(path), label: '流程步骤图', size: '640×480', tip: '流程卡片图' },
+  { test: (path) => path === 'spacePage.ctaImage', label: '收尾背景图', size: '1600×900', tip: '底部 CTA 背景' },
+  { test: () => true, label: '图片', size: '1200×800', tip: '按前台比例裁切即可' },
+]
+
+function resolveAgentImageGuide(path = '') {
+  return AGENT_IMAGE_SIZE_GUIDE.find((item) => item.test(path)) || AGENT_IMAGE_SIZE_GUIDE[AGENT_IMAGE_SIZE_GUIDE.length - 1]
+}
+
+function readEditableText(el) {
+  return (el.innerText || '').replace(/\u00a0/g, ' ').trim()
+}
 
 const KIND_HASH = {
   news: 'content-news',
@@ -194,11 +216,27 @@ function emptyAgent() {
     result: '',
     sceneImage: '',
     archCoreImage: '',
+    spacePage: undefined,
     capabilities: [{}, {}, {}, {}],
     workflow: [{}, {}, {}, {}],
     metrics: [{}, {}, {}],
     scenarios: [],
     published: true,
+  }
+}
+
+function hydrateAgentItem(item = {}) {
+  const base = item.id && AGENT_DETAILS[item.id] ? structuredClone(AGENT_DETAILS[item.id]) : {}
+  return {
+    ...emptyAgent(),
+    ...base,
+    ...item,
+    id: item.id || base.id || '',
+    capabilities: item.capabilities?.length ? item.capabilities : base.capabilities || [],
+    workflow: item.workflow?.length ? item.workflow : base.workflow || [],
+    metrics: item.metrics?.length ? item.metrics : base.metrics || [],
+    scenarios: item.scenarios?.length ? item.scenarios : base.scenarios || [],
+    spacePage: item.spacePage || base.spacePage,
   }
 }
 
@@ -209,7 +247,7 @@ function renderKindList(kind, items, previewBase) {
   const addLabel = kind === 'solutions' ? '新建方案' : '新建智能体'
   editor.innerHTML = `
     <div class="admin-news-toolbar">
-      <p class="admin-form-section__hint" style="margin:0">这里编辑详情页内容。对应频道页只负责首屏和列表关联。</p>
+      <p class="admin-form-section__hint" style="margin:0">${kind === 'agents' ? '点「编辑」进入可视化详情页：上方基础设置，下方预览里直接点改文字和图片。' : '这里编辑详情页内容。对应频道页只负责首屏和列表关联。'}</p>
       <div class="admin-news-toolbar__actions">
         <button type="button" class="admin-add-slide" data-${kind}-add>+ ${addLabel}</button>
       </div>
@@ -404,63 +442,183 @@ function renderSolutionCompose(item) {
   showSolutionSection(active)
 }
 
-function renderAgentCompose(item) {
+function renderAgentCompose(rawItem) {
   const body = document.querySelector('[data-agents-compose-body]')
-  const caps = [...(item.capabilities || []), {}, {}, {}, {}].slice(0, 4)
-  const steps = [...(item.workflow || []), {}, {}, {}, {}].slice(0, 4)
-  const metrics = [...(item.metrics || []), {}, {}, {}].slice(0, 3)
+  if (!body) return
+  const item = hydrateAgentItem(rawItem)
+  const previewAgent = {
+    ...item,
+    id: item.id || 'space',
+    _layout: item.id === 'space' ? 'space' : undefined,
+  }
+  const title = document.querySelector('[data-agents-compose-title]')
+  if (title) title.textContent = item.name ? `可视化编辑 · ${item.name}` : '可视化编辑 · 新建智能体'
   body.innerHTML = `
-    <div class="admin-form-grid">
-      <input type="hidden" data-agents-field="id" value="${esc(item.id || '')}" />
-      ${field('agents', 'name', '智能体名称', item.name, { wide: true, placeholder: '例如 空间服务智能体' })}
-      ${field('agents', 'id', '详情页标识', item.id, { help: '出现在 /agent-detail/?id= 后面' })}
-      ${field('agents', 'shortName', '短名', item.shortName)}
-      ${field('agents', 'icon', '图标', item.icon)}
-      ${field('agents', 'eyebrow', '英文眉题', item.eyebrow)}
-      ${field('agents', 'accent', '强调色 RGB', item.accent, { help: '如 0, 82, 209' })}
-      ${field('agents', 'blurb', '列表简介', item.blurb, { type: 'textarea', rows: 2, wide: true })}
-      ${field('agents', 'tagline', '详情副标题', item.tagline, { type: 'textarea', rows: 2, wide: true })}
-      ${field('agents', 'overview', '详情概述', item.overview, { type: 'textarea', rows: 4, wide: true })}
-      ${field('agents', 'value', '价值', item.value, { type: 'textarea', rows: 2, wide: true })}
-      ${field('agents', 'trigger', '触发', item.trigger, { type: 'textarea', rows: 2 })}
-      ${field('agents', 'action', '动作', item.action, { type: 'textarea', rows: 2 })}
-      ${field('agents', 'result', '结果', item.result, { type: 'textarea', rows: 2 })}
-      ${field('agents', 'sceneImage', '场景图', item.sceneImage, { image: true, wide: true, size: '1200×800' })}
-      ${field('agents', 'archCoreImage', '接入区中心图', item.archCoreImage, {
-        image: true,
-        wide: true,
-        size: '400×400',
-        help: '空间服务详情页「接入现有系统」中间蓝块；上传后整块换成图片，留空则显示图标+名称',
-      })}
-      ${field('agents', 'scenarios', '适用场景', lines(item.scenarios), { type: 'textarea', rows: 3, wide: true, help: '每行一条' })}
-      ${caps.map((row, index) => `
-        <div class="admin-product-card admin-form-wide">
-          <h4>能力 ${index + 1}</h4>
+    <div class="admin-vedit admin-vedit--agent-detail">
+      <details class="admin-vedit-basics" open>
+        <summary>
+          <strong>基础设置</strong>
+          <span>名称、标识、列表简介；详情正文在下方预览里直接点改</span>
+        </summary>
+        <div class="admin-vedit-basics__body">
           <div class="admin-form-grid">
-            ${field('agents', `capabilities.${index}.title`, '标题', row.title || '')}
-            ${field('agents', `capabilities.${index}.icon`, '图标', row.icon || '')}
-            ${field('agents', `capabilities.${index}.desc`, '说明', row.desc || '', { type: 'textarea', rows: 2, wide: true })}
+            <input type="hidden" data-agents-field="id" value="${esc(item.id || '')}" />
+            ${field('agents', 'name', '智能体名称', item.name, { wide: true, placeholder: '例如 空间服务智能体' })}
+            ${field('agents', 'id', '详情页标识', item.id, { help: '出现在 /agent-detail/?id= 后面；空间服务请用 space' })}
+            ${field('agents', 'shortName', '短名', item.shortName)}
+            ${field('agents', 'icon', '图标 Material Symbol', item.icon)}
+            ${field('agents', 'accent', '强调色 RGB', item.accent, { help: '如 0, 82, 209' })}
+            ${field('agents', 'blurb', '列表简介', item.blurb, { type: 'textarea', rows: 2, wide: true })}
+            ${field('agents', 'eyebrow', '英文眉题', item.eyebrow)}
+            ${field('agents', 'sceneImage', '列表/场景图', item.sceneImage, {
+              image: true,
+              wide: true,
+              size: '1200×800',
+              help: '频道列表与通用详情可用；空间服务详情图请在下方预览点换',
+            })}
+            <label class="admin-news-pin admin-form-wide">
+              <input data-agents-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
+              <span><b>发布后前台可见</b></span>
+            </label>
           </div>
-        </div>`).join('')}
-      ${steps.map((row, index) => `
-        <div class="admin-product-card admin-form-wide">
-          <h4>运行机制 ${index + 1}</h4>
-          <div class="admin-form-grid">
-            ${field('agents', `workflow.${index}.title`, '步骤', row.title || '')}
-            ${field('agents', `workflow.${index}.desc`, '说明', row.desc || '', { type: 'textarea', rows: 2, wide: true })}
+          <details class="admin-vedit-advanced">
+            <summary>高级设置（一般不用改）</summary>
+            <div class="admin-form-grid" style="margin-top:12px">
+              ${field('agents', 'value', '价值', item.value, { type: 'textarea', rows: 2, wide: true })}
+              ${field('agents', 'trigger', '触发', item.trigger, { type: 'textarea', rows: 2 })}
+              ${field('agents', 'action', '动作', item.action, { type: 'textarea', rows: 2 })}
+              ${field('agents', 'result', '结果', item.result, { type: 'textarea', rows: 2 })}
+            </div>
+          </details>
+        </div>
+      </details>
+      <div class="admin-vedit-hint">详情页正文请在下方预览里直接改（点文字/图片即可）。上方基础设置只管名称、标识和列表信息。</div>
+      <div class="admin-vedit-canvas" data-agents-detail-visual style="--accent: ${esc(item.accent || '0, 82, 209')}">
+        ${renderAgentDetail(previewAgent, { editable: true })}
+      </div>
+      <input type="file" accept="image/jpeg,image/png,image/webp" hidden data-agents-detail-visual-file />
+      <div class="admin-link-modal" data-agents-detail-image-modal hidden>
+        <div class="admin-link-modal__backdrop" data-agents-detail-image-modal-close></div>
+        <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="agents-detail-image-title">
+          <header>
+            <h3 id="agents-detail-image-title">更换图片</h3>
+            <button type="button" data-agents-detail-image-modal-close aria-label="关闭">×</button>
+          </header>
+          <div class="admin-link-modal__body">
+            <div class="admin-image-modal__size">
+              <strong data-agents-detail-image-size-label>建议尺寸</strong>
+              <em data-agents-detail-image-size-value>1200×800</em>
+              <span data-agents-detail-image-size-tip>上传前请按建议尺寸准备素材</span>
+            </div>
+            <div class="admin-image-modal__preview">
+              <img data-agents-detail-image-preview src="" alt="" hidden />
+              <span data-agents-detail-image-empty>暂无预览</span>
+            </div>
+            <label class="admin-news-field is-wide">
+              <span>图片链接</span>
+              <input type="text" data-agents-detail-image-url placeholder="/images/... 或 https://..." />
+            </label>
+            <div class="admin-image-modal__or">或</div>
+            <label class="admin-image-modal__upload">
+              上传本地图片
+              <input type="file" accept="image/jpeg,image/png,image/webp" data-agents-detail-image-file />
+            </label>
           </div>
-        </div>`).join('')}
-      ${metrics.map((row, index) => `
-        <div class="admin-product-card">
-          <h4>指标 ${index + 1}</h4>
-          ${field('agents', `metrics.${index}.value`, '数值/标签', row.value || '')}
-          ${field('agents', `metrics.${index}.label`, '说明', row.label || '')}
-        </div>`).join('')}
-      <label class="admin-news-pin admin-form-wide">
-        <input data-agents-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
-        <span><b>发布后前台可见</b></span>
-      </label>
+          <footer>
+            <button type="button" data-agents-detail-image-modal-close>取消</button>
+            <button type="button" class="admin-link-modal__ok" data-agents-detail-image-modal-save>确定</button>
+          </footer>
+        </div>
+      </div>
     </div>`
+}
+
+function collectAgentArticle(compose) {
+  const article = collectFields(compose, 'agents')
+  const canvas = compose.querySelector('[data-agents-detail-visual]')
+  if (!canvas) return article
+  canvas.querySelectorAll('[data-edit-path]').forEach((el) => {
+    const path = el.dataset.editPath
+    if (!path) return
+    let value = readEditableText(el)
+    if (el.dataset.editMultiline === 'true') value = value.replace(/\n{3,}/g, '\n\n')
+    setNested(article, path, value)
+  })
+  canvas.querySelectorAll('[data-edit-image]').forEach((el) => {
+    const path = el.dataset.editImage
+    if (!path) return
+    const url = el.dataset.editImageUrl != null ? el.dataset.editImageUrl : el.querySelector('img')?.getAttribute('src') || ''
+    setNested(article, path, String(url || '').trim())
+  })
+  if (Array.isArray(article.scenarios)) {
+    article.scenarios = article.scenarios.map((s) => String(s || '').trim()).filter(Boolean)
+  } else if (typeof article.scenarios === 'string') {
+    article.scenarios = article.scenarios
+      .split(/\n+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+  }
+  if (Array.isArray(article.capabilities)) {
+    article.capabilities = article.capabilities.filter((row) => row && (row.title || row.desc || row.icon))
+  }
+  if (Array.isArray(article.workflow)) {
+    article.workflow = article.workflow.filter((row) => row && (row.title || row.desc))
+  }
+  if (Array.isArray(article.metrics)) {
+    article.metrics = article.metrics.filter((row) => row && (row.value || row.label))
+  }
+  return article
+}
+
+function setAgentsDetailImagePreview(modal, url) {
+  const preview = modal.querySelector('[data-agents-detail-image-preview]')
+  const empty = modal.querySelector('[data-agents-detail-image-empty]')
+  if (!preview) return
+  if (url) {
+    preview.src = url
+    preview.hidden = false
+    if (empty) empty.hidden = true
+  } else {
+    preview.removeAttribute('src')
+    preview.hidden = true
+    if (empty) empty.hidden = false
+  }
+}
+
+function applyAgentsDetailImage(compose, path, url) {
+  const canvas = compose.querySelector('[data-agents-detail-visual]')
+  if (!canvas || !path) return
+  const target =
+    canvas.querySelector(`[data-edit-image="${CSS.escape(path)}"]`) || canvas.querySelector(`[data-edit-image="${path}"]`)
+  const safeUrl = String(url || '').trim()
+  if (!target) return
+  target.dataset.editImageUrl = safeUrl
+  let img = target.querySelector('img')
+  if (safeUrl) {
+    target.classList.remove('hpi-edit-img--empty')
+    if (!img) {
+      img = document.createElement('img')
+      img.alt = ''
+      target.prepend(img)
+    }
+    img.src = safeUrl
+    const tip = target.querySelector('.hpi-edit-img__tip')
+    if (tip) {
+      tip.textContent = '更换图片'
+      tip.classList.remove('is-visible')
+    }
+  } else {
+    target.classList.add('hpi-edit-img--empty')
+    if (img) img.remove()
+    let tip = target.querySelector('.hpi-edit-img__tip')
+    if (!tip) {
+      tip = document.createElement('span')
+      tip.className = 'hpi-edit-img__tip is-visible'
+      target.appendChild(tip)
+    }
+    tip.textContent = '添加图片'
+    tip.classList.add('is-visible')
+  }
 }
 
 function updateStatus(kind, page) {
@@ -486,7 +644,14 @@ async function persistKind(kind, items, message) {
 function openCompose(kind, index) {
   const page = kind === 'solutions' ? ctx.state.solutionsLibrary : ctx.state.agentsLibrary
   const items = page?.draftContent?.items || []
-  const item = index >= 0 ? items[index] : (kind === 'solutions' ? emptySolution() : emptyAgent())
+  const item =
+    index >= 0
+      ? kind === 'agents'
+        ? hydrateAgentItem(items[index])
+        : items[index]
+      : kind === 'solutions'
+        ? emptySolution()
+        : emptyAgent()
   ctx.state[`${kind}ComposeIndex`] = index
   if (kind === 'solutions') ctx.state.solutionSection = 'basics'
   document.querySelector(`[data-${kind}-list-view]`).hidden = true
@@ -571,6 +736,51 @@ function bindKind(kind) {
     }
   })
   compose.addEventListener('click', async (event) => {
+    if (kind === 'agents') {
+      const canvasLink = event.target.closest('[data-agents-detail-visual] a')
+      if (canvasLink) {
+        event.preventDefault()
+      }
+      const imageBtn = event.target.closest('[data-agents-detail-visual] [data-edit-image]')
+      if (imageBtn) {
+        event.preventDefault()
+        const path = imageBtn.dataset.editImage || ''
+        const modal = compose.querySelector('[data-agents-detail-image-modal]')
+        if (!modal || !path) return
+        const guide = resolveAgentImageGuide(path)
+        modal.dataset.imagePath = path
+        const label = modal.querySelector('[data-agents-detail-image-size-label]')
+        const value = modal.querySelector('[data-agents-detail-image-size-value]')
+        const tip = modal.querySelector('[data-agents-detail-image-size-tip]')
+        if (label) label.textContent = guide.label
+        if (value) value.textContent = guide.size
+        if (tip) tip.textContent = guide.tip
+        const url =
+          imageBtn.dataset.editImageUrl != null
+            ? imageBtn.dataset.editImageUrl
+            : imageBtn.querySelector('img')?.getAttribute('src') || ''
+        const urlInput = modal.querySelector('[data-agents-detail-image-url]')
+        if (urlInput) urlInput.value = url
+        setAgentsDetailImagePreview(modal, url)
+        modal.hidden = false
+        return
+      }
+      if (event.target.closest('[data-agents-detail-image-modal-close]')) {
+        event.preventDefault()
+        const modal = compose.querySelector('[data-agents-detail-image-modal]')
+        if (modal) modal.hidden = true
+        return
+      }
+      if (event.target.closest('[data-agents-detail-image-modal-save]')) {
+        event.preventDefault()
+        const modal = compose.querySelector('[data-agents-detail-image-modal]')
+        const path = modal?.dataset.imagePath || ''
+        const url = modal?.querySelector('[data-agents-detail-image-url]')?.value.trim() || ''
+        applyAgentsDetailImage(compose, path, url)
+        if (modal) modal.hidden = true
+        return
+      }
+    }
     const jump = kind === 'solutions' ? event.target.closest('[data-sol-goto]') : null
     if (jump) {
       event.preventDefault()
@@ -650,7 +860,7 @@ function bindKind(kind) {
     if (event.target.closest(`[data-${kind}-compose-publish]`)) {
       event.preventDefault()
       const button = event.target.closest(`[data-${kind}-compose-publish]`)
-      const article = collectFields(compose, kind)
+      const article = kind === 'agents' ? collectAgentArticle(compose) : collectFields(compose, kind)
       if (!article.name?.trim()) {
         ctx.toast('请填写名称', true)
         return
@@ -680,8 +890,35 @@ function bindKind(kind) {
       preview.src = el.value.trim()
       preview.hidden = !el.value.trim()
     }
+    if (kind === 'agents' && path === 'name') {
+      const title = document.querySelector('[data-agents-compose-title]')
+      if (title) title.textContent = `可视化编辑 · ${el.value.trim() || '未命名智能体'}`
+    }
   })
   compose.addEventListener('change', async (event) => {
+    if (kind === 'agents') {
+      const modalFile = event.target.closest('[data-agents-detail-image-file]')
+      if (modalFile?.files?.[0]) {
+        const file = modalFile.files[0]
+        modalFile.disabled = true
+        try {
+          const formData = new FormData()
+          formData.append('image', file)
+          const { url } = await ctx.api('/pages/media/image', { method: 'POST', body: formData })
+          const modal = compose.querySelector('[data-agents-detail-image-modal]')
+          const urlInput = modal?.querySelector('[data-agents-detail-image-url]')
+          if (urlInput) urlInput.value = url
+          setAgentsDetailImagePreview(modal, url)
+          ctx.toast('图片已上传，点确定应用')
+        } catch (error) {
+          ctx.toast(error.message, true)
+        } finally {
+          modalFile.disabled = false
+          modalFile.value = ''
+        }
+        return
+      }
+    }
     const upload = event.target.closest(`[data-${kind}-upload-for]`)
     const file = upload?.files?.[0]
     if (!upload || !file) return
@@ -718,7 +955,7 @@ export function bindContentCenter(helpers) {
     const map = {
       news: ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
       solutions: ['内容中心 · 行业解决方案', '路径 /solutions/?id= · 编辑方案详情'],
-      agents: ['内容中心 · 空间智能体', '路径 /agent-detail/?id= · 编辑智能体详情'],
+      agents: ['内容中心 · 空间智能体', '路径 /agent-detail/?id= · 可视化编辑智能体详情'],
       products: ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
     }
     const pair = map[button.dataset.contentKind]

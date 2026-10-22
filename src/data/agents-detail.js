@@ -259,6 +259,7 @@ export function applyAgentsLibraryCms(content) {
       scenarios: item.scenarios?.length ? item.scenarios : current.scenarios,
       sceneImage: item.sceneImage || current.sceneImage || '',
       archCoreImage: item.archCoreImage || current.archCoreImage || '',
+      spacePage: item.spacePage || current.spacePage || undefined,
       published: true,
     }
     if (!AGENT_ORDER.includes(item.id)) AGENT_ORDER.push(item.id)
