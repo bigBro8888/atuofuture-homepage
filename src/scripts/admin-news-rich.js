@@ -11,6 +11,13 @@ function normalizeImgSrc(src) {
   return value
 }
 
+function escapeTextarea(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
 export function newsRichEditorMarkup(item = {}) {
   const html = sanitizeNewsHtml(item.bodyHtml || htmlFromPlainBody(item.body || ''))
   return `
@@ -28,17 +35,43 @@ export function newsRichEditorMarkup(item = {}) {
           <button type="button" tabindex="-1" data-rich-cmd="video">视频</button>
           <label class="admin-rich__color">颜色<input type="color" value="#333333" data-rich-color /></label>
           <button type="button" tabindex="-1" data-rich-cmd="removeFormat">清除格式</button>
+          <button type="button" tabindex="-1" data-rich-cmd="codeMode" data-rich-code-toggle title="粘贴 HTML / 源码，前台解析展示">代码</button>
         </div>
         <div class="admin-rich__editor" contenteditable="true" data-news-html-editor role="textbox" aria-multiline="true" aria-label="新闻正文">${html}</div>
+        <textarea class="admin-rich__code" hidden data-news-html-code spellcheck="false" aria-label="新闻正文源码">${escapeTextarea(html)}</textarea>
         <input type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,image/*" data-news-rich-file />
         <input type="file" hidden accept="video/mp4,video/webm,video/quicktime,video/*" data-news-rich-video />
-        <small>粘贴会去掉原网站的加粗、颜色和字号。插图建议宽度不少于 1200px，视频可上传或粘贴链接。</small>
+        <small data-news-rich-hint>粘贴会去掉原网站的加粗、颜色和字号。插图建议宽度不少于 1200px，视频可上传或粘贴链接。点「代码」可粘贴 HTML 源码，发布后前台解析展示。</small>
       </div>
     </div>`
 }
 
+function newsRichRoot(scope) {
+  if (!scope) return null
+  if (scope.matches?.('[data-news-rich]')) return scope
+  return scope.querySelector?.('[data-news-rich]') || null
+}
+
+function isNewsCodeMode(scope) {
+  return newsRichRoot(scope)?.dataset.codeMode === '1'
+}
+
+function syncNewsCodeToEditor(scope) {
+  const root = newsRichRoot(scope) || scope
+  const editor = root.querySelector('[data-news-html-editor]')
+  const code = root.querySelector('[data-news-html-code]')
+  if (!editor || !code) return
+  const raw = String(code.value || '').trim()
+  const looksLikeHtml = /<[a-z][\s\S]*>/i.test(raw)
+  editor.innerHTML = looksLikeHtml
+    ? sanitizeNewsHtml(raw)
+    : (raw ? `<pre class="sx-news-code"><code>${escapeTextarea(raw)}</code></pre>` : '')
+}
+
 export function readNewsRichContent(modal = document) {
-  const editor = modal.querySelector('[data-news-html-editor]')
+  const root = newsRichRoot(modal) || modal
+  if (isNewsCodeMode(root)) syncNewsCodeToEditor(root)
+  const editor = root.querySelector('[data-news-html-editor]')
   const html = sanitizeNewsHtml(editor?.innerHTML || '')
   const text = (editor?.innerText || '').replace(/\u00a0/g, ' ').trim()
   return { bodyHtml: html, body: text }
@@ -213,13 +246,42 @@ export async function ingestEditorVideos(modal, { api, toast }) {
 }
 
 export function bindNewsRichEditor(modal, { api, toast }) {
+  const rich = modal.querySelector('[data-news-rich]')
   const editor = modal.querySelector('[data-news-html-editor]')
+  const codeInput = modal.querySelector('[data-news-html-code]')
+  const hint = modal.querySelector('[data-news-rich-hint]')
+  const codeToggle = modal.querySelector('[data-rich-code-toggle]')
   const fileInput = modal.querySelector('[data-news-rich-file]')
   const videoInput = modal.querySelector('[data-news-rich-video]')
-  if (!editor) return
+  if (!editor || !rich) return
   let savedRange = null
   const rememberRange = () => {
     savedRange = saveEditorRange(editor) || savedRange
+  }
+
+  const setCodeMode = (enabled) => {
+    if (enabled) {
+      codeInput.value = editor.innerHTML
+      editor.hidden = true
+      codeInput.hidden = false
+      rich.dataset.codeMode = '1'
+      codeToggle?.classList.add('is-active')
+      if (hint) {
+        hint.textContent = '代码模式：直接粘贴 HTML / 源码。再点「代码」返回可视化编辑；发布时会自动消毒并在前台解析展示。'
+      }
+      codeInput.focus()
+      return
+    }
+    syncNewsCodeToEditor(rich)
+    codeInput.hidden = true
+    editor.hidden = false
+    delete rich.dataset.codeMode
+    codeToggle?.classList.remove('is-active')
+    if (hint) {
+      hint.textContent = '粘贴会去掉原网站的加粗、颜色和字号。插图建议宽度不少于 1200px，视频可上传或粘贴链接。点「代码」可粘贴 HTML 源码，发布后前台解析展示。'
+    }
+    editor.focus()
+    toast?.('源码已解析到正文')
   }
 
   editor.addEventListener('mouseup', rememberRange)
@@ -228,6 +290,7 @@ export function bindNewsRichEditor(modal, { api, toast }) {
 
   modal.querySelector('[data-rich-color]')?.addEventListener('mousedown', rememberRange)
   modal.querySelector('[data-rich-color]')?.addEventListener('input', (event) => {
+    if (isNewsCodeMode(rich)) return
     restoreEditorRange(editor, savedRange)
     document.execCommand('foreColor', false, event.currentTarget.value)
     rememberRange()
@@ -237,8 +300,16 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     const button = event.target.closest('[data-rich-cmd]')
     if (!button) return
     event.preventDefault()
-    rememberRange()
     const command = button.dataset.richCmd
+    if (command === 'codeMode') {
+      setCodeMode(!isNewsCodeMode(rich))
+      return
+    }
+    if (isNewsCodeMode(rich)) {
+      toast?.('请先退出代码模式，再使用格式工具', true)
+      return
+    }
+    rememberRange()
     restoreEditorRange(editor, savedRange)
     if (command === 'h3') document.execCommand('formatBlock', false, 'h3')
     else if (command === 'p') document.execCommand('formatBlock', false, 'p')

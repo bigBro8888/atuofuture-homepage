@@ -49,6 +49,14 @@ test('keeps tables and images but strips scripts from news html', () => {
   assert.doesNotMatch(html, /onerror/)
 })
 
+test('keeps code blocks from source paste and strips unsafe classes', () => {
+  const html = sanitizeNewsHtml('<p>说明</p><pre class="evil onclick"><code class="language-js">const x = 1</code></pre><script>alert(1)</script>')
+  assert.match(html, /<pre class="sx-news-code">/)
+  assert.match(html, /<code class="language-js">/)
+  assert.match(html, /const x = 1/)
+  assert.doesNotMatch(html, /evil|onclick|script/i)
+})
+
 test('publishes news feed articles to the public API', async (context) => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'atuo-news-test-'))
   process.env.NODE_ENV = 'test'

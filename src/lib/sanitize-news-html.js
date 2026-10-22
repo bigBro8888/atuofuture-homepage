@@ -2,15 +2,16 @@ import { resolveNewsVideo } from './news-video.js'
 
 const ALLOWED_TAGS = new Set([
   'p', 'br', 'div', 'span', 'h2', 'h3', 'h4',
-  'blockquote',
+  'blockquote', 'pre', 'code',
   'ul', 'ol', 'li',
   'table', 'thead', 'tbody', 'tr', 'td', 'th', 'caption',
   'img', 'a', 'figure', 'figcaption', 'hr', 'video', 'iframe',
 ])
 
 const VOID_TAGS = new Set(['br', 'img', 'hr'])
-const BREAK_PHRASING = new Set(['figure', 'table', 'ul', 'ol', 'blockquote', 'div', 'h2', 'h3', 'h4', 'video', 'iframe'])
+const BREAK_PHRASING = new Set(['figure', 'table', 'ul', 'ol', 'blockquote', 'pre', 'div', 'h2', 'h3', 'h4', 'video', 'iframe'])
 const BOOLEAN_ATTRS = new Set(['controls', 'playsinline', 'allowfullscreen'])
+const SAFE_CODE_CLASS = /^(sx-news-code|language-[\w-]+|lang-[\w-]+)$/
 
 const ALLOWED_ATTR = {
   a: new Set(['href', 'title', 'target', 'rel']),
@@ -20,6 +21,8 @@ const ALLOWED_ATTR = {
   table: new Set(['border']),
   span: new Set(['style']),
   figure: new Set(['class', 'contenteditable']),
+  pre: new Set(['class']),
+  code: new Set(['class']),
   video: new Set(['src', 'controls', 'playsinline', 'preload', 'poster']),
   iframe: new Set(['src', 'title', 'allow', 'allowfullscreen', 'loading']),
 }
@@ -90,6 +93,15 @@ function parseAttributes(raw, tag, keepColor = true) {
     }
     if (name === 'class' && tag === 'figure') {
       if (/\bsx-news-video\b/.test(value)) out.push('class="sx-news-video" data-news-video="1"')
+      continue
+    }
+    if (name === 'class' && (tag === 'pre' || tag === 'code')) {
+      const classes = String(value || '')
+        .split(/\s+/)
+        .map((item) => item.trim())
+        .filter((item) => SAFE_CODE_CLASS.test(item))
+      if (tag === 'pre' && !classes.includes('sx-news-code')) classes.unshift('sx-news-code')
+      if (classes.length) out.push(`class="${classes.join(' ')}"`)
       continue
     }
     if (name === 'contenteditable' && tag === 'figure') {
@@ -185,7 +197,8 @@ export function sanitizeNewsHtml(dirty, options = {}) {
         html += `</${stack.pop()}>`
       }
     }
-    const attrs = parseAttributes(open[2] || '', tag, keepColor)
+    let attrs = parseAttributes(open[2] || '', tag, keepColor)
+    if (tag === 'pre' && !/\bclass=/.test(attrs)) attrs += ' class="sx-news-code"'
     const selfClosing = VOID_TAGS.has(tag) || Boolean(open[3])
     html += `<${tag}${attrs}>`
     if (!selfClosing) stack.push(tag)
