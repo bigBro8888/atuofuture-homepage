@@ -299,6 +299,11 @@ function makePerson() {
 }
 
 function buildRoom(scene, tex) {
+  /** @type {{ light: THREE.PointLight, glow: THREE.Mesh, on: number }[]} */
+  const pendants = []
+  /** @type {{ light: THREE.SpotLight, glow: THREE.Mesh, on: number }[]} */
+  const cans = []
+
   const floor = addShadow(
     new THREE.Mesh(
       new THREE.PlaneGeometry(ROOM.w, ROOM.d),
@@ -523,18 +528,21 @@ function buildRoom(scene, tex) {
     shade.position.set(0, ROOM.h - 1.05, z - 0.35)
     shade.rotation.x = Math.PI
     scene.add(shade)
-    const bulb = new THREE.PointLight(0xffe2bd, 1.35, 7.2, 2)
+    const bulb = new THREE.PointLight(0xffe2bd, 0, 8.5, 2)
     bulb.position.set(0, ROOM.h - 1.15, z - 0.35)
     scene.add(bulb)
     const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(0.06, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0xffe6c8 })
+      new THREE.SphereGeometry(0.07, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0xffe6c8, transparent: true, opacity: 0 })
     )
     glow.position.copy(bulb.position)
     scene.add(glow)
+    pendants.push({ light: bulb, glow, on: 2.4 })
   })
 
   for (let i = 0; i < 8; i += 1) {
+    const x = -2.8 + (i % 4) * 1.8
+    const z = -3.5 + Math.floor(i / 4) * 4.2
     const can = addShadow(
       new THREE.Mesh(
         new THREE.CylinderGeometry(0.07, 0.09, 0.14, 16),
@@ -543,9 +551,24 @@ function buildRoom(scene, tex) {
       true,
       false
     )
-    can.position.set(-2.8 + (i % 4) * 1.8, ROOM.h - 0.08, -3.5 + Math.floor(i / 4) * 4.2)
+    can.position.set(x, ROOM.h - 0.08, z)
     scene.add(can)
+    const spot = new THREE.SpotLight(0xfff0dd, 0, 12, Math.PI / 5, 0.45, 1.4)
+    spot.position.set(x, ROOM.h - 0.12, z)
+    spot.target.position.set(x, 0, z)
+    scene.add(spot)
+    scene.add(spot.target)
+    const glow = new THREE.Mesh(
+      new THREE.CircleGeometry(0.05, 16),
+      new THREE.MeshBasicMaterial({ color: 0xffe8c4, transparent: true, opacity: 0 })
+    )
+    glow.rotation.x = Math.PI / 2
+    glow.position.set(x, ROOM.h - 0.16, z)
+    scene.add(glow)
+    cans.push({ light: spot, glow, on: 1.8 })
   }
+
+  return { pendants, cans }
 }
 
 /**
@@ -592,7 +615,8 @@ export function mountMeetingRoom3D(host) {
   controls.maxAzimuthAngle = 0.45
   controls.target.set(0, 1.1, -0.8)
 
-  scene.add(new THREE.AmbientLight(0xf4f7fb, 0.28))
+  const ambient = new THREE.AmbientLight(0xf4f7fb, 0.28)
+  scene.add(ambient)
   const hemi = new THREE.HemisphereLight(0xeaf3ff, 0xb8b0a2, 0.7)
   scene.add(hemi)
   const sun = new THREE.DirectionalLight(0xfff1dc, 2.45)
@@ -616,7 +640,7 @@ export function mountMeetingRoom3D(host) {
   scene.add(bounce)
 
   const textures = createTextures()
-  buildRoom(scene, textures)
+  const { pendants, cans } = buildRoom(scene, textures)
   const person = makePerson()
   scene.add(person)
 
@@ -624,6 +648,27 @@ export function mountMeetingRoom3D(host) {
   let raf = 0
   let disposed = false
   let enter = null
+  let lightsOn = false
+
+  const applyLights = (on) => {
+    lightsOn = on
+    pendants.forEach((item) => {
+      item.light.intensity = on ? item.on : 0
+      item.glow.material.opacity = on ? 1 : 0
+    })
+    cans.forEach((item) => {
+      item.light.intensity = on ? item.on : 0
+      item.glow.material.opacity = on ? 0.95 : 0
+    })
+    // 关灯：只留窗外余光；开灯：吊灯+筒灯全亮
+    ambient.intensity = on ? 0.42 : 0.12
+    hemi.intensity = on ? 0.48 : 0.28
+    sun.intensity = on ? 1.05 : 0.55
+    fill.intensity = on ? 0.4 : 0.12
+    bounce.intensity = on ? 0.55 : 0.06
+    renderer.toneMappingExposure = on ? 1.32 : 0.78
+  }
+  applyLights(false)
 
   const resize = () => {
     const w = host.clientWidth || 640
@@ -699,6 +744,15 @@ export function mountMeetingRoom3D(host) {
     host,
     canvas,
     projectPin,
+    isLightsOn: () => lightsOn,
+    setLightsOn(on) {
+      applyLights(Boolean(on))
+      return lightsOn
+    },
+    toggleLights() {
+      applyLights(!lightsOn)
+      return lightsOn
+    },
     playEnter() {
       person.visible = true
       person.position.set(0.2, 0, 5.4)
@@ -751,6 +805,8 @@ export function syncStoryPinsTo3D(root, roomApi) {
     人员进入: 0,
     环境已更新: 1,
     照明开启: 3,
+    灯全亮: 3,
+    灯全关: 3,
     空调舒适模式: '3b',
     信息屏更新: '3c',
     执行成功: 4,

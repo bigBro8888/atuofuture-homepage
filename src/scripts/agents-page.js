@@ -117,6 +117,11 @@ async function ensureMeetingRoom3D(root, state) {
   }
   state.room3d?.setActive(true)
   applyStorySceneMode(root, 'space')
+  const lightPin = root.querySelector('[data-ag-pin-cue="lights"]')
+  if (lightPin && state.room3d?.isLightsOn) {
+    lightPin.textContent = state.room3d.isLightsOn() ? '灯全关' : '灯全亮'
+    lightPin.setAttribute('aria-label', lightPin.textContent)
+  }
   return state.room3d
 }
 
@@ -187,7 +192,7 @@ function bindInteractions(root, state) {
   if (!reduce) window.setInterval(tick, 2200)
 
   bindStoryPins(root, {
-    onPinActivate: ({ step: pinStep, cue }) => {
+    onPinActivate: ({ step: pinStep, cue, pin }) => {
       pauseAutoUntil = Date.now() + 5600
       step = Math.max(0, pinSteps().indexOf(pinStep))
       syncStoryFlowStep(root, pinStep)
@@ -195,10 +200,19 @@ function bindInteractions(root, state) {
         void ensureMeetingRoom3D(root, state).then((room) => {
           playStoryEnterCue(root, room)
         })
-      } else {
-        resetStoryEnterCue(root)
-        state.room3d?.resetPerson()
+        return
       }
+      if (cue === 'lights') {
+        void ensureMeetingRoom3D(root, state).then((room) => {
+          if (!room?.toggleLights) return
+          const on = room.toggleLights()
+          pin.textContent = on ? '灯全关' : '灯全亮'
+          pin.setAttribute('aria-label', pin.textContent)
+        })
+        return
+      }
+      resetStoryEnterCue(root)
+      state.room3d?.resetPerson()
     },
   })
 }
