@@ -524,6 +524,7 @@ function renderAgentCompose(rawItem) {
             <label class="admin-news-field is-wide" data-agents-detail-image-url-wrap>
               <span data-agents-detail-url-label>图片链接</span>
               <input type="text" data-agents-detail-image-url placeholder="/images/... 或 https://..." />
+              <small data-agents-detail-url-hint>视频请用可直接播放的地址（建议 .mp4），或点下方「上传本地视频」。淘宝云点播/分享页链接无法直接播放。</small>
             </label>
             <label class="admin-news-field is-wide" data-agents-detail-poster-wrap hidden>
               <span>视频封面图（可选）</span>
@@ -608,9 +609,23 @@ function setAgentsDetailMediaType(modal, type) {
   if (imageUpload) imageUpload.hidden = false
   if (urlLabel) urlLabel.textContent = next === 'video' ? '视频链接' : '图片链接'
   if (uploadLabel) uploadLabel.textContent = next === 'video' ? '上传封面图（可选）' : '上传本地图片'
+  const urlHint = modal.querySelector('[data-agents-detail-url-hint]')
+  if (urlHint) urlHint.hidden = next !== 'video'
   if (urlInput) {
-    urlInput.placeholder = next === 'video' ? '/videos/... 或 https://....mp4' : '/images/... 或 https://...'
+    urlInput.placeholder = next === 'video' ? 'https://.../xxx.mp4 或点击下方上传本地视频' : '/images/... 或 https://...'
   }
+}
+
+function looksLikeDirectVideoUrl(url = '') {
+  const value = String(url || '').trim()
+  if (!value) return false
+  if (/^(\/|blob:|data:)/i.test(value)) return true
+  if (/\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(value)) return true
+  // 点播页 / 分享页不能直接塞进 <video>
+  if (/cloud\.video\.taobao\.com|youku\.com|v\.qq\.com|bilibili\.com|iqiyi\.com|douyin\.com/i.test(value)) {
+    return false
+  }
+  return /^https?:\/\//i.test(value)
 }
 
 function setAgentsDetailImagePreview(modal, url, type = 'image') {
@@ -623,8 +638,10 @@ function setAgentsDetailImagePreview(modal, url, type = 'image') {
     preview.removeAttribute('src')
   }
   if (videoPreview) {
+    videoPreview.onerror = null
     videoPreview.hidden = true
     videoPreview.removeAttribute('src')
+    videoPreview.load?.()
   }
   if (!safeUrl) {
     if (empty) empty.hidden = false
@@ -632,14 +649,30 @@ function setAgentsDetailImagePreview(modal, url, type = 'image') {
   }
   if (empty) empty.hidden = true
   if (type === 'video' && videoPreview) {
+    if (!looksLikeDirectVideoUrl(safeUrl)) {
+      if (empty) {
+        empty.hidden = false
+        empty.textContent = '该链接不是可直接播放的视频文件，请上传本地 mp4，或填写以 .mp4 结尾的地址'
+      }
+      return
+    }
+    videoPreview.onerror = () => {
+      if (empty) {
+        empty.hidden = false
+        empty.textContent = '视频无法预览（可能被跨域拦截）。仍可点确定保存；建议改用本地上传 mp4'
+      }
+      videoPreview.hidden = true
+    }
     videoPreview.src = safeUrl
     videoPreview.hidden = false
+    videoPreview.load?.()
     return
   }
   if (preview) {
     preview.src = safeUrl
     preview.hidden = false
   }
+  if (empty) empty.textContent = '暂无预览'
 }
 
 function applyAgentsDetailHeroMedia(compose, { imageUrl = '', videoUrl = '' } = {}) {
@@ -914,6 +947,10 @@ function bindKind(kind) {
         const poster = modal?.querySelector('[data-agents-detail-poster-url]')?.value.trim() || ''
         if (isHero) {
           if (mediaType === 'video') {
+            if (url && !looksLikeDirectVideoUrl(url)) {
+              ctx.toast('请上传本地 mp4，或填写可直接播放的视频地址（需含 .mp4）。淘宝云点播/分享页链接无法直接播放。', true)
+              return
+            }
             applyAgentsDetailHeroMedia(compose, { imageUrl: poster, videoUrl: url })
           } else {
             applyAgentsDetailHeroMedia(compose, { imageUrl: url, videoUrl: '' })
@@ -1026,6 +1063,15 @@ function bindKind(kind) {
     }
   })
   compose.addEventListener('input', (event) => {
+    if (kind === 'agents') {
+      const modal = compose.querySelector('[data-agents-detail-image-modal]')
+      const urlInput = event.target.closest('[data-agents-detail-image-url]')
+      if (modal && !modal.hidden && urlInput) {
+        const mediaType = modal.dataset.mediaType || 'image'
+        setAgentsDetailImagePreview(modal, urlInput.value.trim(), mediaType)
+        return
+      }
+    }
     const el = event.target.closest(`[data-${kind}-field]`)
     if (!el) return
     const path = el.getAttribute(`data-${kind}-field`)
