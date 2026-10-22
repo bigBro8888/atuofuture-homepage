@@ -104,6 +104,19 @@ const STORY_AGENT_ID = 'space'
 async function ensureMeetingRoom3D(root, state) {
   const host = root.querySelector('[data-ag-scene-3d]')
   if (!host) return null
+  const syncPinLabel = (cue, onText, offText, isOn) => {
+    const el = root.querySelector(`[data-ag-pin-cue="${cue}"]`)
+    if (!el) return
+    el.textContent = isOn ? onText : offText
+    el.setAttribute('aria-label', el.textContent)
+  }
+  const syncDevicePins = (api) => {
+    if (!api) return
+    syncPinLabel('lights', '灯全关', '灯全亮', api.isLightsOn?.())
+    syncPinLabel('screen', '信息屏关闭', '信息屏更新', api.isScreenOn?.())
+    syncPinLabel('ac', '停止送风', '空调舒适模式', api.isAcOn?.())
+    syncPinLabel('env', '窗帘关闭', '窗帘打开', api.isEnvOn?.())
+  }
   if (!state.room3d) {
     const { mountMeetingRoom3D, syncStoryPinsTo3D } = await import('../components/agents/meeting-room-3d.js')
     state.room3d = mountMeetingRoom3D(host)
@@ -111,23 +124,13 @@ async function ensureMeetingRoom3D(root, state) {
       state.room3d.onStats?.((stats) => syncTwinStats(root, stats))
       state.room3d._onFrame = (api) => {
         syncStoryPinsTo3D(root, api)
+        syncDevicePins(api)
       }
     }
   }
   state.room3d?.setActive(true)
   applyStorySceneMode(root, STORY_AGENT_ID)
-  const syncPinLabel = (cue, onText, offText, isOn) => {
-    const el = root.querySelector(`[data-ag-pin-cue="${cue}"]`)
-    if (!el) return
-    el.textContent = isOn ? onText : offText
-    el.setAttribute('aria-label', el.textContent)
-  }
-  if (state.room3d) {
-    syncPinLabel('lights', '灯全关', '灯全亮', state.room3d.isLightsOn?.())
-    syncPinLabel('screen', '信息屏关闭', '信息屏更新', state.room3d.isScreenOn?.())
-    syncPinLabel('ac', '停止送风', '空调舒适模式', state.room3d.isAcOn?.())
-    syncPinLabel('env', '恢复环境', '环境已更新', state.room3d.isEnvOn?.())
-  }
+  syncDevicePins(state.room3d)
   return state.room3d
 }
 
@@ -222,14 +225,7 @@ function bindInteractions(root, state) {
             pin.textContent = on ? '停止送风' : '空调舒适模式'
           } else if (cue === 'env' && room.toggleEnv) {
             const on = room.toggleEnv()
-            pin.textContent = on ? '恢复环境' : '环境已更新'
-            const lightPin = root.querySelector('[data-ag-pin-cue="lights"]')
-            if (lightPin && room.isLightsOn) {
-              // 半亮时灯光按钮仍显示「灯全亮」，避免语义冲突
-              if (room.getLightLevel?.() >= 0.99) lightPin.textContent = '灯全关'
-              else lightPin.textContent = '灯全亮'
-              lightPin.setAttribute('aria-label', lightPin.textContent)
-            }
+            pin.textContent = on ? '窗帘关闭' : '窗帘打开'
           }
           pin.setAttribute('aria-label', pin.textContent)
         })

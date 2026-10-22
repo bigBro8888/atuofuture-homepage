@@ -30,34 +30,6 @@ function pushOutOfTable(pos) {
   return pos
 }
 
-/** 门口进出、沿桌侧环绕的闭环路径（绝不切穿桌面） */
-function makeTableOrbitPath(index) {
-  const side = index % 2 === 0 ? -1 : 1
-  const lane = 2.05 + (index % 2) * 0.22 + Math.floor(index / 2) * 0.08
-  const x = side * lane
-  const ox = -side * lane
-  const doorX = side * (0.25 + index * 0.12)
-  return [
-    new THREE.Vector3(doorX, 0, 5.55),
-    new THREE.Vector3(side * 0.95, 0, 3.4),
-    new THREE.Vector3(x, 0, 2.25),
-    new THREE.Vector3(x, 0, 0.4),
-    new THREE.Vector3(x, 0, -1.4),
-    new THREE.Vector3(x, 0, -2.8),
-    new THREE.Vector3(x, 0, -3.2),
-    new THREE.Vector3(side * 0.4, 0, -3.2),
-    new THREE.Vector3(-side * 0.4, 0, -3.2),
-    new THREE.Vector3(ox, 0, -3.2),
-    new THREE.Vector3(ox, 0, -2.6),
-    new THREE.Vector3(ox, 0, -0.7),
-    new THREE.Vector3(ox, 0, 1.15),
-    new THREE.Vector3(ox, 0, 2.3),
-    new THREE.Vector3(-side * 0.55, 0, 2.95),
-    new THREE.Vector3(doorX * 0.35, 0, 3.95),
-    new THREE.Vector3(doorX * 0.15, 0, 5.6),
-  ]
-}
-
 function makeCanvasTexture(draw, size = 512) {
   const canvas = document.createElement('canvas')
   canvas.width = size
@@ -920,29 +892,15 @@ export function mountMeetingRoom3D(host) {
 
   const textures = createTextures()
   const { pendants, cans, airflow, curtains, screen } = buildRoom(scene, textures)
-  const person = makePerson()
+  const person = makePerson({ coatColor: 0x1d4f9c, visible: false })
   scene.add(person)
 
   const radar = makeCeilingRadar()
   scene.add(radar)
 
-  const coatPalette = [0x1d4f9c, 0x2f6b4f, 0x8b3d4a, 0x3d4a6b]
-  const npcs = coatPalette.map((color, index) => {
-    const npc = makePerson({ coatColor: color, visible: false })
-    scene.add(npc)
-    return {
-      mesh: npc,
-      progress: index / coatPalette.length,
-      speed: 0.038 + index * 0.007,
-      inRoom: false,
-      path: makeTableOrbitPath(index),
-    }
-  })
-
   const clock = new THREE.Clock()
   let raf = 0
   let disposed = false
-  let enter = null
   /** @type {0 | 0.5 | 1} */
   let lightLevel = 0
   let screenOn = false
@@ -958,6 +916,15 @@ export function mountMeetingRoom3D(host) {
   let statsListener = null
   let statsEmitTick = 0
   let lastStatsKey = ''
+  let demoActive = true
+  /** @type {'enter' | 'stay' | 'exit' | 'wait'} */
+  let demoPhase = 'wait'
+  let demoPhaseAt = 0
+  let devicesOn = false
+
+  const DOOR = new THREE.Vector3(0.2, 0, 5.55)
+  const AISLE = new THREE.Vector3(-2.05, 0, 2.35)
+  const STAND = new THREE.Vector3(-2.15, 0, 0.15)
 
   const applyLights = (level) => {
     const next = level === true ? 1 : level === false ? 0 : level
@@ -992,6 +959,37 @@ export function mountMeetingRoom3D(host) {
       points.visible = on
       points.material.opacity = on ? 0.55 : 0
     })
+  }
+
+  const applyPresence = (occupied) => {
+    if (devicesOn === occupied) return
+    devicesOn = occupied
+    if (occupied) {
+      applyLights(1)
+      applyScreen(true)
+      applyAc(true)
+      envOn = true
+      curtainTarget = 0.98
+    } else {
+      applyLights(0)
+      applyScreen(false)
+      applyAc(false)
+      envOn = false
+      curtainTarget = 0.04
+    }
+  }
+
+  const setDemoPhase = (phase) => {
+    demoPhase = phase
+    demoPhaseAt = performance.now()
+  }
+
+  const startEnterCycle = () => {
+    person.visible = true
+    person.position.copy(DOOR)
+    person.rotation.y = Math.PI
+    applyPresence(false)
+    setDemoPhase('enter')
   }
 
   const resize = () => {
@@ -1037,55 +1035,82 @@ export function mountMeetingRoom3D(host) {
     target.position.y = 0
   }
 
-  const tickEnter = (now) => {
-    if (!enter) return
-    const u = Math.min(1, (now - enter.startedAt) / enter.duration)
-    const ease = 1 - (1 - u) ** 3
-    if (u < 0.42) {
-      const p = ease / 0.42
-      person.position.lerpVectors(enter.from, enter.mid, p)
-      person.rotation.y = Math.PI
-      setPersonPose(person, now * 0.001, true)
-    } else if (u < 0.7) {
-      const p = (u - 0.42) / 0.28
-      person.position.lerpVectors(enter.mid, enter.look, p)
-      person.rotation.y = Math.PI + Math.sin(p * Math.PI * 2) * 0.55
-      setPersonPose(person, now * 0.001, false)
-    } else {
-      const p = (u - 0.7) / 0.3
-      person.position.lerpVectors(enter.look, enter.window, p)
-      person.rotation.y = Math.PI * 0.5 + (1 - p) * 0.35
-      setPersonPose(person, now * 0.001, p < 0.85)
-      if (u >= 1) enter = null
+  const tickDemo = (now) => {
+    if (!demoActive) {
+      peopleCount = 0
+      return
     }
-    pushOutOfTable(person.position)
-  }
 
-  const tickNpcs = (dt, now) => {
-    let inside = 0
-    npcs.forEach((npc, index) => {
-      npc.progress = (npc.progress + dt * npc.speed) % 1
-      const segs = npc.path.length - 1
-      const f = npc.progress * segs
-      const i = Math.min(segs - 1, Math.floor(f))
-      const local = f - i
-      const from = npc.path[i]
-      const to = npc.path[i + 1]
-      npc.mesh.visible = true
-      npc.mesh.position.lerpVectors(from, to, local)
-      pushOutOfTable(npc.mesh.position)
-      const dx = to.x - from.x
-      const dz = to.z - from.z
-      if (Math.abs(dx) + Math.abs(dz) > 0.001) npc.mesh.rotation.y = Math.atan2(dx, dz)
-      setPersonPose(npc.mesh, now * 0.001 + index, true)
-      const inZ = npc.mesh.position.z < 4.2 && npc.mesh.position.z > -3.4
-      const inX = Math.abs(npc.mesh.position.x) < 3.6
-      npc.inRoom = inZ && inX
-      if (npc.inRoom) inside += 1
-    })
-    if (person.visible && !enter) inside += 1
-    if (enter) inside += 1
-    peopleCount = inside
+    const elapsed = now - demoPhaseAt
+
+    if (demoPhase === 'wait') {
+      person.visible = false
+      peopleCount = 0
+      applyPresence(false)
+      if (elapsed >= 1800) startEnterCycle()
+      return
+    }
+
+    person.visible = true
+
+    if (demoPhase === 'enter') {
+      const dur = 4800
+      const u = Math.min(1, elapsed / dur)
+      if (u < 0.55) {
+        const p = u / 0.55
+        person.position.lerpVectors(DOOR, AISLE, p)
+        person.rotation.y = Math.PI
+        setPersonPose(person, now * 0.001, true)
+      } else {
+        const p = (u - 0.55) / 0.45
+        person.position.lerpVectors(AISLE, STAND, p)
+        person.rotation.y = Math.PI + p * 0.45
+        setPersonPose(person, now * 0.001, p < 0.92)
+      }
+      pushOutOfTable(person.position)
+      const inside = person.position.z < 4.0
+      peopleCount = inside ? 1 : 0
+      if (inside) applyPresence(true)
+      if (u >= 1) setDemoPhase('stay')
+      return
+    }
+
+    if (demoPhase === 'stay') {
+      person.position.copy(STAND)
+      pushOutOfTable(person.position)
+      person.rotation.y = Math.PI * 0.55 + Math.sin(elapsed * 0.0016) * 0.25
+      setPersonPose(person, now * 0.001, false)
+      peopleCount = 1
+      applyPresence(true)
+      if (elapsed >= 3200) setDemoPhase('exit')
+      return
+    }
+
+    if (demoPhase === 'exit') {
+      const dur = 4600
+      const u = Math.min(1, elapsed / dur)
+      if (u < 0.45) {
+        const p = u / 0.45
+        person.position.lerpVectors(STAND, AISLE, p)
+        person.rotation.y = 0
+        setPersonPose(person, now * 0.001, true)
+      } else {
+        const p = (u - 0.45) / 0.55
+        person.position.lerpVectors(AISLE, DOOR, p)
+        person.rotation.y = 0
+        setPersonPose(person, now * 0.001, true)
+      }
+      pushOutOfTable(person.position)
+      const inside = person.position.z < 4.2
+      peopleCount = inside ? 1 : 0
+      if (!inside) applyPresence(false)
+      if (u >= 1) {
+        person.visible = false
+        peopleCount = 0
+        applyPresence(false)
+        setDemoPhase('wait')
+      }
+    }
   }
 
   const tickRadar = (now) => {
@@ -1119,7 +1144,7 @@ export function mountMeetingRoom3D(host) {
     weather,
     ac: acOn ? '舒适送风' : '待机',
     screen: screenOn ? '会议中' : '关闭',
-    curtain: envOn ? '半开 50%' : '全开',
+    curtain: envOn ? '已关闭' : '全开',
     radar: peopleCount > 0 ? '感应中' : '空闲',
     lightLevel,
   })
@@ -1157,8 +1182,7 @@ export function mountMeetingRoom3D(host) {
     raf = requestAnimationFrame(loop)
     const now = performance.now()
     const dt = Math.min(0.05, clock.getDelta())
-    tickEnter(now)
-    tickNpcs(dt, now)
+    tickDemo(now)
     tickRadar(now)
     tickAirflow(dt)
     tickCurtains(dt)
@@ -1167,7 +1191,6 @@ export function mountMeetingRoom3D(host) {
       weatherTick = 0
       weather = weatherOptions[Math.floor(Math.random() * weatherOptions.length)]
     }
-    if (!enter && person.visible) setPersonPose(person, clock.elapsedTime, false)
     controls.update()
     renderer.render(scene, camera)
     statsEmitTick += dt
@@ -1224,32 +1247,30 @@ export function mountMeetingRoom3D(host) {
     toggleEnv() {
       const next = !envOn
       envOn = next
-      curtainTarget = next ? 0.5 : 0.04
-      applyLights(next ? 0.5 : 0)
+      curtainTarget = next ? 0.98 : 0.04
       return envOn
     },
     playEnter() {
-      person.visible = true
-      person.position.set(0.2, 0, 5.4)
-      person.rotation.y = Math.PI
-      enter = {
-        startedAt: performance.now(),
-        duration: 5200,
-        from: new THREE.Vector3(0.2, 0, 5.4),
-        mid: new THREE.Vector3(-2.05, 0, 2.35),
-        look: new THREE.Vector3(-2.15, 0, 0.15),
-        window: new THREE.Vector3(-2.55, 0, 0.85),
-      }
+      demoActive = true
+      startEnterCycle()
     },
     resetPerson() {
-      enter = null
+      demoActive = false
       person.visible = false
+      peopleCount = 0
+      applyPresence(false)
+      setDemoPhase('wait')
     },
     setActive(active) {
       canvas.style.pointerEvents = active ? 'auto' : 'none'
+      demoActive = !!active
       if (!active) {
-        enter = null
         person.visible = false
+        peopleCount = 0
+        applyPresence(false)
+        setDemoPhase('wait')
+      } else if (demoPhase === 'wait' && !person.visible) {
+        startEnterCycle()
       }
     },
     dispose() {
