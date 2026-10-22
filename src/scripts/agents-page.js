@@ -16,6 +16,9 @@ import {
   renderAgentTaskStory,
   syncAgentTaskStory,
   syncStoryFlowStep,
+  bindStoryPins,
+  playStoryEnterCue,
+  resetStoryEnterCue,
 } from '../components/agents/task-story.js'
 import {
   renderIndustryAgentComposition,
@@ -141,9 +144,10 @@ function bindInteractions(root, state) {
 
   bindIndustryPinHover(root)
 
-  // workflow + scene pin sync
   let step = 0
+  let pauseAutoUntil = 0
   const tick = () => {
+    if (Date.now() < pauseAutoUntil) return
     const items = root.querySelectorAll('[data-ag-flow-step]')
     if (!items.length) return
     syncStoryFlowStep(root, step % items.length)
@@ -151,6 +155,16 @@ function bindInteractions(root, state) {
   }
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   if (!reduce) window.setInterval(tick, 2200)
+
+  bindStoryPins(root, {
+    onPinActivate: ({ step: pinStep, cue }) => {
+      pauseAutoUntil = Date.now() + 5200
+      step = pinStep
+      syncStoryFlowStep(root, pinStep)
+      if (cue === 'enter') playStoryEnterCue(root)
+      else resetStoryEnterCue(root)
+    },
+  })
 }
 
 let cmsHero = null

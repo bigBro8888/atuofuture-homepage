@@ -15640,6 +15640,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   position: absolute;
   inset: 0;
   pointer-events: none;
+  z-index: 3;
 }
 .ag-story__pin {
   position: absolute;
@@ -15653,8 +15654,19 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   font-size: 12px;
   font-weight: 600;
   line-height: 1.35;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
   opacity: .62;
-  transition: opacity .25s ease, background .25s ease, box-shadow .25s ease, border-color .25s ease;
+  transition: opacity .25s ease, background .25s ease, box-shadow .25s ease, border-color .25s ease, transform .2s ease;
+}
+.ag-story__pin:hover,
+.ag-story__pin:focus-visible {
+  opacity: 1;
+  outline: none;
+  border-color: rgba(0, 216, 192, .4);
+  transform: translate(-50%, -50%) scale(1.04);
 }
 .ag-story__pin.is-active {
   opacity: 1;
@@ -15672,6 +15684,113 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   border-radius: 50%;
   background: var(--agents-cyan);
   vertical-align: middle;
+}
+
+.ag-story__actor {
+  position: absolute;
+  left: 44%;
+  top: 96%;
+  z-index: 2;
+  width: 72px;
+  height: 136px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -92%) scale(0.92);
+  transform-origin: 50% 100%;
+  transition:
+    left 1.45s cubic-bezier(0.22, 1, 0.36, 1),
+    top 1.45s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease,
+    transform 1.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ag-story__actor.is-visible {
+  opacity: 1;
+}
+.ag-story__actor.is-entering {
+  left: 34%;
+  top: 70%;
+  transform: translate(-50%, -92%) scale(0.78);
+}
+.ag-story__actor.is-entering .ag-story__actor-figure {
+  animation: agActorWalk 0.55s ease-in-out infinite;
+}
+.ag-story__actor.is-entering .ag-story__actor-leg--l {
+  animation: agActorLegL 0.55s ease-in-out infinite;
+}
+.ag-story__actor.is-entering .ag-story__actor-leg--r {
+  animation: agActorLegR 0.55s ease-in-out infinite;
+}
+.ag-story__actor.is-entering .ag-story__actor-arm--l,
+.ag-story__actor.is-entering .ag-story__actor-arm--r {
+  animation: agActorArm 0.55s ease-in-out infinite;
+}
+.ag-story__actor.is-entering .ag-story__actor-arm--r {
+  animation-delay: -0.275s;
+}
+.ag-story__actor.is-looking-room {
+  left: 38%;
+  top: 64%;
+  transform: translate(-50%, -92%) scale(0.72) rotate(0deg);
+}
+.ag-story__actor.is-looking-room .ag-story__actor-figure {
+  animation: agActorLookAround 1.4s ease-in-out both;
+}
+.ag-story__actor.is-at-window {
+  left: 18%;
+  top: 58%;
+  transform: translate(-50%, -92%) scale(0.68) scaleX(-1);
+}
+.ag-story__actor.is-at-window .ag-story__actor-figure {
+  animation: agActorGaze 2.4s ease-in-out infinite;
+}
+.ag-story__actor-figure {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 85%;
+  filter: drop-shadow(0 10px 14px rgba(7, 26, 51, 0.28));
+}
+.ag-story__actor-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.ag-story__actor-leg--l,
+.ag-story__actor-leg--r {
+  transform-box: fill-box;
+  transform-origin: center top;
+}
+.ag-story__actor-arm--l,
+.ag-story__actor-arm--r {
+  transform-box: fill-box;
+  transform-origin: center top;
+}
+@keyframes agActorWalk {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes agActorLegL {
+  0%, 100% { transform: rotate(14deg); }
+  50% { transform: rotate(-16deg); }
+}
+@keyframes agActorLegR {
+  0%, 100% { transform: rotate(-14deg); }
+  50% { transform: rotate(16deg); }
+}
+@keyframes agActorArm {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(12deg); }
+}
+@keyframes agActorLookAround {
+  0% { transform: rotate(0deg); }
+  28% { transform: rotate(12deg); }
+  58% { transform: rotate(-10deg); }
+  100% { transform: rotate(4deg); }
+}
+@keyframes agActorGaze {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-2px) rotate(2deg); }
 }
 .ag-story__chip {
   display: none;
@@ -16050,7 +16169,13 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   .ag-story__aside,
   .ag-story__scene,
   .ag-ind__panel,
-  .ag-story__flow li.is-active .ag-story__flow-icon {
+  .ag-story__flow li.is-active .ag-story__flow-icon,
+  .ag-story__actor,
+  .ag-story__actor-figure,
+  .ag-story__actor-leg--l,
+  .ag-story__actor-leg--r,
+  .ag-story__actor-arm--l,
+  .ag-story__actor-arm--r {
     animation: none !important;
     transition: none !important;
   }

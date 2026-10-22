@@ -1,7 +1,7 @@
 /** 空间智能体总览：八大智能体与行业协同配置 */
 
 /**
- * @typedef {{ label: string, x: number, y: number, step: number }} AgentSceneNode
+ * @typedef {{ label: string, x: number, y: number, step: number, cue?: 'enter' }} AgentSceneNode
  * @typedef {{
  *   id: string,
  *   aliases?: string[],
@@ -60,7 +60,7 @@ export const AGENTS_OVERVIEW = [
     workflow: ['人员进入或环境异常', '读取现场状态', '识别当前场景', '调用系统与设备', '回读执行结果'],
     sceneImage: '/images/agents/space.jpg',
     sceneNodes: [
-      { label: '人员进入', x: 18, y: 62, step: 0 },
+      { label: '人员进入', x: 18, y: 62, step: 0, cue: 'enter' },
       { label: '环境已更新', x: 42, y: 22, step: 1 },
       { label: '照明开启', x: 68, y: 28, step: 3 },
       { label: '空调舒适模式', x: 78, y: 48, step: 3 },

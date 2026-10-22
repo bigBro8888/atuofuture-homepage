@@ -13,15 +13,53 @@ function stepIcon(i) {
   return names[i] || 'circle'
 }
 
+/** 场景演示人物：走进来 → 环顾会议室 → 望向窗外 */
+function actorMarkup() {
+  return `
+    <div class="ag-story__actor" data-ag-actor aria-hidden="true">
+      <div class="ag-story__actor-figure">
+        <svg class="ag-story__actor-svg" viewBox="0 0 64 120" width="64" height="120" focusable="false">
+          <ellipse class="ag-story__actor-shadow" cx="32" cy="112" rx="18" ry="5" fill="rgba(7,26,51,.28)"/>
+          <g class="ag-story__actor-body">
+            <circle cx="32" cy="16" r="11" fill="#f0d5c0"/>
+            <path d="M22 18c1.2 4 5 6.5 10 6.5s8.8-2.5 10-6.5" fill="none" stroke="#c9a48a" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>
+            <path d="M21 10c3-6 19-6 22 0-2 5-6.5 8-11 8s-9-3-11-8z" fill="#2c3344"/>
+            <path d="M20 28c2.5-2 8-3.5 12-3.5s9.5 1.5 12 3.5l4 22c-5 3-9 4.5-16 4.5s-11-1.5-16-4.5l4-22z" fill="#1d4f9c"/>
+            <path d="M24 50.5c2.2 1.4 5.2 2.2 8 2.2s5.8-.8 8-2.2l1.2 18.5H22.8L24 50.5z" fill="#163f7d"/>
+            <g class="ag-story__actor-arm ag-story__actor-arm--l">
+              <path d="M20 30c-5 6-7 14-6.5 20" fill="none" stroke="#1d4f9c" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="14" cy="51" r="3.2" fill="#f0d5c0"/>
+            </g>
+            <g class="ag-story__actor-arm ag-story__actor-arm--r">
+              <path d="M44 30c5 6 7 14 6.5 20" fill="none" stroke="#1d4f9c" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="50" cy="51" r="3.2" fill="#f0d5c0"/>
+            </g>
+            <g class="ag-story__actor-leg ag-story__actor-leg--l">
+              <path d="M26 68v28" fill="none" stroke="#243044" stroke-width="7" stroke-linecap="round"/>
+              <path d="M22 97h10" fill="none" stroke="#1a2030" stroke-width="4" stroke-linecap="round"/>
+            </g>
+            <g class="ag-story__actor-leg ag-story__actor-leg--r">
+              <path d="M38 68v28" fill="none" stroke="#2a364c" stroke-width="7" stroke-linecap="round"/>
+              <path d="M34 97h10" fill="none" stroke="#1a2030" stroke-width="4" stroke-linecap="round"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>`
+}
+
 function sceneNodesMarkup(nodes, activeStep = 0) {
   return (nodes || [])
     .map(
       (n) => `
-    <span
+    <button
+      type="button"
       class="ag-story__pin${n.step === activeStep ? ' is-active' : ''}"
       style="left:${n.x}%;top:${n.y}%"
       data-ag-pin-step="${n.step}"
-    >${esc(n.label)}</span>`
+      ${n.cue ? `data-ag-pin-cue="${esc(n.cue)}"` : ''}
+      aria-label="${esc(n.label)}"
+    >${esc(n.label)}</button>`
     )
     .join('')
 }
@@ -67,6 +105,7 @@ export function renderAgentTaskStory({ selectedId }) {
               loading="lazy"
               data-ag-scene-img
             />
+            ${actorMarkup()}
             <div class="ag-story__pins" data-ag-pins>
               ${sceneNodesMarkup(selected.sceneNodes, 0)}
             </div>
@@ -120,6 +159,7 @@ export function renderAgentTaskStory({ selectedId }) {
 }
 
 export function syncAgentTaskStory(root, selectedId) {
+  resetStoryEnterCue(root)
   const selected = AGENTS_OVERVIEW.find((a) => a.id === selectedId) || AGENTS_OVERVIEW[0]
   const stage = root.querySelector('[data-ag-story-stage]')
   const aside = root.querySelector('[data-ag-aside]')
@@ -186,5 +226,65 @@ export function syncStoryFlowStep(root, stepIndex) {
   })
   root.querySelectorAll('[data-ag-pin-step]').forEach((el) => {
     el.classList.toggle('is-active', Number(el.dataset.agPinStep) === stepIndex)
+  })
+}
+
+const enterTimers = new WeakMap()
+
+function clearEnterTimers(root) {
+  const timers = enterTimers.get(root)
+  if (!timers) return
+  timers.forEach((id) => window.clearTimeout(id))
+  enterTimers.delete(root)
+}
+
+export function resetStoryEnterCue(root) {
+  clearEnterTimers(root)
+  const actor = root.querySelector('[data-ag-actor]')
+  if (!actor) return
+  actor.className = 'ag-story__actor'
+  actor.setAttribute('aria-hidden', 'true')
+}
+
+/**
+ * 人员进入：从门口走进来 → 环顾会议室 → 望向左侧窗外
+ */
+export function playStoryEnterCue(root) {
+  const actor = root.querySelector('[data-ag-actor]')
+  if (!actor) return
+  clearEnterTimers(root)
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  actor.setAttribute('aria-hidden', 'false')
+  if (reduce) {
+    actor.className = 'ag-story__actor is-visible is-at-window'
+    return
+  }
+
+  actor.className = 'ag-story__actor'
+  void actor.offsetWidth
+  actor.className = 'ag-story__actor is-visible is-entering'
+  const timers = [
+    window.setTimeout(() => {
+      actor.classList.remove('is-entering')
+      actor.classList.add('is-looking-room')
+    }, 1600),
+    window.setTimeout(() => {
+      actor.classList.remove('is-looking-room')
+      actor.classList.add('is-at-window')
+    }, 3200),
+  ]
+  enterTimers.set(root, timers)
+}
+
+export function bindStoryPins(root, { onPinActivate } = {}) {
+  const pins = root.querySelector('[data-ag-pins]')
+  if (!pins || pins.dataset.bound === '1') return
+  pins.dataset.bound = '1'
+  pins.addEventListener('click', (event) => {
+    const pin = event.target.closest('[data-ag-pin-step]')
+    if (!pin || !pins.contains(pin)) return
+    const step = Number(pin.dataset.agPinStep)
+    const cue = pin.dataset.agPinCue || ''
+    onPinActivate?.({ step, cue, pin })
   })
 }
