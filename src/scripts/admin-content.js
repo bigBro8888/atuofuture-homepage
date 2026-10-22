@@ -463,10 +463,9 @@ function renderAgentCompose(rawItem) {
         <div class="admin-vedit-basics__body">
           <div class="admin-form-grid">
             <input type="hidden" data-agents-field="id" value="${esc(item.id || '')}" />
+            <input type="hidden" data-agents-field="icon" value="${esc(item.icon || '')}" />
             ${field('agents', 'name', '智能体名称', item.name, { wide: true, placeholder: '例如 空间服务智能体' })}
-            ${field('agents', 'id', '详情页标识', item.id, { help: '出现在 /agent-detail/?id= 后面；空间服务请用 space' })}
             ${field('agents', 'shortName', '短名', item.shortName)}
-            ${field('agents', 'icon', '图标 Material Symbol', item.icon)}
             ${field('agents', 'accent', '强调色 RGB', item.accent, { help: '如 0, 82, 209' })}
             ${field('agents', 'blurb', '列表简介', item.blurb, { type: 'textarea', rows: 2, wide: true })}
             ${field('agents', 'eyebrow', '英文眉题', item.eyebrow)}
