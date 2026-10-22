@@ -73,23 +73,6 @@ export function renderAgentTaskStory({ selectedId }) {
           <p>从现场变化开始，到系统与设备执行，再到结果回读，让智能体真正进入业务现场。</p>
         </header>
 
-        <div class="ag-story__nav" role="tablist" aria-label="智能体切换">
-          ${AGENTS_OVERVIEW.map((a) => {
-            const on = a.id === selected.id
-            return `
-            <button
-              type="button"
-              class="ag-story__tab${on ? ' is-selected' : ''}"
-              role="tab"
-              aria-selected="${on ? 'true' : 'false'}"
-              data-ag-select="${esc(a.id)}"
-            >
-              <span class="material-symbols-outlined" aria-hidden="true">${esc(a.icon)}</span>
-              <span>${esc(a.shortName)}</span>
-            </button>`
-          }).join('')}
-        </div>
-
         <div class="ag-story__stage" data-ag-story-stage>
           <div class="ag-story__scene${selected.id === 'space' ? ' is-3d' : ''}" data-ag-scene>
             <img
@@ -156,12 +139,6 @@ export function syncAgentTaskStory(root, selectedId) {
   })
 
   scene?.classList.toggle('is-3d', use3d)
-
-  root.querySelectorAll('.ag-story__tab').forEach((btn) => {
-    const on = btn.dataset.agSelect === selected.id
-    btn.classList.toggle('is-selected', on)
-    btn.setAttribute('aria-selected', on ? 'true' : 'false')
-  })
 
   const img = root.querySelector('[data-ag-scene-img]')
   if (img) {
