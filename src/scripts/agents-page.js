@@ -172,11 +172,15 @@ function bindInteractions(root, state) {
 
   let step = 0
   let pauseAutoUntil = 0
+  const pinSteps = () => {
+    const steps = [...root.querySelectorAll('[data-ag-pin-step]')].map((el) => Number(el.dataset.agPinStep))
+    return [...new Set(steps)].sort((a, b) => a - b)
+  }
   const tick = () => {
     if (Date.now() < pauseAutoUntil) return
-    const items = root.querySelectorAll('[data-ag-flow-step]')
-    if (!items.length) return
-    syncStoryFlowStep(root, step % items.length)
+    const steps = pinSteps()
+    if (!steps.length) return
+    syncStoryFlowStep(root, steps[step % steps.length])
     step += 1
   }
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -185,7 +189,7 @@ function bindInteractions(root, state) {
   bindStoryPins(root, {
     onPinActivate: ({ step: pinStep, cue }) => {
       pauseAutoUntil = Date.now() + 5600
-      step = pinStep
+      step = Math.max(0, pinSteps().indexOf(pinStep))
       syncStoryFlowStep(root, pinStep)
       if (cue === 'enter') {
         void ensureMeetingRoom3D(root, state).then((room) => {

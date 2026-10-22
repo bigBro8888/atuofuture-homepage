@@ -8,11 +8,6 @@ function esc(str = '') {
     .replace(/"/g, '&quot;')
 }
 
-function stepIcon(i) {
-  const names = ['sensors', 'query_stats', 'psychology', 'settings_ethernet', 'task_alt']
-  return names[i] || 'circle'
-}
-
 /** 场景演示人物：走进来 → 环顾会议室 → 望向窗外 */
 function actorMarkup() {
   return `
@@ -141,20 +136,6 @@ export function renderAgentTaskStory({ selectedId }) {
             <a class="ag-btn ag-btn--solid" data-ag-detail href="${esc(selected.detailUrl)}">查看${esc(selected.shortName)}智能体详情</a>
           </div>
         </div>
-
-        <ol class="ag-story__flow" data-ag-flow aria-label="任务闭环">
-          ${selected.workflow
-            .map(
-              (step, i) => `
-            <li class="${i === 0 ? 'is-active' : ''}" data-ag-flow-step="${i}">
-              <span class="ag-story__flow-icon" aria-hidden="true">
-                <span class="material-symbols-outlined">${esc(stepIcon(i))}</span>
-              </span>
-              <strong>${esc(step)}</strong>
-            </li>`
-            )
-            .join('')}
-        </ol>
       </div>
     </section>`
 }
@@ -212,27 +193,9 @@ export function syncAgentTaskStory(root, selectedId) {
     detail.setAttribute('href', selected.detailUrl)
     detail.textContent = `查看${selected.shortName}智能体详情`
   }
-
-  const flow = root.querySelector('[data-ag-flow]')
-  if (flow) {
-    flow.innerHTML = selected.workflow
-      .map(
-        (step, i) => `
-      <li class="${i === 0 ? 'is-active' : ''}" data-ag-flow-step="${i}">
-        <span class="ag-story__flow-icon" aria-hidden="true">
-          <span class="material-symbols-outlined">${esc(stepIcon(i))}</span>
-        </span>
-        <strong>${esc(step)}</strong>
-      </li>`
-      )
-      .join('')
-  }
 }
 
 export function syncStoryFlowStep(root, stepIndex) {
-  root.querySelectorAll('[data-ag-flow-step]').forEach((el) => {
-    el.classList.toggle('is-active', Number(el.dataset.agFlowStep) === stepIndex)
-  })
   root.querySelectorAll('[data-ag-pin-step]').forEach((el) => {
     el.classList.toggle('is-active', Number(el.dataset.agPinStep) === stepIndex)
   })
