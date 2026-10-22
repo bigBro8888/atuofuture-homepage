@@ -188,7 +188,11 @@ function renderSpaceAgentDetail(a) {
       <section class="space-ad__contrast">
         <div class="space-ad__wrap space-ad__contrast-inner">
           <figure class="space-ad__contrast-media">
-            <img src="${esc(p.contrastImage)}" alt="" loading="lazy" />
+            ${
+              p.contrastVideo
+                ? `<video class="space-ad__contrast-media-el" src="${esc(p.contrastVideo)}" poster="${esc(p.contrastImage || '')}" autoplay muted loop playsinline></video>`
+                : `<img class="space-ad__contrast-media-el" src="${esc(p.contrastImage)}" alt="" loading="lazy" />`
+            }
             <div class="space-ad__mini-card space-ad__mini-card--warn space-ad__contrast-badge">
               <span class="material-symbols-outlined">warning</span>
               <div>

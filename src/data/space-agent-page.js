@@ -71,6 +71,7 @@ export const SPACE_AGENT_PAGE = {
       image: '/images/aspace-one/showcase-space.jpg',
     },
   ],
+  contrastVideo: '',
   contrastImage: '/images/aspace-one/showcase-meeting.jpg',
   contrastBadge: {
     title: '会议室投影仪异常',
@@ -78,7 +79,7 @@ export const SPACE_AGENT_PAGE = {
     time: '10:00',
   },
   contrastTitle: '普通系统告诉你发生了什么，空间服务智能体继续把事情做完。',
-  contrastDesc: '从发现问题，到协调资源，执行处理，确认结果。',
+  contrastDesc: '从发现问题，到协调资源、执行处理、确认结果，不再停留在通知，而是完成闭环。',
   scenarios: [
     {
       icon: 'calendar_month',
