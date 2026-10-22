@@ -5836,8 +5836,8 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   margin: 0;
   min-height: 0;
   height: 100%;
-  /* 上宽下窄：任意矩形图/视频都会被裁成右下缺角 */
-  clip-path: polygon(0 0, 100% 0, 78% 100%, 0 100%);
+  /* 上窄下宽（斜边左上→右下）：矩形图/视频也会缺右上角 */
+  clip-path: polygon(0 0, 78% 0, 100% 100%, 0 100%);
   border-radius: 16px 0 0 16px;
 }
 .space-ad__contrast-media-el {
