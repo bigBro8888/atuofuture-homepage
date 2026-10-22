@@ -52,6 +52,7 @@ const titles = {
   aspace: ['Aspace 空间智能', '路径 /aspace-one/ · 分标签管理首页内容、业务分类、应用归属与封面文案'],
   config: ['App 下载页', '路径 /app-download/ · 可视化编辑下载页'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
+  leads: ['预约与资料', '查看客户提交的预约演示、获取资料与联系客服线索'],
   analytics: ['下载统计', '查看匿名点击趋势和终端分布'],
   users: ['账号权限', '按职责管理后台访问权限'],
   audit: ['操作审计', '追踪关键配置和发布操作'],
@@ -170,6 +171,7 @@ function showAdmin(user) {
   renderSitemap()
   const initial = location.hash.replace('#', '')
   loadOverview()
+  void refreshLeadsBadge()
   if (initial && titles[initial] && initial !== 'overview') openTab(initial, { skipHash: true })
 }
 
@@ -222,6 +224,7 @@ function openTab(name, options = {}) {
   if (name === 'home') loadHomePage()
   if (name === 'about') loadAboutPage()
   if (name === 'releases') loadReleases()
+  if (name === 'leads') loadLeads()
   if (name === 'analytics') loadStats()
   if (name === 'users' && state.user.role === 'super_admin') loadUsers()
   if (name === 'audit' && state.user.role === 'super_admin') loadAudit()
@@ -2169,6 +2172,65 @@ async function loadReleases() {
   } catch (error) { toast(error.message, true) }
 }
 
+const LEAD_SOURCE_LABEL = {
+  demo: '预约方案演示',
+  'aspace-contact': 'Aspace 联系客服',
+  materials: '获取资料',
+}
+
+function updateLeadsBadge(unread) {
+  const badge = document.querySelector('[data-leads-badge]')
+  if (!badge) return
+  const count = Number(unread) || 0
+  badge.hidden = count <= 0
+  badge.textContent = count > 99 ? '99+' : String(count)
+}
+
+async function loadLeads() {
+  const filter = document.querySelector('[data-leads-filter]')?.value || 'new'
+  try {
+    const data = await api(`/leads?status=${encodeURIComponent(filter)}`)
+    document.querySelector('[data-leads-total]').textContent = String(data.total || 0)
+    document.querySelector('[data-leads-unread]').textContent = String(data.unread || 0)
+    updateLeadsBadge(data.unread)
+    const list = document.querySelector('[data-leads-list]')
+    if (!data.items?.length) {
+      list.innerHTML = '<div class="admin-empty">暂无线索。客户提交「预约方案演示 / 获取资料」后会出现在这里。</div>'
+      return
+    }
+    list.innerHTML = data.items.map((item) => `
+      <article class="admin-lead-item ${item.status === 'done' ? 'is-done' : 'is-new'}">
+        <header>
+          <div>
+            <strong>${escapeHtml(item.name)}</strong>
+            <span class="admin-lead-item__source">${escapeHtml(LEAD_SOURCE_LABEL[item.source] || item.source || '官网')}</span>
+          </div>
+          <time datetime="${escapeHtml(item.createdAt)}">${dateTime(item.createdAt)}</time>
+        </header>
+        <p class="admin-lead-item__contact"><span class="material-symbols-outlined">call</span>${escapeHtml(item.contact)}</p>
+        ${item.requirement ? `<p class="admin-lead-item__req">${escapeHtml(item.requirement)}</p>` : ''}
+        ${item.pageUrl ? `<p class="admin-lead-item__page"><a href="${escapeHtml(item.pageUrl)}" target="_blank" rel="noopener">来源页面</a></p>` : ''}
+        <footer>
+          ${item.status === 'done'
+            ? `<button type="button" data-lead-status="${escapeHtml(item.id)}" data-next="new">标为待处理</button>`
+            : `<button type="button" class="is-primary" data-lead-status="${escapeHtml(item.id)}" data-next="done">标为已处理</button>`}
+          <button type="button" class="is-danger" data-lead-delete="${escapeHtml(item.id)}">删除</button>
+        </footer>
+      </article>`).join('')
+  } catch (error) {
+    toast(error.message, true)
+  }
+}
+
+async function refreshLeadsBadge() {
+  try {
+    const data = await api('/leads?status=all')
+    updateLeadsBadge(data.unread)
+  } catch {
+    /* 无权限或未登录时忽略 */
+  }
+}
+
 async function loadStats() {
   try {
     const stats = await api('/stats?days=30')
@@ -2842,6 +2904,34 @@ document.querySelector('[data-user-form]').addEventListener('submit', async (eve
 
 document.querySelector('[data-refresh-releases]').addEventListener('click', loadReleases)
 document.querySelector('[data-refresh-audit]').addEventListener('click', loadAudit)
+document.querySelector('[data-refresh-leads]')?.addEventListener('click', () => void loadLeads())
+document.querySelector('[data-leads-filter]')?.addEventListener('change', () => void loadLeads())
+document.querySelector('[data-leads-list]')?.addEventListener('click', async (event) => {
+  const statusBtn = event.target.closest('[data-lead-status]')
+  if (statusBtn) {
+    try {
+      await api(`/leads/${statusBtn.dataset.leadStatus}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: statusBtn.dataset.next }),
+      })
+      toast(statusBtn.dataset.next === 'done' ? '已标记处理完成' : '已标回待处理')
+      await loadLeads()
+    } catch (error) {
+      toast(error.message, true)
+    }
+    return
+  }
+  const deleteBtn = event.target.closest('[data-lead-delete]')
+  if (!deleteBtn) return
+  if (!window.confirm('确定删除这条线索？删除后不可恢复。')) return
+  try {
+    await api(`/leads/${deleteBtn.dataset.leadDelete}`, { method: 'DELETE' })
+    toast('线索已删除')
+    await loadLeads()
+  } catch (error) {
+    toast(error.message, true)
+  }
+})
 
 document.querySelector('[data-item-modal]').addEventListener('click', (event) => {
   if (event.target.closest('[data-item-modal-close]')) {

@@ -276,6 +276,7 @@ const initialData = {
   aspaceHome: structuredClone(defaultAspaceHome),
   aspaceActivities: [],
   downloadEvents: [],
+  demoRequests: [],
   adminUsers: [],
   auditLogs: [],
   sourceHealth: { status: 'unknown', checkedAt: null, message: '' },

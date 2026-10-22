@@ -8,6 +8,7 @@ import { adminRouter } from './modules/admin/routes.js'
 import { adminPagesRouter, publicPagesRouter } from './modules/pages/routes.js'
 import { aspaceSsoRouter } from './modules/aspace/sso-routes.js'
 import { adminAspaceRouter, publicAspaceRouter } from './modules/aspace/quick-actions-routes.js'
+import { adminLeadsRouter, publicLeadsRouter } from './modules/leads/routes.js'
 
 await initStore()
 
@@ -41,8 +42,10 @@ app.use('/api/public/apps', publicAppsRouter)
 app.use('/api/public/pages', publicPagesRouter)
 app.use('/api/public/aspace', publicAspaceRouter)
 app.use('/api/public/aspace/sso', aspaceSsoRouter)
+app.use('/api/public/leads', publicLeadsRouter)
 app.use('/api/admin/pages', adminPagesRouter)
 app.use('/api/admin/aspace', adminAspaceRouter)
+app.use('/api/admin/leads', adminLeadsRouter)
 app.use('/api/admin', adminRouter)
 
 app.use('/api', (request, response) => response.status(404).json({ error: 'not_found' }))

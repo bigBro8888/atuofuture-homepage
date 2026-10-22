@@ -1616,10 +1616,11 @@ function setContactModalOpen(root, open) {
   }
 }
 
-function submitContactRequest(root, form) {
+async function submitContactRequest(root, form) {
   const data = new FormData(form)
   const name = String(data.get('contactName') || '').trim()
   const phone = String(data.get('contactPhone') || '').trim()
+  const note = String(data.get('contactNote') || data.get('contactMessage') || '').trim()
   if (!name || !phone) {
     showToast('请填写姓名和手机号')
     return
@@ -1628,8 +1629,26 @@ function submitContactRequest(root, form) {
     showToast('请输入正确的 11 位手机号')
     return
   }
-  setContactModalOpen(root, false)
-  showToast('已提交联系方式，客服将尽快与您联系')
+  try {
+    const response = await fetch('/api/public/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        name,
+        contact: phone,
+        requirement: note || 'Aspace 联系客服',
+        source: 'aspace-contact',
+        pageUrl: window.location.href.slice(0, 300),
+      }),
+    })
+    const result = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(result.message || '提交失败，请稍后重试')
+    form.reset()
+    setContactModalOpen(root, false)
+    showToast('已提交联系方式，客服将尽快与您联系')
+  } catch (error) {
+    showToast(error.message || '提交失败，请稍后重试')
+  }
 }
 
 function setLoginPromptOpen(root, open, message = '') {

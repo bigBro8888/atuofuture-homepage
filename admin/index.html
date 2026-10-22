@@ -41,6 +41,10 @@
           <button type="button" data-tab="config"><span class="material-symbols-outlined">install_mobile</span>App 下载页</button>
         </div>
         <div class="admin-nav-group">
+          <small>客户线索</small>
+          <button type="button" data-tab="leads"><span class="material-symbols-outlined">contact_mail</span>预约与资料<span class="admin-nav-badge" data-leads-badge hidden>0</span></button>
+        </div>
+        <div class="admin-nav-group">
           <small>App 分发</small>
           <button type="button" data-tab="releases"><span class="material-symbols-outlined">deployed_code</span>版本发布</button>
           <button type="button" data-tab="analytics"><span class="material-symbols-outlined">monitoring</span>下载统计</button>
@@ -310,6 +314,31 @@
             <div class="admin-release-list" data-release-list></div>
           </article>
         </div>
+      </section>
+
+      <section class="admin-panel" data-panel="leads">
+        <div class="admin-metrics admin-metrics--three">
+          <article><small>全部线索</small><strong data-leads-total>0</strong><em>预约演示 / 获取资料</em></article>
+          <article><small>待处理</small><strong data-leads-unread>0</strong><em>尚未标记完成</em></article>
+          <article><small>来源</small><strong>官网弹窗</strong><em>含 Aspace 联系客服</em></article>
+        </div>
+        <article class="admin-card">
+          <div class="admin-card__head">
+            <div>
+              <h2>客户提交记录</h2>
+              <p>前台「预约方案演示 / 获取资料」表单会写入这里，按时间倒序</p>
+            </div>
+            <div class="admin-leads-toolbar">
+              <select data-leads-filter aria-label="筛选状态">
+                <option value="all">全部</option>
+                <option value="new" selected>待处理</option>
+                <option value="done">已处理</option>
+              </select>
+              <button type="button" class="admin-icon-button" data-refresh-leads title="刷新"><span class="material-symbols-outlined">refresh</span></button>
+            </div>
+          </div>
+          <div class="admin-leads-list" data-leads-list></div>
+        </article>
       </section>
 
       <section class="admin-panel" data-panel="analytics">

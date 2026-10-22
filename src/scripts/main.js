@@ -703,12 +703,13 @@ export function initDemoRequestModal() {
     if (event.key === 'Escape' && modal.classList.contains('is-open')) close()
   })
 
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault()
     const data = Object.fromEntries(new FormData(form).entries())
     const requirement = String(data.requirement || '').trim()
     const name = String(data.name || '').trim()
     const contact = String(data.contact || '').trim()
+    const submitButton = form.querySelector('button[type="submit"]')
 
     if (!requirement || !name || !contact) {
       if (tip) {
@@ -719,26 +720,39 @@ export function initDemoRequestModal() {
     }
 
     const payload = {
-      ...data,
-      requirement,
       name,
       contact,
-      submittedAt: new Date().toISOString(),
+      requirement,
+      source: 'demo',
+      pageUrl: window.location.href.slice(0, 300),
+    }
+
+    if (submitButton) submitButton.disabled = true
+    if (tip) {
+      tip.textContent = '正在提交…'
+      tip.className = 'demo-form__tip'
     }
 
     try {
-      const key = 'atuofuture-demo-requests'
-      const saved = JSON.parse(localStorage.getItem(key) || '[]')
-      saved.push(payload)
-      localStorage.setItem(key, JSON.stringify(saved))
-    } catch {
-      // 本地存储不可用时不阻塞用户提交反馈。
-    }
-
-    form.reset()
-    if (tip) {
-      tip.textContent = '预约需求已提交，我们会尽快与您联系。'
-      tip.className = 'demo-form__tip is-success'
+      const response = await fetch('/api/public/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.message || '提交失败，请稍后重试')
+      form.reset()
+      if (tip) {
+        tip.textContent = '预约需求已提交，我们会尽快与您联系。'
+        tip.className = 'demo-form__tip is-success'
+      }
+    } catch (error) {
+      if (tip) {
+        tip.textContent = error.message || '提交失败，请稍后重试'
+        tip.className = 'demo-form__tip is-error'
+      }
+    } finally {
+      if (submitButton) submitButton.disabled = false
     }
   })
 }
