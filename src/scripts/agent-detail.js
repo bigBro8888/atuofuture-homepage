@@ -216,7 +216,7 @@ function renderSpaceAgentDetail(a) {
               (s) => `
             <article class="space-ad__scenario">
               <div class="space-ad__scenario-copy">
-                <span class="space-ad__scenario-icon material-symbols-outlined">${s.icon}</span>
+                <span class="space-ad__scenario-icon material-symbols-outlined${s.tone === 'warn' ? ' space-ad__scenario-icon--warn' : ''}">${s.icon}</span>
                 <h3>${esc(s.title)}</h3>
                 <p>${esc(s.desc)}</p>
                 <ul>
@@ -229,7 +229,7 @@ function renderSpaceAgentDetail(a) {
                 </ul>
               </div>
               <figure class="space-ad__scenario-media">
-                <img src="${esc(s.image)}" alt="" loading="lazy" />
+                <img class="space-ad__scenario-media-el" src="${esc(s.image)}" alt="" loading="lazy" />
                 ${s.badge ? `<span class="space-ad__scenario-badge">${esc(s.badge)}</span>` : ''}
               </figure>
               <ul class="space-ad__scenario-actions">

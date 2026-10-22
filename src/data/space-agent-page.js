@@ -109,15 +109,16 @@ export const SPACE_AGENT_PAGE = {
     },
     {
       icon: 'warning',
+      tone: 'warn',
       title: '设备运行异常',
       desc: '不只发送告警，而是自动推动问题处理。',
       checks: ['实时监测设备运行状态', '自动生成服务工单并通知工程师', '跟踪处理进度并确认恢复'],
       image: '/images/aspace-one/showcase-control.jpg',
-      badge: '工单已自动生成，工程师已接单',
+      badge: '已生成服务工单',
       actions: [
         { icon: 'monitor_heart', label: '监测设备状态' },
         { icon: 'assignment_add', label: '识别异常并派单' },
-        { icon: 'sync', label: '工单跟踪与反馈' },
+        { icon: 'sync', label: '工单跟踪处理并反馈' },
         { icon: 'task_alt', label: '确认设备恢复运行' },
       ],
     },
