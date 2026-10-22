@@ -1,4 +1,3 @@
-import { initAgentChat } from '../components/agent-chat.js'
 import { initAppDownloadModal } from '../components/app-download-modal.js'
 import { initSiteNav } from '../components/site-nav.js'
 import { initSiteFooter } from '../components/site-footer.js'
@@ -851,7 +850,6 @@ function bootstrap() {
   void loadAndApplySiteSettings()
   initMobileDrawer()
   initAppDownloadModal()
-  if (page !== 'app-download') initAgentChat()
   initDemoRequestModal()
   initTokenLinks()
   initScrollReveal()
