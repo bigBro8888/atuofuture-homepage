@@ -281,65 +281,126 @@ function makeChair(fabricMat, metalMat) {
   return g
 }
 
+/** 低面数商务人模：鞋底贴地，腿/脚层级联动，避免胶囊人悬空 */
 function makePerson({ coatColor = 0x1d4f9c, visible = false } = {}) {
   const root = new THREE.Group()
   root.visible = visible
 
-  const skin = mat(0xf0d5c0, { roughness: 0.62, envMapIntensity: 0.35 })
-  const coat = mat(coatColor, { roughness: 0.48, envMapIntensity: 0.7 })
-  const pants = mat(0x243044, { roughness: 0.65 })
-  const hair = mat(0x2c3344, { roughness: 0.78 })
-  const shoe = mat(0x1a2030, { roughness: 0.4, metalness: 0.15 })
+  const skin = mat(0xe9c4a6, { roughness: 0.58, envMapIntensity: 0.4 })
+  const coat = mat(coatColor, { roughness: 0.46, envMapIntensity: 0.75 })
+  const pants = mat(0x2a3347, { roughness: 0.68, envMapIntensity: 0.35 })
+  const hair = mat(0x1a2030, { roughness: 0.82 })
+  const shoeMat = mat(0x12161f, { roughness: 0.38, metalness: 0.12 })
+  const shirt = mat(0xf4f6f8, { roughness: 0.72, envMapIntensity: 0.3 })
 
-  const torso = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.42, 6, 12), coat))
-  torso.position.y = 1.18
-  root.add(torso)
+  const hips = new THREE.Group()
+  // 髋高对齐：大腿+小腿+鞋底后，鞋底落在 y≈0
+  hips.position.y = 0.85
+  root.add(hips)
 
-  const head = addShadow(new THREE.Mesh(new THREE.SphereGeometry(0.16, 20, 16), skin), true, false)
-  head.position.y = 1.62
-  root.add(head)
-  const hairMesh = addShadow(new THREE.Mesh(new THREE.SphereGeometry(0.165, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.58), hair), true, false)
-  hairMesh.position.set(0, 1.66, -0.01)
-  root.add(hairMesh)
+  const pelvis = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.34, 0.18, 0.22, 2, 0.04), pants), true, false)
+  hips.add(pelvis)
 
-  const makeLimb = (geo, material, y) => {
+  const spine = new THREE.Group()
+  spine.position.y = 0.1
+  hips.add(spine)
+
+  const torso = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.44, 0.5, 0.26, 2, 0.05), coat))
+  torso.position.y = 0.28
+  spine.add(torso)
+
+  const collar = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.2, 0.08, 0.16, 1, 0.02), shirt), true, false)
+  collar.position.set(0, 0.52, 0.04)
+  spine.add(collar)
+
+  const shoulder = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.52, 0.12, 0.24, 2, 0.04), coat), true, false)
+  shoulder.position.y = 0.5
+  spine.add(shoulder)
+
+  const neck = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.1, 10), skin), true, false)
+  neck.position.y = 0.6
+  spine.add(neck)
+
+  const head = addShadow(new THREE.Mesh(new THREE.SphereGeometry(0.125, 18, 14), skin), true, false)
+  head.position.y = 0.74
+  spine.add(head)
+
+  const hairMesh = addShadow(
+    new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), hair),
+    true,
+    false
+  )
+  hairMesh.position.set(0, 0.78, -0.01)
+  spine.add(hairMesh)
+
+  const makeArm = (side) => {
     const pivot = new THREE.Group()
-    const mesh = addShadow(new THREE.Mesh(geo, material), true, false)
-    mesh.position.y = y
-    pivot.add(mesh)
-    return { pivot, mesh }
+    pivot.position.set(side * 0.28, 0.48, 0)
+    spine.add(pivot)
+
+    const upper = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.045, 0.26, 4, 8), coat), true, false)
+    upper.position.y = -0.16
+    pivot.add(upper)
+
+    const elbow = new THREE.Group()
+    elbow.position.y = -0.32
+    pivot.add(elbow)
+
+    const lower = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.038, 0.22, 4, 8), coat), true, false)
+    lower.position.y = -0.14
+    elbow.add(lower)
+
+    const hand = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.06, 0.08, 0.05, 1, 0.01), skin), true, false)
+    hand.position.y = -0.3
+    elbow.add(hand)
+
+    pivot.rotation.z = side * 0.08
+    return { pivot, elbow }
   }
 
-  const armL = makeLimb(new THREE.CapsuleGeometry(0.055, 0.34, 4, 8), coat, -0.2)
-  armL.pivot.position.set(-0.28, 1.38, 0)
-  root.add(armL.pivot)
-  const armR = makeLimb(new THREE.CapsuleGeometry(0.055, 0.34, 4, 8), coat, -0.2)
-  armR.pivot.position.set(0.28, 1.38, 0)
-  root.add(armR.pivot)
+  const armL = makeArm(-1)
+  const armR = makeArm(1)
 
-  const legL = makeLimb(new THREE.CapsuleGeometry(0.07, 0.42, 4, 8), pants, -0.28)
-  legL.pivot.position.set(-0.11, 0.92, 0)
-  root.add(legL.pivot)
-  const legR = makeLimb(new THREE.CapsuleGeometry(0.07, 0.42, 4, 8), pants, -0.28)
-  legR.pivot.position.set(0.11, 0.92, 0)
-  root.add(legR.pivot)
+  const makeLeg = (side) => {
+    const hip = new THREE.Group()
+    hip.position.set(side * 0.1, -0.02, 0)
+    hips.add(hip)
 
-  const shoeL = addShadow(new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.07, 0.28), shoe), true, false)
-  shoeL.position.set(-0.11, 0.05, 0.04)
-  root.add(shoeL)
-  const shoeR = addShadow(new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.07, 0.28), shoe), true, false)
-  shoeR.position.set(0.11, 0.05, 0.04)
-  root.add(shoeR)
+    const thigh = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.065, 0.34, 4, 8), pants), true, false)
+    thigh.position.y = -0.2
+    hip.add(thigh)
+
+    const knee = new THREE.Group()
+    knee.position.y = -0.42
+    hip.add(knee)
+
+    const shin = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.32, 4, 8), pants), true, false)
+    shin.position.y = -0.19
+    knee.add(shin)
+
+    const ankle = new THREE.Group()
+    ankle.position.y = -0.4
+    knee.add(ankle)
+
+    const shoe = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.11, 0.07, 0.26, 1, 0.02), shoeMat), true, false)
+    shoe.position.set(0, 0.035, 0.05)
+    ankle.add(shoe)
+
+    return { hip, knee, ankle, shoe }
+  }
+
+  const legL = makeLeg(-1)
+  const legR = makeLeg(1)
 
   const shadow = new THREE.Mesh(
-    new THREE.CircleGeometry(0.38, 24),
-    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false })
+    new THREE.CircleGeometry(0.32, 24),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.2, depthWrite: false })
   )
   shadow.rotation.x = -Math.PI / 2
-  shadow.position.y = 0.01
+  shadow.position.y = 0.008
   root.add(shadow)
 
-  root.userData.parts = { armL, armR, legL, legR, head, shoeL, shoeR }
+  root.userData.parts = { hips, spine, armL, armR, legL, legR, head, shadow }
   return root
 }
 
@@ -953,15 +1014,27 @@ export function mountMeetingRoom3D(host) {
   }
 
   const setPersonPose = (target, t, walking) => {
-    const { armL, armR, legL, legR, shoeL, shoeR } = target.userData.parts
-    const swing = walking ? Math.sin(t * 9) * 0.55 : Math.sin(t * 1.5) * 0.04
-    legL.pivot.rotation.x = swing
-    legR.pivot.rotation.x = -swing
-    armL.pivot.rotation.x = -swing * 0.7
-    armR.pivot.rotation.x = swing * 0.7
-    shoeL.position.z = 0.04 + swing * 0.08
-    shoeR.position.z = 0.04 - swing * 0.08
-    target.position.y = walking ? Math.abs(Math.sin(t * 9)) * 0.025 : 0
+    const { armL, armR, legL, legR, spine, hips } = target.userData.parts
+    const swing = walking ? Math.sin(t * 7.5) * 0.42 : Math.sin(t * 1.2) * 0.03
+    const bendL = walking ? Math.max(0, -swing) * 0.7 : 0
+    const bendR = walking ? Math.max(0, swing) * 0.7 : 0
+
+    legL.hip.rotation.x = swing
+    legR.hip.rotation.x = -swing
+    legL.knee.rotation.x = bendL
+    legR.knee.rotation.x = bendR
+    legL.ankle.rotation.x = walking ? -bendL * 0.35 - Math.min(0, swing) * 0.2 : 0
+    legR.ankle.rotation.x = walking ? -bendR * 0.35 - Math.min(0, -swing) * 0.2 : 0
+
+    armL.pivot.rotation.x = -swing * 0.55
+    armR.pivot.rotation.x = swing * 0.55
+    armL.elbow.rotation.x = walking ? -0.35 - Math.max(0, swing) * 0.25 : -0.2
+    armR.elbow.rotation.x = walking ? -0.35 - Math.max(0, -swing) * 0.25 : -0.2
+
+    if (spine) spine.rotation.y = walking ? Math.sin(t * 7.5) * 0.04 : 0
+    if (hips) hips.position.y = 0.85
+    // 始终贴地，不靠整体抬升制造“飘”
+    target.position.y = 0
   }
 
   const tickEnter = (now) => {
