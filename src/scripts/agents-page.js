@@ -20,6 +20,7 @@ import {
   playStoryEnterCue,
   resetStoryEnterCue,
   applyStorySceneMode,
+  syncTwinStats,
 } from '../components/agents/task-story.js'
 import {
   renderIndustryAgentComposition,
@@ -107,6 +108,7 @@ async function ensureMeetingRoom3D(root, state) {
     const { mountMeetingRoom3D, syncStoryPinsTo3D } = await import('../components/agents/meeting-room-3d.js')
     state.room3d = mountMeetingRoom3D(host)
     if (state.room3d) {
+      state.room3d.onStats?.((stats) => syncTwinStats(root, stats))
       state.room3d._onFrame = (api) => {
         syncStoryPinsTo3D(root, api)
       }

@@ -236,12 +236,12 @@ function makeChair(fabricMat, metalMat) {
   return g
 }
 
-function makePerson() {
+function makePerson({ coatColor = 0x1d4f9c, visible = false } = {}) {
   const root = new THREE.Group()
-  root.visible = false
+  root.visible = visible
 
   const skin = mat(0xf0d5c0, { roughness: 0.62, envMapIntensity: 0.35 })
-  const coat = mat(0x1d4f9c, { roughness: 0.48, envMapIntensity: 0.7 })
+  const coat = mat(coatColor, { roughness: 0.48, envMapIntensity: 0.7 })
   const pants = mat(0x243044, { roughness: 0.65 })
   const hair = mat(0x2c3344, { roughness: 0.78 })
   const shoe = mat(0x1a2030, { roughness: 0.4, metalness: 0.15 })
@@ -296,6 +296,57 @@ function makePerson() {
 
   root.userData.parts = { armL, armR, legL, legR, head, shoeL, shoeR }
   return root
+}
+
+function makeCeilingRadar() {
+  const group = new THREE.Group()
+  group.position.set(2.15, ROOM.h - 0.06, -1.35)
+
+  const housing = addShadow(
+    new THREE.Mesh(
+      new THREE.CylinderGeometry(0.16, 0.18, 0.08, 24),
+      mat(0x1c2433, { metalness: 0.55, roughness: 0.35, envMapIntensity: 1.1 })
+    ),
+    true,
+    false
+  )
+  group.add(housing)
+
+  const lens = new THREE.Mesh(
+    new THREE.CircleGeometry(0.11, 24),
+    new THREE.MeshStandardMaterial({
+      color: 0x00d5c7,
+      emissive: 0x00d5c7,
+      emissiveIntensity: 0.35,
+      roughness: 0.25,
+      metalness: 0.2,
+    })
+  )
+  lens.rotation.x = Math.PI / 2
+  lens.position.y = -0.045
+  group.add(lens)
+
+  const waves = []
+  for (let i = 0; i < 3; i += 1) {
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.18, 0.22, 48),
+      new THREE.MeshBasicMaterial({
+        color: 0x00d5c7,
+        transparent: true,
+        opacity: 0,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      })
+    )
+    ring.rotation.x = Math.PI / 2
+    ring.position.y = -0.05
+    ring.userData.phase = i / 3
+    group.add(ring)
+    waves.push(ring)
+  }
+
+  group.userData = { waves, lens, sensing: false }
+  return group
 }
 
 function makeMeetingScreenTexture() {
@@ -766,6 +817,29 @@ export function mountMeetingRoom3D(host) {
   const person = makePerson()
   scene.add(person)
 
+  const radar = makeCeilingRadar()
+  scene.add(radar)
+
+  const coatPalette = [0x1d4f9c, 0x2f6b4f, 0x8b3d4a, 0x3d4a6b]
+  const npcs = coatPalette.map((color, index) => {
+    const npc = makePerson({ coatColor: color, visible: false })
+    scene.add(npc)
+    return {
+      mesh: npc,
+      progress: index / coatPalette.length,
+      speed: 0.045 + index * 0.008,
+      inRoom: false,
+      path: [
+        new THREE.Vector3(-0.4 + index * 0.25, 0, 5.5),
+        new THREE.Vector3(-0.8 + index * 0.35, 0, 2.2),
+        new THREE.Vector3(0.6 - index * 0.2, 0, 0.4),
+        new THREE.Vector3(1.4 - index * 0.15, 0, -1.2),
+        new THREE.Vector3(-0.2 + index * 0.1, 0, 1.0),
+        new THREE.Vector3(0.3, 0, 5.6),
+      ],
+    }
+  })
+
   const clock = new THREE.Clock()
   let raf = 0
   let disposed = false
@@ -777,6 +851,14 @@ export function mountMeetingRoom3D(host) {
   let envOn = false
   let curtainTarget = 0.04
   let curtainCurrent = 0.04
+  let peopleCount = 0
+  let tempBase = 24.6
+  const weatherOptions = ['晴朗', '多云', '薄雾', '小雨']
+  let weather = weatherOptions[0]
+  let weatherTick = 0
+  let statsListener = null
+  let statsEmitTick = 0
+  let lastStatsKey = ''
 
   const applyLights = (level) => {
     const next = level === true ? 1 : level === false ? 0 : level
@@ -832,8 +914,8 @@ export function mountMeetingRoom3D(host) {
     }
   }
 
-  const setPersonPose = (t, walking) => {
-    const { armL, armR, legL, legR, shoeL, shoeR } = person.userData.parts
+  const setPersonPose = (target, t, walking) => {
+    const { armL, armR, legL, legR, shoeL, shoeR } = target.userData.parts
     const swing = walking ? Math.sin(t * 9) * 0.55 : Math.sin(t * 1.5) * 0.04
     legL.pivot.rotation.x = swing
     legR.pivot.rotation.x = -swing
@@ -841,7 +923,7 @@ export function mountMeetingRoom3D(host) {
     armR.pivot.rotation.x = swing * 0.7
     shoeL.position.z = 0.04 + swing * 0.08
     shoeR.position.z = 0.04 - swing * 0.08
-    person.position.y = walking ? Math.abs(Math.sin(t * 9)) * 0.025 : 0
+    target.position.y = walking ? Math.abs(Math.sin(t * 9)) * 0.025 : 0
   }
 
   const tickEnter = (now) => {
@@ -852,20 +934,82 @@ export function mountMeetingRoom3D(host) {
       const p = ease / 0.42
       person.position.lerpVectors(enter.from, enter.mid, p)
       person.rotation.y = Math.PI
-      setPersonPose(now * 0.001, true)
+      setPersonPose(person, now * 0.001, true)
     } else if (u < 0.7) {
       const p = (u - 0.42) / 0.28
       person.position.lerpVectors(enter.mid, enter.look, p)
       person.rotation.y = Math.PI + Math.sin(p * Math.PI * 2) * 0.55
-      setPersonPose(now * 0.001, false)
+      setPersonPose(person, now * 0.001, false)
     } else {
       const p = (u - 0.7) / 0.3
       person.position.lerpVectors(enter.look, enter.window, p)
       person.rotation.y = Math.PI * 0.5 + (1 - p) * 0.35
-      setPersonPose(now * 0.001, p < 0.85)
+      setPersonPose(person, now * 0.001, p < 0.85)
       if (u >= 1) enter = null
     }
   }
+
+  const tickNpcs = (dt, now) => {
+    let inside = 0
+    npcs.forEach((npc) => {
+      npc.progress = (npc.progress + dt * npc.speed) % 1
+      const segs = npc.path.length - 1
+      const f = npc.progress * segs
+      const i = Math.min(segs - 1, Math.floor(f))
+      const local = f - i
+      const from = npc.path[i]
+      const to = npc.path[i + 1]
+      npc.mesh.visible = true
+      npc.mesh.position.lerpVectors(from, to, local)
+      const dx = to.x - from.x
+      const dz = to.z - from.z
+      if (Math.abs(dx) + Math.abs(dz) > 0.001) npc.mesh.rotation.y = Math.atan2(dx, dz)
+      setPersonPose(npc.mesh, now * 0.001 + i, true)
+      const inZ = npc.mesh.position.z < 4.2 && npc.mesh.position.z > -2.6
+      const inX = Math.abs(npc.mesh.position.x) < 3.6
+      npc.inRoom = inZ && inX
+      if (npc.inRoom) inside += 1
+    })
+    if (person.visible && !enter) inside += 1
+    if (enter) inside += 1
+    peopleCount = inside
+  }
+
+  const tickRadar = (now) => {
+    const sensing = peopleCount > 0
+    radar.userData.sensing = sensing
+    radar.userData.lens.material.emissiveIntensity = sensing ? 0.9 + Math.sin(now * 0.01) * 0.25 : 0.2
+    radar.userData.waves.forEach((ring) => {
+      if (!sensing) {
+        ring.material.opacity = 0
+        ring.scale.setScalar(1)
+        return
+      }
+      const cycle = ((now * 0.00055 + ring.userData.phase) % 1)
+      const scale = 1 + cycle * 4.5
+      ring.scale.setScalar(scale)
+      ring.material.opacity = Math.max(0, 0.55 * (1 - cycle))
+    })
+  }
+
+  const countLitFixtures = () => {
+    if (lightLevel <= 0.01) return 0
+    const total = pendants.length + cans.length
+    return lightLevel >= 0.99 ? total : Math.max(1, Math.round(total * lightLevel))
+  }
+
+  const getTwinStats = () => ({
+    people: peopleCount,
+    lightsOn: countLitFixtures(),
+    lightsTotal: pendants.length + cans.length,
+    temperature: Number((tempBase + Math.sin(clock.elapsedTime * 0.15) * 0.35 - (acOn ? 0.8 : 0)).toFixed(1)),
+    weather,
+    ac: acOn ? '舒适送风' : '待机',
+    screen: screenOn ? '会议中' : '关闭',
+    curtain: envOn ? '半开 50%' : '全开',
+    radar: peopleCount > 0 ? '感应中' : '空闲',
+    lightLevel,
+  })
 
   const tickAirflow = (dt) => {
     if (!acOn) return
@@ -901,11 +1045,28 @@ export function mountMeetingRoom3D(host) {
     const now = performance.now()
     const dt = Math.min(0.05, clock.getDelta())
     tickEnter(now)
+    tickNpcs(dt, now)
+    tickRadar(now)
     tickAirflow(dt)
     tickCurtains(dt)
-    if (!enter && person.visible) setPersonPose(clock.elapsedTime, false)
+    weatherTick += dt
+    if (weatherTick > 18) {
+      weatherTick = 0
+      weather = weatherOptions[Math.floor(Math.random() * weatherOptions.length)]
+    }
+    if (!enter && person.visible) setPersonPose(person, clock.elapsedTime, false)
     controls.update()
     renderer.render(scene, camera)
+    statsEmitTick += dt
+    if (statsListener && statsEmitTick >= 0.25) {
+      statsEmitTick = 0
+      const stats = getTwinStats()
+      const key = `${stats.people}|${stats.lightsOn}|${stats.temperature}|${stats.weather}|${stats.radar}|${stats.ac}|${stats.screen}|${stats.curtain}`
+      if (key !== lastStatsKey) {
+        lastStatsKey = key
+        statsListener(stats)
+      }
+    }
     api._onFrame?.(api)
   }
 
@@ -918,6 +1079,14 @@ export function mountMeetingRoom3D(host) {
     host,
     canvas,
     projectPin,
+    getTwinStats,
+    onStats(fn) {
+      statsListener = typeof fn === 'function' ? fn : null
+      if (statsListener) {
+        lastStatsKey = ''
+        statsEmitTick = 1
+      }
+    },
     isLightsOn: () => lightLevel >= 0.99,
     getLightLevel: () => lightLevel,
     isScreenOn: () => screenOn,
@@ -972,6 +1141,7 @@ export function mountMeetingRoom3D(host) {
     },
     dispose() {
       disposed = true
+      statsListener = null
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', onResize)
       controls.dispose()

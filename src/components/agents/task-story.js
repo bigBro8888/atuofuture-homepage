@@ -89,33 +89,44 @@ export function renderAgentTaskStory({ selectedId }) {
               ${sceneNodesMarkup(selected.sceneNodes, 0)}
             </div>
           </div>
-          <div class="ag-story__aside" data-ag-aside>
-            <p class="ag-story__kicker" data-ag-short>${esc(selected.shortName)}</p>
-            <h3 data-ag-name>${esc(selected.name)}</h3>
-            <p class="ag-story__value" data-ag-value>${esc(selected.value)}</p>
-            <ol class="ag-story__loop">
-              <li>
-                <span class="ag-story__num">01</span>
-                <div>
-                  <strong>触发条件</strong>
-                  <p data-ag-trigger>${esc(selected.trigger)}</p>
-                </div>
-              </li>
-              <li>
-                <span class="ag-story__num">02</span>
-                <div>
-                  <strong>自动执行</strong>
-                  <p data-ag-action>${esc(selected.action)}</p>
-                </div>
-              </li>
-              <li>
-                <span class="ag-story__num">03</span>
-                <div>
-                  <strong>结果回读</strong>
-                  <p data-ag-result>${esc(selected.result)}</p>
-                </div>
-              </li>
-            </ol>
+          <div class="ag-story__aside ag-story__aside--twin" data-ag-aside>
+            <p class="ag-story__kicker">数字孪生 · 实时态势</p>
+            <h3>会议室孪生看板</h3>
+            <p class="ag-story__value">人体感应、环境设备与现场状态同步回读</p>
+            <div class="ag-twin" data-ag-twin>
+              <div class="ag-twin__card">
+                <span class="ag-twin__label">在场人数</span>
+                <strong class="ag-twin__value"><span data-twin-people>0</span><small>人</small></strong>
+              </div>
+              <div class="ag-twin__card">
+                <span class="ag-twin__label">照明开启</span>
+                <strong class="ag-twin__value"><span data-twin-lights>0</span><small>/<span data-twin-lights-total>10</span></small></strong>
+              </div>
+              <div class="ag-twin__card">
+                <span class="ag-twin__label">室内温度</span>
+                <strong class="ag-twin__value"><span data-twin-temp>24.6</span><small>°C</small></strong>
+              </div>
+              <div class="ag-twin__card">
+                <span class="ag-twin__label">室外天气</span>
+                <strong class="ag-twin__value ag-twin__value--text" data-twin-weather>晴朗</strong>
+              </div>
+              <div class="ag-twin__row">
+                <span>人体感应雷达</span>
+                <em data-twin-radar>空闲</em>
+              </div>
+              <div class="ag-twin__row">
+                <span>空调状态</span>
+                <em data-twin-ac>待机</em>
+              </div>
+              <div class="ag-twin__row">
+                <span>信息屏</span>
+                <em data-twin-screen>关闭</em>
+              </div>
+              <div class="ag-twin__row">
+                <span>窗帘开合</span>
+                <em data-twin-curtain>全开</em>
+              </div>
+            </div>
             <a class="ag-btn ag-btn--solid" data-ag-detail href="${esc(selected.detailUrl)}">查看${esc(selected.shortName)}智能体详情</a>
           </div>
         </div>
@@ -154,22 +165,30 @@ export function syncAgentTaskStory(root, selectedId) {
   const pins = root.querySelector('[data-ag-pins]')
   if (pins) pins.innerHTML = sceneNodesMarkup(selected.sceneNodes, 0)
 
-  const setText = (sel, value) => {
-    const el = root.querySelector(sel)
-    if (el) el.textContent = value
-  }
-  setText('[data-ag-short]', selected.shortName)
-  setText('[data-ag-name]', selected.name)
-  setText('[data-ag-value]', selected.value)
-  setText('[data-ag-trigger]', selected.trigger)
-  setText('[data-ag-action]', selected.action)
-  setText('[data-ag-result]', selected.result)
-
   const detail = root.querySelector('[data-ag-detail]')
   if (detail) {
     detail.setAttribute('href', selected.detailUrl)
     detail.textContent = `查看${selected.shortName}智能体详情`
   }
+}
+
+export function syncTwinStats(root, stats) {
+  if (!root || !stats) return
+  const set = (sel, value) => {
+    const el = root.querySelector(sel)
+    if (el) el.textContent = String(value)
+  }
+  set('[data-twin-people]', stats.people ?? 0)
+  set('[data-twin-lights]', stats.lightsOn ?? 0)
+  set('[data-twin-lights-total]', stats.lightsTotal ?? 0)
+  set('[data-twin-temp]', stats.temperature ?? '--')
+  set('[data-twin-weather]', stats.weather ?? '--')
+  set('[data-twin-radar]', stats.radar ?? '--')
+  set('[data-twin-ac]', stats.ac ?? '--')
+  set('[data-twin-screen]', stats.screen ?? '--')
+  set('[data-twin-curtain]', stats.curtain ?? '--')
+  const radarEl = root.querySelector('[data-twin-radar]')
+  radarEl?.classList.toggle('is-active', Number(stats.people) > 0)
 }
 
 export function syncStoryFlowStep(root, stepIndex) {
