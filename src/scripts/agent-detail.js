@@ -142,7 +142,11 @@ function renderSpaceAgentDetail(a) {
               </ul>
             </div>
             <div class="space-ad__hero-visual">
-              <img src="${esc(p.heroImage)}" alt="" width="900" height="640" fetchpriority="high" />
+              ${
+                p.heroVideo
+                  ? `<video class="space-ad__hero-media" src="${esc(p.heroVideo)}" poster="${esc(p.heroImage || '')}" autoplay muted loop playsinline></video>`
+                  : `<img class="space-ad__hero-media" src="${esc(p.heroImage)}" alt="" width="900" height="560" fetchpriority="high" />`
+              }
               <div class="space-ad__chips">
                 ${p.heroChips
                   .map(

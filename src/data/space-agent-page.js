@@ -6,6 +6,8 @@ export const SPACE_AGENT_PAGE = {
     '根据人员、时间、预约和设备状态，自动联动空调、照明、屏幕及服务流程，并持续确认执行结果。',
   heroPrimary: { label: '观看一次自动运行', href: '../agents/#agent-story' },
   heroSecondary: { label: '预约场景演示' },
+  /** 右侧媒体：优先 heroVideo，未配置时用 heroImage；高度与左侧文案区对齐 */
+  heroVideo: '',
   heroImage: '/images/aspace-one/showcase-space.jpg',
   heroChips: [
     { icon: 'ac_unit', tone: 'blue', text: '会议室预冷中 24°C → 22°C' },
