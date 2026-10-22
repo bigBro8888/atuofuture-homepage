@@ -358,6 +358,12 @@ function renderSpaceAgentDetail(a) {
               <span class="material-symbols-outlined">${a.icon}</span>
               <strong>${esc(a.name)}</strong>
             </div>
+            <svg class="space-ad__collab-wires" viewBox="0 0 1000 80" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M500 0 V18 C500 48, 125 48, 125 80" />
+              <path d="M500 0 V18 C500 48, 375 48, 375 80" />
+              <path d="M500 0 V18 C500 48, 625 48, 625 80" />
+              <path d="M500 0 V18 C500 48, 875 48, 875 80" />
+            </svg>
             <div class="space-ad__collab-peers">
               ${p.collabPeers
                 .map(
