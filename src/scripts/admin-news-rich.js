@@ -415,8 +415,11 @@ export function bindNewsRichEditor(modal, { api, toast }) {
       }
       return
     }
-    if (html) insertHtmlAtCaret(editor, sanitizeNewsHtml(html, { keepColor: false }), savedRange)
-    else if (text) document.execCommand('insertText', false, text)
+    if (html) {
+      // 微站迁移稿（带 section / 大量 style）保留排版；普通网页粘贴仍清洗字号颜色
+      const migrateHtml = /<section\b/i.test(html) || /border-top\s*:/i.test(html) || /text-indent\s*:/i.test(html)
+      insertHtmlAtCaret(editor, sanitizeNewsHtml(html, { keepColor: migrateHtml }), savedRange)
+    } else if (text) document.execCommand('insertText', false, text)
     const remoteCount = [...editor.querySelectorAll('img')].filter((image) => {
       const src = normalizeImgSrc(image.getAttribute('src') || '')
       return src && !isLocalMedia(src)
