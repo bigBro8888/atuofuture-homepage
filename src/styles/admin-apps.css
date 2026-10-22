@@ -1,9 +1,11 @@
+@import './site-fonts.css';
+
 body.admin-body {
   margin: 0;
   min-width: 320px;
   background: #f4f7fb;
   color: #172033;
-  font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-sans);
 }
 * { box-sizing: border-box; }
 @font-face {

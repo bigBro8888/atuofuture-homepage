@@ -124,7 +124,8 @@ export function safeInlineStyle(value, { colorOnly = false } = {}) {
         .replace(/["']/g, '')
         .split(',')
         .map((item) => item.trim())
-        .filter((item) => /^[a-z0-9\s_-]+$/i.test(item))
+        .filter((item) => /^[a-z0-9.\s_-]+$/i.test(item))
+        .filter((item) => !/geist|inter|segoe|dingtalk|钉钉|sf pro|helvetica neue|arial black/i.test(item))
         .slice(0, 4)
       if (cleaned.length) declarations.push(`font-family:${cleaned.join(', ')}`)
       return

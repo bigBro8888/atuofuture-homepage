@@ -1,9 +1,12 @@
+@import './site-fonts.css';
+
 body.aso-standalone {
   margin: 0;
   padding-top: 0 !important;
   min-height: 100dvh;
   background: #f4f8fd;
   color: #0b1838;
+  font-family: var(--font-sans);
 }
 body.aso-standalone #site-header,
 body.aso-standalone #agent-chat-root,
@@ -27,7 +30,7 @@ body.aso-standalone .back-to-top { display: none !important; }
   min-height: 100vh;
   color: var(--aso-text);
   background: #fff;
-  font-family: "Segoe UI Variable Display", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-sans);
   font-optical-sizing: auto;
   position: relative;
 }
@@ -1170,7 +1173,7 @@ body.aso-standalone .back-to-top { display: none !important; }
 }
 .aso-app-sidebar__heading strong {
   color: #0879f9;
-  font-family: "钉钉进步体", "DingTalk JinBuTi", "DingTalk Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-sans);
   font-size: 19px;
   font-weight: 700;
   letter-spacing: -.02em;
