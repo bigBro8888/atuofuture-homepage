@@ -97,26 +97,23 @@ function renderNotFound(rawId) {
     </section>`
 }
 
+/** 任务演示区固定为空间服务 3D 会议室，不随生态图切换换成静态图 */
+const STORY_AGENT_ID = 'space'
+
 async function ensureMeetingRoom3D(root, state) {
   const host = root.querySelector('[data-ag-scene-3d]')
   if (!host) return null
-  if (state.selectedAgent !== 'space') {
-    state.room3d?.setActive(false)
-    state.room3d?.resetPerson()
-    return null
-  }
   if (!state.room3d) {
     const { mountMeetingRoom3D, syncStoryPinsTo3D } = await import('../components/agents/meeting-room-3d.js')
     state.room3d = mountMeetingRoom3D(host)
     if (state.room3d) {
       state.room3d._onFrame = (api) => {
-        if (state.selectedAgent !== 'space') return
         syncStoryPinsTo3D(root, api)
       }
     }
   }
   state.room3d?.setActive(true)
-  applyStorySceneMode(root, 'space')
+  applyStorySceneMode(root, STORY_AGENT_ID)
   const syncPinLabel = (cue, onText, offText, isOn) => {
     const el = root.querySelector(`[data-ag-pin-cue="${cue}"]`)
     if (!el) return
@@ -136,9 +133,9 @@ function setSelectedAgent(root, state, id, { scrollStory = false } = {}) {
   if (!resolveAgentOverviewId(id)) return
   state.selectedAgent = id
   syncAgentEcosystemMap(root, id)
-  syncAgentTaskStory(root, id)
+  // 演示区始终锁定 3D 空间服务场景
+  syncAgentTaskStory(root, STORY_AGENT_ID)
   void ensureMeetingRoom3D(root, state)
-  if (id !== 'space') resetStoryEnterCue(root)
 
   const url = new URL(window.location.href)
   url.searchParams.set('agent', id)
@@ -260,7 +257,6 @@ export async function initAgentsPage() {
     if (hit.imageUrl) agent.sceneImage = hit.imageUrl
   }
 
-  const DEFAULT_AGENT = 'space'
   const pageHashes = new Set(['agent-story', 'agent-ecosystem', 'agent-matrix', 'agent-stage', ''])
   const hashRaw = window.location.hash.replace(/^#/, '')
   const raw =
@@ -268,7 +264,7 @@ export async function initAgentsPage() {
     new URLSearchParams(window.location.search).get('agent') ||
     (hashRaw && !pageHashes.has(hashRaw) ? hashRaw : null)
   const requested = raw ? (raw.startsWith('agent-') ? raw.slice(6) : raw) : null
-  const resolved = requested ? resolveAgentOverviewId(requested) : DEFAULT_AGENT
+  const resolved = requested ? resolveAgentOverviewId(requested) : STORY_AGENT_ID
 
   if (requested && !resolved) {
     root.innerHTML = renderNotFound(requested)
@@ -276,7 +272,7 @@ export async function initAgentsPage() {
   }
 
   const state = {
-    selectedAgent: resolved || DEFAULT_AGENT,
+    selectedAgent: resolved || STORY_AGENT_ID,
     selectedIndustry: 'building',
     room3d: null,
   }
@@ -284,12 +280,12 @@ export async function initAgentsPage() {
   root.innerHTML = `
     ${renderHero()}
     ${renderAgentEcosystemMap({ selectedId: state.selectedAgent })}
-    ${renderAgentTaskStory({ selectedId: state.selectedAgent })}
+    ${renderAgentTaskStory({ selectedId: STORY_AGENT_ID })}
     ${renderIndustryAgentComposition({ selectedIndustryId: state.selectedIndustry })}
     ${renderCta()}
   `
 
-  applyStorySceneMode(root, state.selectedAgent)
+  applyStorySceneMode(root, STORY_AGENT_ID)
   void ensureMeetingRoom3D(root, state)
   bindInteractions(root, state)
   layoutAgentOrbitLinks(root)
