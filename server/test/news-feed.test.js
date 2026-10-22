@@ -14,13 +14,33 @@ test('formats pasted news body into headings and paragraphs', () => {
   assert.equal(sections[1].heading, '短标题')
 })
 
-test('strips pasted bold and keeps only editor text color', () => {
+test('strips pasted bold and keeps safe inline layout styles', () => {
   const html = sanitizeNewsHtml('<p><strong>粗体</strong><span style="color:#ff0000;font-size:48px">红字</span></p>')
   assert.doesNotMatch(html, /strong|b>/i)
-  assert.match(html, /style="color:#ff0000"/)
-  assert.doesNotMatch(html, /font-size/)
+  assert.match(html, /color:#ff0000/)
+  assert.match(html, /font-size:48px/)
   const pasted = sanitizeNewsHtml('<p><b>粗</b><span style="color:#ff0000">红</span></p>', { keepColor: false })
   assert.doesNotMatch(pasted, /style=/)
+})
+
+test('keeps section wrapper and layout styles from migrated html', () => {
+  const sample = `<section style="max-width:760px;margin:0 auto;padding:38px 34px 46px;border-top:8px solid #17385f;border-bottom:4px solid #c4a16a;background:#ffffff;box-shadow:0 8px 28px rgba(17,45,77,.10);color:#25364b">
+<h1 style="border-bottom:3px solid #c4a16a;color:#17385f;font-size:30px;font-weight:700;text-align:center">云栖大会</h1>
+<p style="background:#f1f5fa;border-left:4px solid #c4a16a;color:#203b5e;font-size:17px;padding:22px 24px">导语</p>
+<img class="fullScreen" src="//nwzimg.wezhan.net/contents/sitefiles3609/18046385/images/174364781.jpg" height="407.66" />
+</section>`
+  const html = sanitizeNewsHtml(sample)
+  assert.match(html, /<section style="/)
+  assert.match(html, /max-width:760px/)
+  assert.match(html, /border-top:8px solid #17385f/)
+  assert.match(html, /box-shadow:0 8px 28px rgba\(17,45,77,.10\)/)
+  assert.match(html, /<h1 style="/)
+  assert.match(html, /font-size:30px/)
+  assert.match(html, /background:#f1f5fa/)
+  assert.match(html, /border-left:4px solid #c4a16a/)
+  assert.match(html, /https:\/\/nwzimg\.wezhan\.net/)
+  assert.match(html, /class="sx-news-img"/)
+  assert.doesNotMatch(html, /pingfang|javascript:|expression/i)
 })
 
 test('keeps in-article video embeds and file players', () => {

@@ -693,9 +693,23 @@ textarea { resize: vertical; }
 .admin-rich__editor em,
 .admin-rich__editor i { font-weight: 400; font-style: normal; }
 .admin-rich__editor:focus { outline: none; }
+.admin-rich__editor section {
+  display: block;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.admin-rich__editor h1,
 .admin-rich__editor h3 { margin: 0 0 10px; font-size: 16px; }
 .admin-rich__editor p { margin: 0 0 10px; }
-.admin-rich__editor img { max-width: 100%; height: auto; min-height: 120px; display: block; margin: 8px 0; border-radius: 8px; }
+.admin-rich__editor img,
+.admin-rich__editor .sx-news-img {
+  max-width: 100%;
+  height: auto;
+  min-height: 120px;
+  display: block;
+  margin: 8px auto;
+  border-radius: 8px;
+}
 .admin-rich__editor figure { margin: 8px 0; }
 .admin-rich__editor .sx-news-video {
   margin: 12px 0;
