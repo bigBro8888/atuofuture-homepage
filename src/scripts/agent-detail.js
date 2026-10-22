@@ -105,6 +105,35 @@ function renderFlowCard(step) {
     </div>`
 }
 
+/** 接入区汇聚/发散曲线：5 条路径 + 箭头，对齐设计稿流向 */
+function renderArchWires(dir) {
+  const ys = [48, 144, 240, 336, 432]
+  const mid = 240
+  const paths =
+    dir === 'in'
+      ? ys
+          .map((y, i) => {
+            const c1 = 36 + Math.abs(i - 2) * 4
+            return `<path d="M0 ${y} C ${c1} ${y}, 72 ${mid}, 112 ${mid}" />`
+          })
+          .join('')
+      : ys
+          .map((y, i) => {
+            const c1 = 76 - Math.abs(i - 2) * 4
+            return `<path d="M8 ${mid} C 40 ${mid}, ${c1} ${y}, 120 ${y}" />`
+          })
+          .join('')
+  const marker =
+    dir === 'in'
+      ? `<polygon class="space-ad__arch-arrow" points="112,232 124,240 112,248" />`
+      : `<polygon class="space-ad__arch-arrow" points="0,232 12,240 0,248" />`
+  return `
+    <svg class="space-ad__arch-wires space-ad__arch-wires--${dir}" viewBox="0 0 124 480" preserveAspectRatio="none" aria-hidden="true">
+      ${paths}
+      ${marker}
+    </svg>`
+}
+
 function renderSpaceAgentDetail(a) {
   const p = SPACE_AGENT_PAGE
   return `
@@ -257,29 +286,31 @@ function renderSpaceAgentDetail(a) {
           </header>
           <div class="space-ad__arch">
             <div class="space-ad__arch-col">
-              <h4>现有系统</h4>
               ${p.archLeft
                 .map(
                   (item) => `
                 <div class="space-ad__arch-item">
                   <span class="material-symbols-outlined">${item.icon}</span>
-                  ${esc(item.label)}
+                  <span>${esc(item.label)}</span>
                 </div>`
                 )
                 .join('')}
             </div>
+            ${renderArchWires('in')}
             <div class="space-ad__arch-core">
-              <span class="material-symbols-outlined">${a.icon}</span>
+              <div class="space-ad__arch-core-badge">
+                <span class="material-symbols-outlined">${a.icon}</span>
+              </div>
               <strong>${esc(a.name)}</strong>
             </div>
+            ${renderArchWires('out')}
             <div class="space-ad__arch-col space-ad__arch-col--right">
-              <h4>执行与联动</h4>
               ${p.archRight
                 .map(
                   (item) => `
                 <div class="space-ad__arch-item">
+                  <span>${esc(item.label)}</span>
                   <span class="material-symbols-outlined">${item.icon}</span>
-                  ${esc(item.label)}
                 </div>`
                 )
                 .join('')}

@@ -125,20 +125,20 @@ export const SPACE_AGENT_PAGE = {
   ],
   archTitle: '接入现有系统，不改变原来的使用方式',
   archDesc:
-    '打通办公、楼宇、会议、安防等现有系统。在统一的空间服务智能体中进行协同，无需替换原有系统，就能让空间自动运行。',
+    '打通办公、楼宇、会议、安防等现有系统，在统一的空间服务智能体中进行协同，无需替换原有系统，就能让空间自动运行。',
   archLeft: [
-    { icon: 'thermostat', label: '楼宇自控系统' },
+    { icon: 'apartment', label: '楼宇自控系统' },
     { icon: 'calendar_month', label: '会议预约系统' },
     { icon: 'badge', label: '门禁与人员系统' },
-    { icon: 'dns', label: 'IT 与设备管理系统' },
+    { icon: 'desktop_windows', label: 'IT 与设备管理系统' },
     { icon: 'assignment', label: '工单与运维系统' },
   ],
   archRight: [
-    { icon: 'ac_unit', label: '空调、新风、照明' },
-    { icon: 'smart_display', label: '会议设备、显示屏' },
-    { icon: 'door_front', label: '门禁、闸机、电梯' },
-    { icon: 'engineering', label: '服务工单、工程师' },
-    { icon: 'local_fire_department', label: '安防与消防设备' },
+    { icon: 'lightbulb', label: '空调、新风、照明' },
+    { icon: 'settings_input_antenna', label: '会议设备、显示屏' },
+    { icon: 'person', label: '门禁、闸机、电梯' },
+    { icon: 'support_agent', label: '服务工单、工程师' },
+    { icon: 'shield', label: '安防与消防设备' },
   ],
   outcomesTitle: '可见的业务成效，让空间运营更高效',
   outcomes: [
