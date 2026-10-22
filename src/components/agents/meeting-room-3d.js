@@ -73,32 +73,51 @@ function createTextures() {
   }, 256)
   woodRough.repeat.copy(woodMap.repeat)
 
-  const concrete = makeCanvasTexture((ctx, size) => {
-    ctx.fillStyle = '#c9ced6'
-    ctx.fillRect(0, 0, size, size)
-    for (let i = 0; i < 1200; i += 1) {
-      const x = Math.random() * size
-      const y = Math.random() * size
-      const r = 4 + Math.random() * 18
-      ctx.fillStyle = `rgba(${160 + Math.random() * 40},${165 + Math.random() * 35},${170 + Math.random() * 35},${0.04 + Math.random() * 0.08})`
-      ctx.beginPath()
-      ctx.arc(x, y, r, 0, Math.PI * 2)
-      ctx.fill()
+  const floorWood = makeCanvasTexture((ctx, size) => {
+    const plankH = size / 8
+    const tones = ['#8b5a36', '#945f38', '#7e4f2e', '#a06a42', '#865533', '#9a633c']
+    for (let row = 0; row < 8; row += 1) {
+      const y = row * plankH
+      ctx.fillStyle = tones[row % tones.length]
+      ctx.fillRect(0, y, size, plankH + 1)
+      const offset = (row % 2) * (size * 0.28)
+      for (let c = -1; c < 4; c += 1) {
+        const x = offset + c * (size * 0.5)
+        const seam = ctx.createLinearGradient(x - 2, y, x + 2, y)
+        seam.addColorStop(0, 'rgba(40, 22, 10, 0)')
+        seam.addColorStop(0.5, 'rgba(35, 18, 8, 0.55)')
+        seam.addColorStop(1, 'rgba(40, 22, 10, 0)')
+        ctx.fillStyle = seam
+        ctx.fillRect(x - 2, y, 4, plankH)
+        for (let i = 0; i < 18; i += 1) {
+          const yy = y + 2 + (i / 18) * (plankH - 4)
+          ctx.strokeStyle = `rgba(55, 28, 12, ${0.04 + (i % 4) * 0.015})`
+          ctx.beginPath()
+          ctx.moveTo(x + 6, yy)
+          ctx.bezierCurveTo(x + size * 0.18, yy + 1.5, x + size * 0.32, yy - 1.2, x + size * 0.48, yy)
+          ctx.stroke()
+        }
+      }
+      ctx.fillStyle = 'rgba(30, 16, 8, 0.35)'
+      ctx.fillRect(0, y + plankH - 1.5, size, 1.5)
     }
-    noise(ctx, size, 0.1)
-  })
-  concrete.repeat.set(4, 5)
+    noise(ctx, size, 0.07)
+  }, 1024)
+  floorWood.repeat.set(3.2, 4.2)
 
-  const concreteRough = makeCanvasTexture((ctx, size) => {
-    ctx.fillStyle = '#777'
+  const floorWoodRough = makeCanvasTexture((ctx, size) => {
+    ctx.fillStyle = '#8a8a8a'
     ctx.fillRect(0, 0, size, size)
-    noise(ctx, size, 0.35)
-    for (let i = 0; i < 200; i += 1) {
-      ctx.fillStyle = Math.random() > 0.5 ? '#bbb' : '#555'
-      ctx.fillRect(Math.random() * size, Math.random() * size, 2, 2)
+    const plankH = size / 8
+    for (let row = 0; row < 8; row += 1) {
+      ctx.fillStyle = 'rgba(255,255,255,0.12)'
+      ctx.fillRect(0, row * plankH, size, plankH * 0.35)
+      ctx.fillStyle = 'rgba(0,0,0,0.18)'
+      ctx.fillRect(0, row * plankH + plankH - 3, size, 3)
     }
-  }, 256)
-  concreteRough.repeat.copy(concrete.repeat)
+    noise(ctx, size, 0.18)
+  }, 512)
+  floorWoodRough.repeat.copy(floorWood.repeat)
 
   const plaster = makeCanvasTexture((ctx, size) => {
     ctx.fillStyle = '#f3f5f8'
@@ -176,7 +195,7 @@ function createTextures() {
     ctx.fill()
   }, 256)
 
-  return { woodMap, woodRough, concrete, concreteRough, plaster, fabric, metal, foliage, sky }
+  return { woodMap, woodRough, floorWood, floorWoodRough, plaster, fabric, metal, foliage, sky }
 }
 
 function mat(color, opts = {}) {
@@ -284,11 +303,11 @@ function buildRoom(scene, tex) {
     new THREE.Mesh(
       new THREE.PlaneGeometry(ROOM.w, ROOM.d),
       mat(0xffffff, {
-        map: tex.concrete,
-        roughnessMap: tex.concreteRough,
-        roughness: 0.28,
-        metalness: 0.12,
-        envMapIntensity: 1.15,
+        map: tex.floorWood,
+        roughnessMap: tex.floorWoodRough,
+        roughness: 0.48,
+        metalness: 0.04,
+        envMapIntensity: 0.55,
       })
     ),
     false,
