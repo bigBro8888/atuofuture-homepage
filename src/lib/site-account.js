@@ -8,8 +8,74 @@ function base64Url(bytes) {
     .replace(/=+$/g, '')
 }
 
+function sha256Fallback(value) {
+  const rightRotate = (number, amount) => (number >>> amount) | (number << (32 - amount))
+  const maxWord = 2 ** 32
+  const words = []
+  const hash = []
+  const constants = []
+  const byteLength = value.length
+  const bitLength = byteLength * 8
+  const composite = {}
+  let primeCounter = 0
+  for (let candidate = 2; primeCounter < 64; candidate += 1) {
+    if (composite[candidate]) continue
+    for (let multiple = candidate * candidate; multiple < 313; multiple += candidate) composite[multiple] = true
+    if (primeCounter < 8) hash[primeCounter] = (Math.sqrt(candidate) * maxWord) | 0
+    constants[primeCounter] = (candidate ** (1 / 3) * maxWord) | 0
+    primeCounter += 1
+  }
+  const bytes = [...new TextEncoder().encode(value), 0x80]
+  while ((bytes.length % 64) !== 56) bytes.push(0)
+  for (let index = 7; index >= 0; index -= 1) bytes.push(index < 4 ? (bitLength >>> (index * 8)) & 255 : 0)
+  for (let index = 0; index < bytes.length; index += 4) {
+    words.push((bytes[index] << 24) | (bytes[index + 1] << 16) | (bytes[index + 2] << 8) | bytes[index + 3])
+  }
+  for (let block = 0; block < words.length; block += 16) {
+    const schedule = words.slice(block, block + 16)
+    const oldHash = hash.slice()
+    for (let index = 0; index < 64; index += 1) {
+      const w15 = schedule[index - 15]
+      const w2 = schedule[index - 2]
+      const a = hash[0]
+      const e = hash[4]
+      const temp1 = (
+        hash[7]
+        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+        + ((e & hash[5]) ^ (~e & hash[6]))
+        + constants[index]
+        + (schedule[index] = index < 16 ? schedule[index] : (
+          schedule[index - 16]
+          + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+          + schedule[index - 7]
+          + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+        ) | 0)
+      ) | 0
+      const temp2 = (
+        (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]))
+      ) | 0
+      hash.pop()
+      hash.unshift((temp1 + temp2) | 0)
+      hash[4] = (hash[4] + temp1) | 0
+    }
+    hash.forEach((valueAtIndex, index) => {
+      hash[index] = (valueAtIndex + oldHash[index]) | 0
+    })
+  }
+  return Uint8Array.from(hash.flatMap((word) => [
+    (word >>> 24) & 255,
+    (word >>> 16) & 255,
+    (word >>> 8) & 255,
+    word & 255,
+  ]))
+}
+
 async function sha256(value) {
-  return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))
+  if (crypto.subtle) {
+    return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))
+  }
+  return sha256Fallback(value)
 }
 
 function escapeHtml(value) {
@@ -41,18 +107,13 @@ export async function loadSiteAccount() {
   }
 }
 
-export async function startSiteLogin() {
-  if (!crypto.subtle) {
-    window.location.href = '/aspace-one/'
-    return
-  }
+export async function startSiteLogin({ forceLogin = true } = {}) {
   const verifier = base64Url(crypto.getRandomValues(new Uint8Array(32)))
   const challenge = base64Url(await sha256(verifier))
   const state = base64Url(crypto.getRandomValues(new Uint8Array(24)))
   const nonce = base64Url(crypto.getRandomValues(new Uint8Array(24)))
   sessionStorage.setItem(PENDING_KEY, JSON.stringify({ verifier, state, nonce }))
-  const authorizeUrl = new URL('/auth/auth', window.location.origin)
-  authorizeUrl.search = new URLSearchParams({
+  const params = {
     client_id: 'aspace-one',
     redirect_uri: `${window.location.origin}/aspace-one/auth/callback`,
     response_type: 'code',
@@ -61,7 +122,11 @@ export async function startSiteLogin() {
     nonce,
     code_challenge: challenge,
     code_challenge_method: 'S256',
-  }).toString()
+  }
+  // 主动登录时强制出现登录页，避免沿用统一认证侧已有会话直接静默回跳
+  if (forceLogin) params.prompt = 'login'
+  const authorizeUrl = new URL('/auth/auth', window.location.origin)
+  authorizeUrl.search = new URLSearchParams(params).toString()
   window.location.href = authorizeUrl.toString()
 }
 
