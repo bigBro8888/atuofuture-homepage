@@ -190,12 +190,8 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
                 placeholder: '首屏说明',
               })}
               <div class="space-ad__btns">
-                <a class="space-ad__btn space-ad__btn--primary" href="${esc(p.heroPrimary?.href || '#')}"${tab}>
-                  ${textNode('spacePage.heroPrimary.label', p.heroPrimary?.label || '', { editable, tag: 'span', placeholder: '主按钮' })}
-                  <span class="material-symbols-outlined">play_circle</span>
-                </a>
-                <button type="button" class="space-ad__btn space-ad__btn--ghost"${editable ? '' : ' data-demo-modal-open'}>
-                  ${textNode('spacePage.heroSecondary.label', p.heroSecondary?.label || '', { editable, tag: 'span', placeholder: '次按钮' })}
+                <button type="button" class="space-ad__btn space-ad__btn--primary"${editable ? '' : ' data-demo-modal-open'}>
+                  ${textNode('spacePage.heroSecondary.label', p.heroSecondary?.label || '', { editable, tag: 'span', placeholder: '预约场景演示' })}
                 </button>
               </div>
               <ul class="space-ad__venues">
