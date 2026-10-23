@@ -110,7 +110,7 @@ function renderHeroMedia(p, { editable = false } = {}) {
   if (editable) {
     const hasMedia = Boolean(video || image)
     const preview = video
-      ? `<video class="space-ad__hero-media" src="${esc(video)}"${image ? ` poster="${esc(image)}"` : ''} muted playsinline></video>`
+      ? `<video class="space-ad__hero-media" data-online-video="${esc(video)}"${image ? ` poster="${esc(image)}"` : ''} muted playsinline></video>`
       : image
         ? `<img class="space-ad__hero-media" src="${esc(image)}" alt="" width="900" height="560" />`
         : ''
@@ -127,7 +127,7 @@ function renderHeroMedia(p, { editable = false } = {}) {
       </button>`
   }
   if (video) {
-    return `<video class="space-ad__hero-media" src="${esc(video)}"${image ? ` poster="${esc(image)}"` : ''} autoplay muted loop playsinline></video>`
+    return `<video class="space-ad__hero-media" data-online-video="${esc(video)}"${image ? ` poster="${esc(image)}"` : ''} autoplay muted loop playsinline></video>`
   }
   if (!image) return ''
   return `<img class="space-ad__hero-media" src="${esc(image)}" alt="" width="900" height="560" fetchpriority="high" />`

@@ -1,5 +1,6 @@
 import { AGENT_DETAILS } from '../data/agents-detail.js'
 import { renderAgentDetail } from '../lib/agent-detail-render.js'
+import { isHttpVideoUrl, mountOnlineVideo, mountOnlineVideosIn } from '../lib/online-video.js'
 
 const CONTENT_KINDS = [
   { id: 'news', label: '新闻', desc: '新闻稿件' },
@@ -11,7 +12,7 @@ const CONTENT_KINDS = [
 const AGENT_IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'archCoreImage', label: '接入区中心图', size: '400×400', tip: '中间蓝块整图替换' },
   { test: (path) => path === 'sceneImage', label: '场景图', size: '1200×800', tip: '详情页场景配图' },
-  { test: (path) => path === 'spacePage.heroImage' || path === 'spacePage.heroVideo', label: '首屏媒体', size: '1200×760', tip: '可上传图片或视频；视频建议 mp4' },
+  { test: (path) => path === 'spacePage.heroImage' || path === 'spacePage.heroVideo', label: '首屏媒体', size: '1200×760', tip: '支持在线视频链接（含云点播 CDN）或本地上传 mp4' },
   { test: (path) => path === 'spacePage.contrastImage', label: '对比区配图', size: '1200×600', tip: '斜切媒体图' },
   { test: (path) => /spacePage\.scenarios\.\d+\.image/.test(path), label: '场景区配图', size: '960×640', tip: '中间斜切图' },
   { test: (path) => /spacePage\.flowSteps\.\d+\.image/.test(path), label: '流程步骤图', size: '640×480', tip: '流程卡片图' },
@@ -524,7 +525,7 @@ function renderAgentCompose(rawItem) {
             <label class="admin-news-field is-wide" data-agents-detail-image-url-wrap>
               <span data-agents-detail-url-label>图片链接</span>
               <input type="text" data-agents-detail-image-url placeholder="/images/... 或 https://..." />
-              <small data-agents-detail-url-hint>视频请用可直接播放的地址（建议 .mp4），或点下方「上传本地视频」。淘宝云点播/分享页链接无法直接播放。</small>
+              <small data-agents-detail-url-hint>支持在线视频链接（云点播 CDN、https 直链、m3u8）或本地上传。粘贴后点确定即可；后台预览若黑屏多半是跨域，发布后以前台为准。</small>
             </label>
             <label class="admin-news-field is-wide" data-agents-detail-poster-wrap hidden>
               <span>视频封面图（可选）</span>
@@ -547,6 +548,7 @@ function renderAgentCompose(rawItem) {
         </div>
       </div>
     </div>`
+  mountOnlineVideosIn(body)
 }
 
 function collectAgentArticle(compose) {
@@ -612,20 +614,9 @@ function setAgentsDetailMediaType(modal, type) {
   const urlHint = modal.querySelector('[data-agents-detail-url-hint]')
   if (urlHint) urlHint.hidden = next !== 'video'
   if (urlInput) {
-    urlInput.placeholder = next === 'video' ? 'https://.../xxx.mp4 或点击下方上传本地视频' : '/images/... 或 https://...'
+    urlInput.placeholder =
+      next === 'video' ? 'https://cloud.video.taobao.com/... 或 https://....mp4' : '/images/... 或 https://...'
   }
-}
-
-function looksLikeDirectVideoUrl(url = '') {
-  const value = String(url || '').trim()
-  if (!value) return false
-  if (/^(\/|blob:|data:)/i.test(value)) return true
-  if (/\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(value)) return true
-  // 点播页 / 分享页不能直接塞进 <video>
-  if (/cloud\.video\.taobao\.com|youku\.com|v\.qq\.com|bilibili\.com|iqiyi\.com|douyin\.com/i.test(value)) {
-    return false
-  }
-  return /^https?:\/\//i.test(value)
 }
 
 function setAgentsDetailImagePreview(modal, url, type = 'image') {
@@ -641,31 +632,34 @@ function setAgentsDetailImagePreview(modal, url, type = 'image') {
     videoPreview.onerror = null
     videoPreview.hidden = true
     videoPreview.removeAttribute('src')
+    videoPreview.removeAttribute('data-online-video')
     videoPreview.load?.()
   }
   if (!safeUrl) {
-    if (empty) empty.hidden = false
+    if (empty) {
+      empty.hidden = false
+      empty.textContent = '暂无预览'
+    }
     return
   }
   if (empty) empty.hidden = true
   if (type === 'video' && videoPreview) {
-    if (!looksLikeDirectVideoUrl(safeUrl)) {
+    if (!isHttpVideoUrl(safeUrl)) {
       if (empty) {
         empty.hidden = false
-        empty.textContent = '该链接不是可直接播放的视频文件，请上传本地 mp4，或填写以 .mp4 结尾的地址'
+        empty.textContent = '请填写 http(s) 在线视频地址，或上传本地视频'
       }
       return
     }
     videoPreview.onerror = () => {
       if (empty) {
         empty.hidden = false
-        empty.textContent = '视频无法预览（可能被跨域拦截）。仍可点确定保存；建议改用本地上传 mp4'
+        empty.textContent = '后台预览可能因跨域无法播放，仍可点确定保存；发布后以前台为准'
       }
-      videoPreview.hidden = true
     }
-    videoPreview.src = safeUrl
     videoPreview.hidden = false
-    videoPreview.load?.()
+    videoPreview.setAttribute('data-online-video', safeUrl)
+    void mountOnlineVideo(videoPreview, safeUrl)
     return
   }
   if (preview) {
@@ -690,11 +684,12 @@ function applyAgentsDetailHeroMedia(compose, { imageUrl = '', videoUrl = '' } = 
     if (safeVideo) {
       const video = document.createElement('video')
       video.className = 'space-ad__hero-media'
-      video.src = safeVideo
       video.muted = true
       video.playsInline = true
+      video.setAttribute('data-online-video', safeVideo)
       if (safeImage) video.poster = safeImage
       target.prepend(video)
+      void mountOnlineVideo(video, safeVideo)
     } else {
       const img = document.createElement('img')
       img.className = 'space-ad__hero-media'
@@ -947,11 +942,12 @@ function bindKind(kind) {
         const poster = modal?.querySelector('[data-agents-detail-poster-url]')?.value.trim() || ''
         if (isHero) {
           if (mediaType === 'video') {
-            if (url && !looksLikeDirectVideoUrl(url)) {
-              ctx.toast('请上传本地 mp4，或填写可直接播放的视频地址（需含 .mp4）。淘宝云点播/分享页链接无法直接播放。', true)
+            if (url && !isHttpVideoUrl(url)) {
+              ctx.toast('请填写有效的在线视频地址（http/https），或上传本地视频', true)
               return
             }
             applyAgentsDetailHeroMedia(compose, { imageUrl: poster, videoUrl: url })
+            if (url) ctx.toast('已应用在线视频，记得点「发布上线」')
           } else {
             applyAgentsDetailHeroMedia(compose, { imageUrl: url, videoUrl: '' })
           }

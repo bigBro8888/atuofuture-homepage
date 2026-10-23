@@ -2,6 +2,7 @@ import { AGENT_DETAILS, AGENT_ORDER, applyAgentsLibraryCms, resolveAgentId } fro
 import { applyAgentsOverviewCms } from '../data/agents-overview.js'
 import { applyProductAgentsCms } from '../data/product-agents.js'
 import { renderAgentDetail } from '../lib/agent-detail-render.js'
+import { mountOnlineVideosIn } from '../lib/online-video.js'
 import { loadAgentsLibraryContent } from '../services/site-settings-api.js'
 
 function esc(str = '') {
@@ -75,6 +76,7 @@ export async function initAgentDetail() {
 
   if (id === 'space') {
     mount.innerHTML = renderAgentDetail({ ...a, _layout: 'space' })
+    mountOnlineVideosIn(mount)
     return
   }
 
