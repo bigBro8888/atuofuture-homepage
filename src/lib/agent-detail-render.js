@@ -212,17 +212,6 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
             </div>
             <div class="space-ad__hero-visual">
               ${renderHeroMedia(p, { editable })}
-              <div class="space-ad__chips">
-                ${(p.heroChips || [])
-                  .map(
-                    (c, i) => `
-                  <span class="space-ad__chip space-ad__chip--${c.tone}" style="--i:${i}">
-                    <i class="material-symbols-outlined">${c.icon}</i>
-                    ${textNode(`spacePage.heroChips.${i}.text`, c.text || '', { editable, tag: 'span', placeholder: '状态芯片' })}
-                  </span>`
-                  )
-                  .join('')}
-              </div>
             </div>
           </div>
         </div>
