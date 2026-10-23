@@ -633,8 +633,6 @@ function renderGenericAgentDetail(agent, { editable = false } = {}) {
 /** @param {object} agent @param {{ editable?: boolean }} [options] */
 export function renderAgentDetail(agent, { editable = false } = {}) {
   if (!agent) return ''
-  if (agent.id === 'space' || agent._layout === 'space') {
-    return renderSpaceAgentDetail(agent, { editable })
-  }
-  return renderGenericAgentDetail(agent, { editable })
+  // 全部智能体统一使用空间服务详情页布局与后台可视化编辑
+  return renderSpaceAgentDetail(agent, { editable })
 }

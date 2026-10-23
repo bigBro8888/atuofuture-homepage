@@ -1,4 +1,4 @@
-import { AGENT_DETAILS, AGENT_ORDER, applyAgentsLibraryCms, resolveAgentId } from '../data/agents-detail.js'
+import { AGENT_DETAILS, applyAgentsLibraryCms, resolveAgentId } from '../data/agents-detail.js'
 import { applyAgentsOverviewCms } from '../data/agents-overview.js'
 import { applyProductAgentsCms } from '../data/product-agents.js'
 import { renderAgentDetail } from '../lib/agent-detail-render.js'
@@ -38,23 +38,6 @@ function renderNotFound(rawId) {
     </section>`
 }
 
-function renderRelated(currentId) {
-  return AGENT_ORDER.filter((id) => id !== currentId)
-    .slice(0, 3)
-    .map((id) => {
-      const a = AGENT_DETAILS[id]
-      return `
-        <a class="agent-detail-related__card" href="./?id=${id}" style="--accent: ${a.accent}">
-          <span class="material-symbols-outlined">${a.icon}</span>
-          <div>
-            <strong>${esc(a.name)}</strong>
-          </div>
-          <span class="material-symbols-outlined agent-detail-related__arrow">arrow_forward</span>
-        </a>`
-    })
-    .join('')
-}
-
 export async function initAgentDetail() {
   const mount = document.getElementById('agent-detail')
   if (!mount) return
@@ -73,22 +56,6 @@ export async function initAgentDetail() {
   const a = { ...AGENT_DETAILS[id], id }
   document.title = `${a.name} | 安托未来`
   mount.style.setProperty('--accent', a.accent)
-
-  if (id === 'space') {
-    mount.innerHTML = renderAgentDetail({ ...a, _layout: 'space' })
-    mountOnlineVideosIn(mount)
-    return
-  }
-
-  mount.innerHTML = `
-    ${renderAgentDetail(a)}
-    <section class="py-20 bg-white">
-      <div class="max-w-max-width mx-auto px-margin-desktop">
-        <div class="agent-detail-section-head">
-          <span class="agent-detail-section-kicker">More Agents</span>
-          <h2>探索其它智能体</h2>
-        </div>
-        <div class="agent-detail-related">${renderRelated(id)}</div>
-      </div>
-    </section>`
+  mount.innerHTML = renderAgentDetail(a)
+  mountOnlineVideosIn(mount)
 }

@@ -1,4 +1,6 @@
 /** 七类产品智能体详情 —— 供 agent-detail 页按 id 渲染 */
+import { SPACE_AGENT_PAGE } from './space-agent-page.js'
+
 export const AGENT_DETAILS = {
   space: {
     name: '空间服务智能体',
@@ -219,6 +221,15 @@ export const AGENT_DETAILS = {
 }
 
 export const AGENT_ORDER = ['space', 'energy', 'meeting', 'exhibition', 'visitor', 'opc', 'hospitality', 'asset']
+
+/** 其它智能体暂用空间服务详情页默认文案/素材，后续后台逐一改 */
+for (const id of AGENT_ORDER) {
+  const item = AGENT_DETAILS[id]
+  if (!item) continue
+  if (!item.spacePage || typeof item.spacePage !== 'object') {
+    item.spacePage = structuredClone(SPACE_AGENT_PAGE)
+  }
+}
 
 /** 兼容旧链接与别名 */
 export const AGENT_ID_ALIASES = {

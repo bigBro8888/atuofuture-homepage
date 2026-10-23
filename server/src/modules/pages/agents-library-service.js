@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { db } from '../../lib/store.js'
 import { AGENT_DETAILS, AGENT_ORDER } from '../../../../src/data/agents-detail.js'
 import { AGENTS_OVERVIEW } from '../../../../src/data/agents-overview.js'
+import { SPACE_AGENT_PAGE } from '../../../../src/data/space-agent-page.js'
 
 export const AGENTS_LIBRARY_PAGE_KEY = 'agents-library'
 
@@ -65,6 +66,9 @@ function seedItem(id) {
     action: overview.action || '',
     result: overview.result || '',
     sceneImage: overview.sceneImage || '',
+    archCoreImage: detail.archCoreImage || '',
+    collabCoreImage: detail.collabCoreImage || '',
+    spacePage: structuredClone(detail.spacePage || SPACE_AGENT_PAGE),
     capabilities: detail.capabilities || [],
     workflow: detail.workflow || [],
     metrics: detail.metrics || [],

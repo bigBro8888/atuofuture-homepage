@@ -1,4 +1,5 @@
 import { AGENT_DETAILS } from '../data/agents-detail.js'
+import { SPACE_AGENT_PAGE } from '../data/space-agent-page.js'
 import { renderAgentDetail } from '../lib/agent-detail-render.js'
 import { isHttpVideoUrl, mountOnlineVideo, mountOnlineVideosIn } from '../lib/online-video.js'
 
@@ -218,7 +219,7 @@ function emptyAgent() {
     sceneImage: '',
     archCoreImage: '',
     collabCoreImage: '',
-    spacePage: undefined,
+    spacePage: structuredClone(SPACE_AGENT_PAGE),
     capabilities: [{}, {}, {}, {}],
     workflow: [{}, {}, {}, {}],
     metrics: [{}, {}, {}],
@@ -238,7 +239,12 @@ function hydrateAgentItem(item = {}) {
     workflow: item.workflow?.length ? item.workflow : base.workflow || [],
     metrics: item.metrics?.length ? item.metrics : base.metrics || [],
     scenarios: item.scenarios?.length ? item.scenarios : base.scenarios || [],
-    spacePage: item.spacePage || base.spacePage,
+    spacePage:
+      item.spacePage && typeof item.spacePage === 'object'
+        ? item.spacePage
+        : base.spacePage && typeof base.spacePage === 'object'
+          ? structuredClone(base.spacePage)
+          : structuredClone(SPACE_AGENT_PAGE),
   }
 }
 
@@ -451,7 +457,6 @@ function renderAgentCompose(rawItem) {
   const previewAgent = {
     ...item,
     id: item.id || 'space',
-    _layout: item.id === 'space' ? 'space' : undefined,
   }
   const title = document.querySelector('[data-agents-compose-title]')
   if (title) title.textContent = item.name ? `可视化编辑 · ${item.name}` : '可视化编辑 · 新建智能体'
@@ -475,7 +480,7 @@ function renderAgentCompose(rawItem) {
               image: true,
               wide: true,
               size: '1200×800',
-              help: '频道列表与通用详情可用；空间服务详情图请在下方预览点换',
+              help: '频道列表用；详情页配图请在下方预览里直接点换',
             })}
             <label class="admin-news-pin admin-form-wide">
               <input data-agents-field="published" type="checkbox"${item.published !== false ? ' checked' : ''} />
