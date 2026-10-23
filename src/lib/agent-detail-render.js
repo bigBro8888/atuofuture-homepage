@@ -169,6 +169,7 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
   const p = resolveSpacePage(a)
   const tab = editable ? ' tabindex="-1"' : ''
   const coreImage = a.archCoreImage || p.archCoreImage || ''
+  const collabCoreImage = a.collabCoreImage || p.collabCoreImage || ''
   return `
     <article class="space-ad${editable ? ' space-ad--editable' : ''}">
       <section class="space-ad__hero">
@@ -424,10 +425,20 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
             })}
           </header>
           <div class="space-ad__collab">
-            <div class="space-ad__collab-core">
+            ${
+              editable
+                ? `<div class="space-ad__collab-core space-ad__collab-core--image">
+              ${imgNode('collabCoreImage', collabCoreImage, { editable, loading: 'lazy', alt: a.name || '' })}
+            </div>`
+                : collabCoreImage
+                  ? `<div class="space-ad__collab-core space-ad__collab-core--image">
+              <img src="${esc(collabCoreImage)}" alt="${esc(a.name || '')}" loading="lazy" />
+            </div>`
+                  : `<div class="space-ad__collab-core">
               <span class="material-symbols-outlined">${a.icon}</span>
               <strong>${esc(a.name)}</strong>
-            </div>
+            </div>`
+            }
             <svg class="space-ad__collab-wires" viewBox="0 0 1000 80" preserveAspectRatio="none" aria-hidden="true">
               <path d="M500 0 V18 C500 48, 125 48, 125 80" />
               <path d="M500 0 V18 C500 48, 375 48, 375 80" />

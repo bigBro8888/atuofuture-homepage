@@ -6187,7 +6187,7 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   z-index: 1;
   width: 168px;
   padding: 26px 14px;
-  border-radius: 999px;
+  border-radius: 28px;
   display: grid;
   place-items: center;
   gap: 6px;
@@ -6198,6 +6198,22 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 }
 .space-ad__collab-core .material-symbols-outlined { font-size: 34px; }
 .space-ad__collab-core strong { font-size: 14px; }
+/* 整图替换：裁切在圆角矩形框架内 */
+.space-ad__collab-core--image {
+  position: relative;
+  padding: 0;
+  width: 168px;
+  height: 120px;
+  overflow: hidden;
+  background: #e8eef8;
+}
+.space-ad__collab-core--image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
 .space-ad__collab-wires {
   display: block;
   width: 100%;

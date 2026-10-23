@@ -176,6 +176,7 @@ function validateItem(value = {}, fallback = {}) {
     result: cleanText(value.result, fallback.result || catalog.result || '', 200),
     sceneImage: cleanUrl(value.sceneImage, fallback.sceneImage || catalog.sceneImage || ''),
     archCoreImage: cleanUrl(value.archCoreImage, fallback.archCoreImage || ''),
+    collabCoreImage: cleanUrl(value.collabCoreImage, fallback.collabCoreImage || ''),
     ...(spacePage ? { spacePage } : {}),
     capabilities: caps,
     workflow,

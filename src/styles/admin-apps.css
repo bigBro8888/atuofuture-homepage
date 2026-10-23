@@ -1773,6 +1773,7 @@ body.admin-agents-fullscreen {
 .admin-vedit--agent-detail .space-ad__contrast-media > .hpi-edit-img,
 .admin-vedit--agent-detail .space-ad__scenario-media > .hpi-edit-img,
 .admin-vedit--agent-detail .space-ad__arch-core--image > .hpi-edit-img,
+.admin-vedit--agent-detail .space-ad__collab-core--image > .hpi-edit-img,
 .admin-vedit--agent-detail .space-ad__flow-card--media > .hpi-edit-img {
   position: absolute;
   inset: 0;
@@ -1794,6 +1795,7 @@ body.admin-agents-fullscreen {
 .admin-vedit--agent-detail .space-ad__contrast-media > .hpi-edit-img img,
 .admin-vedit--agent-detail .space-ad__scenario-media > .hpi-edit-img img,
 .admin-vedit--agent-detail .space-ad__arch-core--image > .hpi-edit-img img,
+.admin-vedit--agent-detail .space-ad__collab-core--image > .hpi-edit-img img,
 .admin-vedit--agent-detail .space-ad__flow-card--media > .hpi-edit-img img {
   position: absolute;
   inset: 0;
@@ -1802,6 +1804,9 @@ body.admin-agents-fullscreen {
   object-fit: cover;
   display: block;
   background: #0f172a;
+}
+.admin-vedit--agent-detail .space-ad__collab-core--image {
+  position: relative;
 }
 .admin-vedit--agent-detail .space-ad__hero-edit-media .hpi-edit-img__tip {
   z-index: 5;

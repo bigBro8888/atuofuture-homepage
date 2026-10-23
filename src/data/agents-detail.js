@@ -259,6 +259,7 @@ export function applyAgentsLibraryCms(content) {
       scenarios: item.scenarios?.length ? item.scenarios : current.scenarios,
       sceneImage: item.sceneImage || current.sceneImage || '',
       archCoreImage: item.archCoreImage || current.archCoreImage || '',
+      collabCoreImage: item.collabCoreImage || current.collabCoreImage || '',
       spacePage:
         item.spacePage && typeof item.spacePage === 'object'
           ? { ...(current.spacePage || {}), ...item.spacePage }
