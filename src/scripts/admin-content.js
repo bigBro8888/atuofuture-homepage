@@ -17,7 +17,6 @@ const AGENT_IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'spacePage.contrastImage', label: '对比区配图', size: '1200×600', tip: '斜切媒体图' },
   { test: (path) => /spacePage\.scenarios\.\d+\.image/.test(path), label: '场景区配图', size: '960×640', tip: '中间斜切图' },
   { test: (path) => /spacePage\.flowSteps\.\d+\.image/.test(path), label: '流程步骤图', size: '640×480', tip: '流程卡片图' },
-  { test: (path) => path === 'spacePage.ctaImage', label: '收尾背景图', size: '1600×900', tip: '底部 CTA 背景' },
   { test: () => true, label: '图片', size: '1200×800', tip: '按前台比例裁切即可' },
 ]
 

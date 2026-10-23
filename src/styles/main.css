@@ -6275,7 +6275,8 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 .space-ad__peer small { display: block; margin-top: 2px; font-size: 11px; color: var(--sad-muted); }
 .space-ad__cta {
   margin: 0 0 48px;
-  padding: 56px 0;
+  /* 高度对齐前台横幅：文案 + 单按钮一行 */
+  padding: 48px 0;
   background:
     linear-gradient(110deg, rgba(10, 28, 58, 0.92), rgba(0, 70, 170, 0.78)),
     var(--cta-img) center / cover no-repeat;
@@ -6287,6 +6288,7 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
+  min-height: 88px;
 }
 .space-ad__cta h2 {
   margin: 0;

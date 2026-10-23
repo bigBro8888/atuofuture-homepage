@@ -1837,9 +1837,11 @@ body.admin-agents-fullscreen {
 .admin-vedit--agent-detail .space-ad__scenario-media {
   position: relative;
 }
+.admin-vedit--agent-detail .space-ad__cta {
+  padding: 48px 0;
+}
 .admin-vedit--agent-detail .space-ad__cta-edit-img {
-  margin-top: 12px;
-  max-width: 280px;
+  display: none;
 }
 .admin-vedit--agents .ag-edit-strip .ag-section-head h2 {
   font-size: 22px;

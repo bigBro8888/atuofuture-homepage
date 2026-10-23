@@ -473,10 +473,8 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
               multiline: true,
               placeholder: '收尾说明',
             })}
-            ${editable ? `<div class="space-ad__cta-edit-img">${imgNode('spacePage.ctaImage', p.ctaImage, { editable })}</div>` : ''}
           </div>
           <div class="space-ad__btns">
-            <a class="space-ad__btn space-ad__btn--primary" href="../agents/#agent-story"${tab}>观看一次自动运行</a>
             <button type="button" class="space-ad__btn space-ad__btn--light"${editable ? '' : ' data-demo-modal-open'}>预约场景演示</button>
           </div>
         </div>
