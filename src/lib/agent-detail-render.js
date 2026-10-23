@@ -110,12 +110,15 @@ function renderHeroMedia(p, { editable = false } = {}) {
   if (editable) {
     const hasMedia = Boolean(video || image)
     const preview = video
-      ? `<video class="space-ad__hero-media" data-online-video="${esc(video)}"${image ? ` poster="${esc(image)}"` : ''} muted playsinline></video>`
+      ? `<video class="space-ad__hero-media" data-online-video="${esc(video)}"${image ? ` poster="${esc(image)}"` : ''} muted loop playsinline></video>`
       : image
         ? `<img class="space-ad__hero-media" src="${esc(image)}" alt="" width="900" height="560" />`
         : ''
+    // 不用 <button> 包 <video>：HTML 禁止 button 内嵌交互/媒体，浏览器会不显示视频
     return `
-      <button type="button" class="hpi-edit-img${hasMedia ? '' : ' hpi-edit-img--empty'} space-ad__hero-edit-media"
+      <div class="hpi-edit-img${hasMedia ? '' : ' hpi-edit-img--empty'} space-ad__hero-edit-media"
+        role="button"
+        tabindex="0"
         data-edit-hero-media
         data-edit-image="spacePage.heroImage"
         data-edit-image-url="${esc(image)}"
@@ -124,7 +127,7 @@ function renderHeroMedia(p, { editable = false } = {}) {
         title="更换图片或视频">
         ${preview}
         <span class="hpi-edit-img__tip${hasMedia ? '' : ' is-visible'}">${hasMedia ? '更换媒体' : '添加图片或视频'}</span>
-      </button>`
+      </div>`
   }
   if (video) {
     return `<video class="space-ad__hero-media" data-online-video="${esc(video)}"${image ? ` poster="${esc(image)}"` : ''} autoplay muted loop playsinline></video>`

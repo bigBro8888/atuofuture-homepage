@@ -678,35 +678,47 @@ function applyAgentsDetailHeroMedia(compose, { imageUrl = '', videoUrl = '' } = 
   target.dataset.editImageUrl = safeImage
   target.dataset.editVideoUrl = safeVideo
   target.querySelectorAll('img, video').forEach((el) => el.remove())
-  const tip = target.querySelector('.hpi-edit-img__tip')
+  let tip = target.querySelector('.hpi-edit-img__tip')
+  if (!tip) {
+    tip = document.createElement('span')
+    tip.className = 'hpi-edit-img__tip'
+    target.appendChild(tip)
+  }
   if (safeVideo || safeImage) {
     target.classList.remove('hpi-edit-img--empty')
     if (safeVideo) {
       const video = document.createElement('video')
       video.className = 'space-ad__hero-media'
       video.muted = true
+      video.loop = true
       video.playsInline = true
+      video.setAttribute('playsinline', '')
       video.setAttribute('data-online-video', safeVideo)
       if (safeImage) video.poster = safeImage
-      target.prepend(video)
-      void mountOnlineVideo(video, safeVideo)
+      target.insertBefore(video, tip)
+      void mountOnlineVideo(video, safeVideo, { autoplay: true }).then((ok) => {
+        if (!ok) return
+        // 部分 CDN 首帧黑屏，强制再 load 一次
+        try {
+          video.load()
+          video.play?.().catch(() => {})
+        } catch {
+          /* ignore */
+        }
+      })
     } else {
       const img = document.createElement('img')
       img.className = 'space-ad__hero-media'
       img.alt = ''
       img.src = safeImage
-      target.prepend(img)
+      target.insertBefore(img, tip)
     }
-    if (tip) {
-      tip.textContent = '更换媒体'
-      tip.classList.remove('is-visible')
-    }
+    tip.textContent = '更换媒体'
+    tip.classList.remove('is-visible')
   } else {
     target.classList.add('hpi-edit-img--empty')
-    if (tip) {
-      tip.textContent = '添加图片或视频'
-      tip.classList.add('is-visible')
-    }
+    tip.textContent = '添加图片或视频'
+    tip.classList.add('is-visible')
   }
 }
 
@@ -880,7 +892,8 @@ function bindKind(kind) {
       const imageBtn = heroBtn || event.target.closest('[data-agents-detail-visual] [data-edit-image]')
       if (imageBtn) {
         event.preventDefault()
-        const isHero = Boolean(imageBtn.matches('[data-edit-hero-media]'))
+        event.stopPropagation()
+        const isHero = Boolean(imageBtn.matches?.('[data-edit-hero-media]') || imageBtn.hasAttribute?.('data-edit-hero-media'))
         const path = imageBtn.dataset.editImage || ''
         const modal = compose.querySelector('[data-agents-detail-image-modal]')
         if (!modal || (!path && !isHero)) return
