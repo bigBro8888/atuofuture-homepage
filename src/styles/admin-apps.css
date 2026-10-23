@@ -1761,6 +1761,23 @@ body.admin-agents-fullscreen {
   border-radius: 4px;
   min-width: 1ch;
 }
+/* 粘贴进来的 span/font 字号一律继承模块样式，标题字号锁死 */
+.admin-vedit--agent-detail .space-ad--editable [contenteditable='true'] *,
+.admin-vedit--agent-detail .agent-detail-vedit--editable [contenteditable='true'] * {
+  font-size: inherit !important;
+  font-family: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+  background: transparent !important;
+}
+.admin-vedit--agent-detail .space-ad__contrast-copy h2[contenteditable='true'],
+.admin-vedit--agent-detail .space-ad__contrast-copy h2 {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+  color: var(--sad-ink, #0f274f) !important;
+}
 .admin-vedit--agent-detail .space-ad--editable [contenteditable='true']:hover,
 .admin-vedit--agent-detail .agent-detail-vedit--editable [contenteditable='true']:hover,
 .admin-vedit--agent-detail .space-ad--editable [contenteditable='true']:focus,

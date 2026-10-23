@@ -5905,7 +5905,8 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 }
 .space-ad__contrast-copy h2 {
   margin: 0;
-  font-size: clamp(18px, 1.7vw, 24px);
+  /* 固定字号，避免粘贴富文本 / 窄屏 clamp 把标题挤小 */
+  font-size: 22px;
   line-height: 1.45;
   color: var(--sad-ink);
   font-weight: 800;

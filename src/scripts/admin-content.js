@@ -29,6 +29,35 @@ function readEditableText(el) {
   return (el.innerText || '').replace(/\u00a0/g, ' ').trim()
 }
 
+/** 去掉粘贴带来的富文本字号/标签，只保留纯文本 */
+function sanitizeAgentEditable(el) {
+  if (!el) return
+  const multiline = el.dataset.editMultiline === 'true'
+  let text = (el.innerText || '').replace(/\u00a0/g, ' ')
+  if (multiline) {
+    text = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/[ \t]+\n/g, '\n').trim()
+  } else {
+    text = text.replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim()
+  }
+  const hasMarkup = Boolean(el.querySelector('*')) || /style\s*=|font-size|<\/?[a-z]/i.test(el.innerHTML || '')
+  if (!hasMarkup) {
+    if (!multiline && (el.innerText || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim() !== text) {
+      el.textContent = text
+    }
+    return
+  }
+  if (!multiline) {
+    el.textContent = text
+    return
+  }
+  el.replaceChildren()
+  const lines = text.split('\n')
+  lines.forEach((line, index) => {
+    el.appendChild(document.createTextNode(line))
+    if (index < lines.length - 1) el.appendChild(document.createElement('br'))
+  })
+}
+
 const KIND_HASH = {
   news: 'content-news',
   solutions: 'content-solutions',
@@ -888,6 +917,38 @@ function bindKind(kind) {
       try { await persistKind(kind, items, '已删除并发布') } catch (error) { ctx.toast(error.message, true) }
     }
   })
+  if (kind === 'agents') {
+    compose.addEventListener('paste', (event) => {
+      const editable = event.target.closest('[data-edit-path]')
+      if (!editable) return
+      event.preventDefault()
+      const raw = (event.clipboardData || window.clipboardData)?.getData('text/plain') || ''
+      const multiline = editable.dataset.editMultiline === 'true'
+      const clean = multiline
+        ? String(raw).replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
+        : String(raw).replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim()
+      document.execCommand('insertText', false, clean)
+      sanitizeAgentEditable(editable)
+    })
+    compose.addEventListener(
+      'blur',
+      (event) => {
+        const editable = event.target.closest?.('[data-edit-path]')
+        if (editable) sanitizeAgentEditable(editable)
+      },
+      true,
+    )
+    compose.addEventListener('keydown', (event) => {
+      const editable = event.target.closest('[data-edit-path]')
+      if (!editable) return
+      if (event.key === 'Enter' && editable.dataset.editMultiline !== 'true') {
+        event.preventDefault()
+        sanitizeAgentEditable(editable)
+        editable.blur()
+      }
+    })
+  }
+
   compose.addEventListener('click', async (event) => {
     if (kind === 'agents') {
       const canvasLink = event.target.closest('[data-agents-detail-visual] a')
