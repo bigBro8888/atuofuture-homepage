@@ -1804,7 +1804,7 @@ body.admin-agents-fullscreen {
   background: #0f172a;
 }
 .admin-vedit--agent-detail .space-ad__hero-edit-media .hpi-edit-img__tip {
-  z-index: 2;
+  z-index: 5;
 }
 .admin-vedit--agent-detail [data-agents-detail-video-preview] {
   display: block;
