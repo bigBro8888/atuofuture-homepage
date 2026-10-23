@@ -99,6 +99,58 @@ function validateMetric(value = {}, fallback = {}) {
   }
 }
 
+/** 允许 http(s)、站内绝对路径、相对路径 */
+function cleanMediaOrHref(value, fallback = '') {
+  const url = String(value ?? fallback ?? '').trim()
+  if (!url) return fallback || ''
+  if (url.startsWith('/') && !url.startsWith('//')) return url.slice(0, 1000)
+  if (url.startsWith('../') || url.startsWith('./') || url.startsWith('#')) return url.slice(0, 1000)
+  return cleanUrl(url, fallback)
+}
+
+/** 空间服务详情页可视化字段（含在线视频 heroVideo） */
+function validateSpacePage(value, fallback = {}) {
+  if (!value || typeof value !== 'object') {
+    return fallback && typeof fallback === 'object' ? structuredClone(fallback) : undefined
+  }
+  const base = fallback && typeof fallback === 'object' ? fallback : {}
+  const next = structuredClone(value)
+
+  const cleanDeep = (node) => {
+    if (Array.isArray(node)) {
+      return node.map((item) => cleanDeep(item))
+    }
+    if (!node || typeof node !== 'object') return node
+    const out = {}
+    for (const [key, raw] of Object.entries(node)) {
+      if (raw == null) continue
+      if (typeof raw === 'string') {
+        const lower = key.toLowerCase()
+        if (
+          lower.includes('image') ||
+          lower.includes('video') ||
+          lower.includes('poster') ||
+          lower.endsWith('url') ||
+          lower.endsWith('href') ||
+          key === 'ctaImage'
+        ) {
+          out[key] = cleanMediaOrHref(raw, '')
+        } else {
+          out[key] = cleanText(raw, '', 2000)
+        }
+      } else if (typeof raw === 'object') {
+        out[key] = cleanDeep(raw)
+      } else {
+        out[key] = raw
+      }
+    }
+    return out
+  }
+
+  const cleaned = cleanDeep(next)
+  return { ...structuredClone(base), ...cleaned }
+}
+
 function validateItem(value = {}, fallback = {}) {
   const id = cleanSlug(value.id || value.slug, fallback.id || `a-${randomUUID().slice(0, 8)}`)
   const catalogId = AGENT_DETAILS[id] ? id : (AGENT_DETAILS[fallback.id] ? fallback.id : '')
@@ -106,6 +158,7 @@ function validateItem(value = {}, fallback = {}) {
   const caps = pad(value.capabilities, 4, () => ({})).map((item, index) => validateCap(item, catalog.capabilities?.[index] || {}))
   const workflow = pad(value.workflow, 4, () => ({})).map((item, index) => validateStep(item, catalog.workflow?.[index] || {}))
   const metrics = pad(value.metrics, 3, () => ({})).map((item, index) => validateMetric(item, catalog.metrics?.[index] || {}))
+  const spacePage = validateSpacePage(value.spacePage, fallback.spacePage)
   return {
     id,
     slug: id,
@@ -122,6 +175,8 @@ function validateItem(value = {}, fallback = {}) {
     action: cleanText(value.action, fallback.action || catalog.action || '', 240),
     result: cleanText(value.result, fallback.result || catalog.result || '', 200),
     sceneImage: cleanUrl(value.sceneImage, fallback.sceneImage || catalog.sceneImage || ''),
+    archCoreImage: cleanUrl(value.archCoreImage, fallback.archCoreImage || ''),
+    ...(spacePage ? { spacePage } : {}),
     capabilities: caps,
     workflow,
     metrics,
