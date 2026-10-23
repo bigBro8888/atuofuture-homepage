@@ -11,7 +11,7 @@ const CONTENT_KINDS = [
 
 const AGENT_IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'archCoreImage', label: '接入区中心图', size: '400×400', tip: '中间蓝块整图替换' },
-  { test: (path) => path === 'collabCoreImage', label: '协同区中心图', size: '336×240', tip: '圆角矩形框内整图替换，建议竖向构图' },
+  { test: (path) => path === 'collabCoreImage', label: '协同区中心图', size: '400×336', tip: '圆角框内完整显示（contain），勿依赖裁切' },
   { test: (path) => path === 'sceneImage', label: '场景图', size: '1200×800', tip: '详情页场景配图' },
   { test: (path) => path === 'spacePage.heroImage' || path === 'spacePage.heroVideo', label: '首屏媒体', size: '1200×760', tip: '支持在线视频链接（含云点播 CDN）或本地上传 mp4' },
   { test: (path) => path === 'spacePage.contrastImage', label: '对比区配图', size: '1200×600', tip: '斜切媒体图' },

@@ -1806,7 +1806,21 @@ body.admin-agents-fullscreen {
   background: #0f172a;
 }
 .admin-vedit--agent-detail .space-ad__collab-core--image {
+  display: block;
   position: relative;
+  width: 200px;
+  height: 168px;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: none;
+}
+.admin-vedit--agent-detail .space-ad__collab-core--image > .hpi-edit-img {
+  background: transparent;
+}
+.admin-vedit--agent-detail .space-ad__collab-core--image > .hpi-edit-img img {
+  object-fit: contain;
+  background: transparent;
 }
 .admin-vedit--agent-detail .space-ad__hero-edit-media .hpi-edit-img__tip {
   z-index: 5;

@@ -6198,20 +6198,25 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 }
 .space-ad__collab-core .material-symbols-outlined { font-size: 34px; }
 .space-ad__collab-core strong { font-size: 14px; }
-/* 整图替换：裁切在圆角矩形框架内 */
+/* 整图替换：与后台预览同框，绝对铺满避免 grid place-items 把图挤偏 */
 .space-ad__collab-core--image {
+  display: block;
+  place-items: unset;
   position: relative;
   padding: 0;
-  width: 168px;
-  height: 120px;
+  width: 200px;
+  height: 168px;
   overflow: hidden;
-  background: #e8eef8;
+  background: transparent;
+  box-shadow: none;
 }
 .space-ad__collab-core--image img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
 }
 .space-ad__collab-wires {
