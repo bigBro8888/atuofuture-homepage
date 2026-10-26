@@ -33,74 +33,20 @@ export function resolveSpacePage(agent = {}) {
   return deepMerge(SPACE_AGENT_PAGE, agent.spacePage || {})
 }
 
+/** 每个步骤下方仅一张可换小方块图，不再做预约卡/叠层等细碎组件 */
 function renderFlowCard(step, index, { editable = false } = {}) {
+  const image = String(step.image || '').trim()
   const imgPath = `spacePage.flowSteps.${index}.image`
-  if (step.kind === 'booking') {
-    const b = step.booking || {}
+  if (editable) {
     return `
-      <div class="space-ad__flow-card space-ad__flow-card--booking">
-        <div class="space-ad__mini-card">
-          <span class="material-symbols-outlined">calendar_month</span>
-          ${textNode(`spacePage.flowSteps.${index}.booking.title`, b.title || '', { editable, tag: 'strong', placeholder: '会议标题' })}
-          ${textNode(`spacePage.flowSteps.${index}.booking.time`, b.time || '', { editable, tag: 'em', placeholder: '时间' })}
-          ${textNode(`spacePage.flowSteps.${index}.booking.place`, b.place || '', { editable, tag: 'small', placeholder: '地点' })}
-          ${textNode(`spacePage.flowSteps.${index}.booking.people`, b.people || '', { editable, tag: 'small', placeholder: '人数' })}
-        </div>
+      <div class="space-ad__flow-card space-ad__flow-card--image">
+        ${imgNode(imgPath, image, { editable, loading: 'lazy', alt: step.title || '' })}
       </div>`
   }
-  if (step.kind === 'check') {
-    return `
-      <div class="space-ad__flow-card space-ad__flow-card--media">
-        ${imgNode(imgPath, step.image, { editable, loading: 'lazy' })}
-        <div class="space-ad__flow-overlay space-ad__flow-overlay--ok">
-          <span class="material-symbols-outlined">check_circle</span>
-          ${
-            editable
-              ? textNode(`spacePage.flowSteps.${index}.checkText`, step.checkText || '', {
-                  editable,
-                  tag: 'p',
-                  multiline: true,
-                  placeholder: '检测完成文案',
-                })
-              : `<p>${esc(step.checkText || '').replace(/\n/g, '<br />')}</p>`
-          }
-        </div>
-      </div>`
-  }
-  if (step.kind === 'ticket') {
-    const t = step.ticket || {}
-    return `
-      <div class="space-ad__flow-card space-ad__flow-card--media">
-        ${imgNode(imgPath, step.image, { editable, loading: 'lazy' })}
-        <div class="space-ad__mini-card space-ad__mini-card--warn">
-          <span class="material-symbols-outlined">warning</span>
-          ${textNode(`spacePage.flowSteps.${index}.ticket.title`, t.title || '', { editable, tag: 'strong', placeholder: '工单标题' })}
-          ${textNode(`spacePage.flowSteps.${index}.ticket.desc`, t.desc || '', { editable, tag: 'small', placeholder: '工单说明' })}
-        </div>
-      </div>`
-  }
-  if (step.kind === 'ready') {
-    return `
-      <div class="space-ad__flow-card space-ad__flow-card--media">
-        ${imgNode(imgPath, step.image, { editable, loading: 'lazy' })}
-        <div class="space-ad__flow-overlay space-ad__flow-overlay--ok">
-          <span class="material-symbols-outlined">check_circle</span>
-          ${
-            editable
-              ? textNode(`spacePage.flowSteps.${index}.readyText`, step.readyText || '', {
-                  editable,
-                  tag: 'p',
-                  multiline: true,
-                  placeholder: '就绪文案',
-                })
-              : `<p>${esc(step.readyText || '').replace(/\n/g, '<br />')}</p>`
-          }
-        </div>
-      </div>`
-  }
+  if (!image) return `<div class="space-ad__flow-card space-ad__flow-card--image space-ad__flow-card--empty" aria-hidden="true"></div>`
   return `
-    <div class="space-ad__flow-card space-ad__flow-card--media">
-      ${imgNode(imgPath, step.image, { editable, loading: 'lazy' })}
+    <div class="space-ad__flow-card space-ad__flow-card--image">
+      <img src="${esc(image)}" alt="" loading="lazy" />
     </div>`
 }
 

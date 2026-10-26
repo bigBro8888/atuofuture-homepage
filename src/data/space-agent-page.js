@@ -24,49 +24,36 @@ export const SPACE_AGENT_PAGE = {
   ],
   flowTitle: '看它如何准备一场会议',
   flowDesc: '从读取会议预约开始，到环境调整、设备自检、异常处理，直至会议室准备就绪。',
+  /** 六个步骤：标题 + 说明 + 下方小方块图（后台点图替换即可） */
   flowSteps: [
     {
       title: '读取会议预约',
       desc: '识别参会人、时间与会议室需求',
-      kind: 'booking',
-      booking: {
-        title: '产品评审会',
-        time: '10:00 - 11:00',
-        place: 'A座 3F - 301会议室',
-        people: '12人',
-      },
+      image: '/images/aspace-one/showcase-meeting.jpg',
     },
     {
       title: '环境自动调整',
       desc: '提前调节空调、照明与环境',
-      kind: 'photo',
       image: '/images/aspace-one/showcase-meeting.jpg',
     },
     {
       title: '会议设备自检',
       desc: '检测屏幕、投影、视频与网络状态',
-      kind: 'check',
       image: '/images/hardware/control-screen.jpg',
-      checkText: '设备检测完成\n一切正常',
     },
     {
       title: '异常自动处理',
       desc: '发现异常后自动生成工单并通知相关人员',
-      kind: 'ticket',
       image: '/images/aspace-one/showcase-control.jpg',
-      ticket: { title: '已生成服务工单', desc: '工程师已接单' },
     },
     {
       title: '会议室准备就绪',
       desc: '环境、设备与服务准备完成，等待参会人',
-      kind: 'ready',
       image: '/images/agents/meeting.jpg',
-      readyText: '会议已就绪\n欢迎参会',
     },
     {
       title: '会议进行中',
       desc: '持续保障设备与环境稳定，支持临时需求',
-      kind: 'photo',
       image: '/images/aspace-one/showcase-space.jpg',
     },
   ],

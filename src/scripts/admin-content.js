@@ -17,7 +17,7 @@ const AGENT_IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'spacePage.heroImage' || path === 'spacePage.heroVideo', label: '首屏媒体', size: '1200×760', tip: '支持在线视频链接（含云点播 CDN）或本地上传 mp4' },
   { test: (path) => path === 'spacePage.contrastImage', label: '对比区配图', size: '1200×600', tip: '斜切媒体图' },
   { test: (path) => /spacePage\.scenarios\.\d+\.image/.test(path), label: '场景区配图', size: '960×640', tip: '中间斜切图' },
-  { test: (path) => /spacePage\.flowSteps\.\d+\.image/.test(path), label: '流程步骤图', size: '640×480', tip: '流程卡片图' },
+  { test: (path) => /spacePage\.flowSteps\.\d+\.image/.test(path), label: '流程步骤图', size: '400×400', tip: '步骤下方小方块图，圆角框内裁切' },
   { test: () => true, label: '图片', size: '1200×800', tip: '按前台比例裁切即可' },
 ]
 
