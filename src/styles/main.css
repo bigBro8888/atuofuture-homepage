@@ -526,6 +526,10 @@
     box-shadow: none;
   }
 
+  .site-mega__glance--cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .site-mega-row {
     display: grid;
     gap: 3px;

@@ -47,9 +47,11 @@ function resolveVisualItems(item) {
 }
 
 function renderVisualMega(item, root) {
+  const glanceClass =
+    item.id === 'agents' ? 'site-mega__glance site-mega__glance--cols-4' : 'site-mega__glance'
   return `
     <div class="site-mega site-mega--visual" role="region" data-mega-panel>
-      <div class="site-mega__glance">
+      <div class="${glanceClass}">
         ${(item.children || [])
           .map(
             (child, index) => `
