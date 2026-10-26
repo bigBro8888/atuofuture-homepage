@@ -216,8 +216,16 @@ function parseFlowStepsPaste(raw = '') {
       .replace(/^描述[：:].*$/u, '')
       .replace(/^配图内容[：:].*$/u, '')
       .trim()
-    const descMatch = chunk.match(/(?:^|\n)\s*描述[：:]\s*(.+?)(?=\n\s*(?:配图内容[：:]|0?[1-6][\s.、．]|$))/su)
-    const desc = descMatch ? String(descMatch[1] || '').replace(/\s+/g, ' ').trim() : ''
+    // 描述行在 chunk 末尾时无尾随换行；不要强制 \n 再匹配结束
+    const descMatch =
+      chunk.match(/(?:^|\n)\s*描述[：:]\s*([^\n]+)/u) ||
+      chunk.match(/(?:^|\n)\s*描述[：:]\s*(.+?)(?=\n\s*配图内容[：:]|$)/su)
+    const desc = descMatch
+      ? String(descMatch[1] || '')
+          .replace(/\s+/g, ' ')
+          .replace(/[。．.]+$/g, '')
+          .trim()
+      : ''
     if (!title && !desc) continue
     steps[index] = { title, desc }
   }
