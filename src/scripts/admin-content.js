@@ -245,6 +245,69 @@ function applyFlowStepsPasteToCanvas(compose, steps) {
   return filled
 }
 
+/** 左侧：标题 + 打勾项（忽略「核心能力」标题行） */
+function parseScenarioCopyPaste(raw = '') {
+  const lines = String(raw || '')
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+  if (!lines.length) return null
+  const title = lines[0]
+  const checks = lines
+    .slice(1)
+    .filter((line) => !/^核心能力/.test(line) && !/^打勾项/.test(line))
+    .map((line) => line.replace(/^[·•\-、．.\d]+[\s.]*/, '').trim())
+    .filter(Boolean)
+    .slice(0, 4)
+  return { title, checks }
+}
+
+/** 右侧：每行一条动作文案 */
+function parseScenarioActionsPaste(raw = '') {
+  return String(raw || '')
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.replace(/^[·•\-、．.\d]+[\s.]*/, '').trim())
+    .filter(Boolean)
+    .slice(0, 4)
+}
+
+function applyScenarioCopyPasteToCanvas(compose, index, parsed) {
+  const canvas = compose?.querySelector('[data-agents-detail-visual]')
+  if (!canvas || !parsed) return 0
+  let filled = 0
+  const titleEl = canvas.querySelector(`[data-edit-path="spacePage.scenarios.${index}.title"]`)
+  if (titleEl && parsed.title) {
+    titleEl.textContent = parsed.title
+    filled += 1
+  }
+  for (let ci = 0; ci < 4; ci += 1) {
+    const el = canvas.querySelector(`[data-edit-path="spacePage.scenarios.${index}.checks.${ci}"]`)
+    if (!el) continue
+    const value = parsed.checks?.[ci] || ''
+    el.textContent = value
+    if (value) filled += 1
+  }
+  return filled
+}
+
+function applyScenarioActionsPasteToCanvas(compose, index, labels) {
+  const canvas = compose?.querySelector('[data-agents-detail-visual]')
+  if (!canvas || !Array.isArray(labels)) return 0
+  let filled = 0
+  for (let ai = 0; ai < 4; ai += 1) {
+    const el = canvas.querySelector(`[data-edit-path="spacePage.scenarios.${index}.actions.${ai}.label"]`)
+    if (!el) continue
+    const value = labels[ai] || ''
+    el.textContent = value
+    if (value) filled += 1
+  }
+  return filled
+}
+
 function collectFields(root, kind) {
   const item = {}
   root.querySelectorAll(`[data-${kind}-field]`).forEach((el) => {
@@ -600,6 +663,24 @@ function renderAgentCompose(rawItem) {
           <footer>
             <button type="button" data-agents-flow-paste-modal-close>取消</button>
             <button type="button" class="admin-link-modal__ok" data-agents-flow-paste-apply>解析并填入</button>
+          </footer>
+        </div>
+      </div>
+      <div class="admin-link-modal" data-agents-scenario-paste-modal hidden>
+        <div class="admin-link-modal__backdrop" data-agents-scenario-paste-modal-close></div>
+        <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="agents-scenario-paste-title">
+          <header>
+            <h3 id="agents-scenario-paste-title" data-agents-scenario-paste-heading>场景 · 批量粘贴</h3>
+            <button type="button" data-agents-scenario-paste-modal-close aria-label="关闭">×</button>
+          </header>
+          <div class="admin-link-modal__body">
+            <p class="admin-vedit-flow-paste__hint" data-agents-scenario-paste-hint>粘贴后自动填入当前场景对应字段。</p>
+            <textarea data-agents-scenario-paste rows="12" placeholder=""></textarea>
+            <small data-agents-scenario-paste-tip></small>
+          </div>
+          <footer>
+            <button type="button" data-agents-scenario-paste-modal-close>取消</button>
+            <button type="button" class="admin-link-modal__ok" data-agents-scenario-paste-apply>解析并填入</button>
           </footer>
         </div>
       </div>
@@ -991,8 +1072,8 @@ function bindKind(kind) {
   })
   if (kind === 'agents') {
     compose.addEventListener('click', (event) => {
-      const openBtn = event.target.closest('[data-agents-flow-paste-open]')
-      if (openBtn) {
+      const openFlow = event.target.closest('[data-agents-flow-paste-open]')
+      if (openFlow) {
         event.preventDefault()
         event.stopPropagation()
         const modal = compose.querySelector('[data-agents-flow-paste-modal]')
@@ -1006,26 +1087,105 @@ function bindKind(kind) {
         if (modal) modal.hidden = true
         return
       }
-      const applyBtn = event.target.closest('[data-agents-flow-paste-apply]')
-      if (!applyBtn) return
-      event.preventDefault()
-      const modal = compose.querySelector('[data-agents-flow-paste-modal]')
-      const textarea = compose.querySelector('[data-agents-flow-paste]')
-      const tip = compose.querySelector('[data-agents-flow-paste-tip]')
-      const steps = parseFlowStepsPaste(textarea?.value || '')
-      const count = steps.filter(Boolean).length
-      if (!count) {
-        if (tip) tip.textContent = '没识别到步骤，请确认格式为「01 标题」+「描述：…」'
-        ctx.toast('未识别到流程步骤', true)
+      const applyFlow = event.target.closest('[data-agents-flow-paste-apply]')
+      if (applyFlow) {
+        event.preventDefault()
+        const modal = compose.querySelector('[data-agents-flow-paste-modal]')
+        const textarea = compose.querySelector('[data-agents-flow-paste]')
+        const tip = compose.querySelector('[data-agents-flow-paste-tip]')
+        const steps = parseFlowStepsPaste(textarea?.value || '')
+        const count = steps.filter(Boolean).length
+        if (!count) {
+          if (tip) tip.textContent = '没识别到步骤，请确认格式为「01 标题」+「描述：…」'
+          ctx.toast('未识别到流程步骤', true)
+          return
+        }
+        applyFlowStepsPasteToCanvas(compose, steps)
+        if (tip) tip.textContent = `已填入 ${count} 步标题/描述（配图内容已忽略）`
+        if (modal) modal.hidden = true
+        ctx.toast(`已解析并填入 ${count} 个步骤`)
         return
       }
-      applyFlowStepsPasteToCanvas(compose, steps)
-      if (tip) tip.textContent = `已填入 ${count} 步标题/描述（配图内容已忽略）`
-      if (modal) modal.hidden = true
-      ctx.toast(`已解析并填入 ${count} 个步骤`)
+
+      const openScenario = event.target.closest('[data-agents-scenario-paste-open]')
+      if (openScenario) {
+        event.preventDefault()
+        event.stopPropagation()
+        const modal = compose.querySelector('[data-agents-scenario-paste-modal]')
+        if (!modal) return
+        const mode = openScenario.dataset.scenarioMode === 'actions' ? 'actions' : 'copy'
+        const index = Number(openScenario.dataset.scenarioIndex || 0)
+        modal.dataset.scenarioMode = mode
+        modal.dataset.scenarioIndex = String(Number.isFinite(index) ? index : 0)
+        const heading = modal.querySelector('[data-agents-scenario-paste-heading]')
+        const hint = modal.querySelector('[data-agents-scenario-paste-hint]')
+        const tip = modal.querySelector('[data-agents-scenario-paste-tip]')
+        const textarea = modal.querySelector('[data-agents-scenario-paste]')
+        if (mode === 'actions') {
+          if (heading) heading.textContent = `场景 ${index + 1} · 右侧动作批量粘贴`
+          if (hint) hint.textContent = '每行一条动作文案，按顺序填入右侧列表。'
+          if (textarea) {
+            textarea.value = ''
+            textarea.placeholder = '统一空间档案与租赁信息\n\n自动整理展示素材与卖点\n\n多渠道发布与信息同步\n\n可租、锁定、签约状态联动'
+          }
+          if (tip) tip.textContent = '只更新动作文案，图标保持原样'
+        } else {
+          if (heading) heading.textContent = `场景 ${index + 1} · 左侧标题与打勾项`
+          if (hint) hint.textContent = '第一行是标题；「核心能力（打勾项）：」可有可无；其后每行一条打勾能力。'
+          if (textarea) {
+            textarea.value = ''
+            textarea.placeholder =
+              '智能分房，让房间与住客需求自动匹配\n核心能力（打勾项）：\n\n综合房型、日期、楼层与住客偏好\n\n实时检查空间、清洁、维修和锁房状态\n\n团队入住支持连续房、同楼层与批量分配'
+          }
+          if (tip) tip.textContent = '只更新标题与打勾项；场景说明请在预览里单独改'
+        }
+        modal.hidden = false
+        textarea?.focus()
+        return
+      }
+      if (event.target.closest('[data-agents-scenario-paste-modal-close]')) {
+        event.preventDefault()
+        const modal = compose.querySelector('[data-agents-scenario-paste-modal]')
+        if (modal) modal.hidden = true
+        return
+      }
+      const applyScenario = event.target.closest('[data-agents-scenario-paste-apply]')
+      if (applyScenario) {
+        event.preventDefault()
+        const modal = compose.querySelector('[data-agents-scenario-paste-modal]')
+        const mode = modal?.dataset.scenarioMode === 'actions' ? 'actions' : 'copy'
+        const index = Number(modal?.dataset.scenarioIndex || 0)
+        const textarea = compose.querySelector('[data-agents-scenario-paste]')
+        const tip = compose.querySelector('[data-agents-scenario-paste-tip]')
+        const raw = textarea?.value || ''
+        if (mode === 'actions') {
+          const labels = parseScenarioActionsPaste(raw)
+          if (!labels.length) {
+            if (tip) tip.textContent = '没识别到动作行，请每行一条文案'
+            ctx.toast('未识别到动作文案', true)
+            return
+          }
+          const filled = applyScenarioActionsPasteToCanvas(compose, index, labels)
+          if (tip) tip.textContent = `已填入 ${filled} 条动作`
+          if (modal) modal.hidden = true
+          ctx.toast(`场景 ${index + 1} 右侧已更新 ${filled} 条`)
+          return
+        }
+        const parsed = parseScenarioCopyPaste(raw)
+        if (!parsed?.title && !parsed?.checks?.length) {
+          if (tip) tip.textContent = '没识别到标题或打勾项'
+          ctx.toast('未识别到场景文案', true)
+          return
+        }
+        const filled = applyScenarioCopyPasteToCanvas(compose, index, parsed)
+        if (tip) tip.textContent = `已填入标题与 ${parsed.checks?.length || 0} 条打勾项`
+        if (modal) modal.hidden = true
+        ctx.toast(`场景 ${index + 1} 左侧已更新（${filled} 项）`)
+        return
+      }
     })
     compose.addEventListener('paste', (event) => {
-      if (event.target.closest('[data-agents-flow-paste]')) return
+      if (event.target.closest('[data-agents-flow-paste], [data-agents-scenario-paste]')) return
       const editable = event.target.closest('[data-edit-path]')
       if (!editable) return
       event.preventDefault()

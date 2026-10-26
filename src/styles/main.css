@@ -5971,6 +5971,51 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   padding: 12px 0 36px;
   border-bottom: 1px solid var(--sad-line);
 }
+.space-ad__scenario-col {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  min-width: 0;
+}
+.space-ad__scenario-col--copy .space-ad__scenario-copy {
+  flex: 1;
+  min-width: 0;
+}
+.space-ad__scenario-col--actions .space-ad__scenario-actions {
+  flex: 1;
+  min-width: 0;
+}
+.space-ad__scenario-paste-entry {
+  flex: none;
+  width: 44px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 4px;
+  border: 1px dashed rgba(0, 82, 209, 0.45);
+  border-radius: 12px;
+  background: rgba(0, 82, 209, 0.04);
+  color: var(--sad-blue);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.space-ad__scenario-paste-entry:hover {
+  background: rgba(0, 82, 209, 0.1);
+  border-color: rgba(0, 82, 209, 0.7);
+}
+.space-ad__scenario-paste-entry .material-symbols-outlined {
+  font-size: 20px;
+}
+.space-ad__scenario-paste-entry em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  writing-mode: vertical-rl;
+  letter-spacing: 0.06em;
+}
 .space-ad__scenario:last-child { border-bottom: 0; padding-bottom: 0; }
 .space-ad__scenario-icon {
   display: inline-flex;

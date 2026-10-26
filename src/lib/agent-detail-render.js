@@ -225,25 +225,46 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
       <section class="space-ad__block">
         <div class="space-ad__wrap space-ad__scenarios">
           ${(p.scenarios || [])
-            .map(
-              (s, i) => `
-            <article class="space-ad__scenario">
-              <div class="space-ad__scenario-copy">
-                <span class="space-ad__scenario-icon material-symbols-outlined${s.tone === 'warn' ? ' space-ad__scenario-icon--warn' : ''}">${s.icon}</span>
-                ${textNode(`spacePage.scenarios.${i}.title`, s.title || '', { editable, tag: 'h3', placeholder: '场景标题' })}
-                ${textNode(`spacePage.scenarios.${i}.desc`, s.desc || '', { editable, tag: 'p', placeholder: '场景说明' })}
-                <ul>
-                  ${(s.checks || [])
-                    .map(
-                      (c, ci) => `
-                    <li><span class="material-symbols-outlined">check_circle</span>${textNode(
-                      `spacePage.scenarios.${i}.checks.${ci}`,
-                      c || '',
-                      { editable, tag: 'span', placeholder: '能力点' }
-                    )}</li>`
-                    )
-                    .join('')}
-                </ul>
+            .map((s, i) => {
+              const checks = editable
+                ? [...(s.checks || []), '', '', '', ''].slice(0, Math.max(4, s.checks?.length || 0))
+                : s.checks || []
+              const actions = editable
+                ? [...(s.actions || []), {}, {}, {}, {}].slice(0, Math.max(4, s.actions?.length || 0))
+                : s.actions || []
+              const pasteCopy = editable
+                ? `<button type="button" class="space-ad__scenario-paste-entry" data-agents-scenario-paste-open data-scenario-index="${i}" data-scenario-mode="copy" title="批量粘贴左侧标题与打勾项">
+                    <span class="material-symbols-outlined" aria-hidden="true">content_paste</span>
+                    <em>粘贴</em>
+                  </button>`
+                : ''
+              const pasteActions = editable
+                ? `<button type="button" class="space-ad__scenario-paste-entry" data-agents-scenario-paste-open data-scenario-index="${i}" data-scenario-mode="actions" title="批量粘贴右侧动作列表">
+                    <span class="material-symbols-outlined" aria-hidden="true">content_paste</span>
+                    <em>粘贴</em>
+                  </button>`
+                : ''
+              return `
+            <article class="space-ad__scenario" data-scenario-index="${i}">
+              <div class="space-ad__scenario-col space-ad__scenario-col--copy">
+                ${pasteCopy}
+                <div class="space-ad__scenario-copy">
+                  <span class="space-ad__scenario-icon material-symbols-outlined${s.tone === 'warn' ? ' space-ad__scenario-icon--warn' : ''}">${s.icon}</span>
+                  ${textNode(`spacePage.scenarios.${i}.title`, s.title || '', { editable, tag: 'h3', placeholder: '场景标题' })}
+                  ${textNode(`spacePage.scenarios.${i}.desc`, s.desc || '', { editable, tag: 'p', placeholder: '场景说明' })}
+                  <ul>
+                    ${checks
+                      .map(
+                        (c, ci) => `
+                      <li><span class="material-symbols-outlined">check_circle</span>${textNode(
+                        `spacePage.scenarios.${i}.checks.${ci}`,
+                        typeof c === 'string' ? c : '',
+                        { editable, tag: 'span', placeholder: '能力点' }
+                      )}</li>`
+                      )
+                      .join('')}
+                  </ul>
+                </div>
               </div>
               <figure class="space-ad__scenario-media">
                 ${
@@ -261,23 +282,26 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
                     : ''
                 }
               </figure>
-              <ul class="space-ad__scenario-actions">
-                ${(s.actions || [])
-                  .map(
-                    (act, ai) => `
-                  <li>
-                    <span class="material-symbols-outlined">${act.icon}</span>
-                    ${textNode(`spacePage.scenarios.${i}.actions.${ai}.label`, act.label || '', {
-                      editable,
-                      tag: 'span',
-                      placeholder: '动作',
-                    })}
-                  </li>`
-                  )
-                  .join('')}
-              </ul>
+              <div class="space-ad__scenario-col space-ad__scenario-col--actions">
+                ${pasteActions}
+                <ul class="space-ad__scenario-actions">
+                  ${actions
+                    .map(
+                      (act, ai) => `
+                    <li>
+                      <span class="material-symbols-outlined">${act?.icon || 'chevron_right'}</span>
+                      ${textNode(`spacePage.scenarios.${i}.actions.${ai}.label`, act?.label || '', {
+                        editable,
+                        tag: 'span',
+                        placeholder: '动作',
+                      })}
+                    </li>`
+                    )
+                    .join('')}
+                </ul>
+              </div>
             </article>`
-            )
+            })
             .join('')}
         </div>
       </section>

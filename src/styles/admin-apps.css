@@ -1402,11 +1402,13 @@ body.admin-modal-open { overflow: hidden; }
   color: #35598c;
   font-size: 13px;
 }
-.admin-vedit--agent-detail [data-agents-flow-paste-modal] .admin-link-modal__body {
+.admin-vedit--agent-detail [data-agents-flow-paste-modal] .admin-link-modal__body,
+.admin-vedit--agent-detail [data-agents-scenario-paste-modal] .admin-link-modal__body {
   display: grid;
   gap: 10px;
 }
-.admin-vedit--agent-detail [data-agents-flow-paste-modal] textarea {
+.admin-vedit--agent-detail [data-agents-flow-paste-modal] textarea,
+.admin-vedit--agent-detail [data-agents-scenario-paste-modal] textarea {
   width: 100%;
   min-height: 240px;
   padding: 12px 14px;
@@ -1425,7 +1427,8 @@ body.admin-modal-open { overflow: hidden; }
   line-height: 1.5;
   color: #5c6b7e;
 }
-.admin-vedit--agent-detail [data-agents-flow-paste-tip] {
+.admin-vedit--agent-detail [data-agents-flow-paste-tip],
+.admin-vedit--agent-detail [data-agents-scenario-paste-tip] {
   font-size: 12px;
   color: #7b8aa0;
 }
