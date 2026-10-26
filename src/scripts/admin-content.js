@@ -576,27 +576,32 @@ function renderAgentCompose(rawItem) {
         </div>
       </details>
       <div class="admin-vedit-hint">详情页正文请在下方预览里直接改（点文字/图片即可）。上方基础设置只管名称、标识和列表信息。</div>
-      <details class="admin-vedit-flow-paste">
-        <summary>
-          <strong>流程六步 · 批量粘贴</strong>
-          <span>粘贴「01 标题 + 描述：…」自动填入下方六步；配图内容行会忽略</span>
-        </summary>
-        <div class="admin-vedit-flow-paste__body">
-          <textarea data-agents-flow-paste rows="10" placeholder="01 建立空间档案
+      <div class="admin-vedit-canvas" data-agents-detail-visual style="--accent: ${esc(item.accent || '0, 82, 209')}">
+        ${renderAgentDetail(previewAgent, { editable: true })}
+      </div>
+      <div class="admin-link-modal" data-agents-flow-paste-modal hidden>
+        <div class="admin-link-modal__backdrop" data-agents-flow-paste-modal-close></div>
+        <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="agents-flow-paste-title">
+          <header>
+            <h3 id="agents-flow-paste-title">流程六步 · 批量粘贴</h3>
+            <button type="button" data-agents-flow-paste-modal-close aria-label="关闭">×</button>
+          </header>
+          <div class="admin-link-modal__body">
+            <p class="admin-vedit-flow-paste__hint">粘贴「01 标题 + 描述：…」自动填入六步；「配图内容」行会忽略，小方块图请点图更换。</p>
+            <textarea data-agents-flow-paste rows="14" placeholder="01 建立空间档案
 
 描述：统一面积、价格、平面图、配套与可租状态
 
 02 多渠道发布
 
 描述：自动生成空间介绍，同步官网、小程序与招商渠道"></textarea>
-          <div class="admin-vedit-flow-paste__actions">
-            <button type="button" class="admin-link-modal__ok" data-agents-flow-paste-apply>解析并填入预览</button>
-            <small data-agents-flow-paste-tip>只更新标题与描述，下方小方块图请继续点图更换</small>
+            <small data-agents-flow-paste-tip>只更新标题与描述</small>
           </div>
+          <footer>
+            <button type="button" data-agents-flow-paste-modal-close>取消</button>
+            <button type="button" class="admin-link-modal__ok" data-agents-flow-paste-apply>解析并填入</button>
+          </footer>
         </div>
-      </details>
-      <div class="admin-vedit-canvas" data-agents-detail-visual style="--accent: ${esc(item.accent || '0, 82, 209')}">
-        ${renderAgentDetail(previewAgent, { editable: true })}
       </div>
       <input type="file" accept="image/jpeg,image/png,image/webp" hidden data-agents-detail-visual-file />
       <div class="admin-link-modal" data-agents-detail-image-modal hidden>
@@ -986,9 +991,25 @@ function bindKind(kind) {
   })
   if (kind === 'agents') {
     compose.addEventListener('click', (event) => {
+      const openBtn = event.target.closest('[data-agents-flow-paste-open]')
+      if (openBtn) {
+        event.preventDefault()
+        event.stopPropagation()
+        const modal = compose.querySelector('[data-agents-flow-paste-modal]')
+        if (modal) modal.hidden = false
+        compose.querySelector('[data-agents-flow-paste]')?.focus()
+        return
+      }
+      if (event.target.closest('[data-agents-flow-paste-modal-close]')) {
+        event.preventDefault()
+        const modal = compose.querySelector('[data-agents-flow-paste-modal]')
+        if (modal) modal.hidden = true
+        return
+      }
       const applyBtn = event.target.closest('[data-agents-flow-paste-apply]')
       if (!applyBtn) return
       event.preventDefault()
+      const modal = compose.querySelector('[data-agents-flow-paste-modal]')
       const textarea = compose.querySelector('[data-agents-flow-paste]')
       const tip = compose.querySelector('[data-agents-flow-paste-tip]')
       const steps = parseFlowStepsPaste(textarea?.value || '')
@@ -1000,6 +1021,7 @@ function bindKind(kind) {
       }
       applyFlowStepsPasteToCanvas(compose, steps)
       if (tip) tip.textContent = `已填入 ${count} 步标题/描述（配图内容已忽略）`
+      if (modal) modal.hidden = true
       ctx.toast(`已解析并填入 ${count} 个步骤`)
     })
     compose.addEventListener('paste', (event) => {

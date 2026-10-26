@@ -170,19 +170,29 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
               placeholder: '流程说明',
             })}
           </header>
-          <ol class="space-ad__flow">
-            ${(p.flowSteps || [])
-              .map(
-                (step, i) => `
-              <li>
-                <div class="space-ad__flow-dot">${String(i + 1).padStart(2, '0')}</div>
-                ${textNode(`spacePage.flowSteps.${i}.title`, step.title || '', { editable, tag: 'h3', placeholder: '步骤标题' })}
-                ${textNode(`spacePage.flowSteps.${i}.desc`, step.desc || '', { editable, tag: 'p', placeholder: '步骤说明' })}
-                ${renderFlowCard(step, i, { editable })}
-              </li>`
-              )
-              .join('')}
-          </ol>
+          <div class="space-ad__flow-row">
+            ${
+              editable
+                ? `<button type="button" class="space-ad__flow-paste-entry" data-agents-flow-paste-open title="批量粘贴解析流程六步">
+              <span class="material-symbols-outlined" aria-hidden="true">content_paste</span>
+              <em>批量粘贴</em>
+            </button>`
+                : ''
+            }
+            <ol class="space-ad__flow">
+              ${(p.flowSteps || [])
+                .map(
+                  (step, i) => `
+                <li>
+                  <div class="space-ad__flow-dot">${String(i + 1).padStart(2, '0')}</div>
+                  ${textNode(`spacePage.flowSteps.${i}.title`, step.title || '', { editable, tag: 'h3', placeholder: '步骤标题' })}
+                  ${textNode(`spacePage.flowSteps.${i}.desc`, step.desc || '', { editable, tag: 'p', placeholder: '步骤说明' })}
+                  ${renderFlowCard(step, i, { editable })}
+                </li>`
+                )
+                .join('')}
+            </ol>
+          </div>
         </div>
       </section>
 
