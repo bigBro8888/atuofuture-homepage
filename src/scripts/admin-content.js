@@ -196,6 +196,55 @@ function setNested(target, path, value) {
   })
 }
 
+/**
+ * 解析流程六步粘贴文案。只取「序号+标题」与「描述：」；忽略「配图内容：」。
+ * 例：
+ * 01 建立空间档案
+ * 描述：统一面积、价格…
+ * 配图内容：…（忽略）
+ */
+function parseFlowStepsPaste(raw = '') {
+  const text = String(raw || '').replace(/\r\n/g, '\n').trim()
+  if (!text) return []
+  const chunks = text.split(/(?=^\s*0?[1-6][\s.、．]+)/m).map((s) => s.trim()).filter(Boolean)
+  const steps = []
+  for (const chunk of chunks) {
+    const head = chunk.match(/^\s*0?([1-6])[\s.、．]+(.+?)(?:\n|$)/)
+    if (!head) continue
+    const index = Number(head[1]) - 1
+    const title = String(head[2] || '')
+      .replace(/^描述[：:].*$/u, '')
+      .replace(/^配图内容[：:].*$/u, '')
+      .trim()
+    const descMatch = chunk.match(/(?:^|\n)\s*描述[：:]\s*(.+?)(?=\n\s*(?:配图内容[：:]|0?[1-6][\s.、．]|$))/su)
+    const desc = descMatch ? String(descMatch[1] || '').replace(/\s+/g, ' ').trim() : ''
+    if (!title && !desc) continue
+    steps[index] = { title, desc }
+  }
+  return steps
+}
+
+function applyFlowStepsPasteToCanvas(compose, steps) {
+  const canvas = compose?.querySelector('[data-agents-detail-visual]')
+  if (!canvas || !Array.isArray(steps)) return 0
+  let filled = 0
+  for (let i = 0; i < 6; i += 1) {
+    const step = steps[i]
+    if (!step) continue
+    const titleEl = canvas.querySelector(`[data-edit-path="spacePage.flowSteps.${i}.title"]`)
+    const descEl = canvas.querySelector(`[data-edit-path="spacePage.flowSteps.${i}.desc"]`)
+    if (titleEl && step.title) {
+      titleEl.textContent = step.title
+      filled += 1
+    }
+    if (descEl && step.desc) {
+      descEl.textContent = step.desc
+      filled += 1
+    }
+  }
+  return filled
+}
+
 function collectFields(root, kind) {
   const item = {}
   root.querySelectorAll(`[data-${kind}-field]`).forEach((el) => {
@@ -527,6 +576,25 @@ function renderAgentCompose(rawItem) {
         </div>
       </details>
       <div class="admin-vedit-hint">详情页正文请在下方预览里直接改（点文字/图片即可）。上方基础设置只管名称、标识和列表信息。</div>
+      <details class="admin-vedit-flow-paste">
+        <summary>
+          <strong>流程六步 · 批量粘贴</strong>
+          <span>粘贴「01 标题 + 描述：…」自动填入下方六步；配图内容行会忽略</span>
+        </summary>
+        <div class="admin-vedit-flow-paste__body">
+          <textarea data-agents-flow-paste rows="10" placeholder="01 建立空间档案
+
+描述：统一面积、价格、平面图、配套与可租状态
+
+02 多渠道发布
+
+描述：自动生成空间介绍，同步官网、小程序与招商渠道"></textarea>
+          <div class="admin-vedit-flow-paste__actions">
+            <button type="button" class="admin-link-modal__ok" data-agents-flow-paste-apply>解析并填入预览</button>
+            <small data-agents-flow-paste-tip>只更新标题与描述，下方小方块图请继续点图更换</small>
+          </div>
+        </div>
+      </details>
       <div class="admin-vedit-canvas" data-agents-detail-visual style="--accent: ${esc(item.accent || '0, 82, 209')}">
         ${renderAgentDetail(previewAgent, { editable: true })}
       </div>
@@ -917,7 +985,25 @@ function bindKind(kind) {
     }
   })
   if (kind === 'agents') {
+    compose.addEventListener('click', (event) => {
+      const applyBtn = event.target.closest('[data-agents-flow-paste-apply]')
+      if (!applyBtn) return
+      event.preventDefault()
+      const textarea = compose.querySelector('[data-agents-flow-paste]')
+      const tip = compose.querySelector('[data-agents-flow-paste-tip]')
+      const steps = parseFlowStepsPaste(textarea?.value || '')
+      const count = steps.filter(Boolean).length
+      if (!count) {
+        if (tip) tip.textContent = '没识别到步骤，请确认格式为「01 标题」+「描述：…」'
+        ctx.toast('未识别到流程步骤', true)
+        return
+      }
+      applyFlowStepsPasteToCanvas(compose, steps)
+      if (tip) tip.textContent = `已填入 ${count} 步标题/描述（配图内容已忽略）`
+      ctx.toast(`已解析并填入 ${count} 个步骤`)
+    })
     compose.addEventListener('paste', (event) => {
+      if (event.target.closest('[data-agents-flow-paste]')) return
       const editable = event.target.closest('[data-edit-path]')
       if (!editable) return
       event.preventDefault()
