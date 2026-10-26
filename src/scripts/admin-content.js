@@ -333,6 +333,48 @@ function applyArchLabelsPasteToCanvas(compose, side, labels) {
   return filled
 }
 
+/** 成效区：每行「标题：说明」→ 最多 4 条 */
+function parseOutcomesPaste(raw = '') {
+  return String(raw || '')
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const match = line.match(/^(.+?)[：:]\s*(.*)$/u)
+      if (!match) return null
+      const title = String(match[1] || '').trim()
+      const desc = String(match[2] || '')
+        .replace(/[。．.]+$/g, '')
+        .trim()
+      if (!title && !desc) return null
+      return { title, desc }
+    })
+    .filter(Boolean)
+    .slice(0, 4)
+}
+
+function applyOutcomesPasteToCanvas(compose, items) {
+  const canvas = compose?.querySelector('[data-agents-detail-visual]')
+  if (!canvas || !Array.isArray(items)) return 0
+  let filled = 0
+  for (let i = 0; i < 4; i += 1) {
+    const item = items[i]
+    if (!item) continue
+    const titleEl = canvas.querySelector(`[data-edit-path="spacePage.outcomes.${i}.title"]`)
+    const descEl = canvas.querySelector(`[data-edit-path="spacePage.outcomes.${i}.desc"]`)
+    if (titleEl && item.title) {
+      titleEl.textContent = item.title
+      filled += 1
+    }
+    if (descEl && item.desc) {
+      descEl.textContent = item.desc
+      filled += 1
+    }
+  }
+  return filled
+}
+
 function collectFields(root, kind) {
   const item = {}
   root.querySelectorAll(`[data-${kind}-field]`).forEach((el) => {
@@ -724,6 +766,30 @@ function renderAgentCompose(rawItem) {
           <footer>
             <button type="button" data-agents-arch-paste-modal-close>取消</button>
             <button type="button" class="admin-link-modal__ok" data-agents-arch-paste-apply>解析并填入</button>
+          </footer>
+        </div>
+      </div>
+      <div class="admin-link-modal" data-agents-outcomes-paste-modal hidden>
+        <div class="admin-link-modal__backdrop" data-agents-outcomes-paste-modal-close></div>
+        <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="agents-outcomes-paste-title">
+          <header>
+            <h3 id="agents-outcomes-paste-title">业务成效 · 批量粘贴</h3>
+            <button type="button" data-agents-outcomes-paste-modal-close aria-label="关闭">×</button>
+          </header>
+          <div class="admin-link-modal__body">
+            <p class="admin-vedit-flow-paste__hint">每行一条「标题：说明」，按顺序填入最多 4 条；图标保持原样。</p>
+            <textarea data-agents-outcomes-paste rows="10" placeholder="分房调度更高效：自动匹配最优房间，减少人工沟通，提升入住效率。
+
+入住通行更顺畅：住客自助办理，手机开门，缩短前台排队时间。
+
+客房能耗更可控：接入住状态联动设备，降低空置能耗。
+
+费用记录更清晰：房费、押金与服务费用统一管理，对账更高效"></textarea>
+            <small data-agents-outcomes-paste-tip>只更新标题与说明</small>
+          </div>
+          <footer>
+            <button type="button" data-agents-outcomes-paste-modal-close>取消</button>
+            <button type="button" class="admin-link-modal__ok" data-agents-outcomes-paste-apply>解析并填入</button>
           </footer>
         </div>
       </div>
@@ -1273,9 +1339,46 @@ function bindKind(kind) {
         ctx.toast(`接入区${side === 'right' ? '右侧' : '左侧'}已更新 ${filled} 条`)
         return
       }
+
+      const openOutcomes = event.target.closest('[data-agents-outcomes-paste-open]')
+      if (openOutcomes) {
+        event.preventDefault()
+        event.stopPropagation()
+        const modal = compose.querySelector('[data-agents-outcomes-paste-modal]')
+        if (!modal) return
+        const textarea = modal.querySelector('[data-agents-outcomes-paste]')
+        if (textarea) textarea.value = ''
+        modal.hidden = false
+        textarea?.focus()
+        return
+      }
+      if (event.target.closest('[data-agents-outcomes-paste-modal-close]')) {
+        event.preventDefault()
+        const modal = compose.querySelector('[data-agents-outcomes-paste-modal]')
+        if (modal) modal.hidden = true
+        return
+      }
+      const applyOutcomes = event.target.closest('[data-agents-outcomes-paste-apply]')
+      if (applyOutcomes) {
+        event.preventDefault()
+        const modal = compose.querySelector('[data-agents-outcomes-paste-modal]')
+        const textarea = compose.querySelector('[data-agents-outcomes-paste]')
+        const tip = compose.querySelector('[data-agents-outcomes-paste-tip]')
+        const items = parseOutcomesPaste(textarea?.value || '')
+        if (!items.length) {
+          if (tip) tip.textContent = '没识别到成效，请每行「标题：说明」'
+          ctx.toast('未识别到业务成效', true)
+          return
+        }
+        const filled = applyOutcomesPasteToCanvas(compose, items)
+        if (tip) tip.textContent = `已填入 ${items.length} 条成效`
+        if (modal) modal.hidden = true
+        ctx.toast(`业务成效已更新 ${items.length} 条（${filled} 项字段）`)
+        return
+      }
     })
     compose.addEventListener('paste', (event) => {
-      if (event.target.closest('[data-agents-flow-paste], [data-agents-scenario-paste], [data-agents-arch-paste]')) return
+      if (event.target.closest('[data-agents-flow-paste], [data-agents-scenario-paste], [data-agents-arch-paste], [data-agents-outcomes-paste]')) return
       const editable = event.target.closest('[data-edit-path]')
       if (!editable) return
       event.preventDefault()

@@ -1404,13 +1404,15 @@ body.admin-modal-open { overflow: hidden; }
 }
 .admin-vedit--agent-detail [data-agents-flow-paste-modal] .admin-link-modal__body,
 .admin-vedit--agent-detail [data-agents-scenario-paste-modal] .admin-link-modal__body,
-.admin-vedit--agent-detail [data-agents-arch-paste-modal] .admin-link-modal__body {
+.admin-vedit--agent-detail [data-agents-arch-paste-modal] .admin-link-modal__body,
+.admin-vedit--agent-detail [data-agents-outcomes-paste-modal] .admin-link-modal__body {
   display: grid;
   gap: 10px;
 }
 .admin-vedit--agent-detail [data-agents-flow-paste-modal] textarea,
 .admin-vedit--agent-detail [data-agents-scenario-paste-modal] textarea,
-.admin-vedit--agent-detail [data-agents-arch-paste-modal] textarea {
+.admin-vedit--agent-detail [data-agents-arch-paste-modal] textarea,
+.admin-vedit--agent-detail [data-agents-outcomes-paste-modal] textarea {
   width: 100%;
   min-height: 240px;
   padding: 12px 14px;
@@ -1426,6 +1428,9 @@ body.admin-modal-open { overflow: hidden; }
 .admin-vedit--agent-detail [data-agents-arch-paste-modal] textarea {
   min-height: 120px;
 }
+.admin-vedit--agent-detail [data-agents-outcomes-paste-modal] textarea {
+  min-height: 200px;
+}
 .admin-vedit-flow-paste__hint {
   margin: 0;
   font-size: 13px;
@@ -1434,7 +1439,8 @@ body.admin-modal-open { overflow: hidden; }
 }
 .admin-vedit--agent-detail [data-agents-flow-paste-tip],
 .admin-vedit--agent-detail [data-agents-scenario-paste-tip],
-.admin-vedit--agent-detail [data-agents-arch-paste-tip] {
+.admin-vedit--agent-detail [data-agents-arch-paste-tip],
+.admin-vedit--agent-detail [data-agents-outcomes-paste-tip] {
   font-size: 12px;
   color: #7b8aa0;
 }

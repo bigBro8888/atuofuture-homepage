@@ -408,6 +408,16 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
               )
               .join('')}
           </div>
+          ${
+            editable
+              ? `<div class="space-ad__outcomes-paste-bar">
+            <button type="button" class="space-ad__outcomes-paste-entry" data-agents-outcomes-paste-open title="批量粘贴四条业务成效">
+              <span class="material-symbols-outlined" aria-hidden="true">content_paste</span>
+              <em>批量粘贴</em>
+            </button>
+          </div>`
+              : ''
+          }
         </div>
       </section>
 
