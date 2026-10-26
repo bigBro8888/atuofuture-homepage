@@ -5925,9 +5925,9 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 }
 .space-ad__scenario {
   display: grid;
-  grid-template-columns: minmax(220px, 0.92fr) minmax(280px, 1.2fr) minmax(180px, 0.78fr);
-  gap: 28px 36px;
-  /* 图片高度跟左右文案区对齐，由文字内容决定行高 */
+  /* 中间图加宽，右侧动作贴右，与上方对比区右缘对齐 */
+  grid-template-columns: minmax(200px, 0.82fr) minmax(340px, 1.55fr) minmax(150px, 0.52fr);
+  gap: 28px 20px;
   align-items: stretch;
   padding: 12px 0 36px;
   border-bottom: 1px solid var(--sad-line);
@@ -6023,6 +6023,10 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   list-style: none;
   display: grid;
   gap: 18px;
+  align-content: center;
+  justify-self: end;
+  width: max-content;
+  max-width: 100%;
 }
 .space-ad__scenario-actions li {
   display: flex;
