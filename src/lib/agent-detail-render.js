@@ -115,7 +115,6 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
   const p = resolveSpacePage(a)
   const tab = editable ? ' tabindex="-1"' : ''
   const coreImage = a.archCoreImage || p.archCoreImage || ''
-  const collabCoreImage = a.collabCoreImage || p.collabCoreImage || ''
   return `
     <article class="space-ad${editable ? ' space-ad--editable' : ''}">
       <section class="space-ad__hero">
@@ -347,56 +346,6 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
               </article>`
               )
               .join('')}
-          </div>
-        </div>
-      </section>
-
-      <section class="space-ad__block space-ad__block--soft">
-        <div class="space-ad__wrap">
-          <header class="space-ad__head space-ad__head--center">
-            ${textNode('spacePage.collabTitle', p.collabTitle || '', { editable, tag: 'h2', placeholder: '协同标题' })}
-            ${textNode('spacePage.collabDesc', p.collabDesc || '', {
-              editable,
-              tag: 'p',
-              multiline: true,
-              placeholder: '协同说明',
-            })}
-          </header>
-          <div class="space-ad__collab">
-            ${
-              editable
-                ? `<div class="space-ad__collab-core space-ad__collab-core--image">
-              ${imgNode('collabCoreImage', collabCoreImage, { editable, loading: 'lazy', alt: a.name || '' })}
-            </div>`
-                : collabCoreImage
-                  ? `<div class="space-ad__collab-core space-ad__collab-core--image">
-              <img src="${esc(collabCoreImage)}" alt="${esc(a.name || '')}" loading="lazy" />
-            </div>`
-                  : `<div class="space-ad__collab-core">
-              <span class="material-symbols-outlined">${a.icon}</span>
-              <strong>${esc(a.name)}</strong>
-            </div>`
-            }
-            <svg class="space-ad__collab-wires" viewBox="0 0 1000 80" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M500 0 V18 C500 48, 125 48, 125 80" />
-              <path d="M500 0 V18 C500 48, 375 48, 375 80" />
-              <path d="M500 0 V18 C500 48, 625 48, 625 80" />
-              <path d="M500 0 V18 C500 48, 875 48, 875 80" />
-            </svg>
-            <div class="space-ad__collab-peers">
-              ${(p.collabPeers || [])
-                .map(
-                  (peer, i) => `
-                <a class="space-ad__peer" href="./?id=${esc(peer.id)}"${tab}>
-                  <span class="space-ad__peer-icon space-ad__peer-icon--${peer.tone} material-symbols-outlined">${peer.icon}</span>
-                  <span>
-                    ${textNode(`spacePage.collabPeers.${i}.name`, peer.name || '', { editable, tag: 'strong', placeholder: '智能体名称' })}
-                    ${textNode(`spacePage.collabPeers.${i}.desc`, peer.desc || '', { editable, tag: 'small', placeholder: '简介' })}
-                  </span>
-                </a>`
-                )
-                .join('')}
-            </div>
           </div>
         </div>
       </section>
