@@ -1784,6 +1784,41 @@ body.admin-agents-fullscreen {
   right: 16px;
   z-index: 5;
 }
+.admin-vedit--agents .ag-hero__overlay-ctrl {
+  position: absolute;
+  top: 16px;
+  right: 132px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(12, 24, 48, 0.78);
+  color: #fff;
+  font-size: 12px;
+  cursor: default;
+  backdrop-filter: blur(6px);
+}
+.admin-vedit--agents .ag-hero__overlay-ctrl span {
+  flex: none;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.admin-vedit--agents .ag-hero__overlay-ctrl input[type='range'] {
+  width: 110px;
+  margin: 0;
+  accent-color: #00d5be;
+  cursor: pointer;
+}
+.admin-vedit--agents .ag-hero__overlay-ctrl em {
+  flex: none;
+  min-width: 3.2em;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  opacity: 0.92;
+}
 .admin-vedit--agents .ag-edit-strip {
   padding: 32px 0 48px;
   background: #f5f7fb;

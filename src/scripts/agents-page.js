@@ -30,13 +30,20 @@ function esc(str = '') {
     .replace(/"/g, '&quot;')
 }
 
+function clampBannerOverlay(value, fallback = 100) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return fallback
+  return Math.max(0, Math.min(100, Math.round(n)))
+}
+
 function renderHero() {
   const title = cmsHero?.title || '让空间智能体感知现场、调用设备、完成任务'
   const subtitle = cmsHero?.subtitle || '不只是回答问题，而是连接软件系统、智能硬件与业务流程，让空间能够自主感知、判断、执行并持续反馈。'
   const banner = cmsHero?.bannerUrl || '/images/agents/hero-bleed.jpg'
   const cta = cmsHero?.ctaLabel || '预约方案演示'
+  const overlay = clampBannerOverlay(cmsHero?.bannerOverlay, 100)
   return `
-    <section class="ag-hero">
+    <section class="ag-hero" style="--ag-hero-overlay:${(overlay / 100).toFixed(2)}">
       <div class="ag-hero__bg" aria-hidden="true">
         <img src="${esc(banner)}" alt="" width="1920" height="1080" decoding="async" fetchpriority="high" />
       </div>

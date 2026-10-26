@@ -12,17 +12,33 @@ import {
   syncAgentTaskStory,
 } from '../components/agents/task-story.js'
 
+function clampOverlay(value, fallback = 100) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return fallback
+  return Math.max(0, Math.min(100, Math.round(n)))
+}
+
 function renderHero(hero, { editable }) {
   const banner = hero.bannerUrl || '/images/agents/hero-bleed.jpg'
+  const overlay = clampOverlay(hero.bannerOverlay, 100)
+  const overlayCss = (overlay / 100).toFixed(2)
   const bgEdit = editable
     ? `<button type="button" class="hpi-edit-bg" data-edit-image="bannerUrl" data-edit-image-url="${esc(banner)}" title="更换 Banner">${banner ? '更换 Banner' : '添加 Banner'}</button>`
     : ''
+  const overlayCtrl = editable
+    ? `<label class="ag-hero__overlay-ctrl" title="调整 Banner 蒙版透明度">
+        <span>蒙版</span>
+        <input type="range" min="0" max="100" step="1" value="${overlay}" data-agents-banner-overlay />
+        <em data-agents-banner-overlay-value>${overlay}%</em>
+      </label>`
+    : ''
   return `
-    <section class="ag-hero">
+    <section class="ag-hero" style="--ag-hero-overlay:${overlayCss}" data-banner-overlay="${overlay}">
       <div class="ag-hero__bg" aria-hidden="true">
         <img src="${esc(banner)}" alt="" width="1920" height="1080" decoding="async"${editable ? '' : ' fetchpriority="high"'} />
       </div>
       ${bgEdit}
+      ${overlayCtrl}
       <div class="ag-shell ag-hero__content">
         <div class="ag-hero__copy">
           ${textNode('title', hero.title || '', { editable, tag: 'h1', placeholder: '首屏标题' })}

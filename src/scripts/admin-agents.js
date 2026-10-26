@@ -81,12 +81,15 @@ function buildModel(content) {
   applyCmsToOverview(content)
   const items = Array.isArray(content.items) ? content.items : []
   const resolveItemIndex = (id) => items.findIndex((item) => item.id === id || item.group === id)
+  const overlayRaw = Number(content.bannerOverlay)
+  const bannerOverlay = Number.isFinite(overlayRaw) ? Math.max(0, Math.min(100, Math.round(overlayRaw))) : 100
   return {
     hero: {
       title: content.title || '',
       subtitle: content.subtitle || '',
       bannerUrl: content.bannerUrl || '',
       ctaLabel: content.ctaLabel || '',
+      bannerOverlay,
     },
     agents: AGENTS_OVERVIEW.map((agent) => ({
       id: agent.id,
@@ -229,6 +232,12 @@ export function collectAgentsVisualContent(baseContent) {
     if (!path) return
     setNested(content, path, el.dataset.editHref || '')
   })
+  const overlayInput = root.querySelector('[data-agents-banner-overlay]')
+  const heroEl = root.querySelector('.ag-hero[data-banner-overlay]')
+  const overlayRaw = overlayInput
+    ? Number(overlayInput.value)
+    : Number(heroEl?.dataset.bannerOverlay)
+  content.bannerOverlay = Number.isFinite(overlayRaw) ? Math.max(0, Math.min(100, Math.round(overlayRaw))) : 100
   content.items = (content.items || []).filter(Boolean).map((item) => ({
     id: item.id || '',
     group: item.group || item.id || '',
@@ -459,6 +468,19 @@ export function bindAgentsVisualAdmin(helpers) {
     if (event.key !== 'Escape') return
     if (!document.body.classList.contains('admin-agents-fullscreen')) return
     setFullscreen(false)
+  })
+
+  editor.addEventListener('input', (event) => {
+    if (ctx.state?.simpleKey !== 'agents') return
+    const range = event.target.closest('[data-agents-banner-overlay]')
+    if (!range) return
+    const hero = range.closest('.ag-hero')
+    if (!hero) return
+    const value = Math.max(0, Math.min(100, Math.round(Number(range.value) || 0)))
+    hero.style.setProperty('--ag-hero-overlay', (value / 100).toFixed(2))
+    hero.dataset.bannerOverlay = String(value)
+    const label = hero.querySelector('[data-agents-banner-overlay-value]')
+    if (label) label.textContent = `${value}%`
   })
 
   editor.addEventListener('change', async (event) => {

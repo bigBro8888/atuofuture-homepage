@@ -15944,6 +15944,9 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   background:
     linear-gradient(90deg, rgba(7,26,51,.88) 0%, rgba(7,26,51,.62) 42%, rgba(7,26,51,.28) 72%, rgba(7,26,51,.45) 100%),
     linear-gradient(180deg, rgba(7,26,51,.28) 0%, transparent 28%, rgba(7,26,51,.55) 100%);
+  opacity: var(--ag-hero-overlay, 1);
+  pointer-events: none;
+  transition: opacity 0.15s ease;
 }
 .ag-hero__content {
   position: relative;

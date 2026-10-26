@@ -53,6 +53,7 @@ export const defaultSimplePages = {
     title: '让空间智能体感知现场、调用设备、完成任务',
     subtitle: '不只是回答问题，而是连接软件系统、智能硬件与业务流程，让空间能够自主感知、判断、执行并持续反馈。',
     bannerUrl: '/images/agents/hero-bleed.jpg',
+    bannerOverlay: 100,
     ctaLabel: '预约方案演示',
   },
   hardware: {
@@ -266,12 +267,20 @@ export function validateSimplePage(key, value = {}) {
   const fallback = defaultSimplePages[key]
   if (!fallback) throw new Error('未知页面')
   const catalog = catalogItemsFor(key)
+  const overlayFallback = Number.isFinite(Number(fallback.bannerOverlay)) ? Number(fallback.bannerOverlay) : 100
+  const overlayRaw = value.bannerOverlay == null ? overlayFallback : Number(value.bannerOverlay)
+  const bannerOverlay = Number.isFinite(overlayRaw)
+    ? Math.max(0, Math.min(100, Math.round(overlayRaw)))
+    : overlayFallback
   const page = {
     title: cleanText(value.title, fallback.title, 120),
     subtitle: cleanText(value.subtitle, fallback.subtitle, 400),
     bannerUrl: cleanUrl(value.bannerUrl, fallback.bannerUrl),
     ctaLabel: cleanText(value.ctaLabel, fallback.ctaLabel, 20),
     items: cleanItems(value.items, catalog),
+  }
+  if (key === 'agents' || fallback.bannerOverlay != null) {
+    page.bannerOverlay = bannerOverlay
   }
   if (key === 'hardware') {
     page.navGroups = cleanNavGroups(value.navGroups)
