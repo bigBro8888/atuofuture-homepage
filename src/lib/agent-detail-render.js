@@ -195,14 +195,6 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
                 ? imgNode('spacePage.contrastImage', p.contrastImage, { editable, loading: 'lazy' })
                 : `<img class="space-ad__contrast-media-el" src="${esc(p.contrastImage || '')}" alt="" loading="lazy" />`
             }
-            <div class="space-ad__mini-card space-ad__mini-card--warn space-ad__contrast-badge">
-              <span class="material-symbols-outlined">warning</span>
-              <div>
-                ${textNode('spacePage.contrastBadge.title', p.contrastBadge?.title || '', { editable, tag: 'strong', placeholder: '告警标题' })}
-                ${textNode('spacePage.contrastBadge.desc', p.contrastBadge?.desc || '', { editable, tag: 'small', placeholder: '告警说明' })}
-                ${textNode('spacePage.contrastBadge.time', p.contrastBadge?.time || '', { editable, tag: 'em', placeholder: '时间' })}
-              </div>
-            </div>
           </figure>
           <div class="space-ad__contrast-copy">
             ${textNode('spacePage.contrastTitle', p.contrastTitle || '', {
