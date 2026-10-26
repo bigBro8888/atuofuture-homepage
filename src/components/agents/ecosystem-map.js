@@ -1,4 +1,5 @@
 import { AGENTS_OVERVIEW } from '../../data/agents-overview.js'
+import { textNode } from '../../lib/vedit-nodes.js'
 
 function esc(str = '') {
   return String(str)
@@ -6,6 +7,12 @@ function esc(str = '') {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
+}
+
+function agentHref(a) {
+  const raw = String(a?.detailUrl || '').trim()
+  if (raw) return raw
+  return `/agent-detail/?id=${encodeURIComponent(a?.id || '')}`
 }
 
 /** 左右环绕中心的智能体顺序 */
@@ -60,36 +67,74 @@ function renderHeader() {
     </header>`
 }
 
-function renderAgentButton(a, selectedId) {
+function renderAgentButton(a, selectedId, { editable = false, itemIndex = -1 } = {}) {
   const on = a.id === selectedId
-  return `
-    <button
-      type="button"
+  const href = agentHref(a)
+  const copy =
+    editable && itemIndex >= 0
+      ? `<span class="ag-eco__agent-copy">
+        ${textNode(`items.${itemIndex}.title`, a.name || '', { editable: true, tag: 'strong', placeholder: '智能体名称' })}
+        ${textNode(`items.${itemIndex}.summary`, a.blurb || '', {
+          editable: true,
+          tag: 'small',
+          multiline: true,
+          placeholder: '简介',
+        })}
+        <button type="button" class="ag-eco__agent-link-edit" data-edit-link data-edit-href-path="items.${itemIndex}.href" data-edit-href="${esc(href)}" title="设置跳转链接">
+          <span class="material-symbols-outlined" aria-hidden="true">link</span>
+          <em data-edit-link-label>${esc(href || '设置链接')}</em>
+        </button>
+      </span>`
+      : `<span class="ag-eco__agent-copy">
+        <strong>${esc(a.name || '')}</strong>
+        <small>${esc(a.blurb || '')}</small>
+      </span>`
+
+  if (editable) {
+    return `
+    <div
       class="ag-eco__agent${on ? ' is-selected' : ''}"
+      data-ag-select="${esc(a.id)}"
+      role="button"
+      tabindex="0"
+      aria-pressed="${on ? 'true' : 'false'}"
+    >
+      <span class="ag-eco__agent-icon" aria-hidden="true">
+        <span class="material-symbols-outlined">${esc(a.icon)}</span>
+      </span>
+      ${copy}
+    </div>`
+  }
+
+  return `
+    <a
+      class="ag-eco__agent${on ? ' is-selected' : ''}"
+      href="${esc(href)}"
       data-ag-select="${esc(a.id)}"
       aria-pressed="${on ? 'true' : 'false'}"
     >
       <span class="ag-eco__agent-icon" aria-hidden="true">
         <span class="material-symbols-outlined">${esc(a.icon)}</span>
       </span>
-      <span class="ag-eco__agent-copy">
-        <strong>${esc(a.name || '')}</strong>
-        <small>${esc(a.blurb || '')}</small>
-      </span>
-    </button>`
+      ${copy}
+    </a>`
 }
 
-function renderOrbitSlot(a, selectedId, side, row) {
+function renderOrbitSlot(a, selectedId, side, row, options = {}) {
   return `
     <div class="ag-eco__orbit-slot ag-eco__orbit-slot--${side}" style="--orbit-row:${row}">
-      ${renderAgentButton(a, selectedId)}
+      ${renderAgentButton(a, selectedId, options)}
     </div>`
 }
 
-function renderAgentsOrbit(selectedId) {
+function renderAgentsOrbit(selectedId, { editable = false, resolveItemIndex = () => -1 } = {}) {
   const left = AGENT_LEFT_IDS.map((id) => AGENTS_OVERVIEW.find((a) => a.id === id)).filter(Boolean)
   const right = AGENT_RIGHT_IDS.map((id) => AGENTS_OVERVIEW.find((a) => a.id === id)).filter(Boolean)
   const linkIds = [...left, ...right].map((a) => a.id)
+  const slotOpts = (a) => ({
+    editable,
+    itemIndex: typeof resolveItemIndex === 'function' ? resolveItemIndex(a.id) : -1,
+  })
 
   return `
     <div class="ag-eco__orbit" data-ag-eco>
@@ -106,11 +151,11 @@ function renderAgentsOrbit(selectedId) {
           )
           .join('')}
       </svg>
-      ${left.map((a, i) => renderOrbitSlot(a, selectedId, 'left', i + 1)).join('')}
+      ${left.map((a, i) => renderOrbitSlot(a, selectedId, 'left', i + 1, slotOpts(a))).join('')}
       <div class="ag-eco__orbit-core" aria-hidden="true">
         <span>八大空间智能体</span>
       </div>
-      ${right.map((a, i) => renderOrbitSlot(a, selectedId, 'right', i + 1)).join('')}
+      ${right.map((a, i) => renderOrbitSlot(a, selectedId, 'right', i + 1, slotOpts(a))).join('')}
     </div>`
 }
 
@@ -281,16 +326,16 @@ function renderValueBar() {
 
 /**
  * AgentEcosystemMap — 业务目标 → 八大智能体 → 自主执行 → 人/系统/设备 → 客户价值
- * @param {{ selectedId: string }} props
+ * @param {{ selectedId: string, editable?: boolean, resolveItemIndex?: (id: string) => number }} props
  */
-export function renderAgentEcosystemMap({ selectedId }) {
+export function renderAgentEcosystemMap({ selectedId, editable = false, resolveItemIndex } = {}) {
   const selected = getAgent(selectedId)
 
   return `
     <section class="ag-eco" id="agent-ecosystem">
       <div class="ag-eco__shell">
         ${renderHeader()}
-        ${renderAgentsOrbit(selected.id)}
+        ${renderAgentsOrbit(selected.id, { editable, resolveItemIndex })}
         ${renderHubPill()}
         ${renderResources()}
         ${renderValueBar()}

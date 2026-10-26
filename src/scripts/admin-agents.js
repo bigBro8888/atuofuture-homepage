@@ -37,6 +37,13 @@ function readEditableText(el) {
   return (el.innerText || '').replace(/\u00a0/g, ' ').trim()
 }
 
+function defaultAgentHref(base) {
+  const raw = String(base?.detailUrl || '').trim()
+  if (raw.startsWith('/')) return raw
+  if (raw.includes('agent-detail')) return `/agent-detail/?id=${base.id}`
+  return `/agent-detail/?id=${base?.id || ''}`
+}
+
 /** 把草稿写回 AGENTS_OVERVIEW，供生态图 / 任务故事同构渲染 */
 function applyCmsToOverview(content) {
   const items = Array.isArray(content?.items) ? content.items : []
@@ -48,6 +55,7 @@ function applyCmsToOverview(content) {
     if (hit.title) agent.name = hit.title
     if (hit.summary) agent.blurb = hit.summary
     if (hit.imageUrl) agent.sceneImage = hit.imageUrl
+    if (hit.href) agent.detailUrl = hit.href
   }
 }
 
@@ -63,6 +71,7 @@ function ensureItems(content) {
       title: hit.title || base.name || '',
       summary: hit.summary || base.blurb || '',
       imageUrl: hit.imageUrl || base.sceneImage || '',
+      href: hit.href || defaultAgentHref(base),
     }
   })
   return content
@@ -88,6 +97,30 @@ function buildModel(content) {
     resolveItemIndex,
     selectedAgent: AGENTS_OVERVIEW[0]?.id || 'space',
   }
+}
+
+function linkModalHtml() {
+  return `
+      <div class="admin-link-modal" data-agents-link-modal hidden>
+        <div class="admin-link-modal__backdrop" data-agents-link-modal-close></div>
+        <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="admin-ag-link-modal-title">
+          <header>
+            <h3 id="admin-ag-link-modal-title">设置跳转链接</h3>
+            <button type="button" data-agents-link-modal-close aria-label="关闭">×</button>
+          </header>
+          <div class="admin-link-modal__body">
+            <label class="admin-news-field is-wide">
+              <span>跳转地址</span>
+              <input type="text" data-agents-link-modal-url placeholder="/agent-detail/?id=space 或 https://..." />
+            </label>
+            <p class="admin-form-section__hint">站内路径以 / 开头；也可填完整 http(s) 链接。</p>
+          </div>
+          <footer>
+            <button type="button" data-agents-link-modal-close>取消</button>
+            <button type="button" class="admin-link-modal__ok" data-agents-link-modal-save>确定</button>
+          </footer>
+        </div>
+      </div>`
 }
 
 function imageModalHtml() {
@@ -152,11 +185,11 @@ export function renderAgentsVisualEditor(content) {
           <span>预览与前台同结构；首屏与底部卡片可点改，详情正文在内容中心</span>
         </summary>
         <div class="admin-vedit-basics__body">
-          <p class="admin-form-section__hint">上方预览与线上一致：首屏、生态图、任务故事、行业组合、底部 CTA。可改首屏文案/Banner，以及页底「八大智能体」名称、简介、场景图。生态图点选、任务故事切换可在预览里试用。</p>
+          <p class="admin-form-section__hint">上方预览与线上一致。生态图八块可直接改名称、简介，点链接图标设跳转；底部只换任务故事场景图。详情正文请到「内容中心 → 空间智能体」。</p>
         </div>
       </details>
       <div class="admin-vedit-toolbar">
-        <p class="admin-vedit-hint">点首屏文字/Banner 直接改；八大智能体字段在预览底部。详情页请到「内容中心 → 空间智能体」。</p>
+        <p class="admin-vedit-hint">点生态图卡片改文字；点卡片上的链接图标设跳转。详情页请到「内容中心 → 空间智能体」。</p>
         <button type="button" class="admin-vedit-fullscreen-btn" data-agents-fullscreen>
           <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
           全屏编辑
@@ -172,6 +205,7 @@ export function renderAgentsVisualEditor(content) {
         </div>
         ${renderAgentsChannel(model, { editable: true })}
       </div>
+      ${linkModalHtml()}
       ${imageModalHtml()}
     </div>`
   mountPreview()
@@ -190,12 +224,18 @@ export function collectAgentsVisualContent(baseContent) {
     const url = el.dataset.editImageUrl != null ? el.dataset.editImageUrl : el.querySelector('img')?.getAttribute('src') || ''
     setNested(content, path, url || '')
   })
+  root.querySelectorAll('[data-edit-link]').forEach((el) => {
+    const path = el.dataset.editHrefPath
+    if (!path) return
+    setNested(content, path, el.dataset.editHref || '')
+  })
   content.items = (content.items || []).filter(Boolean).map((item) => ({
     id: item.id || '',
     group: item.group || item.id || '',
     title: item.title || '',
     summary: item.summary || '',
     imageUrl: item.imageUrl || '',
+    href: item.href || '',
   }))
   return content
 }
@@ -264,6 +304,44 @@ function applyVisualImage(path, url) {
       }
     }
   }
+}
+
+function openLinkModal(linkEl) {
+  const modal = document.querySelector('[data-agents-link-modal]')
+  if (!modal || !linkEl) return
+  modal.hidden = false
+  modal._target = linkEl
+  const urlInput = modal.querySelector('[data-agents-link-modal-url]')
+  if (urlInput) urlInput.value = linkEl.dataset.editHref || ''
+  urlInput?.focus()
+}
+
+function closeLinkModal() {
+  const modal = document.querySelector('[data-agents-link-modal]')
+  if (!modal) return
+  modal.hidden = true
+  modal._target = null
+}
+
+function saveLinkModal() {
+  const modal = document.querySelector('[data-agents-link-modal]')
+  const target = modal?._target
+  if (!target) return
+  const url = modal.querySelector('[data-agents-link-modal-url]')?.value.trim() || ''
+  target.dataset.editHref = url
+  const label = target.querySelector('[data-edit-link-label]')
+  if (label) label.textContent = url || '设置链接'
+  const path = target.dataset.editHrefPath || ''
+  const match = /^items\.(\d+)\.href$/.exec(path)
+  if (match) {
+    const index = Number(match[1])
+    const content = ctx.state?.simplePage?.draftContent
+    const agentId = content?.items?.[index]?.id
+    const agent = agentId ? AGENTS_OVERVIEW.find((row) => row.id === agentId) : null
+    if (agent) agent.detailUrl = url || defaultAgentHref(BASE_BY_ID[agentId])
+  }
+  closeLinkModal()
+  ctx.toast(url ? '跳转链接已更新' : '已清空跳转链接')
 }
 
 function openImageModal(imageEl) {
@@ -343,6 +421,23 @@ export function bindAgentsVisualAdmin(helpers) {
       saveImageModal()
       return
     }
+    if (event.target.closest('[data-agents-link-modal-close]')) {
+      event.preventDefault()
+      closeLinkModal()
+      return
+    }
+    if (event.target.closest('[data-agents-link-modal-save]')) {
+      event.preventDefault()
+      saveLinkModal()
+      return
+    }
+    const linkEl = event.target.closest('[data-edit-link]')
+    if (linkEl && editor.contains(linkEl)) {
+      event.preventDefault()
+      event.stopPropagation()
+      openLinkModal(linkEl)
+      return
+    }
     const imageEl = event.target.closest('[data-edit-image]')
     if (imageEl && editor.contains(imageEl)) {
       event.preventDefault()
@@ -351,7 +446,7 @@ export function bindAgentsVisualAdmin(helpers) {
     }
     // 允许生态图 / 任务故事 / 行业切换；拦截其它跳转
     if (
-      event.target.closest('[data-ag-select], [data-ag-jump-story], [data-edit-path], [data-edit-image]')
+      event.target.closest('[data-ag-select], [data-ag-jump-story], [data-edit-path], [data-edit-image], [data-edit-link]')
     ) {
       return
     }

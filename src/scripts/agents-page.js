@@ -147,13 +147,24 @@ function setSelectedAgent(root, state, id, { scrollStory = false } = {}) {
 
 function bindInteractions(root, state) {
   root.querySelectorAll('[data-ag-select]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (event) => {
       const id = btn.dataset.agSelect
+      const href = (btn.getAttribute('href') || '').trim()
+      // 有真实跳转时交给浏览器；仅 # / 空链时仍做选中高亮
+      if (href && href !== '#' && !href.startsWith('#')) return
+      event.preventDefault()
       if (!id || id === state.selectedAgent) return
       setSelectedAgent(root, state, id)
     })
+    btn.addEventListener('mouseenter', () => {
+      const id = btn.dataset.agSelect
+      if (!id || id === state.selectedAgent) return
+      state.selectedAgent = id
+      syncAgentEcosystemMap(root, id)
+    })
     btn.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' && e.key !== ' ') return
+      if (btn.tagName === 'A' && btn.getAttribute('href')) return
       e.preventDefault()
       btn.click()
     })
@@ -232,6 +243,7 @@ export async function initAgentsPage() {
     if (hit.title) agent.name = hit.title
     if (hit.summary) agent.blurb = hit.summary
     if (hit.imageUrl) agent.sceneImage = hit.imageUrl
+    if (hit.href) agent.detailUrl = hit.href
   }
 
   const pageHashes = new Set(['agent-story', 'agent-ecosystem', 'agent-matrix', 'agent-stage', ''])

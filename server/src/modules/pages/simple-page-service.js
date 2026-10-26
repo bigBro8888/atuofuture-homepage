@@ -36,6 +36,7 @@ export function catalogItemsFor(key) {
       title: item.name,
       summary: item.blurb || '',
       imageUrl: item.sceneImage || '',
+      href: cleanHref(item.detailUrl || '', `/agent-detail/?id=${item.id}`),
     }))
   }
   return []
@@ -103,7 +104,17 @@ function cleanHref(value, fallback = '') {
   const text = String(value ?? '').trim()
   if (!text) return fallback
   if (text.startsWith('/') && !text.startsWith('//')) return text.slice(0, 1000)
+  if (text.startsWith('#') || text.startsWith('?')) return text.slice(0, 1000)
   if (/^https?:\/\//i.test(text)) return cleanUrl(text, fallback)
+  // 相对路径（如 ../agent-detail/?id=space）按 /agents/ 页归一成站内绝对路径
+  if (text.startsWith('../') || text.startsWith('./')) {
+    try {
+      const parsed = new URL(text, 'https://example.com/agents/')
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`.slice(0, 1000)
+    } catch {
+      return fallback
+    }
+  }
   return `/${text.replace(/^\/+/, '')}`.slice(0, 1000)
 }
 
@@ -122,12 +133,14 @@ function cleanItems(value, catalog) {
   const source = catalog.length ? catalog : saved
   return source.slice(0, 40).map((item) => {
     const extra = byId.get(item.id) || {}
+    const defaultHref = item.href || ''
     return {
       id: cleanText(extra.id || item.id, item.id, 40),
       group: cleanText(extra.group || item.group, item.group || '', 40),
       title: cleanText(extra.title, item.title || '未命名', 80),
       summary: cleanText(extra.summary, item.summary || '', 240),
       imageUrl: cleanUrl(extra.imageUrl || item.imageUrl || '', item.imageUrl || ''),
+      href: cleanHref(extra.href, defaultHref),
       detailId: cleanText(extra.detailId, '', 40),
       tag: cleanText(extra.tag, extra.tag || '', 20),
       fullDescription: cleanText(extra.fullDescription, extra.fullDescription || '', 600),

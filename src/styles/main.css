@@ -16244,8 +16244,13 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   background: rgba(0, 213, 190, .12);
   color: #071A33;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   transition: background .18s ease, color .18s ease;
+  box-sizing: border-box;
+}
+a.ag-eco__agent:visited {
+  color: #071A33;
 }
 .ag-eco__agent:hover,
 .ag-eco__agent:focus-visible {
@@ -16291,6 +16296,33 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   font-size: 12px;
   line-height: 1.45;
   color: #62758F;
+}
+.ag-eco__agent-link-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 2px 6px;
+  border: 1px dashed rgba(0, 82, 209, 0.4);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #0052d1;
+  font: inherit;
+  cursor: pointer;
+  max-width: 100%;
+}
+.ag-eco__agent-link-edit .material-symbols-outlined {
+  font-size: 14px;
+  flex: none;
+}
+.ag-eco__agent-link-edit em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .ag-eco__flow-mid {
   display: grid;

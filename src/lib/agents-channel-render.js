@@ -71,8 +71,8 @@ function renderEditableAgentStrip(agents, resolveItemIndex) {
     <section class="ag-edit-strip">
       <div class="ag-shell">
         <header class="ag-section-head">
-          <h2>可编辑字段 · 八大智能体</h2>
-          <p>名称、简介、场景图会同步到上方任务故事与前台频道；详情正文请到「内容中心 → 空间智能体」。</p>
+          <h2>任务故事 · 场景图</h2>
+          <p>生态图八块的名称、简介、跳转请在上方卡片直接改；此处只换任务故事场景图。详情正文请到「内容中心 → 空间智能体」。</p>
         </header>
         <div class="ag-edit-grid">
           ${agents
@@ -88,13 +88,8 @@ function renderEditableAgentStrip(agents, resolveItemIndex) {
                 </button>
               </span>
               <span class="ag-edit-card__body">
-                ${textNode(`items.${itemIndex}.title`, agent.name || '', { editable: true, tag: 'strong', placeholder: '智能体名称' })}
-                ${textNode(`items.${itemIndex}.summary`, agent.blurb || '', {
-                  editable: true,
-                  tag: 'small',
-                  multiline: true,
-                  placeholder: '简介',
-                })}
+                <strong>${esc(agent.name || '')}</strong>
+                <small>${esc(agent.blurb || '')}</small>
               </span>
             </div>`
             })
@@ -124,7 +119,7 @@ export function renderAgentsChannel(model, { editable = false } = {}) {
   return `
 <div class="ag-channel${editable ? ' ag-channel--editable hpi--editable' : ''}" data-ag-channel>
   ${renderHero(hero, { editable })}
-  ${renderAgentEcosystemMap({ selectedId: selectedAgent })}
+  ${renderAgentEcosystemMap({ selectedId: selectedAgent, editable, resolveItemIndex })}
   ${renderAgentTaskStory({ selectedId: selectedAgent })}
   ${renderCta({ editable })}
   ${editable ? renderEditableAgentStrip(agents, resolveItemIndex) : ''}
@@ -142,6 +137,7 @@ export function bindAgentsChannelPreview(root, { selectedAgent } = {}) {
   layoutAgentOrbitLinks(root)
 
   root.addEventListener('click', (event) => {
+    if (event.target.closest('[data-edit-link], [data-edit-path], [data-edit-image]')) return
     const agentBtn = event.target.closest('[data-ag-select]')
     if (agentBtn && root.contains(agentBtn)) {
       event.preventDefault()
