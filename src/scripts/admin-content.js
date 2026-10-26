@@ -196,61 +196,78 @@ function setNested(target, path, value) {
   })
 }
 
+const FLOW_DESC_PREFIX = /^(?:描述|说明|副标题)\s*[：:=\-–—︰﹕∶]\s*/u
+
 /**
- * 解析流程六步粘贴文案。只取「序号+标题」与「描述：」；忽略「配图内容：」。
- * 例：
- * 01 建立空间档案
- * 描述：统一面积、价格…
+ * 解析流程六步粘贴文案（按行状态机，兼容各类冒号/换行）。
+ * 01 标题
+ * 描述：说明…
  * 配图内容：…（忽略）
  */
 function parseFlowStepsPaste(raw = '') {
-  const text = String(raw || '').replace(/\r\n/g, '\n').trim()
-  if (!text) return []
-  const chunks = text.split(/(?=^\s*0?[1-6][\s.、．]+)/m).map((s) => s.trim()).filter(Boolean)
+  const lines = String(raw || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .map((line) => line.replace(/\u00a0/g, ' ').replace(/\u200b/g, '').trim())
   const steps = []
-  for (const chunk of chunks) {
-    const head = chunk.match(/^\s*0?([1-6])[\s.、．]+(.+?)(?:\n|$)/)
-    if (!head) continue
-    const index = Number(head[1]) - 1
-    const title = String(head[2] || '')
-      .replace(/^描述[：:].*$/u, '')
-      .replace(/^配图内容[：:].*$/u, '')
-      .trim()
-    // 描述行在 chunk 末尾时无尾随换行；不要强制 \n 再匹配结束
-    const descMatch =
-      chunk.match(/(?:^|\n)\s*描述[：:]\s*([^\n]+)/u) ||
-      chunk.match(/(?:^|\n)\s*描述[：:]\s*(.+?)(?=\n\s*配图内容[：:]|$)/su)
-    const desc = descMatch
-      ? String(descMatch[1] || '')
-          .replace(/\s+/g, ' ')
-          .replace(/[。．.]+$/g, '')
-          .trim()
-      : ''
-    if (!title && !desc) continue
-    steps[index] = { title, desc }
+  let current = -1
+  for (const line of lines) {
+    if (!line) continue
+    if (/^配图/.test(line)) continue
+    const head = line.match(/^0?([1-6])[\s.、．]+(.+)$/u)
+    if (head) {
+      current = Number(head[1]) - 1
+      const title = String(head[2] || '')
+        .replace(FLOW_DESC_PREFIX, '')
+        .replace(/^配图.*$/u, '')
+        .trim()
+      steps[current] = { title, desc: '' }
+      continue
+    }
+    if (current < 0) continue
+    const withPrefix = line.match(/^(?:描述|说明|副标题)\s*[：:=\-–—︰﹕∶]\s*(.+)$/u)
+    if (withPrefix) {
+      steps[current].desc = String(withPrefix[1] || '')
+        .replace(/\s+/g, ' ')
+        .replace(/[。．.]+$/g, '')
+        .trim()
+      continue
+    }
+    // 无「描述：」前缀时，标题后的首条非空行也当作说明
+    if (!steps[current].desc) {
+      steps[current].desc = line.replace(/\s+/g, ' ').replace(/[。．.]+$/g, '').trim()
+    }
   }
   return steps
 }
 
 function applyFlowStepsPasteToCanvas(compose, steps) {
   const canvas = compose?.querySelector('[data-agents-detail-visual]')
-  if (!canvas || !Array.isArray(steps)) return 0
-  let filled = 0
+  if (!canvas || !Array.isArray(steps)) return { titles: 0, descs: 0 }
+  const lis = canvas.querySelectorAll('.space-ad__flow > li')
+  let titles = 0
+  let descs = 0
   for (let i = 0; i < 6; i += 1) {
     const step = steps[i]
     if (!step) continue
-    const titleEl = canvas.querySelector(`[data-edit-path="spacePage.flowSteps.${i}.title"]`)
-    const descEl = canvas.querySelector(`[data-edit-path="spacePage.flowSteps.${i}.desc"]`)
+    const li = lis[i]
+    const titleEl =
+      canvas.querySelector(`[data-edit-path="spacePage.flowSteps.${i}.title"]`) ||
+      li?.querySelector('h3[data-edit-path], h3')
+    const descEl =
+      canvas.querySelector(`[data-edit-path="spacePage.flowSteps.${i}.desc"]`) ||
+      li?.querySelector('p[data-edit-path], p')
     if (titleEl && step.title) {
       titleEl.textContent = step.title
-      filled += 1
+      titles += 1
     }
     if (descEl && step.desc) {
       descEl.textContent = step.desc
-      filled += 1
+      descs += 1
     }
   }
-  return filled
+  return { titles, descs }
 }
 
 /** 左侧：标题 + 打勾项（忽略「核心能力」标题行） */
@@ -1212,15 +1229,21 @@ function bindKind(kind) {
         const tip = compose.querySelector('[data-agents-flow-paste-tip]')
         const steps = parseFlowStepsPaste(textarea?.value || '')
         const count = steps.filter(Boolean).length
+        const descCount = steps.filter((s) => s?.desc).length
         if (!count) {
           if (tip) tip.textContent = '没识别到步骤，请确认格式为「01 标题」+「描述：…」'
           ctx.toast('未识别到流程步骤', true)
           return
         }
-        applyFlowStepsPasteToCanvas(compose, steps)
-        if (tip) tip.textContent = `已填入 ${count} 步标题/描述（配图内容已忽略）`
+        if (!descCount) {
+          if (tip) tip.textContent = '识别到标题但没有「描述：」行，请检查每步是否有描述'
+          ctx.toast('未识别到步骤描述', true)
+          return
+        }
+        const filled = applyFlowStepsPasteToCanvas(compose, steps)
+        if (tip) tip.textContent = `已填入标题 ${filled.titles}、描述 ${filled.descs}（配图忽略）`
         if (modal) modal.hidden = true
-        ctx.toast(`已解析并填入 ${count} 个步骤`)
+        ctx.toast(`已填入 ${filled.titles} 个标题、${filled.descs} 条描述`)
         return
       }
 
