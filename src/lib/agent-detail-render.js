@@ -318,16 +318,39 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
             })}
           </header>
           <div class="space-ad__arch">
-            <div class="space-ad__arch-col">
-              ${(p.archLeft || [])
-                .map(
-                  (item, i) => `
-                <div class="space-ad__arch-item">
-                  <span class="material-symbols-outlined">${item.icon}</span>
-                  ${textNode(`spacePage.archLeft.${i}.label`, item.label || '', { editable, tag: 'span', placeholder: '系统' })}
-                </div>`
-                )
-                .join('')}
+            ${(() => {
+              const leftItems = editable
+                ? [...(p.archLeft || []), {}, {}, {}, {}, {}].slice(0, Math.max(5, p.archLeft?.length || 0))
+                : p.archLeft || []
+              const rightItems = editable
+                ? [...(p.archRight || []), {}, {}, {}, {}, {}].slice(0, Math.max(5, p.archRight?.length || 0))
+                : p.archRight || []
+              const pasteLeft = editable
+                ? `<button type="button" class="space-ad__arch-paste-entry" data-agents-arch-paste-open data-arch-side="left" title="批量粘贴左侧系统">
+                    <span class="material-symbols-outlined" aria-hidden="true">content_paste</span>
+                    <em>粘贴</em>
+                  </button>`
+                : ''
+              const pasteRight = editable
+                ? `<button type="button" class="space-ad__arch-paste-entry" data-agents-arch-paste-open data-arch-side="right" title="批量粘贴右侧执行项">
+                    <span class="material-symbols-outlined" aria-hidden="true">content_paste</span>
+                    <em>粘贴</em>
+                  </button>`
+                : ''
+              return `
+            <div class="space-ad__arch-side space-ad__arch-side--left">
+              ${pasteLeft}
+              <div class="space-ad__arch-col">
+                ${leftItems
+                  .map(
+                    (item, i) => `
+                  <div class="space-ad__arch-item">
+                    <span class="material-symbols-outlined">${item?.icon || 'dns'}</span>
+                    ${textNode(`spacePage.archLeft.${i}.label`, item?.label || '', { editable, tag: 'span', placeholder: '系统' })}
+                  </div>`
+                  )
+                  .join('')}
+              </div>
             </div>
             ${renderArchWires('in')}
             ${
@@ -347,17 +370,21 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
             </div>`
             }
             ${renderArchWires('out')}
-            <div class="space-ad__arch-col space-ad__arch-col--right">
-              ${(p.archRight || [])
-                .map(
-                  (item, i) => `
-                <div class="space-ad__arch-item">
-                  ${textNode(`spacePage.archRight.${i}.label`, item.label || '', { editable, tag: 'span', placeholder: '执行项' })}
-                  <span class="material-symbols-outlined">${item.icon}</span>
-                </div>`
-                )
-                .join('')}
-            </div>
+            <div class="space-ad__arch-side space-ad__arch-side--right">
+              <div class="space-ad__arch-col space-ad__arch-col--right">
+                ${rightItems
+                  .map(
+                    (item, i) => `
+                  <div class="space-ad__arch-item">
+                    ${textNode(`spacePage.archRight.${i}.label`, item?.label || '', { editable, tag: 'span', placeholder: '执行项' })}
+                    <span class="material-symbols-outlined">${item?.icon || 'bolt'}</span>
+                  </div>`
+                  )
+                  .join('')}
+              </div>
+              ${pasteRight}
+            </div>`
+            })()}
           </div>
         </div>
       </section>

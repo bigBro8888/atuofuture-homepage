@@ -308,6 +308,31 @@ function applyScenarioActionsPasteToCanvas(compose, index, labels) {
   return filled
 }
 
+/** 接入区：顿号/逗号分隔 → 左右列表文案 */
+function parseArchLabelsPaste(raw = '') {
+  return String(raw || '')
+    .replace(/\r\n/g, '\n')
+    .split(/[、，,；;|\n]+/)
+    .map((item) => item.trim().replace(/[。．.]+$/g, '').trim())
+    .filter(Boolean)
+    .slice(0, 5)
+}
+
+function applyArchLabelsPasteToCanvas(compose, side, labels) {
+  const canvas = compose?.querySelector('[data-agents-detail-visual]')
+  const key = side === 'right' ? 'archRight' : 'archLeft'
+  if (!canvas || !Array.isArray(labels)) return 0
+  let filled = 0
+  for (let i = 0; i < 5; i += 1) {
+    const el = canvas.querySelector(`[data-edit-path="spacePage.${key}.${i}.label"]`)
+    if (!el) continue
+    const value = labels[i] || ''
+    el.textContent = value
+    if (value) filled += 1
+  }
+  return filled
+}
+
 function collectFields(root, kind) {
   const item = {}
   root.querySelectorAll(`[data-${kind}-field]`).forEach((el) => {
@@ -681,6 +706,24 @@ function renderAgentCompose(rawItem) {
           <footer>
             <button type="button" data-agents-scenario-paste-modal-close>取消</button>
             <button type="button" class="admin-link-modal__ok" data-agents-scenario-paste-apply>解析并填入</button>
+          </footer>
+        </div>
+      </div>
+      <div class="admin-link-modal" data-agents-arch-paste-modal hidden>
+        <div class="admin-link-modal__backdrop" data-agents-arch-paste-modal-close></div>
+        <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="agents-arch-paste-title">
+          <header>
+            <h3 id="agents-arch-paste-title" data-agents-arch-paste-heading>接入区 · 批量粘贴</h3>
+            <button type="button" data-agents-arch-paste-modal-close aria-label="关闭">×</button>
+          </header>
+          <div class="admin-link-modal__body">
+            <p class="admin-vedit-flow-paste__hint">用顿号「、」或逗号分隔多项，按顺序填入最多 5 条；图标保持原样。</p>
+            <textarea data-agents-arch-paste rows="6" placeholder="PMS与预订渠道、住客与协议管理、智能门锁与门禁、客房控制与物联、财务账单与工单。"></textarea>
+            <small data-agents-arch-paste-tip>只更新文案标签</small>
+          </div>
+          <footer>
+            <button type="button" data-agents-arch-paste-modal-close>取消</button>
+            <button type="button" class="admin-link-modal__ok" data-agents-arch-paste-apply>解析并填入</button>
           </footer>
         </div>
       </div>
@@ -1183,9 +1226,56 @@ function bindKind(kind) {
         ctx.toast(`场景 ${index + 1} 左侧已更新（${filled} 项）`)
         return
       }
+
+      const openArch = event.target.closest('[data-agents-arch-paste-open]')
+      if (openArch) {
+        event.preventDefault()
+        event.stopPropagation()
+        const modal = compose.querySelector('[data-agents-arch-paste-modal]')
+        if (!modal) return
+        const side = openArch.dataset.archSide === 'right' ? 'right' : 'left'
+        modal.dataset.archSide = side
+        const heading = modal.querySelector('[data-agents-arch-paste-heading]')
+        const tip = modal.querySelector('[data-agents-arch-paste-tip]')
+        const textarea = modal.querySelector('[data-agents-arch-paste]')
+        if (heading) heading.textContent = side === 'right' ? '接入区 · 右侧批量粘贴' : '接入区 · 左侧批量粘贴'
+        if (tip) tip.textContent = side === 'right' ? '填入右侧执行项文案' : '填入左侧系统文案'
+        if (textarea) {
+          textarea.value = ''
+          textarea.placeholder = 'PMS与预订渠道、住客与协议管理、智能门锁与门禁、客房控制与物联、财务账单与工单。'
+        }
+        modal.hidden = false
+        textarea?.focus()
+        return
+      }
+      if (event.target.closest('[data-agents-arch-paste-modal-close]')) {
+        event.preventDefault()
+        const modal = compose.querySelector('[data-agents-arch-paste-modal]')
+        if (modal) modal.hidden = true
+        return
+      }
+      const applyArch = event.target.closest('[data-agents-arch-paste-apply]')
+      if (applyArch) {
+        event.preventDefault()
+        const modal = compose.querySelector('[data-agents-arch-paste-modal]')
+        const side = modal?.dataset.archSide === 'right' ? 'right' : 'left'
+        const textarea = compose.querySelector('[data-agents-arch-paste]')
+        const tip = compose.querySelector('[data-agents-arch-paste-tip]')
+        const labels = parseArchLabelsPaste(textarea?.value || '')
+        if (!labels.length) {
+          if (tip) tip.textContent = '没识别到条目，请用顿号「、」分隔'
+          ctx.toast('未识别到接入项', true)
+          return
+        }
+        const filled = applyArchLabelsPasteToCanvas(compose, side, labels)
+        if (tip) tip.textContent = `已填入 ${filled} 条`
+        if (modal) modal.hidden = true
+        ctx.toast(`接入区${side === 'right' ? '右侧' : '左侧'}已更新 ${filled} 条`)
+        return
+      }
     })
     compose.addEventListener('paste', (event) => {
-      if (event.target.closest('[data-agents-flow-paste], [data-agents-scenario-paste]')) return
+      if (event.target.closest('[data-agents-flow-paste], [data-agents-scenario-paste], [data-agents-arch-paste]')) return
       const editable = event.target.closest('[data-edit-path]')
       if (!editable) return
       event.preventDefault()
