@@ -1109,7 +1109,8 @@ body.aso-standalone .back-to-top { display: none !important; }
   background: rgba(255, 255, 255, .55);
 }
 @media (min-width: 1101px) {
-  [data-aso-view="apps"] .aso-hero {
+  /* :not([hidden]) 避免盖过 .aso-hero[hidden]，否则切到知识库时应用广场仍强制显示 */
+  [data-aso-view="apps"] .aso-hero:not([hidden]) {
     display: flex;
     flex-direction: column;
     height: calc(100dvh - 64px);

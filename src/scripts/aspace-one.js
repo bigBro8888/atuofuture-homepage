@@ -2268,7 +2268,7 @@ export async function initAspaceOne() {
   loadAppPreferences()
   await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()
-  const hash = window.location.hash
+  const hash = String(window.location.hash || '').replace(/^#\/?/, '#')
   const initialAboutSection = aboutSectionIdFromHash(hash)
   const initialView = initialAboutSection
     ? 'about'
