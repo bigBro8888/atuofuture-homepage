@@ -321,13 +321,14 @@ function setAspaceEditorTab(tab) {
     panel.hidden = panel.dataset.aspaceTabPanel !== next
   })
   syncPresenceRoom('aspace')
+  presence.setFocus(`aspace-tab:${next}`)
 }
 
 function setAspaceHomeSection(section) {
   const next = ['hero', 'panorama', 'scenes', 'infra'].includes(section) ? section : 'hero'
   aspaceHomeSection = next
   scrollAspaceHomeSection(next)
-  presence.setFocus(next)
+  presence.setFocus(`aspace-home:${next}`)
 }
 
 function setAspaceHelpSection(section) {
@@ -341,6 +342,7 @@ function setAspaceHelpSection(section) {
   host.querySelectorAll('[data-aspace-help-panel]').forEach((panel) => {
     panel.hidden = panel.dataset.aspaceHelpPanel !== next
   })
+  presence.setFocus(`aspace-help:${next}`)
   if (next === 'page') setAspaceHelpPageGroup(aspaceHelpPageGroup)
 }
 
@@ -765,7 +767,7 @@ function showConfigSection(id) {
   document.querySelectorAll('[data-config-section]').forEach((section) => {
     section.hidden = section.dataset.configSection !== id
   })
-  presence.setFocus(id)
+  presence.setFocus(`config:${id}`)
 }
 
 async function loadConfig() {
@@ -829,7 +831,7 @@ function showHomeSection(id) {
   document.querySelectorAll('[data-home-section]').forEach((section) => {
     section.hidden = section.dataset.homeSection !== id
   })
-  presence.setFocus(id)
+  presence.setFocus(`home:${id}`)
 }
 
 function renderHomeEditor(content) {
@@ -1408,7 +1410,7 @@ function showAboutSection(id) {
   document.querySelectorAll('[data-about-section]').forEach((section) => {
     section.hidden = section.dataset.aboutSection !== id
   })
-  presence.setFocus(id)
+  presence.setFocus(`about:${id}`)
 }
 
 function aboutThumb(src, kind) {
@@ -1649,7 +1651,7 @@ function showSimpleSection(id) {
   document.querySelectorAll('[data-simple-section]').forEach((section) => {
     section.hidden = section.dataset.simpleSection !== id
   })
-  presence.setFocus(id)
+  presence.setFocus(`simple:${id}`)
 }
 
 function renderSpaceMatrixEditor(spaceMatrixRows = [], items = []) {

@@ -5324,9 +5324,20 @@ body.admin-aspace-help-fullscreen { overflow: hidden; }
 .admin-aspace-tabs button.is-remote-focus,
 [data-aspace-home-section].is-remote-focus,
 [data-aspace-help-section].is-remote-focus,
-[data-config-goto].is-remote-focus {
+[data-config-goto].is-remote-focus,
+[data-edit-path].is-remote-focus,
+[data-edit-image].is-remote-focus,
+[data-ag-select].is-remote-focus,
+[data-aso-app].is-remote-focus,
+[data-aspace-profile].is-remote-focus,
+[data-aspace-category].is-remote-focus,
+.admin-panel.is-active section.is-remote-focus,
+.admin-panel.is-active [data-home-section].is-remote-focus,
+.admin-panel.is-active [data-simple-section].is-remote-focus {
   border-color: #d92d20 !important;
   box-shadow: inset 0 0 0 2px #d92d20 !important;
+  outline: 2px solid #d92d20;
+  outline-offset: 2px;
   background: #fff5f5 !important;
   z-index: 2;
 }

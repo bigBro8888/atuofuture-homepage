@@ -1,17 +1,8 @@
-/** 后台协作在场：心跳轮询 + 顶部在线警示 + 区块焦点高亮 + 远程光标 */
+/** 后台协作在场：心跳轮询 + 顶部在线警示 + 全页焦点高亮 + 远程光标 */
 
 const COLORS = ['#0879f9', '#0f9f6e', '#d97706', '#db2777', '#7c3aed', '#0891b2']
 const HEARTBEAT_MS = 1500
 const DEFAULT_ROOM = '__admin__'
-const FOCUS_SELECTORS = [
-  (id) => `[data-home-goto="${CSS.escape(id)}"]`,
-  (id) => `[data-about-goto="${CSS.escape(id)}"]`,
-  (id) => `[data-simple-goto="${CSS.escape(id)}"]`,
-  (id) => `[data-aspace-home-section="${CSS.escape(id)}"]`,
-  (id) => `[data-aspace-help-section="${CSS.escape(id)}"]`,
-  (id) => `[data-aspace-tab="${CSS.escape(id)}"]`,
-  (id) => `[data-config-goto="${CSS.escape(id)}"]`,
-]
 
 function makeClientId() {
   try {
@@ -33,17 +24,112 @@ function colorFor(id = '') {
   return COLORS[hash % COLORS.length]
 }
 
+function safeEscape(value) {
+  try {
+    return CSS.escape(String(value || ''))
+  } catch {
+    return String(value || '').replace(/["\\]/g, '\\$&')
+  }
+}
+
+/** 从 DOM 元素解析焦点键：kind:id */
+function encodeFocusFromElement(el) {
+  if (!el || !(el instanceof Element)) return ''
+  if (el.dataset.homeGoto) return `home:${el.dataset.homeGoto}`
+  if (el.dataset.aboutGoto) return `about:${el.dataset.aboutGoto}`
+  if (el.dataset.simpleGoto) return `simple:${el.dataset.simpleGoto}`
+  if (el.dataset.aspaceHomeSection) return `aspace-home:${el.dataset.aspaceHomeSection}`
+  if (el.dataset.aspaceHelpSection) return `aspace-help:${el.dataset.aspaceHelpSection}`
+  if (el.dataset.aspaceHelpPageGroup) return `aspace-help-group:${el.dataset.aspaceHelpPageGroup}`
+  if (el.dataset.aspaceTab) return `aspace-tab:${el.dataset.aspaceTab}`
+  if (el.dataset.configGoto) return `config:${el.dataset.configGoto}`
+  if (el.dataset.editPath) return `path:${el.dataset.editPath}`
+  if (el.dataset.editImage) return `image:${el.dataset.editImage}`
+  if (el.dataset.homeField) {
+    const section = el.closest('[data-home-section]')
+    if (section?.dataset.homeSection) return `home:${section.dataset.homeSection}`
+  }
+  if (el.dataset.aboutField) {
+    const section = el.closest('[data-about-section], section[id]')
+    if (section?.dataset.aboutSection) return `about:${section.dataset.aboutSection}`
+    if (section?.id) return `dom-id:${section.id}`
+  }
+  const homeSection = el.closest('[data-home-section]')
+  if (homeSection?.dataset.homeSection) return `home:${homeSection.dataset.homeSection}`
+  const simpleSection = el.closest('[data-simple-section]')
+  if (simpleSection?.dataset.simpleSection) return `simple:${simpleSection.dataset.simpleSection}`
+  const aboutSection = el.closest('[data-about-section]')
+  if (aboutSection?.dataset.aboutSection) return `about:${aboutSection.dataset.aboutSection}`
+  const visualSection = el.closest('[data-about-visual] section[id], [data-agents-visual] section[id], [data-solutions-visual] section[id], [data-hardware-visual] section[id], [data-aspace-home-visual] section[id]')
+  if (visualSection?.id) return `dom-id:${visualSection.id}`
+  const card = el.closest('[data-ag-select], [data-aso-app], [data-aspace-profile], [data-aspace-category]')
+  if (card?.dataset.agSelect) return `agent:${card.dataset.agSelect}`
+  if (card?.dataset.asoApp) return `aso-app:${card.dataset.asoApp}`
+  if (card?.dataset.aspaceProfile) return `aspace-profile:${card.dataset.aspaceProfile}`
+  if (card?.dataset.aspaceCategory) return `aspace-category:${card.dataset.aspaceCategory}`
+  return ''
+}
+
 function findFocusTarget(focusId) {
   if (!focusId) return null
-  for (const build of FOCUS_SELECTORS) {
+  const active = '.admin-panel.is-active'
+  const colon = focusId.indexOf(':')
+  const kind = colon === -1 ? '' : focusId.slice(0, colon)
+  const id = colon === -1 ? focusId : focusId.slice(colon + 1)
+  if (!id && kind) return null
+
+  const query = (selector) => {
     try {
-      const el = document.querySelector(`.admin-panel.is-active ${build(focusId)}`)
-      if (el) return el
+      return document.querySelector(`${active} ${selector}`)
     } catch {
-      // ignore invalid selectors
+      return null
     }
   }
-  return null
+
+  if (!kind) {
+    return query(`[data-home-goto="${safeEscape(id)}"]`)
+      || query(`[data-about-goto="${safeEscape(id)}"]`)
+      || query(`[data-simple-goto="${safeEscape(id)}"]`)
+      || query(`[data-aspace-home-section="${safeEscape(id)}"]`)
+      || query(`[data-aspace-help-section="${safeEscape(id)}"]`)
+      || query(`[data-aspace-tab="${safeEscape(id)}"]`)
+      || query(`[data-config-goto="${safeEscape(id)}"]`)
+  }
+
+  switch (kind) {
+    case 'home':
+      return query(`[data-home-goto="${safeEscape(id)}"]`) || query(`[data-home-section="${safeEscape(id)}"]`)
+    case 'about':
+      return query(`[data-about-goto="${safeEscape(id)}"]`) || query(`[data-about-section="${safeEscape(id)}"]`)
+    case 'simple':
+      return query(`[data-simple-goto="${safeEscape(id)}"]`) || query(`[data-simple-section="${safeEscape(id)}"]`)
+    case 'aspace-home':
+      return query(`[data-aspace-home-section="${safeEscape(id)}"]`)
+    case 'aspace-help':
+      return query(`[data-aspace-help-section="${safeEscape(id)}"]`)
+    case 'aspace-help-group':
+      return query(`[data-aspace-help-page-group="${safeEscape(id)}"]`)
+    case 'aspace-tab':
+      return query(`[data-aspace-tab="${safeEscape(id)}"]`)
+    case 'config':
+      return query(`[data-config-goto="${safeEscape(id)}"]`)
+    case 'path':
+      return query(`[data-edit-path="${safeEscape(id)}"]`)
+    case 'image':
+      return query(`[data-edit-image="${safeEscape(id)}"]`)
+    case 'dom-id':
+      return query(`#${safeEscape(id)}`)
+    case 'agent':
+      return query(`[data-ag-select="${safeEscape(id)}"]`)
+    case 'aso-app':
+      return query(`[data-aso-app="${safeEscape(id)}"]`)
+    case 'aspace-profile':
+      return query(`[data-aspace-profile="${safeEscape(id)}"]`)
+    case 'aspace-category':
+      return query(`[data-aspace-category="${safeEscape(id)}"]`)
+    default:
+      return null
+  }
 }
 
 export function createAdminPresence({ api } = {}) {
@@ -193,6 +279,7 @@ export function createAdminPresence({ api } = {}) {
     const layer = ensureLayer()
     if (!layer || !canvasEl) return
     const rect = canvasEl.getBoundingClientRect()
+    // 已有区块/字段焦点时，优先显示红框，不再叠一层光标点
     layer.innerHTML = peers.filter((peer) => peer.cursor && !peer.focus).map((peer) => {
       const left = peer.cursor.x * rect.width
       const top = peer.cursor.y * rect.height
@@ -222,6 +309,14 @@ export function createAdminPresence({ api } = {}) {
     }
   }
 
+  const applyLocalFocus = (nextFocus, { markEdit = true } = {}) => {
+    const value = String(nextFocus || '').trim().slice(0, 80)
+    if (!value || value === focus) return
+    focus = value
+    if (markEdit) editing = true
+    void tick()
+  }
+
   const onPointerMove = (event) => {
     if (!canvasEl || !room || room === DEFAULT_ROOM) return
     if (!canvasEl.contains(event.target) && event.target !== canvasEl) return
@@ -233,52 +328,17 @@ export function createAdminPresence({ api } = {}) {
     }
   }
 
-  const onActivity = () => {
+  const onActivity = (event) => {
     editing = true
+    const hit = event.target?.closest?.('[data-edit-path], [data-edit-image], [data-home-field], [data-about-field], [data-home-goto], [data-about-goto], [data-simple-goto], [data-aspace-home-section], [data-aspace-help-section], [data-aspace-tab], [data-home-section], [data-simple-section], [data-ag-select], [data-aso-app], [data-aspace-profile], [data-aspace-category], section[id]')
+    const next = encodeFocusFromElement(hit)
+    if (next) applyLocalFocus(next)
   }
 
   const onFocusClick = (event) => {
-    const home = event.target.closest('[data-home-goto]')
-    if (home?.dataset.homeGoto) {
-      focus = home.dataset.homeGoto
-      editing = true
-      void tick()
-      return
-    }
-    const about = event.target.closest('[data-about-goto]')
-    if (about?.dataset.aboutGoto) {
-      focus = about.dataset.aboutGoto
-      editing = true
-      void tick()
-      return
-    }
-    const simple = event.target.closest('[data-simple-goto]')
-    if (simple?.dataset.simpleGoto) {
-      focus = simple.dataset.simpleGoto
-      editing = true
-      void tick()
-      return
-    }
-    const aspaceHome = event.target.closest('[data-aspace-home-section]')
-    if (aspaceHome?.dataset.aspaceHomeSection) {
-      focus = aspaceHome.dataset.aspaceHomeSection
-      editing = true
-      void tick()
-      return
-    }
-    const aspaceHelp = event.target.closest('[data-aspace-help-section]')
-    if (aspaceHelp?.dataset.aspaceHelpSection) {
-      focus = aspaceHelp.dataset.aspaceHelpSection
-      editing = true
-      void tick()
-      return
-    }
-    const aspaceTab = event.target.closest('[data-aspace-tab]')
-    if (aspaceTab?.dataset.aspaceTab) {
-      focus = aspaceTab.dataset.aspaceTab
-      editing = true
-      void tick()
-    }
+    const hit = event.target.closest('[data-home-goto], [data-about-goto], [data-simple-goto], [data-aspace-home-section], [data-aspace-help-section], [data-aspace-help-page-group], [data-aspace-tab], [data-config-goto], [data-edit-path], [data-edit-image], [data-home-field], [data-about-field], [data-ag-select], [data-aso-app], [data-aspace-profile], [data-aspace-category], [data-home-section], [data-simple-section], section[id]')
+    const next = encodeFocusFromElement(hit)
+    if (next) applyLocalFocus(next)
   }
 
   const leave = () => {
@@ -302,6 +362,7 @@ export function createAdminPresence({ api } = {}) {
     bound = true
     document.addEventListener('pointermove', onPointerMove, { passive: true })
     document.addEventListener('click', onFocusClick, true)
+    document.addEventListener('focusin', onActivity, true)
     document.addEventListener('input', onActivity, true)
     document.addEventListener('change', onActivity, true)
     window.addEventListener('beforeunload', leave)
@@ -348,11 +409,7 @@ export function createAdminPresence({ api } = {}) {
   }
 
   const setFocus = (nextFocus) => {
-    const value = String(nextFocus || '').trim().slice(0, 80)
-    if (value === focus) return
-    focus = value
-    editing = Boolean(value)
-    void tick()
+    applyLocalFocus(nextFocus, { markEdit: Boolean(nextFocus) })
   }
 
   const hasOtherEditors = () => peers.some((peer) => peer.editing)
