@@ -111,7 +111,7 @@ function encodeFocusFromElement(el) {
   if (simpleSection?.dataset.simpleSection) return `simple:${simpleSection.dataset.simpleSection}`
   const aboutSection = el.closest('[data-about-section]')
   if (aboutSection?.dataset.aboutSection) return `about:${aboutSection.dataset.aboutSection}`
-  const visualSection = el.closest('[data-about-visual] section[id], [data-agents-visual] section[id], [data-solutions-visual] section[id], [data-hardware-visual] section[id], [data-aspace-home-visual] section[id]')
+  const visualSection = el.closest('[data-about-visual] section[id], [data-agents-visual] section[id], [data-solutions-visual] section[id], [data-hardware-visual] section[id], [data-aspace-home-visual] section[id], [data-home-visual] section[id]')
   if (visualSection?.id) return `dom-id:${visualSection.id}`
   const card = el.closest('[data-ag-select], [data-aso-app], [data-aspace-profile], [data-aspace-category]')
   if (card?.dataset.agSelect) return `agent:${card.dataset.agSelect}`

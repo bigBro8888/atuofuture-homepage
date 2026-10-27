@@ -6,6 +6,7 @@ import { bindHardwareVisualAdmin, collectHardwareVisualContent, renderHardwareVi
 import { bindSolutionsVisualAdmin, collectSolutionsVisualContent, renderSolutionsVisualEditor } from './admin-solutions.js'
 import { bindAgentsVisualAdmin, collectAgentsVisualContent, renderAgentsVisualEditor } from './admin-agents.js'
 import { bindAboutVisualAdmin, collectAboutVisualContent, renderAboutVisualEditor } from './admin-about.js'
+import { bindHomeVisualAdmin, collectHomeVisualContent, renderHomeVisualEditor } from './admin-home.js'
 import { bindAspaceHomeVisualAdmin, collectAspaceHomeVisual, renderAspaceHomeVisualMarkup, scrollAspaceHomeSection } from './admin-aspace-home.js'
 import { bindAspaceAppsVisualAdmin, renderAspaceAppsVisualMarkup } from './admin-aspace-apps.js'
 import { alignHelpWithCatalog } from '../lib/aspace-help-categories.js'
@@ -828,125 +829,20 @@ function showHomeSection(id) {
   if (!HOME_OUTLINE.some((item) => item.id === id)) id = 'hero'
   state.homeSection = id
   document.querySelectorAll('[data-home-goto]').forEach((button) => button.classList.toggle('is-active', button.dataset.homeGoto === id))
+  const visual = document.querySelector('[data-home-visual]')
   document.querySelectorAll('[data-home-section]').forEach((section) => {
-    section.hidden = section.dataset.homeSection !== id
+    // 可视化模式下各区块同时展示，只负责滚动定位，不再隐藏
+    if (!visual) section.hidden = section.dataset.homeSection !== id
   })
+  if (visual) {
+    visual.querySelector(`[data-home-section="${CSS.escape(id)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
   presence.setFocus(`home:${id}`)
 }
 
 function renderHomeEditor(content) {
-  const slides = content.heroSlides?.length ? content.heroSlides : []
-  const banner = content.banner || {}
-  const agents = content.agents || {}
-  const news = content.news || { items: [] }
-  const pitch = content.pitch || {}
-  const editor = document.querySelector('[data-home-editor]')
-  editor.innerHTML = `
-    <aside class="admin-home-outline" data-home-outline>
-      <p>按官网首页从上到下排列，点一项只打开这一块</p>
-      ${HOME_OUTLINE.map((item) => `
-        <button type="button" class="admin-home-outline__item${item.id === state.homeSection ? ' is-active' : ''}" data-home-goto="${item.id}">
-          <em>${item.no}</em>
-          <span><b>${item.title}</b><small>${item.desc}</small></span>
-        </button>`).join('')}
-    </aside>
-    <div class="admin-home-stage">
-      <fieldset data-home-section="hero">
-        <legend>首屏轮播</legend>
-        <p class="admin-form-section__hint">每屏一行，点「编辑」在弹窗里改文案和背景图。</p>
-        <div class="admin-home-list" data-hero-slides>${slides.map((slide, index) => `
-          <div class="admin-item-row" data-hero-slide>
-            <div><strong>第 ${index + 1} 屏：${escapeHtml(slide.title || '未填写标题')}</strong></div>
-            <span class="admin-slide-tools">
-              ${itemEditButton('hero', index)}
-              <button type="button" data-hero-move="-1" ${index === 0 ? 'disabled' : ''}>上移</button>
-              <button type="button" data-hero-move="1" ${index === slides.length - 1 ? 'disabled' : ''}>下移</button>
-              <button type="button" data-hero-remove ${slides.length <= 1 ? 'disabled' : ''}>删除</button>
-            </span>
-          </div>`).join('')}</div>
-        <button type="button" class="admin-add-slide" data-hero-add>+ 新增一屏</button>
-      </fieldset>
-      <fieldset data-home-section="banner">
-        <legend>中部推广条</legend>
-        <p class="admin-form-section__hint">首屏下方的咨询横条。</p>
-        <div class="admin-form-grid">
-          ${homeField('banner.title', '标题', banner.title, { wide: true })}
-          ${homeField('banner.subtitle', '说明', banner.subtitle, { type: 'textarea', wide: true })}
-          ${homeField('banner.ctaLabel', '按钮文字', banner.ctaLabel)}
-          ${homeField('banner.ctaUrl', '跳转链接', banner.ctaUrl, { help: '普通路径如 /agents/；填 #demo 则打开「预约方案演示」弹窗' })}
-          ${homeField('banner.imageUrl', '左侧配图', banner.imageUrl, { image: true, wide: true, size: '480×360' })}
-        </div>
-      </fieldset>
-      <fieldset data-home-section="agents">
-        <legend>空间智能体</legend>
-        <p class="admin-form-section__hint">整区标题在上面改。每个智能体点「编辑」弹窗修改，避免一长条展开。</p>
-        <div class="admin-form-grid">
-          ${homeField('agents.kicker', '眉题', agents.kicker)}
-          ${homeField('agents.title', '主标题', agents.title, { wide: true })}
-          ${homeField('agents.subtitle', '说明', agents.subtitle, { type: 'textarea', wide: true, rows: 4 })}
-        </div>
-        <div class="admin-home-list">${(agents.items || []).map((item, index) => `
-          <div class="admin-item-row" data-agent-item>
-            <div><strong>智能体 ${index + 1}：${escapeHtml(item.name || '未命名')}</strong><small>${escapeHtml(item.sceneTitle || '')}</small></div>
-            <span class="admin-slide-tools">
-              ${itemEditButton('agents', index)}
-              <button type="button" data-agent-move="-1" ${index === 0 ? 'disabled' : ''}>上移</button>
-              <button type="button" data-agent-move="1" ${index === (agents.items || []).length - 1 ? 'disabled' : ''}>下移</button>
-              <button type="button" data-agent-remove ${(agents.items || []).length <= 1 ? 'disabled' : ''}>删除</button>
-            </span>
-          </div>`).join('')}</div>
-        <button type="button" class="admin-add-slide" data-agent-add>+ 新增一个智能体</button>
-      </fieldset>
-      <fieldset data-home-section="solutions">
-        <legend>产品与方案</legend>
-        <p class="admin-form-section__hint">方案卡一行一条，点「编辑」弹窗修改。</p>
-        <div class="admin-form-grid">
-          ${homeField('solutions.eyebrow', '眉题', content.solutions.eyebrow)}
-          ${homeField('solutions.title', '区块标题', content.solutions.title)}
-          ${homeField('solutions.subtitle', '区块说明', content.solutions.subtitle, { type: 'textarea', wide: true })}
-          ${homeField('solutions.moreLabel', '更多按钮文字', content.solutions.moreLabel)}
-          ${homeField('solutions.moreUrl', '更多按钮链接', content.solutions.moreUrl)}
-        </div>
-        <div class="admin-home-list">${(content.solutions.items || []).map((item, index) => `
-          <div class="admin-item-row" data-list-item="solutions">
-            <div><strong>方案 ${index + 1}：${escapeHtml(item.title || '未填写')}</strong></div>
-            <span class="admin-slide-tools">${itemEditButton('solutions', index)}${listTools('solutions', index, (content.solutions.items || []).length)}</span>
-          </div>`).join('')}</div>
-        <button type="button" class="admin-add-slide" data-list-kind="solutions" data-list-add>+ 新增一张方案卡</button>
-      </fieldset>
-      <fieldset data-home-section="news">
-        <legend>新闻动态</legend>
-        <p class="admin-form-section__hint">这三张卡也可在「新闻中心」里勾选「推送到首页」。封面比例与新闻列表封面一致。</p>
-        <div class="admin-form-grid">
-          ${homeField('news.kicker', '眉题', news.kicker)}
-          ${homeField('news.title', '区块标题', news.title)}
-          ${homeField('news.subtitle', '区块说明', news.subtitle, { type: 'textarea', wide: true })}
-          ${homeField('news.moreLabel', '更多按钮', news.moreLabel)}
-          ${homeField('news.moreUrl', '更多链接', news.moreUrl)}
-        </div>
-        <div class="admin-home-list">${(news.items || []).map((item, index) => `
-          <div class="admin-item-row" data-list-item="news">
-            <div><strong>新闻 ${index + 1}：${escapeHtml(item.title || '未填写')}</strong></div>
-            <span class="admin-slide-tools">${itemEditButton('news', index)}${listTools('news', index, (news.items || []).length)}</span>
-          </div>`).join('')}</div>
-        <button type="button" class="admin-add-slide" data-list-kind="news" data-list-add>+ 新增一条新闻</button>
-      </fieldset>
-      <fieldset data-home-section="pitch">
-        <legend>探索安托未来</legend>
-        <p class="admin-form-section__hint">宫格一行一张，点「编辑」弹窗修改样式、图片和跳转。</p>
-        <div class="admin-form-grid">
-          ${homeField('pitch.label', '小标题', pitch.label)}
-          ${homeField('pitch.title', '主标题', pitch.title, { type: 'textarea', wide: true })}
-        </div>
-        <div class="admin-home-list">${(pitch.items || []).map((item, index) => `
-          <div class="admin-item-row" data-list-item="pitch">
-            <div><strong>宫格 ${index + 1}：${escapeHtml(item.kicker || item.title || '未填写')}</strong></div>
-            <span class="admin-slide-tools">${itemEditButton('pitch', index)}${listTools('pitch', index, (pitch.items || []).length)}</span>
-          </div>`).join('')}</div>
-        <button type="button" class="admin-add-slide" data-list-kind="pitch" data-list-add>+ 新增一张宫格</button>
-      </fieldset>
-    </div>`
-  showHomeSection(state.homeSection)
+  renderHomeVisualEditor(content, { section: state.homeSection || 'hero' })
+  showHomeSection(state.homeSection || 'hero')
   window.requestAnimationFrame(() => presence.refresh())
 }
 
@@ -964,6 +860,9 @@ function setHomeValue(target, path, value) {
 }
 
 function collectHomeContent() {
+  if (document.querySelector('[data-home-visual]')) {
+    return collectHomeVisualContent(state.homePage?.draftContent || {})
+  }
   const content = structuredClone(state.homePage.draftContent)
   document.querySelectorAll('[data-home-editor] [data-home-field], [data-item-modal]:not([hidden]) [data-home-field]').forEach((field) => {
     let value
@@ -973,28 +872,6 @@ function collectHomeContent() {
     if (field.dataset.homeField.endsWith('.tags')) value = String(field.value || '').split(/[，,]/).map((tag) => tag.trim()).filter(Boolean)
     setHomeValue(content, field.dataset.homeField, value)
   })
-  const heroCount = document.querySelectorAll('[data-hero-slide]').length
-  if (heroCount) content.heroSlides = (content.heroSlides || []).slice(0, heroCount)
-  const agentCount = document.querySelectorAll('[data-agent-item]').length
-  if (agentCount) {
-    content.agents = content.agents || {}
-    content.agents.items = (content.agents.items || []).slice(0, agentCount)
-  }
-  const solCount = document.querySelectorAll('[data-list-item="solutions"]').length
-  if (solCount) {
-    content.solutions = content.solutions || {}
-    content.solutions.items = (content.solutions.items || []).slice(0, solCount)
-  }
-  const newsCount = document.querySelectorAll('[data-list-item="news"]').length
-  if (newsCount) {
-    content.news = content.news || {}
-    content.news.items = (content.news.items || []).slice(0, newsCount)
-  }
-  const pitchCount = document.querySelectorAll('[data-list-item="pitch"]').length
-  if (pitchCount) {
-    content.pitch = content.pitch || {}
-    content.pitch.items = (content.pitch.items || []).slice(0, pitchCount)
-  }
   return content
 }
 
@@ -3546,6 +3423,13 @@ bindAboutVisualAdmin({
   toast,
   escapeHtml,
   state,
+})
+bindHomeVisualAdmin({
+  api,
+  toast,
+  escapeHtml,
+  state,
+  onSectionChange: (id) => showHomeSection(id),
 })
 bindAspaceHomeVisualAdmin({
   api,
