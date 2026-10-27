@@ -346,7 +346,9 @@ ${textNode('contact.joinBody', contact.joinBody || '', {
 <div>
 <h3>邮箱</h3>
 ${textNode('contact.email1', contact.email1 || '', { editable, tag: 'p', placeholder: '主邮箱' })}
-${textNode('contact.email2', contact.email2 || '', { editable, tag: 'p', placeholder: '备用邮箱（可空）' })}
+${editable || String(contact.email2 || '').trim()
+  ? textNode('contact.email2', contact.email2 || '', { editable, tag: 'p', placeholder: '备用邮箱（可空）' })
+  : ''}
 </div>
 <span class="ab-contact__go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
 </a>
