@@ -1596,11 +1596,15 @@ body.admin-modal-open { overflow: hidden; }
   .admin-help-drawer { border-left: 0; border-top: 1px solid #eef2f7; }
 }
 
-/* 智能硬件 / 方案 / 智能体 共用 simple 面板：发布条固定在视口底部，避免长预览每次滚到底 */
-.admin-panel[data-panel="simple"].is-active .admin-home-form {
+/* 智能硬件 / 方案 / 智能体 / 官网首页 / 关于我们：发布条固定视口底部 */
+.admin-panel[data-panel="simple"].is-active .admin-home-form,
+.admin-panel[data-panel="home"].is-active .admin-home-form,
+.admin-panel[data-panel="about"].is-active .admin-home-form {
   padding-bottom: 92px;
 }
-.admin-panel[data-panel="simple"].is-active .admin-home-actions {
+.admin-panel[data-panel="simple"].is-active .admin-home-actions,
+.admin-panel[data-panel="home"].is-active .admin-home-actions,
+.admin-panel[data-panel="about"].is-active .admin-home-actions {
   position: fixed;
   left: calc(238px + 34px);
   right: 34px;
@@ -3818,7 +3822,9 @@ button.hpi-edit-link.hpi-hero__link {
   .admin-aspace-category { grid-template-columns: 1fr; }
   .admin-aspace-category__description { grid-column: auto; }
   .admin-aspace-apps { grid-template-columns: 1fr; }
-  .admin-panel[data-panel="simple"].is-active .admin-home-actions {
+  .admin-panel[data-panel="simple"].is-active .admin-home-actions,
+  .admin-panel[data-panel="home"].is-active .admin-home-actions,
+  .admin-panel[data-panel="about"].is-active .admin-home-actions {
     left: 16px;
     right: 16px;
     bottom: 12px;
