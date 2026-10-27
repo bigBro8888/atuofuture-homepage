@@ -483,6 +483,7 @@ function renderAspaceHomeEditor(home) {
               <label><span>标题</span><input name="title" maxlength="40" value="${escapeHtml(item.title)}" /></label>
               <label><span>简介</span><input name="desc" maxlength="80" value="${escapeHtml(item.desc)}" /></label>
               <label><span>封面图链接</span><input name="image" maxlength="500" value="${escapeHtml(item.image)}" /></label>
+              <label><span>封面跳转链接</span><input name="href" maxlength="500" placeholder="https://… 或 /path 或 app:应用ID，空则进应用广场" value="${escapeHtml(item.href || '')}" /></label>
               <div class="admin-aspace-home-grid">
                 ${item.items.map((link, index) => `
                   <label><span>能力 ${index + 1}</span><input name="link-${index}" maxlength="30" value="${escapeHtml(link.label)}" /></label>
@@ -851,6 +852,7 @@ function collectAspaceHome() {
       title: row.querySelector('[name="title"]')?.value.trim() || item.title,
       desc: row.querySelector('[name="desc"]')?.value.trim() || item.desc,
       image: row.querySelector('[name="image"]')?.value.trim() || item.image,
+      href: row.querySelector('[name="href"]')?.value.trim() || '',
       items: item.items.map((link, index) => ({
         ...link,
         label: row.querySelector(`[name="link-${index}"]`)?.value.trim() || link.label,

@@ -107,6 +107,7 @@ export const defaultAspaceHome = {
         step: '01',
         stage: '协同',
         image: '/images/aspace-one/showcase-meeting.jpg',
+        href: '',
         title: '会议与办公',
         desc: '提升空间使用效率',
         items: [
@@ -120,6 +121,7 @@ export const defaultAspaceHome = {
         step: '02',
         stage: '资产',
         image: '/images/aspace-one/app-resource.jpg',
+        href: '',
         title: '资产与仓储',
         desc: '掌握资产全生命周期',
         items: [
@@ -133,6 +135,7 @@ export const defaultAspaceHome = {
         step: '03',
         stage: '运维',
         image: '/images/aspace-one/app-energy.jpg',
+        href: '',
         title: '设备与能源',
         desc: '看清运行与能源使用',
         items: [
@@ -146,6 +149,7 @@ export const defaultAspaceHome = {
         step: '04',
         stage: '服务',
         image: '/images/aspace-one/showcase-building.jpg',
+        href: '',
         title: '通行与服务',
         desc: '连接人员与日常服务',
         items: [
@@ -159,6 +163,7 @@ export const defaultAspaceHome = {
         step: '05',
         stage: '洞察',
         image: '/images/aspace-one/showcase-space.jpg',
+        href: '',
         title: '可视化与展示',
         desc: '让空间状态清晰可见',
         items: [

@@ -159,6 +159,15 @@ function cleanMediaUrl(value, label) {
   return url
 }
 
+function cleanLinkUrl(value, label) {
+  const url = String(value || '').trim().slice(0, 500)
+  if (!url) return ''
+  if (!/^(?:https?:\/\/|\/|app:)/i.test(url)) {
+    throw new Error(`${label}跳转链接无效，请填写 http(s) 地址、站内路径或以 app: 开头的应用 ID`)
+  }
+  return url
+}
+
 function normalizeHome(value = {}) {
   const fallback = defaultAspaceHome
   const heroSource = value.hero || {}
@@ -188,6 +197,7 @@ function normalizeHome(value = {}) {
         step: String(item.step ?? itemFallback.step).trim().slice(0, 8) || itemFallback.step,
         stage: String(item.stage ?? itemFallback.stage).trim().slice(0, 20) || itemFallback.stage,
         image: cleanMediaUrl(item.image ?? itemFallback.image, `业务全景「${itemFallback.title}」封面`) || itemFallback.image,
+        href: cleanLinkUrl(item.href ?? itemFallback.href ?? '', `业务全景「${itemFallback.title}」`),
         title: String(item.title ?? itemFallback.title).trim().slice(0, 40) || itemFallback.title,
         desc: String(item.desc ?? itemFallback.desc).trim().slice(0, 80) || itemFallback.desc,
         items: itemFallback.items.map((linkFallback, index) => {

@@ -487,12 +487,20 @@ body.aso-standalone .back-to-top { display: none !important; }
   overflow: hidden;
   background: #d9e8fb;
 }
+.aso-home-panorama__media.is-link {
+  cursor: pointer;
+}
+.aso-home-panorama__media.is-link:focus-visible {
+  outline: 2px solid #176fcf;
+  outline-offset: 2px;
+}
 .aso-home-panorama__media img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform .45s var(--aso-spring);
+  pointer-events: none;
 }
 .aso-home-panorama__card:hover .aso-home-panorama__media img { transform: scale(1.05); }
 .aso-home-panorama__media header {

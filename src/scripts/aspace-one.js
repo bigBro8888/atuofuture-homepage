@@ -669,11 +669,11 @@ const defaultHomeContent = {
     lead: '从日常办公到空间运营，能力按业务链路串联协同。',
     moreLabel: '查看全部能力',
     items: [
-      { id: 'collab', step: '01', stage: '协同', image: '/images/aspace-one/showcase-meeting.jpg', title: '会议与办公', desc: '提升空间使用效率', items: [{ category: 'meeting', label: '会议预约', appId: 'screen' }, { category: 'meeting', label: '智能门牌', appId: 'deskplate' }, { category: 'meeting', label: '会议控制', appId: 'wireless-screen' }] },
-      { id: 'asset', step: '02', stage: '资产', image: '/images/aspace-one/app-resource.jpg', title: '资产与仓储', desc: '掌握资产全生命周期', items: [{ category: 'asset', label: '资产台账', appId: 'resource' }, { category: 'asset', label: 'RFID盘点', appId: 'resource' }, { category: 'asset', label: '借还管理', appId: 'resource' }] },
-      { id: 'ops', step: '03', stage: '运维', image: '/images/aspace-one/app-energy.jpg', title: '设备与能源', desc: '看清运行与能源使用', items: [{ category: 'foundation', label: '设备监测', appId: 'device-center' }, { category: 'foundation', label: '空调控制', appId: 'smart-air' }, { category: 'energy', label: '能耗分析', appId: 'energy' }] },
-      { id: 'service', step: '04', stage: '服务', image: '/images/aspace-one/showcase-building.jpg', title: '通行与服务', desc: '连接人员与日常服务', items: [{ category: 'visitor', label: '访客接待', appId: 'visitor-booking' }, { category: 'security', label: '门禁通行', appId: 'access-security' }, { category: 'foundation', label: '工单巡检', appId: 'aspace' }] },
-      { id: 'insight', step: '05', stage: '洞察', image: '/images/aspace-one/showcase-space.jpg', title: '可视化与展示', desc: '让空间状态清晰可见', items: [{ category: 'twin', label: '数字孪生', appId: 'digital-twin' }, { category: 'content', label: '信息发布', appId: 'info-publish' }, { category: 'content', label: '电子相框', appId: 'album' }] },
+      { id: 'collab', step: '01', stage: '协同', image: '/images/aspace-one/showcase-meeting.jpg', href: '', title: '会议与办公', desc: '提升空间使用效率', items: [{ category: 'meeting', label: '会议预约', appId: 'screen' }, { category: 'meeting', label: '智能门牌', appId: 'deskplate' }, { category: 'meeting', label: '会议控制', appId: 'wireless-screen' }] },
+      { id: 'asset', step: '02', stage: '资产', image: '/images/aspace-one/app-resource.jpg', href: '', title: '资产与仓储', desc: '掌握资产全生命周期', items: [{ category: 'asset', label: '资产台账', appId: 'resource' }, { category: 'asset', label: 'RFID盘点', appId: 'resource' }, { category: 'asset', label: '借还管理', appId: 'resource' }] },
+      { id: 'ops', step: '03', stage: '运维', image: '/images/aspace-one/app-energy.jpg', href: '', title: '设备与能源', desc: '看清运行与能源使用', items: [{ category: 'foundation', label: '设备监测', appId: 'device-center' }, { category: 'foundation', label: '空调控制', appId: 'smart-air' }, { category: 'energy', label: '能耗分析', appId: 'energy' }] },
+      { id: 'service', step: '04', stage: '服务', image: '/images/aspace-one/showcase-building.jpg', href: '', title: '通行与服务', desc: '连接人员与日常服务', items: [{ category: 'visitor', label: '访客接待', appId: 'visitor-booking' }, { category: 'security', label: '门禁通行', appId: 'access-security' }, { category: 'foundation', label: '工单巡检', appId: 'aspace' }] },
+      { id: 'insight', step: '05', stage: '洞察', image: '/images/aspace-one/showcase-space.jpg', href: '', title: '可视化与展示', desc: '让空间状态清晰可见', items: [{ category: 'twin', label: '数字孪生', appId: 'digital-twin' }, { category: 'content', label: '信息发布', appId: 'info-publish' }, { category: 'content', label: '电子相框', appId: 'album' }] },
     ],
   },
   scenes: {
@@ -744,13 +744,21 @@ function renderHomeView() {
                 </svg>
               </span>` : ''}
               <div class="aso-home-panorama__card">
-                <figure class="aso-home-panorama__media">
+                ${(() => {
+                  const href = String(column.href || '').trim()
+                  const first = column.items?.[0]
+                  const mediaAttrs = href
+                    ? `data-panorama-href="${escapeHtml(href)}" role="link" tabindex="0" aria-label="${escapeHtml(column.title)}"`
+                    : `data-aso-nav="apps" data-app-category-goto="${escapeHtml(first?.category || '')}" data-app-goto="${escapeHtml(first?.appId || '')}" role="link" tabindex="0" aria-label="${escapeHtml(column.title)}"`
+                  return `
+                <figure class="aso-home-panorama__media is-link" ${mediaAttrs}>
                   <img src="${escapeHtml(column.image)}" alt="" loading="lazy" />
                   <header>
                     <em>${escapeHtml(column.step)}</em>
                     <b>${escapeHtml(column.stage)}</b>
                   </header>
-                </figure>
+                </figure>`
+                })()}
                 <div class="aso-home-panorama__body">
                   <h3>${escapeHtml(column.title)}</h3>
                   <p>${escapeHtml(column.desc)}</p>
@@ -2310,27 +2318,33 @@ async function loginQuickSettingsAdmin(root) {
   }
 }
 
-function openQuickAction(root, action) {
-  const url = String(action?.dataset.quickUrl || '').trim()
-  if (!url) {
-    showToast('该快捷入口尚未配置链接')
+function openConfiguredLink(root, url, { pendingFeature = '' } = {}) {
+  const target = String(url || '').trim()
+  if (!target) {
+    showToast('尚未配置跳转链接')
     return
   }
-  if (url.startsWith('app:')) {
-    const appId = url.slice(4)
+  if (target.startsWith('app:')) {
+    const appId = target.slice(4)
     const button = root.querySelector(`[data-enter-app="${CSS.escape(appId)}"]`)
     if (button) {
-      root.dataset.pendingActivityFeature = action.querySelector('span')?.textContent?.trim() || ''
+      if (pendingFeature) root.dataset.pendingActivityFeature = pendingFeature
       button.click()
     }
     else showToast('对应应用不存在或尚未开通')
     return
   }
-  if (/^https?:\/\//i.test(url)) {
-    window.open(url, '_blank', 'noopener,noreferrer')
+  if (/^https?:\/\//i.test(target)) {
+    window.open(target, '_blank', 'noopener,noreferrer')
     return
   }
-  window.location.href = url
+  window.location.href = target
+}
+
+function openQuickAction(root, action) {
+  openConfiguredLink(root, action?.dataset.quickUrl, {
+    pendingFeature: action.querySelector('span')?.textContent?.trim() || '',
+  })
 }
 
 export async function initAspaceOne() {
@@ -2380,6 +2394,12 @@ export async function initAspaceOne() {
         setShellView(root, 'about', { section })
         return
       }
+    }
+    const panoramaLink = event.target.closest('[data-panorama-href]')
+    if (panoramaLink) {
+      event.preventDefault()
+      openConfiguredLink(root, panoramaLink.dataset.panoramaHref)
+      return
     }
     const navButton = event.target.closest('[data-aso-nav]')
     if (navButton) {
