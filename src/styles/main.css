@@ -6121,14 +6121,17 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   display: grid;
   gap: 18px;
   align-content: center;
-  justify-self: end;
-  width: max-content;
+  justify-self: stretch;
+  width: 100%;
   max-width: 100%;
+  min-width: 0;
 }
 .space-ad__scenario-actions li {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  max-width: 100%;
   font-size: 14px;
   font-weight: 600;
   color: #3d5273;
@@ -6144,6 +6147,13 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   color: var(--sad-blue);
   font-size: 18px;
   flex: none;
+}
+.space-ad__scenario-action-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .space-ad__arch-side {
   display: flex;

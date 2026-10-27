@@ -8,11 +8,12 @@ export function esc(str = '') {
     .replace(/"/g, '&quot;')
 }
 
-export function textNode(path, value, { editable = false, tag = 'span', className = '', multiline = false, placeholder = '' } = {}) {
+export function textNode(path, value, { editable = false, tag = 'span', className = '', multiline = false, placeholder = '', title = '' } = {}) {
   const safe = esc(value || '')
+  const titleAttr = title ? ` title="${esc(title)}"` : ''
   if (!editable) {
-    if (tag === 'span' && !className) return safe
-    return `<${tag}${className ? ` class="${className}"` : ''}>${safe}</${tag}>`
+    if (tag === 'span' && !className && !title) return safe
+    return `<${tag}${className ? ` class="${className}"` : ''}${titleAttr}>${safe}</${tag}>`
   }
   const attrs = [
     `contenteditable="true"`,
@@ -21,6 +22,7 @@ export function textNode(path, value, { editable = false, tag = 'span', classNam
     multiline ? `data-edit-multiline="true"` : '',
     placeholder ? `data-placeholder="${esc(placeholder)}"` : '',
     className ? `class="${className}"` : '',
+    title ? `title="${esc(title)}"` : '',
   ]
     .filter(Boolean)
     .join(' ')

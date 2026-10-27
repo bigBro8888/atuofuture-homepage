@@ -937,8 +937,13 @@ function collectAgentArticle(compose) {
 function syncScenarioEmptyRow(el) {
   const li = el?.closest?.('li')
   if (!li?.closest?.('.space-ad__scenario-copy, .space-ad__scenario-actions')) return
-  const empty = !readEditableText(el)
+  const text = readEditableText(el)
+  const empty = !text
   li.classList.toggle('is-empty', empty)
+  if (el.classList.contains('space-ad__scenario-action-label')) {
+    if (text) el.setAttribute('title', text)
+    else el.removeAttribute('title')
+  }
 }
 
 function setAgentsDetailMediaType(modal, type) {

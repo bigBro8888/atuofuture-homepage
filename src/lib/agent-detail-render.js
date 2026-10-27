@@ -294,14 +294,17 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
                     .map((act, ai) => {
                       const label = act?.label || ''
                       const empty = !String(label || '').trim()
+                      const labelNode = textNode(`spacePage.scenarios.${i}.actions.${ai}.label`, label, {
+                        editable,
+                        tag: 'span',
+                        className: 'space-ad__scenario-action-label',
+                        placeholder: editable ? '动作' : '',
+                        title: label,
+                      })
                       return `
                     <li class="${empty && editable ? 'is-empty' : ''}"${empty && editable ? ' data-scenario-action-empty' : ''}>
                       <span class="material-symbols-outlined" aria-hidden="true">${act?.icon || 'chevron_right'}</span>
-                      ${textNode(`spacePage.scenarios.${i}.actions.${ai}.label`, label, {
-                        editable,
-                        tag: 'span',
-                        placeholder: '动作',
-                      })}
+                      ${labelNode}
                     </li>`
                     })
                     .join('')}
