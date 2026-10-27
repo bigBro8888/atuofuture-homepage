@@ -1161,6 +1161,18 @@ body.aso-standalone .back-to-top { display: none !important; }
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 4px;
+    /* 滚动容器内禁止 backdrop-filter，避免 Chrome 合成层滚动时开天窗 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  [data-aso-view="apps"] .aso-app-grid *,
+  [data-aso-view="apps"] .aso-app-grid *::before,
+  [data-aso-view="apps"] .aso-app-grid *::after,
+  [data-aso-view="apps"] .aso-recent-panel__body *,
+  [data-aso-view="apps"] .aso-recent-panel__body *::before,
+  [data-aso-view="apps"] .aso-recent-panel__body *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
   [data-aso-view="apps"] .aso-app-grid {
     align-content: start;
@@ -1556,11 +1568,12 @@ button.aso-portal-account:active { transform: scale(.98); }
   padding: 9px 9px 12px;
   border: 1px solid #e3ebf5;
   border-radius: 15px;
-  background: rgba(255, 255, 255, .88);
+  background: #fff;
   box-shadow: 0 4px 16px rgba(32, 62, 108, .05);
   transition: border-color .22s ease, box-shadow .3s var(--aso-spring), transform .3s var(--aso-spring);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* 不用 backdrop-filter：卡片在 overflow 滚动区内会触发 Chrome 合成层开天窗 */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 .aso-app-card[draggable="true"] { cursor: grab; }
 .aso-app-card[draggable="true"]:active { cursor: grabbing; }
@@ -1596,6 +1609,7 @@ button.aso-portal-account:active { transform: scale(.98); }
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background: #eef4fb;
   transition: transform .7s var(--aso-spring);
 }
 .aso-app-card:hover .aso-app-card__shot img { transform: scale(1.045); }
@@ -1605,11 +1619,9 @@ button.aso-portal-account:active { transform: scale(.98); }
   left: 9px;
   height: 23px;
   padding: 0 9px 0 8px;
-  background: rgba(255, 255, 255, .88);
+  background: rgba(255, 255, 255, .94);
   box-shadow: 0 2px 8px rgba(9, 26, 54, .14);
   font-size: 11px;
-  backdrop-filter: blur(10px) saturate(150%);
-  -webkit-backdrop-filter: blur(10px) saturate(150%);
 }
 .aso-app-favorite {
   position: absolute;
@@ -1622,11 +1634,9 @@ button.aso-portal-account:active { transform: scale(.98); }
   padding: 0;
   border: 1px solid rgba(255, 255, 255, .72);
   border-radius: 50%;
-  background: rgba(255, 255, 255, .82);
+  background: rgba(255, 255, 255, .94);
   color: #8292a8;
   cursor: pointer;
-  backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
   transition: color .2s ease, background-color .2s ease, transform .18s var(--aso-spring);
 }
 .aso-app-favorite:hover { color: #f1a514; background: #fff; transform: scale(1.06); }

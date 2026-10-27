@@ -520,7 +520,7 @@ function appCard(app, index) {
         <figure class="aso-app-card__shot">
           ${locked
             ? `<span class="aso-app-card__developing-art">${icon(app.icon || 'construction')}<b>开发中</b><small>COMING SOON</small></span>`
-            : `<img src="${app.image}" alt="${app.alt}" width="640" height="400" loading="${index < 3 ? 'eager' : 'lazy'}" decoding="async" />`}
+            : `<img src="${app.image}" alt="${app.alt}" width="640" height="400" loading="eager" decoding="async" fetchpriority="${index < 6 ? 'high' : 'auto'}" />`}
           <span class="aso-status${locked ? ' aso-status--idle' : ''}"><i></i>${locked ? '开发中' : '运行中'}</span>
           <button class="aso-app-favorite${isFavorite ? ' is-active' : ''}" type="button" data-favorite-app="${app.id}" aria-label="${isFavorite ? '取消收藏' : '收藏'}${escapeHtml(app.name)}" aria-pressed="${isFavorite}">
             ${icon('star')}
