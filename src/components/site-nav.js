@@ -23,8 +23,9 @@ function buildHref(item, root) {
   return `${root}${item.segment}`
 }
 
-/** 仅跨域外链才新开标签；同站路径必须同页跳转以保留登录态 */
+/** 显式 newTab，或跨域外链；同站默认同页跳转 */
 function openInNewTab(item, href = '') {
+  if (item?.newTab) return true
   if (!item?.external) return false
   try {
     const url = new URL(href || item.href || '', typeof window !== 'undefined' ? window.location.origin : 'https://example.com')
