@@ -30,19 +30,25 @@ function cleanCursor(cursor) {
   }
 }
 
+function cleanFocus(focus) {
+  const value = String(focus || '').trim().slice(0, 80)
+  return value || null
+}
+
 function presentSession(item) {
   return {
     clientId: item.clientId,
     userId: item.userId,
     name: item.name,
     room: item.room,
+    focus: item.focus || null,
     editing: item.editing,
     cursor: item.cursor,
     lastSeen: item.lastSeen,
   }
 }
 
-export function heartbeatPresence({ clientId, user, room, cursor, editing }) {
+export function heartbeatPresence({ clientId, user, room, cursor, editing, focus }) {
   prune()
   const id = cleanClientId(clientId)
   const nextRoom = cleanRoom(room)
@@ -58,6 +64,7 @@ export function heartbeatPresence({ clientId, user, room, cursor, editing }) {
     name: String(user.name || user.email || '编辑者').trim().slice(0, 40) || '编辑者',
     email: String(user.email || '').trim().slice(0, 80),
     room: nextRoom,
+    focus: cleanFocus(focus),
     cursor: cleanCursor(cursor),
     editing: Boolean(editing),
     lastSeen: Date.now(),

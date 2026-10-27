@@ -327,6 +327,7 @@ function setAspaceHomeSection(section) {
   const next = ['hero', 'panorama', 'scenes', 'infra'].includes(section) ? section : 'hero'
   aspaceHomeSection = next
   scrollAspaceHomeSection(next)
+  presence.setFocus(next)
 }
 
 function setAspaceHelpSection(section) {
@@ -764,6 +765,7 @@ function showConfigSection(id) {
   document.querySelectorAll('[data-config-section]').forEach((section) => {
     section.hidden = section.dataset.configSection !== id
   })
+  presence.setFocus(id)
 }
 
 async function loadConfig() {
@@ -827,6 +829,7 @@ function showHomeSection(id) {
   document.querySelectorAll('[data-home-section]').forEach((section) => {
     section.hidden = section.dataset.homeSection !== id
   })
+  presence.setFocus(id)
 }
 
 function renderHomeEditor(content) {
@@ -942,6 +945,7 @@ function renderHomeEditor(content) {
       </fieldset>
     </div>`
   showHomeSection(state.homeSection)
+  window.requestAnimationFrame(() => presence.refresh())
 }
 
 function setHomeValue(target, path, value) {
@@ -1404,6 +1408,7 @@ function showAboutSection(id) {
   document.querySelectorAll('[data-about-section]').forEach((section) => {
     section.hidden = section.dataset.aboutSection !== id
   })
+  presence.setFocus(id)
 }
 
 function aboutThumb(src, kind) {
@@ -1644,6 +1649,7 @@ function showSimpleSection(id) {
   document.querySelectorAll('[data-simple-section]').forEach((section) => {
     section.hidden = section.dataset.simpleSection !== id
   })
+  presence.setFocus(id)
 }
 
 function renderSpaceMatrixEditor(spaceMatrixRows = [], items = []) {

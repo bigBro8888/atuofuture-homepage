@@ -1,8 +1,17 @@
-/** 后台协作在场：心跳轮询 + 顶部在线警示 + 远程光标 + 编辑冲突提示 */
+/** 后台协作在场：心跳轮询 + 顶部在线警示 + 区块焦点高亮 + 远程光标 */
 
 const COLORS = ['#0879f9', '#0f9f6e', '#d97706', '#db2777', '#7c3aed', '#0891b2']
 const HEARTBEAT_MS = 1500
 const DEFAULT_ROOM = '__admin__'
+const FOCUS_SELECTORS = [
+  (id) => `[data-home-goto="${CSS.escape(id)}"]`,
+  (id) => `[data-about-goto="${CSS.escape(id)}"]`,
+  (id) => `[data-simple-goto="${CSS.escape(id)}"]`,
+  (id) => `[data-aspace-home-section="${CSS.escape(id)}"]`,
+  (id) => `[data-aspace-help-section="${CSS.escape(id)}"]`,
+  (id) => `[data-aspace-tab="${CSS.escape(id)}"]`,
+  (id) => `[data-config-goto="${CSS.escape(id)}"]`,
+]
 
 function makeClientId() {
   try {
@@ -24,9 +33,23 @@ function colorFor(id = '') {
   return COLORS[hash % COLORS.length]
 }
 
+function findFocusTarget(focusId) {
+  if (!focusId) return null
+  for (const build of FOCUS_SELECTORS) {
+    try {
+      const el = document.querySelector(`.admin-panel.is-active ${build(focusId)}`)
+      if (el) return el
+    } catch {
+      // ignore invalid selectors
+    }
+  }
+  return null
+}
+
 export function createAdminPresence({ api } = {}) {
   const clientId = makeClientId()
   let room = ''
+  let focus = ''
   let editing = false
   let cursor = null
   let peers = []
@@ -37,6 +60,7 @@ export function createAdminPresence({ api } = {}) {
   let layerEl = null
   let alertEl = null
   let warnEl = null
+  const taggedEls = new Set()
 
   const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
@@ -92,6 +116,44 @@ export function createAdminPresence({ api } = {}) {
     return layerEl
   }
 
+  const clearFocusTags = () => {
+    taggedEls.forEach((el) => {
+      el.classList.remove('is-remote-focus')
+      el.querySelectorAll('[data-admin-presence-focus-tag]').forEach((tag) => tag.remove())
+    })
+    taggedEls.clear()
+  }
+
+  const renderFocus = () => {
+    clearFocusTags()
+    if (!room || room === DEFAULT_ROOM) return
+
+    const byFocus = new Map()
+    peers.forEach((peer) => {
+      if (!peer.focus) return
+      const list = byFocus.get(peer.focus) || []
+      list.push(peer)
+      byFocus.set(peer.focus, list)
+    })
+
+    byFocus.forEach((group, focusId) => {
+      const target = findFocusTarget(focusId)
+      if (!target) return
+      const style = getComputedStyle(target)
+      if (style.position === 'static') target.style.position = 'relative'
+      target.classList.add('is-remote-focus')
+      const names = group.map((peer) => peer.name).join('、')
+      const color = colorFor(group[0].userId || group[0].clientId)
+      const tag = document.createElement('span')
+      tag.className = 'admin-presence-focus-tag'
+      tag.dataset.adminPresenceFocusTag = ''
+      tag.style.setProperty('--presence-color', color)
+      tag.textContent = names
+      target.appendChild(tag)
+      taggedEls.add(target)
+    })
+  }
+
   const renderAlert = () => {
     ensureUi()
     if (!alertEl) return
@@ -118,7 +180,6 @@ export function createAdminPresence({ api } = {}) {
     ensureUi()
     const editingPeers = peers.filter((peer) => peer.editing)
     if (!warnEl) return
-    // 顶部红色条已覆盖在线提示；同页编辑补充条仅在有人编辑且顶部已显示时弱化重复——直接隐藏，统一用顶部红条
     warnEl.hidden = true
     warnEl.innerHTML = ''
     document.querySelectorAll('[data-simple-publish], [data-home-publish], [data-about-publish], [data-site-publish]').forEach((button) => {
@@ -132,7 +193,7 @@ export function createAdminPresence({ api } = {}) {
     const layer = ensureLayer()
     if (!layer || !canvasEl) return
     const rect = canvasEl.getBoundingClientRect()
-    layer.innerHTML = peers.filter((peer) => peer.cursor).map((peer) => {
+    layer.innerHTML = peers.filter((peer) => peer.cursor && !peer.focus).map((peer) => {
       const left = peer.cursor.x * rect.width
       const top = peer.cursor.y * rect.height
       const color = colorFor(peer.userId || peer.clientId)
@@ -148,12 +209,13 @@ export function createAdminPresence({ api } = {}) {
     try {
       const data = await api('/presence', {
         method: 'PUT',
-        body: JSON.stringify({ clientId, room, cursor, editing }),
+        body: JSON.stringify({ clientId, room, cursor, editing, focus }),
       })
       peers = Array.isArray(data?.peers) ? data.peers : []
       online = Array.isArray(data?.online) ? data.online : []
       renderAlert()
       renderWarn()
+      renderFocus()
       renderCursors()
     } catch {
       // 心跳失败不打断编辑
@@ -173,6 +235,50 @@ export function createAdminPresence({ api } = {}) {
 
   const onActivity = () => {
     editing = true
+  }
+
+  const onFocusClick = (event) => {
+    const home = event.target.closest('[data-home-goto]')
+    if (home?.dataset.homeGoto) {
+      focus = home.dataset.homeGoto
+      editing = true
+      void tick()
+      return
+    }
+    const about = event.target.closest('[data-about-goto]')
+    if (about?.dataset.aboutGoto) {
+      focus = about.dataset.aboutGoto
+      editing = true
+      void tick()
+      return
+    }
+    const simple = event.target.closest('[data-simple-goto]')
+    if (simple?.dataset.simpleGoto) {
+      focus = simple.dataset.simpleGoto
+      editing = true
+      void tick()
+      return
+    }
+    const aspaceHome = event.target.closest('[data-aspace-home-section]')
+    if (aspaceHome?.dataset.aspaceHomeSection) {
+      focus = aspaceHome.dataset.aspaceHomeSection
+      editing = true
+      void tick()
+      return
+    }
+    const aspaceHelp = event.target.closest('[data-aspace-help-section]')
+    if (aspaceHelp?.dataset.aspaceHelpSection) {
+      focus = aspaceHelp.dataset.aspaceHelpSection
+      editing = true
+      void tick()
+      return
+    }
+    const aspaceTab = event.target.closest('[data-aspace-tab]')
+    if (aspaceTab?.dataset.aspaceTab) {
+      focus = aspaceTab.dataset.aspaceTab
+      editing = true
+      void tick()
+    }
   }
 
   const leave = () => {
@@ -195,6 +301,7 @@ export function createAdminPresence({ api } = {}) {
     if (bound) return
     bound = true
     document.addEventListener('pointermove', onPointerMove, { passive: true })
+    document.addEventListener('click', onFocusClick, true)
     document.addEventListener('input', onActivity, true)
     document.addEventListener('change', onActivity, true)
     window.addEventListener('beforeunload', leave)
@@ -227,14 +334,25 @@ export function createAdminPresence({ api } = {}) {
       room = value
       editing = false
       cursor = null
+      focus = ''
       peers = []
+      clearFocusTags()
     }
     ensureUi()
     ensureLayer()
     renderAlert()
     renderWarn()
+    renderFocus()
     renderCursors()
     if (!timer || !sameRoom) startHeartbeat()
+  }
+
+  const setFocus = (nextFocus) => {
+    const value = String(nextFocus || '').trim().slice(0, 80)
+    if (value === focus) return
+    focus = value
+    editing = Boolean(value)
+    void tick()
   }
 
   const hasOtherEditors = () => peers.some((peer) => peer.editing)
@@ -248,6 +366,7 @@ export function createAdminPresence({ api } = {}) {
   return {
     clientId,
     setRoom,
+    setFocus,
     start: () => setRoom(room || DEFAULT_ROOM),
     markEditing: () => { editing = true },
     getPeers: () => peers.slice(),
