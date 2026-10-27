@@ -6,6 +6,7 @@ import { bindHardwareVisualAdmin, collectHardwareVisualContent, renderHardwareVi
 import { bindSolutionsVisualAdmin, collectSolutionsVisualContent, renderSolutionsVisualEditor } from './admin-solutions.js'
 import { bindAgentsVisualAdmin, collectAgentsVisualContent, renderAgentsVisualEditor } from './admin-agents.js'
 import { bindAboutVisualAdmin, collectAboutVisualContent, renderAboutVisualEditor } from './admin-about.js'
+import { bindAspaceHomeVisualAdmin, collectAspaceHomeVisual, renderAspaceHomeVisualMarkup, scrollAspaceHomeSection } from './admin-aspace-home.js'
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 
 const API = '/api/admin'
@@ -49,7 +50,7 @@ const titles = {
   'content-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
   'page-news': ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
   'page-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
-  aspace: ['Aspace 空间智能', '路径 /aspace-one/ · 分标签页首页内容、业务分类、应用归属、封面文案与知识库'],
+  aspace: ['Aspace 空间智能', '路径 /aspace-one/ · 可视化编辑首页；另可配业务分类、应用归属、封面文案与知识库'],
   config: ['App 下载页', '路径 /app-download/ · 可视化编辑下载页'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
   leads: ['预约与资料', '查看客户提交的预约演示、获取资料与联系客服线索'],
@@ -285,14 +286,7 @@ function setAspaceEditorTab(tab) {
 function setAspaceHomeSection(section) {
   const next = ['hero', 'panorama', 'scenes', 'infra'].includes(section) ? section : 'hero'
   aspaceHomeSection = next
-  const host = document.querySelector('[data-aspace-editor]')
-  if (!host) return
-  host.querySelectorAll('[data-aspace-home-section]').forEach((button) => {
-    button.classList.toggle('is-active', button.dataset.aspaceHomeSection === next)
-  })
-  host.querySelectorAll('[data-aspace-home-panel]').forEach((panel) => {
-    panel.hidden = panel.dataset.aspaceHomePanel !== next
-  })
+  scrollAspaceHomeSection(next)
 }
 
 function setAspaceHelpSection(section) {
@@ -451,84 +445,8 @@ function renderAspaceHomeEditor(home) {
   if (!home) return ''
   return `
     <section class="admin-aspace-section" data-aspace-tab-panel="home" hidden>
-      <header><div><h3>首页内容</h3><p>配置 Aspace 门户首页的首屏、业务全景、业务场景与能力指标，保存后立即生效。</p></div></header>
-      <nav class="admin-aspace-home-nav" aria-label="首页区块">
-        <button type="button" data-aspace-home-section="hero">首屏</button>
-        <button type="button" data-aspace-home-section="panorama">业务全景</button>
-        <button type="button" data-aspace-home-section="scenes">业务场景</button>
-        <button type="button" data-aspace-home-section="infra">能力指标</button>
-      </nav>
-      <div class="admin-aspace-home-panel" data-aspace-home-panel="hero" data-aspace-home>
-        <label><span>背景图链接</span><input name="home-hero-background" maxlength="500" value="${escapeHtml(home.hero.background)}" placeholder="https://… 或 /images/…" /></label>
-        <label><span>主标题（可用换行）</span><textarea name="home-hero-title" rows="3" maxlength="120">${escapeHtml(home.hero.title)}</textarea></label>
-        <div class="admin-aspace-home-grid">
-          <label><span>主按钮文案</span><input name="home-hero-primary" maxlength="40" value="${escapeHtml(home.hero.primaryCta)}" /></label>
-          <label><span>次按钮文案</span><input name="home-hero-secondary" maxlength="40" value="${escapeHtml(home.hero.secondaryCta)}" /></label>
-        </div>
-      </div>
-      <div class="admin-aspace-home-panel" data-aspace-home-panel="panorama" data-aspace-home hidden>
-        <div class="admin-aspace-home-grid">
-          <label><span>区块标题</span><input name="home-panorama-title" maxlength="60" value="${escapeHtml(home.panorama.title)}" /></label>
-          <label><span>右侧按钮</span><input name="home-panorama-more" maxlength="40" value="${escapeHtml(home.panorama.moreLabel)}" /></label>
-        </div>
-        <label><span>区块说明</span><input name="home-panorama-lead" maxlength="160" value="${escapeHtml(home.panorama.lead)}" /></label>
-        <div class="admin-aspace-home-cards">
-          ${home.panorama.items.map((item) => `
-            <article class="admin-aspace-home-card" data-home-panorama="${escapeHtml(item.id)}">
-              <header><b>${escapeHtml(item.step)} · ${escapeHtml(item.stage)}</b><small>${escapeHtml(item.id)}</small></header>
-              <div class="admin-aspace-home-grid">
-                <label><span>阶段名</span><input name="stage" maxlength="20" value="${escapeHtml(item.stage)}" /></label>
-                <label><span>序号</span><input name="step" maxlength="8" value="${escapeHtml(item.step)}" /></label>
-              </div>
-              <label><span>标题</span><input name="title" maxlength="40" value="${escapeHtml(item.title)}" /></label>
-              <label><span>简介</span><input name="desc" maxlength="80" value="${escapeHtml(item.desc)}" /></label>
-              <label><span>封面图链接</span><input name="image" maxlength="500" value="${escapeHtml(item.image)}" /></label>
-              <label><span>封面跳转链接</span><input name="href" maxlength="500" placeholder="https://… 或 /path 或 app:应用ID，空则进应用广场" value="${escapeHtml(item.href || '')}" /></label>
-              <div class="admin-aspace-home-grid">
-                ${item.items.map((link, index) => `
-                  <label><span>能力 ${index + 1}</span><input name="link-${index}" maxlength="30" value="${escapeHtml(link.label)}" /></label>
-                `).join('')}
-              </div>
-            </article>
-          `).join('')}
-        </div>
-      </div>
-      <div class="admin-aspace-home-panel" data-aspace-home-panel="scenes" data-aspace-home hidden>
-        <label><span>区块标题</span><input name="home-scenes-title" maxlength="60" value="${escapeHtml(home.scenes.title)}" /></label>
-        <label><span>区块说明</span><input name="home-scenes-lead" maxlength="160" value="${escapeHtml(home.scenes.lead)}" /></label>
-        <div class="admin-aspace-home-cards">
-          ${home.scenes.items.map((item) => `
-            <article class="admin-aspace-home-card" data-home-scene="${escapeHtml(item.id)}">
-              <header><b>${escapeHtml(item.label)}</b><small>${escapeHtml(item.id)}</small></header>
-              <label><span>场景名</span><input name="label" maxlength="30" value="${escapeHtml(item.label)}" /></label>
-              <label><span>标题</span><input name="title" maxlength="60" value="${escapeHtml(item.title)}" /></label>
-              <label><span>简介</span><input name="lead" maxlength="160" value="${escapeHtml(item.lead)}" /></label>
-              <label><span>封面图链接</span><input name="image" maxlength="500" value="${escapeHtml(item.image)}" /></label>
-              <div class="admin-aspace-home-grid">
-                ${item.apps.map((app, index) => `
-                  <label><span>应用 ${index + 1}</span><input name="app-${index}" maxlength="30" value="${escapeHtml(app.label)}" /></label>
-                `).join('')}
-              </div>
-            </article>
-          `).join('')}
-        </div>
-      </div>
-      <div class="admin-aspace-home-panel" data-aspace-home-panel="infra" data-aspace-home hidden>
-        <label><span>区块标题</span><input name="home-infra-title" maxlength="80" value="${escapeHtml(home.infra.title)}" /></label>
-        <label><span>按钮文案</span><input name="home-infra-cta" maxlength="40" value="${escapeHtml(home.infra.cta)}" /></label>
-        <div class="admin-aspace-home-cards admin-aspace-home-cards--stats">
-          ${home.infra.stats.map((stat, index) => `
-            <article class="admin-aspace-home-card" data-home-stat="${index}">
-              <header><b>指标 ${index + 1}</b></header>
-              <div class="admin-aspace-home-grid">
-                <label><span>数值</span><input name="value" maxlength="16" value="${escapeHtml(stat.value)}" /></label>
-                <label><span>单位</span><input name="unit" maxlength="8" value="${escapeHtml(stat.unit)}" placeholder="如 +" /></label>
-              </div>
-              <label><span>说明</span><input name="label" maxlength="40" value="${escapeHtml(stat.label)}" /></label>
-            </article>
-          `).join('')}
-        </div>
-      </div>
+      <header><div><h3>首页内容</h3><p>可视化编辑 Aspace 门户首页：点文字改文案，点图片换图，业务全景封面可设跳转；保存后立即生效。</p></div></header>
+      ${renderAspaceHomeVisualMarkup(home, { section: aspaceHomeSection })}
     </section>`
 }
 
@@ -831,63 +749,11 @@ function renderAspaceCatalog() {
 }
 
 function collectAspaceHome() {
-  const home = structuredClone(state.aspaceHome)
-  if (!home) return null
-  home.hero = {
-    background: document.querySelector('[name="home-hero-background"]')?.value.trim() || home.hero.background,
-    title: document.querySelector('[name="home-hero-title"]')?.value.trim() || home.hero.title,
-    primaryCta: document.querySelector('[name="home-hero-primary"]')?.value.trim() || home.hero.primaryCta,
-    secondaryCta: document.querySelector('[name="home-hero-secondary"]')?.value.trim() || home.hero.secondaryCta,
+  if (!state.aspaceHome) return null
+  if (document.querySelector('[data-aspace-home-visual]')) {
+    return collectAspaceHomeVisual(state.aspaceHome)
   }
-  home.panorama.title = document.querySelector('[name="home-panorama-title"]')?.value.trim() || home.panorama.title
-  home.panorama.lead = document.querySelector('[name="home-panorama-lead"]')?.value.trim() || home.panorama.lead
-  home.panorama.moreLabel = document.querySelector('[name="home-panorama-more"]')?.value.trim() || home.panorama.moreLabel
-  home.panorama.items = home.panorama.items.map((item) => {
-    const row = document.querySelector(`[data-home-panorama="${CSS.escape(item.id)}"]`)
-    if (!row) return item
-    return {
-      ...item,
-      stage: row.querySelector('[name="stage"]')?.value.trim() || item.stage,
-      step: row.querySelector('[name="step"]')?.value.trim() || item.step,
-      title: row.querySelector('[name="title"]')?.value.trim() || item.title,
-      desc: row.querySelector('[name="desc"]')?.value.trim() || item.desc,
-      image: row.querySelector('[name="image"]')?.value.trim() || item.image,
-      href: row.querySelector('[name="href"]')?.value.trim() || '',
-      items: item.items.map((link, index) => ({
-        ...link,
-        label: row.querySelector(`[name="link-${index}"]`)?.value.trim() || link.label,
-      })),
-    }
-  })
-  home.scenes.title = document.querySelector('[name="home-scenes-title"]')?.value.trim() || home.scenes.title
-  home.scenes.lead = document.querySelector('[name="home-scenes-lead"]')?.value.trim() || home.scenes.lead
-  home.scenes.items = home.scenes.items.map((item) => {
-    const row = document.querySelector(`[data-home-scene="${CSS.escape(item.id)}"]`)
-    if (!row) return item
-    return {
-      ...item,
-      label: row.querySelector('[name="label"]')?.value.trim() || item.label,
-      title: row.querySelector('[name="title"]')?.value.trim() || item.title,
-      lead: row.querySelector('[name="lead"]')?.value.trim() || item.lead,
-      image: row.querySelector('[name="image"]')?.value.trim() || item.image,
-      apps: item.apps.map((app, index) => ({
-        ...app,
-        label: row.querySelector(`[name="app-${index}"]`)?.value.trim() || app.label,
-      })),
-    }
-  })
-  home.infra.title = document.querySelector('[name="home-infra-title"]')?.value.trim() || home.infra.title
-  home.infra.cta = document.querySelector('[name="home-infra-cta"]')?.value.trim() || home.infra.cta
-  home.infra.stats = home.infra.stats.map((stat, index) => {
-    const row = document.querySelector(`[data-home-stat="${index}"]`)
-    if (!row) return stat
-    return {
-      value: row.querySelector('[name="value"]')?.value.trim() || stat.value,
-      unit: row.querySelector('[name="unit"]')?.value.trim() ?? stat.unit,
-      label: row.querySelector('[name="label"]')?.value.trim() || stat.label,
-    }
-  })
-  return home
+  return structuredClone(state.aspaceHome)
 }
 
 function collectAspaceCatalog() {
@@ -3786,6 +3652,12 @@ bindAgentsVisualAdmin({
   state,
 })
 bindAboutVisualAdmin({
+  api,
+  toast,
+  escapeHtml,
+  state,
+})
+bindAspaceHomeVisualAdmin({
   api,
   toast,
   escapeHtml,
