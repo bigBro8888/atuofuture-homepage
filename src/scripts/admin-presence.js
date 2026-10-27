@@ -197,10 +197,12 @@ export function createAdminPresence({ api } = {}) {
   let layerEl = null
   let alertEl = null
   let warnEl = null
+  let focusSyncTimer = 0
   const taggedEls = new Set()
   const liveDraft = {}
   /** @type {Map<string, { original: string, peerName: string }>} */
   const remoteApplied = new Map()
+  const FOCUS_HIT = '[data-edit-path], [data-edit-image], [data-home-field], [data-about-field], [data-home-goto], [data-about-goto], [data-simple-goto], [data-aspace-home-section], [data-aspace-help-section], [data-aspace-tab], [data-home-section], [data-simple-section], [data-ag-select], [data-aso-app], [data-aspace-profile], [data-aspace-category], section[id]'
 
   const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
@@ -279,7 +281,6 @@ export function createAdminPresence({ api } = {}) {
         remoteApplied.get(key).peerName = peer.name
       }
       writeDraftValue(el, value)
-      el.classList.add('is-remote-editing')
     })
   }
 
@@ -335,14 +336,25 @@ export function createAdminPresence({ api } = {}) {
 
   const clearFocusTags = () => {
     taggedEls.forEach((el) => {
-      el.classList.remove('is-remote-focus')
+      el.classList.remove('is-remote-focus', 'is-remote-editing')
       el.querySelectorAll('[data-admin-presence-focus-tag], [data-admin-presence-live-tag]').forEach((tag) => tag.remove())
+    })
+    document.querySelectorAll('.admin-panel.is-active .is-remote-focus, .admin-panel.is-active .is-remote-editing').forEach((el) => {
+      el.classList.remove('is-remote-focus', 'is-remote-editing')
     })
     document.querySelectorAll('.admin-panel.is-active [data-admin-presence-focus-tag], .admin-panel.is-active [data-admin-presence-live-tag]').forEach((tag) => tag.remove())
     taggedEls.clear()
   }
 
-  /** 每个目标只挂一个标签：仅在场显示名字，有文案改动则「名字 · 编辑中」 */
+  const draftTouchesElement = (draft, el) => {
+    if (!el || !draft) return false
+    return Object.keys(draft).some((key) => {
+      const target = findDraftTarget(key)
+      return Boolean(target && (target === el || el.contains(target) || target.contains(el)))
+    })
+  }
+
+  /** 只标当前焦点位置：一个红框 + 一个名字（有改文案则带「编辑中」） */
   const renderFocus = () => {
     clearFocusTags()
     if (!room || room === DEFAULT_ROOM) return
@@ -350,24 +362,16 @@ export function createAdminPresence({ api } = {}) {
     /** @type {Map<Element, { names: string[], editing: boolean, color: string }>} */
     const byTarget = new Map()
 
-    const addPeerToTarget = (el, peer, editing) => {
+    peers.forEach((peer) => {
+      if (!peer.focus) return
+      const el = findFocusTarget(peer.focus)
       if (!el) return
+      const draft = peer.liveDraft && typeof peer.liveDraft === 'object' ? peer.liveDraft : {}
+      const editingHere = draftTouchesElement(draft, el)
       const prev = byTarget.get(el) || { names: [], editing: false, color: colorFor(peer.userId || peer.clientId) }
       if (!prev.names.includes(peer.name)) prev.names.push(peer.name)
-      prev.editing = prev.editing || editing
+      prev.editing = prev.editing || editingHere
       byTarget.set(el, prev)
-    }
-
-    peers.forEach((peer) => {
-      const draft = peer.liveDraft && typeof peer.liveDraft === 'object' ? peer.liveDraft : {}
-      const draftKeys = Object.keys(draft)
-      const isEditingCopy = Boolean(peer.editing && draftKeys.length) || draftKeys.length > 0
-
-      if (peer.focus) addPeerToTarget(findFocusTarget(peer.focus), peer, isEditingCopy)
-
-      draftKeys.forEach((key) => {
-        addPeerToTarget(findDraftTarget(key), peer, true)
-      })
     })
 
     byTarget.forEach((info, target) => {
@@ -460,38 +464,50 @@ export function createAdminPresence({ api } = {}) {
     }
   }
 
-  const applyLocalFocus = (nextFocus, { markEdit = true } = {}) => {
+  const applyLocalFocus = (nextFocus, { markEdit = false, syncNow = true } = {}) => {
     const value = String(nextFocus || '').trim().slice(0, 80)
-    if (!value || value === focus) return
+    if (value === focus) {
+      if (markEdit) editing = true
+      return
+    }
     focus = value
-    if (markEdit) editing = true
-    void tick()
+    if (markEdit && value) editing = true
+    if (!syncNow) return
+    clearTimeout(focusSyncTimer)
+    focusSyncTimer = window.setTimeout(() => { void tick() }, markEdit ? 0 : 180)
   }
 
   const onPointerMove = (event) => {
-    if (!canvasEl || !room || room === DEFAULT_ROOM) return
-    if (!canvasEl.contains(event.target) && event.target !== canvasEl) return
-    const rect = canvasEl.getBoundingClientRect()
-    if (!rect.width || !rect.height) return
-    cursor = {
-      x: Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)),
-      y: Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height)),
+    if (!room || room === DEFAULT_ROOM) return
+    const panel = document.querySelector('.admin-panel.is-active')
+    if (!panel?.contains(event.target)) return
+
+    const trackEl = canvasEl && panel.contains(canvasEl) ? canvasEl : panel
+    const rect = trackEl.getBoundingClientRect()
+    if (rect.width && rect.height) {
+      cursor = {
+        x: Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)),
+        y: Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height)),
+      }
     }
+
+    const hit = event.target.closest(FOCUS_HIT)
+    const next = encodeFocusFromElement(hit) || ''
+    applyLocalFocus(next, { markEdit: false, syncNow: true })
   }
 
   const onActivity = (event) => {
-    editing = true
     const draftEl = event.target?.closest?.('[data-edit-path], [data-home-field], [data-about-field]')
     if (draftEl && (event.type === 'input' || event.type === 'change')) recordLocalDraft(draftEl)
-    const hit = event.target?.closest?.('[data-edit-path], [data-edit-image], [data-home-field], [data-about-field], [data-home-goto], [data-about-goto], [data-simple-goto], [data-aspace-home-section], [data-aspace-help-section], [data-aspace-tab], [data-home-section], [data-simple-section], [data-ag-select], [data-aso-app], [data-aspace-profile], [data-aspace-category], section[id]')
+    const hit = event.target?.closest?.(FOCUS_HIT)
     const next = encodeFocusFromElement(hit)
-    if (next) applyLocalFocus(next)
+    if (next) applyLocalFocus(next, { markEdit: event.type === 'input' || event.type === 'change', syncNow: true })
   }
 
   const onFocusClick = (event) => {
-    const hit = event.target.closest('[data-home-goto], [data-about-goto], [data-simple-goto], [data-aspace-home-section], [data-aspace-help-section], [data-aspace-help-page-group], [data-aspace-tab], [data-config-goto], [data-edit-path], [data-edit-image], [data-home-field], [data-about-field], [data-ag-select], [data-aso-app], [data-aspace-profile], [data-aspace-category], [data-home-section], [data-simple-section], section[id]')
-    const next = encodeFocusFromElement(hit)
-    if (next) applyLocalFocus(next)
+    const hit = event.target.closest(FOCUS_HIT)
+    const next = encodeFocusFromElement(hit) || ''
+    applyLocalFocus(next, { markEdit: false, syncNow: true })
   }
 
   const leave = () => {
