@@ -1,5 +1,6 @@
 import createGlobe from 'cobe'
 import { renderSiteFooter } from '../components/site-footer.js'
+import { clearPortalTokens, readPortalTokens, writePortalTokens } from '../lib/site-account.js'
 import { fetchAboutPageContent, mountAboutContent } from './about-page.js'
 
 const ABOUT_SECTION_IDS = new Set([
@@ -596,12 +597,12 @@ function setAccountMenuOpen(root, open) {
 async function logoutPortalAccount() {
   let idToken = ''
   try {
-    const tokens = JSON.parse(sessionStorage.getItem('aspace-one-oidc-tokens') || 'null')
+    const tokens = readPortalTokens()
     idToken = String(tokens?.id_token || '')
   } catch {
     idToken = ''
   }
-  sessionStorage.removeItem('aspace-one-oidc-tokens')
+  clearPortalTokens()
   sessionStorage.removeItem('aspace-one-oidc-pending')
   window.ASPACE_CURRENT_USER = null
 
@@ -1476,7 +1477,7 @@ async function initPortalAuth() {
       const tokens = await tokenResponse.json()
       if (!tokenResponse.ok || !tokens.access_token) throw new Error(tokens.error_description || '无法完成登录')
       const user = await readPortalUser(tokens.access_token)
-      sessionStorage.setItem('aspace-one-oidc-tokens', JSON.stringify(tokens))
+      writePortalTokens(tokens)
       sessionStorage.removeItem('aspace-one-oidc-pending')
       window.ASPACE_CURRENT_USER = { id: user.sub, ...user }
       window.location.replace('/aspace-one/')
@@ -1488,12 +1489,13 @@ async function initPortalAuth() {
     }
   }
   try {
-    const tokens = JSON.parse(sessionStorage.getItem('aspace-one-oidc-tokens') || 'null')
+    const tokens = readPortalTokens()
     if (!tokens?.access_token) return
     const user = await readPortalUser(tokens.access_token)
+    writePortalTokens(tokens)
     window.ASPACE_CURRENT_USER = { id: user.sub, ...user }
   } catch {
-    sessionStorage.removeItem('aspace-one-oidc-tokens')
+    clearPortalTokens()
     window.ASPACE_CURRENT_USER = null
   }
 }
@@ -1697,7 +1699,7 @@ async function startPersonalLogin(root, trigger) {
   }
   try {
     // 清除本地登录缓存，并强制统一认证弹出登录界面
-    sessionStorage.removeItem('aspace-one-oidc-tokens')
+    clearPortalTokens()
     window.ASPACE_CURRENT_USER = null
     window.location.href = await createPortalLoginUrl({ forceLogin: true })
   } catch {

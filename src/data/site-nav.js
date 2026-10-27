@@ -1,7 +1,8 @@
 /** 全站顶部导航：一级 + 二级（mega menu） */
 export const SITE_NAV_ITEMS = [
   { id: 'home', label: '首页', segment: '' },
-  { id: 'aspace-one', label: 'Aspace空间智能', segment: 'aspace-one/', external: true, href: '/aspace-one/' },
+  // 同站内跳转，勿用 external/_blank：登录态在 sessionStorage，新标签+noopener 会丢登录
+  { id: 'aspace-one', label: 'Aspace空间智能', segment: 'aspace-one/', href: '/aspace-one/' },
   {
     id: 'agents',
     label: '空间智能体',

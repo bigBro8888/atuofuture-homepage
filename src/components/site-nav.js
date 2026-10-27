@@ -14,9 +14,29 @@ function getRootPrefix() {
 
 function buildHref(item, root) {
   if (item.external) return item.href
+  // 站内绝对路径（如 /aspace-one/）避免深层页面相对路径算错
+  if (item.href && String(item.href).startsWith('/') && !String(item.href).startsWith('//')) {
+    return item.href
+  }
   if (item.anchor) return `${root}${item.segment}`
   if (!item.segment) return root
   return `${root}${item.segment}`
+}
+
+/** 仅跨域外链才新开标签；同站路径必须同页跳转以保留登录态 */
+function openInNewTab(item, href = '') {
+  if (!item?.external) return false
+  try {
+    const url = new URL(href || item.href || '', typeof window !== 'undefined' ? window.location.origin : 'https://example.com')
+    if (typeof window !== 'undefined' && url.origin === window.location.origin) return false
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return Boolean(item.external)
+  }
+}
+
+function newTabAttrs(item, href) {
+  return openInNewTab(item, href) ? ' target="_blank" rel="noopener noreferrer"' : ''
 }
 
 function isActiveNav(item, activeId) {
@@ -147,7 +167,7 @@ function renderMegaChildren(item, root) {
         ${children
           .map(
             (child, index) => `
-          <a class="site-mega__card" href="${buildHref(child, root)}"${child.external ? ' target="_blank" rel="noopener noreferrer"' : ''} data-stagger style="--stagger:${index}">
+          <a class="site-mega__card" href="${buildHref(child, root)}"${newTabAttrs(child, buildHref(child, root))} data-stagger style="--stagger:${index}">
             <strong>${child.label}</strong>
             ${child.desc ? `<span>${child.desc}</span>` : ''}
           </a>`
@@ -164,7 +184,7 @@ function renderDesktopNav(activeId, root) {
     const active = isActiveNav(item, activeId)
     const hasChildren = Array.isArray(item.children) && item.children.length > 0
     if (!hasChildren) {
-      return `<a class="site-nav-link${active ? ' is-active' : ''}" href="${href}"${item.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${item.label}</a>`
+      return `<a class="site-nav-link${active ? ' is-active' : ''}" href="${href}"${newTabAttrs(item, href)}>${item.label}</a>`
     }
     return `
       <div class="site-nav-item${active ? ' is-active' : ''}" data-nav-item data-nav-id="${item.id}">
@@ -184,7 +204,7 @@ function renderMobileNav(activeId, root) {
     const active = isActiveNav(item, activeId)
     const hasChildren = Array.isArray(item.children) && item.children.length > 0
     if (!hasChildren) {
-      return `<a class="site-mobile-nav-link${active ? ' is-active' : ''}" href="${href}"${item.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${item.label}</a>`
+      return `<a class="site-mobile-nav-link${active ? ' is-active' : ''}" href="${href}"${newTabAttrs(item, href)}>${item.label}</a>`
     }
     return `
       <div class="site-mobile-acc${active ? ' is-open' : ''}" data-mobile-acc>

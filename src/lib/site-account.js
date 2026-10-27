@@ -1,6 +1,46 @@
 const TOKEN_KEY = 'aspace-one-oidc-tokens'
 const PENDING_KEY = 'aspace-one-oidc-pending'
 
+/** 读写登录 token：优先 session，并同步 local，避免新标签/部分跳转丢登录态 */
+export function readPortalTokens() {
+  for (const store of [sessionStorage, localStorage]) {
+    try {
+      const tokens = JSON.parse(store.getItem(TOKEN_KEY) || 'null')
+      if (tokens?.access_token) return tokens
+    } catch {
+      /* ignore */
+    }
+  }
+  return null
+}
+
+export function writePortalTokens(tokens) {
+  const raw = JSON.stringify(tokens || null)
+  try {
+    sessionStorage.setItem(TOKEN_KEY, raw)
+  } catch {
+    /* ignore */
+  }
+  try {
+    localStorage.setItem(TOKEN_KEY, raw)
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearPortalTokens() {
+  try {
+    sessionStorage.removeItem(TOKEN_KEY)
+  } catch {
+    /* ignore */
+  }
+  try {
+    localStorage.removeItem(TOKEN_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
 function base64Url(bytes) {
   return btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, '-')
@@ -90,7 +130,7 @@ export function siteAccountName(user) {
 
 export async function loadSiteAccount() {
   try {
-    const tokens = JSON.parse(sessionStorage.getItem(TOKEN_KEY) || 'null')
+    const tokens = readPortalTokens()
     if (!tokens?.access_token) return null
     const response = await fetch('/auth/me', {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
@@ -98,10 +138,12 @@ export async function loadSiteAccount() {
     })
     if (!response.ok) throw new Error('expired')
     const user = await response.json()
+    // 回写一份到两边，保证后续同站跳转都能读到
+    writePortalTokens(tokens)
     window.ASPACE_CURRENT_USER = { id: user.sub, ...user }
     return window.ASPACE_CURRENT_USER
   } catch {
-    sessionStorage.removeItem(TOKEN_KEY)
+    clearPortalTokens()
     window.ASPACE_CURRENT_USER = null
     return null
   }
