@@ -137,16 +137,15 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
           <nav class="admin-aso-help__cats" data-aso-help-anchor="categories" data-aso-help-cat-nav aria-label="文档分类">
             <div class="admin-aso-help__side-label">
               <span>文档分类</span>
-              <small>拖拽排序</small>
+              <small>与应用广场同步</small>
             </div>
             ${categories.map((item, index) => `
-              <button type="button" class="admin-aso-help__cat${index === 0 ? ' is-active' : ''}" draggable="${index === 0 ? 'false' : 'true'}" data-aso-help-cat-index="${index}" data-aso-help-open="categories" title="${index === 0 ? '全部文档固定首位' : '拖拽排序，点击编辑'}">
-                ${index === 0 ? '' : '<span class="admin-aso-help__cat-drag material-symbols-outlined" aria-hidden="true">drag_indicator</span>'}
+              <div class="admin-aso-help__cat${index === 0 ? ' is-active' : ''}" data-aso-help-cat-index="${index}" title="分类与应用广场保持一致">
                 <i class="material-symbols-outlined" data-aso-help-cat-icon>${esc(item.icon || 'folder')}</i>
                 <span data-aso-help-cat-name>${esc(item.name || '')}</span>
-              </button>
+              </div>
             `).join('') || '<p class="admin-form-section__hint">暂无分类</p>'}
-            <button type="button" class="admin-aso-help__add" data-aspace-help-add="category">+ 新增分类</button>
+            <p class="admin-aso-help__sync-hint">分类名称、图标与顺序跟随「应用广场」，请在应用广场调整。</p>
           </nav>
 
           <div class="admin-aso-help__docs" data-aso-help-anchor="docs">
@@ -237,7 +236,6 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
       ${renderDrawer('basics', '基础信息')}
       ${renderDrawer('search', '搜索热词')}
       ${renderDrawer('docs', '文档列表展示规则')}
-      ${renderDrawer('categories', '文档分类')}
       ${renderDrawer('updates', '最新更新')}
       ${renderDrawer('support', '客服引导')}
     </div>`

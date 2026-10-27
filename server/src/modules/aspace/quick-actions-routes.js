@@ -263,6 +263,62 @@ function currentHome() {
 const helpTones = new Set(['blue', 'teal', 'amber', 'violet'])
 const helpArts = new Set(['lines', 'chart', 'grid', 'book'])
 
+const HELP_CATEGORY_ALIASES = {
+  AI画报: '信息发布',
+  电子相册: '信息发布',
+  会议室预约系统: '会议管理',
+  会议与空间: '智能底座',
+  项目服务: '智能底座',
+}
+
+function helpCategoriesFromCatalog(catalog) {
+  const source = Array.isArray(catalog?.categories) ? catalog.categories : defaultAspaceCatalog.categories
+  const mapped = source
+    .map((item) => ({
+      icon: String(item?.icon || 'folder').trim().slice(0, 40) || 'folder',
+      name: String(item?.label || item?.name || '').trim().slice(0, 40),
+    }))
+    .filter((item) => item.name && item.name !== '全部文档')
+  return [{ icon: 'description', name: '全部文档' }, ...mapped]
+}
+
+function remapHelpDocCategory(category, categories) {
+  const raw = String(category || '').trim() || '全部文档'
+  const aliased = HELP_CATEGORY_ALIASES[raw] || raw
+  const valid = new Set((categories || []).map((item) => item.name))
+  if (valid.has(aliased)) return aliased
+  if (valid.has(raw)) return raw
+  return '全部文档'
+}
+
+function alignHelpWithCatalog(help, catalog) {
+  const categories = helpCategoriesFromCatalog(catalog)
+  const docs = (Array.isArray(help.docs) ? help.docs : []).map((item) => ({
+    ...item,
+    category: remapHelpDocCategory(item.category, categories),
+  }))
+  const featuredDocs = docs
+    .filter((item) => item.featured)
+    .slice(0, 4)
+    .map((item) => ({
+      title: item.title,
+      date: item.date,
+      badge: item.badge || '推荐',
+      tone: item.tone || 'blue',
+      art: item.art || 'lines',
+      fileUrl: item.fileUrl || '',
+      id: item.id,
+    }))
+  return {
+    ...help,
+    categories,
+    docs,
+    featuredDocs: featuredDocs.length
+      ? featuredDocs
+      : structuredClone(defaultAspaceHelp.featuredDocs).map((item) => ({ ...item, fileUrl: '', id: '' })),
+  }
+}
+
 function normalizeHelp(raw = {}) {
   const fallback = defaultAspaceHelp
   const text = (input, def, max) => String(input ?? def ?? '').trim().slice(0, max) || def
@@ -383,9 +439,9 @@ function normalizeHelp(raw = {}) {
 
 function currentHelp() {
   try {
-    return normalizeHelp(db().aspaceHelp)
+    return alignHelpWithCatalog(normalizeHelp(db().aspaceHelp), currentCatalog())
   } catch {
-    return structuredClone(defaultAspaceHelp)
+    return alignHelpWithCatalog(structuredClone(defaultAspaceHelp), defaultAspaceCatalog)
   }
 }
 
@@ -519,7 +575,7 @@ adminAspaceRouter.get('/help', requireAuth(), (_request, response) => {
 
 adminAspaceRouter.put('/help', requireAuth('config:write'), async (request, response) => {
   try {
-    const help = normalizeHelp(request.body?.help)
+    const help = alignHelpWithCatalog(normalizeHelp(request.body?.help), currentCatalog())
     db().aspaceHelp = help
     await save()
     await addAudit(request.admin, 'aspace.help.update', 'aspace-one', {

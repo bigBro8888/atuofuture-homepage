@@ -4858,13 +4858,13 @@ body.admin-aspace-help-fullscreen { overflow: hidden; }
 .admin-aso-help__side-label small { color: #0879f9; font-weight: 650; }
 .admin-aso-help__cat {
   display: grid;
-  grid-template-columns: 16px 22px minmax(0, 1fr);
+  grid-template-columns: 22px minmax(0, 1fr);
   align-items: center;
   gap: 6px;
   width: 100%;
   min-height: 40px;
   margin-bottom: 4px;
-  padding: 0 8px 0 4px;
+  padding: 0 8px;
   border: 1px solid transparent;
   border-radius: 10px;
   background: transparent;
@@ -4873,12 +4873,12 @@ body.admin-aspace-help-fullscreen { overflow: hidden; }
   font-size: 12px;
   font-weight: 650;
   text-align: left;
-  cursor: grab;
 }
-.admin-aso-help__cat:not([draggable="true"]) {
-  grid-template-columns: 22px minmax(0, 1fr);
-  cursor: pointer;
-  padding-left: 8px;
+.admin-aso-help__sync-hint {
+  margin: 10px 2px 0;
+  color: #8b98aa;
+  font-size: 11px;
+  line-height: 1.45;
 }
 .admin-aso-help__cat.is-active,
 .admin-aso-help__cat:hover {

@@ -8,6 +8,7 @@ import { bindAgentsVisualAdmin, collectAgentsVisualContent, renderAgentsVisualEd
 import { bindAboutVisualAdmin, collectAboutVisualContent, renderAboutVisualEditor } from './admin-about.js'
 import { bindAspaceHomeVisualAdmin, collectAspaceHomeVisual, renderAspaceHomeVisualMarkup, scrollAspaceHomeSection } from './admin-aspace-home.js'
 import { bindAspaceAppsVisualAdmin, renderAspaceAppsVisualMarkup } from './admin-aspace-apps.js'
+import { alignHelpWithCatalog } from '../lib/aspace-help-categories.js'
 import { bindAspaceHelpVisualAdmin, flushAspaceHelpVisualDrawer, renderAspaceHelpPageVisualMarkup } from './admin-aspace-help.js'
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 
@@ -242,19 +243,23 @@ let aspaceHelpDocQuery = ''
 let aspaceHelpEditingDocId = ''
 
 const helpCategoryIconChoices = [
-  ['description', '文档'],
-  ['bar_chart', '能耗'],
-  ['image', '画报'],
-  ['photo_library', '相册'],
-  ['desktop_windows', '会议'],
-  ['groups', '空间'],
-  ['folder', '项目'],
-  ['eco', '双碳'],
+  ['description', '全部'],
+  ['deployed_code', '孪生'],
+  ['groups', '会议'],
   ['campaign', '发布'],
-  ['sensors', '传感'],
+  ['business_center', '资产'],
+  ['eco', '能耗'],
+  ['co2', '双碳'],
   ['shield_lock', '安防'],
   ['hub', '底座'],
+  ['person_add', '访客'],
+  ['folder', '其他'],
 ]
+
+function syncedAspaceHelp(help = state.aspaceHelp) {
+  if (!help) return null
+  return alignHelpWithCatalog(help, state.aspaceCatalog)
+}
 
 async function loadAspaceCatalog() {
   try {
@@ -265,7 +270,7 @@ async function loadAspaceCatalog() {
     ])
     state.aspaceCatalog = catalog
     state.aspaceHome = home
-    state.aspaceHelp = help
+    state.aspaceHelp = alignHelpWithCatalog(help, catalog)
     renderAspaceCatalog()
   } catch (error) {
     toast(error.message, true)
@@ -521,7 +526,7 @@ function renderAspaceHelpDocLibrary(data) {
 }
 
 function renderAspaceHelpEditor(help) {
-  const data = help || state.aspaceHelp
+  const data = syncedAspaceHelp(help || state.aspaceHelp)
   if (!data) {
     return `<section class="admin-aspace-section" data-aspace-tab-panel="help" hidden>
       <p class="admin-aspace-loading">知识库配置加载中…</p>
@@ -529,7 +534,7 @@ function renderAspaceHelpEditor(help) {
   }
   return `
     <section class="admin-aspace-section" data-aspace-tab-panel="help" hidden>
-      <header><div><h3>知识库</h3><p>页面配置为可视化编辑；内容管理用目录 + 列表维护文档资料。</p></div></header>
+      <header><div><h3>知识库</h3><p>页面配置为可视化编辑；分类与应用广场保持一致；内容管理用目录 + 列表维护文档资料。</p></div></header>
       <nav class="admin-aspace-help-nav" aria-label="知识库配置分组">
         <button type="button" data-aspace-help-section="page">页面配置</button>
         <button type="button" data-aspace-help-section="content">内容管理</button>
@@ -616,7 +621,7 @@ function collectAspaceHelp() {
   const docs = (Array.isArray(state.aspaceHelp?.docs) ? state.aspaceHelp.docs : [])
     .map((item) => ({ ...item }))
     .filter((item) => item.title)
-  return {
+  const payload = {
     title: panel.querySelector('[name="help-title"]')?.value.trim() || '知识库',
     lead: panel.querySelector('[name="help-lead"]')?.value.trim() || '',
     searchPlaceholder: panel.querySelector('[name="help-search-placeholder"]')?.value.trim() || '',
@@ -633,10 +638,7 @@ function collectAspaceHelp() {
         .slice(0, 40),
     },
     hotSearches,
-    categories: [...panel.querySelectorAll('[data-aspace-help-category]')].map((row) => ({
-      icon: row.querySelector('[name="cat-icon"]')?.value.trim() || 'description',
-      name: row.querySelector('[name="cat-name"]')?.value.trim() || '',
-    })).filter((item) => item.name),
+    categories: [],
     featuredDocs: docs.filter((item) => item.featured).slice(0, 4).map((item) => ({
       title: item.title,
       date: item.date,
@@ -657,6 +659,7 @@ function collectAspaceHelp() {
       subtitle: panel.querySelector('[name="help-support-subtitle"]')?.value.trim() || '',
     },
   }
+  return alignHelpWithCatalog(payload, state.aspaceCatalog)
 }
 
 function refreshAspaceHelpEditor() {
@@ -2520,22 +2523,7 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
   }
   const helpCatMove = event.target.closest('[data-aspace-help-cat-move]')
   if (helpCatMove) {
-    const nextHelp = collectAspaceHelp()
-    if (!nextHelp) return
-    const row = helpCatMove.closest('[data-aspace-help-category]')
-    const index = [...document.querySelectorAll('[data-aspace-help-category]')].indexOf(row)
-    const target = index + Number(helpCatMove.dataset.aspaceHelpCatMove)
-    if (index <= 0 || target <= 0 || target >= nextHelp.categories.length) return
-    const [category] = nextHelp.categories.splice(index, 1)
-    nextHelp.categories.splice(target, 0, category)
-    state.aspaceHelp = nextHelp
-    aspaceHelpSection = 'page'
-    aspaceHelpPageGroup = 'categories'
-    aspaceEditorTab = 'help'
-    renderAspaceCatalog()
-    window.requestAnimationFrame(() => {
-      document.querySelector('[data-aso-help-open="categories"]')?.click()
-    })
+    toast('知识库分类已与应用广场同步，请到「应用广场」拖拽排序', true)
     return
   }
   const helpRemove = event.target.closest('[data-aspace-help-remove]')
@@ -2544,11 +2532,8 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
     if (!nextHelp) return
     const kind = helpRemove.dataset.aspaceHelpRemove
     if (kind === 'category') {
-      const row = helpRemove.closest('[data-aspace-help-category]')
-      const index = [...document.querySelectorAll('[data-aspace-help-category]')].indexOf(row)
-      if (index > 0) nextHelp.categories.splice(index, 1)
-      aspaceHelpSection = 'page'
-      aspaceHelpPageGroup = 'categories'
+      toast('知识库分类已与应用广场同步，请到「应用广场」调整分类', true)
+      return
     }
     if (kind === 'doc') {
       const docId = helpRemove.dataset.docId || aspaceHelpEditingDocId
@@ -2620,10 +2605,8 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
     const nextHelp = collectAspaceHelp() || { categories: [], featuredDocs: [], docs: [], updates: [], hotSearches: [], support: {} }
     const kind = helpAdd.dataset.aspaceHelpAdd
     if (kind === 'category') {
-      nextHelp.categories.push({ icon: 'folder', name: '新分类' })
-      aspaceHelpSection = 'page'
-      aspaceHelpPageGroup = 'categories'
-      aspaceHelpEditingDocId = ''
+      toast('知识库分类已与应用广场同步，请到「应用广场」调整分类', true)
+      return
     }
     if (kind === 'doc') {
       const defaultCategory = aspaceHelpDocFilter !== '全部' && aspaceHelpDocFilter !== '全部文档'
