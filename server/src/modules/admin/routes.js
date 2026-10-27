@@ -9,7 +9,7 @@ import { addAudit, db, normalizeAppButtons, normalizeAppFeatures, publicUser, sa
 import { getLatestAndroidVersion } from '../apps/version-service.js'
 import { publishRelease, rollbackRelease } from '../apps/release-service.js'
 import { createSession, requireAuth, sessionCookieOptions } from './auth.js'
-import { heartbeatPresence, leavePresence, listPresence } from './presence-service.js'
+import { heartbeatPresence, leavePresence, listOnlineUsers, listPresence } from './presence-service.js'
 
 export const adminRouter = Router()
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 300 * 1024 * 1024, files: 1 } })
@@ -251,14 +251,14 @@ adminRouter.get('/audit-logs', requireAuth('audit:read'), (request, response) =>
 
 adminRouter.put('/presence', requireAuth(), (request, response) => {
   try {
-    const peers = heartbeatPresence({
+    const { peers, online } = heartbeatPresence({
       clientId: request.body?.clientId,
       user: request.admin,
       room: request.body?.room,
       cursor: request.body?.cursor,
       editing: request.body?.editing,
     })
-    response.json({ peers, serverTime: Date.now() })
+    response.json({ peers, online, serverTime: Date.now() })
   } catch (error) {
     response.status(error.status || 400).json({
       error: error.code || 'invalid_presence',
@@ -270,7 +270,11 @@ adminRouter.put('/presence', requireAuth(), (request, response) => {
 adminRouter.get('/presence', requireAuth(), (request, response) => {
   const room = String(request.query.room || '').trim()
   const clientId = String(request.query.clientId || '').trim()
-  response.json({ peers: listPresence(room, clientId), serverTime: Date.now() })
+  response.json({
+    peers: listPresence(room, clientId),
+    online: listOnlineUsers(clientId, request.admin?.id),
+    serverTime: Date.now(),
+  })
 })
 
 adminRouter.post('/presence/leave', requireAuth(), (request, response) => {

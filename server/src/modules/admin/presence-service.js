@@ -1,6 +1,7 @@
 /** 后台协作在场：单机内存会话，心跳超时即离开 */
 
 const TTL_MS = 8000
+const DEFAULT_ROOM = '__admin__'
 const sessions = new Map()
 
 function prune(now = Date.now()) {
@@ -10,7 +11,8 @@ function prune(now = Date.now()) {
 }
 
 function cleanRoom(room) {
-  return String(room || '').trim().slice(0, 80)
+  const value = String(room || '').trim().slice(0, 80)
+  return value || DEFAULT_ROOM
 }
 
 function cleanClientId(value) {
@@ -28,11 +30,23 @@ function cleanCursor(cursor) {
   }
 }
 
+function presentSession(item) {
+  return {
+    clientId: item.clientId,
+    userId: item.userId,
+    name: item.name,
+    room: item.room,
+    editing: item.editing,
+    cursor: item.cursor,
+    lastSeen: item.lastSeen,
+  }
+}
+
 export function heartbeatPresence({ clientId, user, room, cursor, editing }) {
   prune()
   const id = cleanClientId(clientId)
   const nextRoom = cleanRoom(room)
-  if (!id || !user?.id || !nextRoom) {
+  if (!id || !user?.id) {
     const error = new Error('在场参数无效')
     error.status = 400
     error.code = 'invalid_presence'
@@ -49,7 +63,10 @@ export function heartbeatPresence({ clientId, user, room, cursor, editing }) {
     lastSeen: Date.now(),
   }
   sessions.set(id, session)
-  return listPresence(nextRoom, id)
+  return {
+    peers: listPresence(nextRoom, id),
+    online: listOnlineUsers(id, session.userId),
+  }
 }
 
 export function leavePresence(clientId) {
@@ -63,17 +80,34 @@ export function listPresence(room, excludeClientId = '') {
   prune()
   const nextRoom = cleanRoom(room)
   const exclude = cleanClientId(excludeClientId)
-  if (!nextRoom) return []
   return [...sessions.values()]
     .filter((item) => item.room === nextRoom && item.clientId !== exclude)
-    .map((item) => ({
-      clientId: item.clientId,
-      userId: item.userId,
-      name: item.name,
-      editing: item.editing,
-      cursor: item.cursor,
-      lastSeen: item.lastSeen,
-    }))
+    .map(presentSession)
+}
+
+/** 后台全局在线：按用户去重，排除自己 */
+export function listOnlineUsers(excludeClientId = '', excludeUserId = '') {
+  prune()
+  const exclude = cleanClientId(excludeClientId)
+  const excludeUser = String(excludeUserId || '').trim()
+  const byUser = new Map()
+  for (const item of sessions.values()) {
+    if (item.clientId === exclude) continue
+    if (excludeUser && item.userId === excludeUser) continue
+    const prev = byUser.get(item.userId)
+    if (!prev || item.lastSeen > prev.lastSeen) {
+      byUser.set(item.userId, {
+        userId: item.userId,
+        name: item.name,
+        room: item.room,
+        editing: item.editing,
+        lastSeen: item.lastSeen,
+      })
+    } else if (item.editing) {
+      prev.editing = true
+    }
+  }
+  return [...byUser.values()].sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
 }
 
 export function roomHasOtherEditors(room, excludeClientId = '', excludeUserId = '') {

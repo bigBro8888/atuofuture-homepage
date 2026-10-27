@@ -81,7 +81,7 @@ const presence = createAdminPresence({
 })
 
 function presenceRoomForTab(name) {
-  if (!name || name === 'overview' || name === 'releases' || name === 'leads' || name === 'analytics' || name === 'users' || name === 'audit') return ''
+  if (!name || name === 'overview' || name === 'releases' || name === 'leads' || name === 'analytics' || name === 'users' || name === 'audit') return '__admin__'
   if (name === 'aspace') return `aspace-${aspaceEditorTab || 'home'}`
   if (name === 'home') return 'page-home'
   if (name === 'about') return 'page-about'
@@ -89,7 +89,7 @@ function presenceRoomForTab(name) {
   if (name === 'config') return 'page-app-download'
   if (name.startsWith('page-') || name.startsWith('content-')) return name
   if (name === 'content') return `content-${contentKindFromHash(location.hash) || 'news'}`
-  return ''
+  return '__admin__'
 }
 
 function syncPresenceRoom(tabName = location.hash.replace(/^#/, '') || 'overview') {
@@ -205,6 +205,7 @@ function showAdmin(user) {
   loadOverview()
   void refreshLeadsBadge()
   if (initial && titles[initial] && initial !== 'overview') openTab(initial, { skipHash: true })
+  else syncPresenceRoom(initial || 'overview')
 }
 
 function showLogin() {

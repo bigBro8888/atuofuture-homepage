@@ -1,7 +1,8 @@
-/** 后台协作在场：心跳轮询 + 远程光标 + 编辑冲突提示 */
+/** 后台协作在场：心跳轮询 + 顶部在线警示 + 远程光标 + 编辑冲突提示 */
 
 const COLORS = ['#0879f9', '#0f9f6e', '#d97706', '#db2777', '#7c3aed', '#0891b2']
 const HEARTBEAT_MS = 1500
+const DEFAULT_ROOM = '__admin__'
 
 function makeClientId() {
   try {
@@ -23,39 +24,53 @@ function colorFor(id = '') {
   return COLORS[hash % COLORS.length]
 }
 
-export function createAdminPresence({ api, toast } = {}) {
+export function createAdminPresence({ api } = {}) {
   const clientId = makeClientId()
   let room = ''
   let editing = false
   let cursor = null
   let peers = []
+  let online = []
   let timer = 0
   let bound = false
   let canvasEl = null
   let layerEl = null
-  let barEl = null
+  let alertEl = null
   let warnEl = null
 
+  const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
+  }[ch]))
+
   const ensureUi = () => {
-    if (!barEl) {
-      barEl = document.createElement('div')
-      barEl.className = 'admin-presence-bar'
-      barEl.hidden = true
-      barEl.dataset.adminPresenceBar = ''
-      const top = document.querySelector('.admin-topbar')
-      top?.insertAdjacentElement('afterend', barEl)
+    const main = document.querySelector('.admin-main')
+    if (!alertEl) {
+      alertEl = document.createElement('div')
+      alertEl.className = 'admin-presence-alert'
+      alertEl.hidden = true
+      alertEl.dataset.adminPresenceAlert = ''
+      alertEl.setAttribute('role', 'status')
+      alertEl.setAttribute('aria-live', 'polite')
+      main?.prepend(alertEl)
     }
     if (!warnEl) {
       warnEl = document.createElement('div')
       warnEl.className = 'admin-presence-warn'
       warnEl.hidden = true
       warnEl.dataset.adminPresenceWarn = ''
-      const main = document.querySelector('.admin-main')
-      main?.prepend(warnEl)
+      const top = document.querySelector('.admin-topbar')
+      if (top) top.insertAdjacentElement('afterend', warnEl)
+      else main?.appendChild(warnEl)
     }
   }
 
   const ensureLayer = () => {
+    if (!room || room === DEFAULT_ROOM) {
+      layerEl?.remove()
+      layerEl = null
+      canvasEl = null
+      return null
+    }
     const host = document.querySelector('.admin-panel.is-active .admin-home-editor, .admin-panel.is-active .admin-aspace-editor, .admin-panel.is-active [data-aspace-help-visual], .admin-panel.is-active .admin-vedit-canvas')
       || document.querySelector('.admin-panel.is-active .admin-card')
     if (!host) {
@@ -77,32 +92,35 @@ export function createAdminPresence({ api, toast } = {}) {
     return layerEl
   }
 
-  const renderBar = () => {
+  const renderAlert = () => {
     ensureUi()
-    if (!barEl) return
-    if (!room || !peers.length) {
-      barEl.hidden = true
-      barEl.innerHTML = ''
-    } else {
-      barEl.hidden = false
-      barEl.innerHTML = `
-        <span class="admin-presence-bar__label">同页协作</span>
-        ${peers.map((peer) => `
-          <span class="admin-presence-pill" style="--presence-color:${colorFor(peer.userId || peer.clientId)}">
-            <i></i>${escape(peer.name)}${peer.editing ? ' · 正在编辑' : ' · 正在查看'}
-          </span>
-        `).join('')}`
+    if (!alertEl) return
+    if (!online.length) {
+      alertEl.hidden = true
+      alertEl.innerHTML = ''
+      return
     }
+    const names = online.map((user) => escape(user.name)).join('、')
+    const editingHere = peers.filter((peer) => peer.editing)
+    const editingNote = editingHere.length
+      ? `；其中 ${editingHere.map((peer) => escape(peer.name)).join('、')} 正在编辑本页，请避免同时发布`
+      : ''
+    alertEl.hidden = false
+    alertEl.innerHTML = `
+      <span class="material-symbols-outlined admin-presence-alert__icon" aria-hidden="true">warning</span>
+      <div class="admin-presence-alert__text">
+        <strong>当前还有他人在线</strong>
+        <span>${names}${editingNote}</span>
+      </div>`
+  }
 
+  const renderWarn = () => {
+    ensureUi()
     const editingPeers = peers.filter((peer) => peer.editing)
     if (!warnEl) return
-    if (editingPeers.length) {
-      warnEl.hidden = false
-      warnEl.innerHTML = `<strong>注意：</strong>${editingPeers.map((peer) => escape(peer.name)).join('、')} 正在修改此页。请避免同时发布；如需继续，请先沟通或刷新后再操作。`
-    } else {
-      warnEl.hidden = true
-      warnEl.innerHTML = ''
-    }
+    // 顶部红色条已覆盖在线提示；同页编辑补充条仅在有人编辑且顶部已显示时弱化重复——直接隐藏，统一用顶部红条
+    warnEl.hidden = true
+    warnEl.innerHTML = ''
     document.querySelectorAll('[data-simple-publish], [data-home-publish], [data-about-publish], [data-site-publish]').forEach((button) => {
       button.classList.toggle('is-presence-blocked', editingPeers.length > 0)
       if (editingPeers.length) button.title = '有人正在编辑，发布前请确认'
@@ -125,10 +143,6 @@ export function createAdminPresence({ api, toast } = {}) {
     }).join('')
   }
 
-  const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
-  }[ch]))
-
   const tick = async () => {
     if (!room || typeof api !== 'function') return
     try {
@@ -137,7 +151,9 @@ export function createAdminPresence({ api, toast } = {}) {
         body: JSON.stringify({ clientId, room, cursor, editing }),
       })
       peers = Array.isArray(data?.peers) ? data.peers : []
-      renderBar()
+      online = Array.isArray(data?.online) ? data.online : []
+      renderAlert()
+      renderWarn()
       renderCursors()
     } catch {
       // 心跳失败不打断编辑
@@ -145,11 +161,7 @@ export function createAdminPresence({ api, toast } = {}) {
   }
 
   const onPointerMove = (event) => {
-    if (!canvasEl || !room) return
-    const target = event.target.closest('.admin-home-editor, .admin-aspace-editor, .admin-vedit-canvas, .admin-card')
-    if (!target || !canvasEl.contains(target) && target !== canvasEl) {
-      // still update if over canvasEl
-    }
+    if (!canvasEl || !room || room === DEFAULT_ROOM) return
     if (!canvasEl.contains(event.target) && event.target !== canvasEl) return
     const rect = canvasEl.getBoundingClientRect()
     if (!rect.width || !rect.height) return
@@ -161,6 +173,22 @@ export function createAdminPresence({ api, toast } = {}) {
 
   const onActivity = () => {
     editing = true
+  }
+
+  const leave = () => {
+    if (!clientId) return
+    const body = JSON.stringify({ clientId })
+    try {
+      if (navigator.sendBeacon) {
+        const blob = new Blob([body], { type: 'application/json' })
+        navigator.sendBeacon('/api/admin/presence/leave', blob)
+      }
+    } catch {
+      // ignore
+    }
+    if (typeof api === 'function') {
+      void api('/presence/leave', { method: 'POST', body }).catch(() => {})
+    }
   }
 
   const bindListeners = () => {
@@ -183,44 +211,30 @@ export function createAdminPresence({ api, toast } = {}) {
     })
   }
 
-  const leave = () => {
-    if (!clientId) return
-    const body = JSON.stringify({ clientId })
-    try {
-      if (navigator.sendBeacon) {
-        const blob = new Blob([body], { type: 'application/json' })
-        navigator.sendBeacon('/api/admin/presence/leave', blob)
-      }
-    } catch {
-      // ignore
-    }
-    if (typeof api === 'function') {
-      void api('/presence/leave', { method: 'POST', body }).catch(() => {})
-    }
-  }
-
-  const setRoom = (nextRoom) => {
-    const value = String(nextRoom || '').trim()
-    if (value === room) {
-      ensureLayer()
-      renderBar()
-      return
-    }
-    if (room) leave()
-    room = value
-    editing = false
-    cursor = null
-    peers = []
-    ensureUi()
-    ensureLayer()
-    renderBar()
-    renderCursors()
+  const startHeartbeat = () => {
     bindListeners()
     clearInterval(timer)
     timer = 0
     if (!room) return
     void tick()
     timer = window.setInterval(() => { void tick() }, HEARTBEAT_MS)
+  }
+
+  const setRoom = (nextRoom) => {
+    const value = String(nextRoom || '').trim() || DEFAULT_ROOM
+    const sameRoom = value === room
+    if (!sameRoom) {
+      room = value
+      editing = false
+      cursor = null
+      peers = []
+    }
+    ensureUi()
+    ensureLayer()
+    renderAlert()
+    renderWarn()
+    renderCursors()
+    if (!timer || !sameRoom) startHeartbeat()
   }
 
   const hasOtherEditors = () => peers.some((peer) => peer.editing)
@@ -234,8 +248,10 @@ export function createAdminPresence({ api, toast } = {}) {
   return {
     clientId,
     setRoom,
+    start: () => setRoom(room || DEFAULT_ROOM),
     markEditing: () => { editing = true },
     getPeers: () => peers.slice(),
+    getOnline: () => online.slice(),
     hasOtherEditors,
     confirmIfPeersEditing,
     leave,
