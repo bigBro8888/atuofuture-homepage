@@ -24,7 +24,7 @@ export const config = {
   posterSsoTtlMs: Number(process.env.POSTER_SSO_TTL_MS || 120000),
   /** Aspace One → AAP：默认走门户同端口 /aso-aap 反代（18181 外网未放行） */
   aapAppOrigin: (process.env.AAP_APP_ORIGIN || 'http://47.103.102.65:18180/aso-aap').replace(/\/$/, ''),
-  aapUpstreamOrigin: (process.env.AAP_UPSTREAM_ORIGIN || 'https://asset.atuofuture.com').replace(/\/$/, ''),
+  aapUpstreamOrigin: (process.env.AAP_UPSTREAM_ORIGIN || 'https://zc.atuofuture.com').replace(/\/$/, ''),
   aapGatewayPath: String(process.env.AAP_GATEWAY_PATH || '/aso-aap').replace(/\/$/, '') || '/aso-aap',
   aapSsoTenantId: String(process.env.AAP_SSO_TENANT_ID || 'bkws').trim(),
   aapSsoUsername: String(process.env.AAP_SSO_USERNAME || '').trim(),

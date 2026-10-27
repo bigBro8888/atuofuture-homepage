@@ -121,7 +121,7 @@ let apps = [
     time: '2026-09-18 11:40',
     image: '/images/aspace-one/app-resource.jpg',
     alt: 'AAP 资产管理系统示意',
-    url: 'https://asset.atuofuture.com/',
+    url: 'https://zc.atuofuture.com/',
   },
   {
     id: 'energy',
