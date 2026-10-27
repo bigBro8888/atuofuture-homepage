@@ -195,6 +195,7 @@ function normalizeHome(value = {}) {
           return {
             category: linkFallback.category,
             label: String(link.label ?? linkFallback.label).trim().slice(0, 30) || linkFallback.label,
+            appId: String(link.appId ?? linkFallback.appId ?? '').trim().slice(0, 64) || linkFallback.appId || '',
           }
         }),
       }

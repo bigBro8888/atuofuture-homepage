@@ -110,9 +110,9 @@ export const defaultAspaceHome = {
         title: '会议与办公',
         desc: '提升空间使用效率',
         items: [
-          { category: 'meeting', label: '会议预约' },
-          { category: 'meeting', label: '智能门牌' },
-          { category: 'meeting', label: '会议控制' },
+          { category: 'meeting', label: '会议预约', appId: 'screen' },
+          { category: 'meeting', label: '智能门牌', appId: 'deskplate' },
+          { category: 'meeting', label: '会议控制', appId: 'wireless-screen' },
         ],
       },
       {
@@ -123,9 +123,9 @@ export const defaultAspaceHome = {
         title: '资产与仓储',
         desc: '掌握资产全生命周期',
         items: [
-          { category: 'asset', label: '资产台账' },
-          { category: 'asset', label: 'RFID盘点' },
-          { category: 'asset', label: '借还管理' },
+          { category: 'asset', label: '资产台账', appId: 'resource' },
+          { category: 'asset', label: 'RFID盘点', appId: 'resource' },
+          { category: 'asset', label: '借还管理', appId: 'resource' },
         ],
       },
       {
@@ -136,9 +136,9 @@ export const defaultAspaceHome = {
         title: '设备与能源',
         desc: '看清运行与能源使用',
         items: [
-          { category: 'foundation', label: '设备监测' },
-          { category: 'foundation', label: '空调控制' },
-          { category: 'energy', label: '能耗分析' },
+          { category: 'foundation', label: '设备监测', appId: 'device-center' },
+          { category: 'foundation', label: '空调控制', appId: 'smart-air' },
+          { category: 'energy', label: '能耗分析', appId: 'energy' },
         ],
       },
       {
@@ -149,9 +149,9 @@ export const defaultAspaceHome = {
         title: '通行与服务',
         desc: '连接人员与日常服务',
         items: [
-          { category: 'visitor', label: '访客接待' },
-          { category: 'security', label: '门禁通行' },
-          { category: 'foundation', label: '工单巡检' },
+          { category: 'visitor', label: '访客接待', appId: 'visitor-booking' },
+          { category: 'security', label: '门禁通行', appId: 'access-security' },
+          { category: 'foundation', label: '工单巡检', appId: 'aspace' },
         ],
       },
       {
@@ -162,9 +162,9 @@ export const defaultAspaceHome = {
         title: '可视化与展示',
         desc: '让空间状态清晰可见',
         items: [
-          { category: 'twin', label: '数字孪生' },
-          { category: 'content', label: '信息发布' },
-          { category: 'content', label: '电子相框' },
+          { category: 'twin', label: '数字孪生', appId: 'digital-twin' },
+          { category: 'content', label: '信息发布', appId: 'info-publish' },
+          { category: 'content', label: '电子相框', appId: 'album' },
         ],
       },
     ],

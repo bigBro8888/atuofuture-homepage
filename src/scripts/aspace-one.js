@@ -669,11 +669,11 @@ const defaultHomeContent = {
     lead: '从日常办公到空间运营，能力按业务链路串联协同。',
     moreLabel: '查看全部能力',
     items: [
-      { id: 'collab', step: '01', stage: '协同', image: '/images/aspace-one/showcase-meeting.jpg', title: '会议与办公', desc: '提升空间使用效率', items: [{ category: 'meeting', label: '会议预约' }, { category: 'meeting', label: '智能门牌' }, { category: 'meeting', label: '会议控制' }] },
-      { id: 'asset', step: '02', stage: '资产', image: '/images/aspace-one/app-resource.jpg', title: '资产与仓储', desc: '掌握资产全生命周期', items: [{ category: 'asset', label: '资产台账' }, { category: 'asset', label: 'RFID盘点' }, { category: 'asset', label: '借还管理' }] },
-      { id: 'ops', step: '03', stage: '运维', image: '/images/aspace-one/app-energy.jpg', title: '设备与能源', desc: '看清运行与能源使用', items: [{ category: 'foundation', label: '设备监测' }, { category: 'foundation', label: '空调控制' }, { category: 'energy', label: '能耗分析' }] },
-      { id: 'service', step: '04', stage: '服务', image: '/images/aspace-one/showcase-building.jpg', title: '通行与服务', desc: '连接人员与日常服务', items: [{ category: 'visitor', label: '访客接待' }, { category: 'security', label: '门禁通行' }, { category: 'foundation', label: '工单巡检' }] },
-      { id: 'insight', step: '05', stage: '洞察', image: '/images/aspace-one/showcase-space.jpg', title: '可视化与展示', desc: '让空间状态清晰可见', items: [{ category: 'twin', label: '数字孪生' }, { category: 'content', label: '信息发布' }, { category: 'content', label: '电子相框' }] },
+      { id: 'collab', step: '01', stage: '协同', image: '/images/aspace-one/showcase-meeting.jpg', title: '会议与办公', desc: '提升空间使用效率', items: [{ category: 'meeting', label: '会议预约', appId: 'screen' }, { category: 'meeting', label: '智能门牌', appId: 'deskplate' }, { category: 'meeting', label: '会议控制', appId: 'wireless-screen' }] },
+      { id: 'asset', step: '02', stage: '资产', image: '/images/aspace-one/app-resource.jpg', title: '资产与仓储', desc: '掌握资产全生命周期', items: [{ category: 'asset', label: '资产台账', appId: 'resource' }, { category: 'asset', label: 'RFID盘点', appId: 'resource' }, { category: 'asset', label: '借还管理', appId: 'resource' }] },
+      { id: 'ops', step: '03', stage: '运维', image: '/images/aspace-one/app-energy.jpg', title: '设备与能源', desc: '看清运行与能源使用', items: [{ category: 'foundation', label: '设备监测', appId: 'device-center' }, { category: 'foundation', label: '空调控制', appId: 'smart-air' }, { category: 'energy', label: '能耗分析', appId: 'energy' }] },
+      { id: 'service', step: '04', stage: '服务', image: '/images/aspace-one/showcase-building.jpg', title: '通行与服务', desc: '连接人员与日常服务', items: [{ category: 'visitor', label: '访客接待', appId: 'visitor-booking' }, { category: 'security', label: '门禁通行', appId: 'access-security' }, { category: 'foundation', label: '工单巡检', appId: 'aspace' }] },
+      { id: 'insight', step: '05', stage: '洞察', image: '/images/aspace-one/showcase-space.jpg', title: '可视化与展示', desc: '让空间状态清晰可见', items: [{ category: 'twin', label: '数字孪生', appId: 'digital-twin' }, { category: 'content', label: '信息发布', appId: 'info-publish' }, { category: 'content', label: '电子相框', appId: 'album' }] },
     ],
   },
   scenes: {
@@ -757,7 +757,7 @@ function renderHomeView() {
                   <ul>
                     ${column.items.map((link) => `
                     <li>
-                      <button type="button" data-aso-nav="apps" data-app-category-goto="${escapeHtml(link.category)}">
+                      <button type="button" data-aso-nav="apps" data-app-category-goto="${escapeHtml(link.category)}" data-app-goto="${escapeHtml(link.appId || '')}">
                         <span>${escapeHtml(link.label)}</span>
                         ${icon('arrow_forward')}
                       </button>
@@ -1230,6 +1230,21 @@ function selectAppCategory(root, categoryId) {
   if (button) button.click()
 }
 
+function focusAppCard(root, appId) {
+  if (!appId) return
+  const app = apps.find((item) => item.id === appId && !item.hidden)
+  if (!app) return
+  selectAppCategory(root, app.category)
+  window.requestAnimationFrame(() => {
+    const card = root.querySelector(`[data-app="${CSS.escape(appId)}"]`)
+    if (!card || card.classList.contains('is-hidden')) return
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    card.classList.add('is-spotlight')
+    window.clearTimeout(focusAppCard.timer)
+    focusAppCard.timer = window.setTimeout(() => card.classList.remove('is-spotlight'), 2200)
+  })
+}
+
 function initPanoramaFlow(root) {
   const section = root.querySelector('[data-panorama-flow]')
   if (!section) return
@@ -1331,7 +1346,7 @@ function initHomeGlobe(root) {
   })
 }
 
-function setShellView(root, view, { portalMode, category, section, preserveScroll } = {}) {
+function setShellView(root, view, { portalMode, category, appId, section, preserveScroll } = {}) {
   let nextView = ['home', 'apps', 'help', 'about'].includes(view) ? view : 'home'
   if (nextView === 'apps' && portalMode === 'help') nextView = 'help'
   const contentView = nextView === 'help' ? 'apps' : nextView
@@ -1358,8 +1373,11 @@ function setShellView(root, view, { portalMode, category, section, preserveScrol
   if (`${window.location.pathname}${window.location.search}${window.location.hash}` !== nextUrl) {
     window.history.replaceState({}, '', nextUrl)
   }
-  if (contentView === 'apps' && category) {
-    window.requestAnimationFrame(() => selectAppCategory(root, category))
+  if (contentView === 'apps' && (appId || category)) {
+    window.requestAnimationFrame(() => {
+      if (appId) focusAppCard(root, appId)
+      else selectAppCategory(root, category)
+    })
   }
   if (nextView === 'about') {
     void initAboutEmbed(root).then(() => {
@@ -2369,6 +2387,7 @@ export async function initAspaceOne() {
       setShellView(root, navButton.dataset.asoNav, {
         portalMode: navButton.dataset.portalMode,
         category: navButton.dataset.appCategoryGoto,
+        appId: navButton.dataset.appGoto,
         section: navButton.dataset.asoNav === 'about' ? 'intro' : undefined,
       })
       return

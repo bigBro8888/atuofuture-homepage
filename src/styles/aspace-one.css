@@ -1564,6 +1564,12 @@ button.aso-portal-account:active { transform: scale(.98); }
   transform: scale(.985);
 }
 .aso-app-card.is-hidden { display: none; }
+.aso-app-card.is-spotlight {
+  outline: 2px solid #1769ff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(23, 105, 255, 0.16), 0 18px 40px rgba(23, 105, 255, 0.18);
+  transition: box-shadow 0.25s ease, outline-color 0.25s ease;
+}
 .aso-app-card:hover {
   border-color: rgba(138, 178, 226, .75);
   box-shadow: 0 16px 38px rgba(32, 62, 108, .12);
