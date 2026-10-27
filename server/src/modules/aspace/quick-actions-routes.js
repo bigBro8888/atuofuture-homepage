@@ -277,31 +277,47 @@ function normalizeHelp(raw = {}) {
     categories = [{ icon: 'description', name: '全部文档' }, ...categories.filter((item) => item.name !== '全部文档')]
   }
 
-  const featuredSource = Array.isArray(source.featuredDocs) ? source.featuredDocs : fallback.featuredDocs
-  const featuredDocs = featuredSource.slice(0, 4).map((item, index) => {
-    const fb = fallback.featuredDocs[Math.min(index, fallback.featuredDocs.length - 1)]
-    return {
-      title: text(item?.title, fb.title, 80),
-      date: text(item?.date, fb.date, 20),
-      badge: text(item?.badge, fb.badge, 20),
-      tone: helpTones.has(item?.tone) ? item.tone : fb.tone,
-      art: helpArts.has(item?.art) ? item.art : fb.art,
-    }
-  })
-  if (!featuredDocs.length) featuredDocs.push(...structuredClone(fallback.featuredDocs))
+  const cleanFileUrl = (url) => {
+    const value = String(url || '').trim().slice(0, 500)
+    if (!value) return ''
+    if (/^(?:https?:\/\/|\/api\/public\/uploads\/files\/)/i.test(value)) return value
+    return ''
+  }
 
   const docsSource = Array.isArray(source.docs) ? source.docs : fallback.docs
-  let docs = docsSource.slice(0, 40).map((item, index) => {
+  let docs = docsSource.slice(0, 80).map((item, index) => {
     const fb = fallback.docs[Math.min(index, fallback.docs.length - 1)] || fallback.docs[0]
+    const featured = Boolean(item?.featured)
     return {
+      id: text(item?.id, fb.id || `doc-${index + 1}`, 64),
       title: text(item?.title, fb.title, 80),
       category: text(item?.category, fb.category, 40),
       date: text(item?.date, fb.date, 20),
-      featured: Boolean(item?.featured),
+      featured,
       keywords: text(item?.keywords, fb.keywords || '', 120),
+      badge: text(item?.badge, featured ? (fb.badge || '推荐') : (fb.badge || '推荐'), 20),
+      tone: helpTones.has(item?.tone) ? item.tone : (fb.tone || 'blue'),
+      art: helpArts.has(item?.art) ? item.art : (fb.art || 'lines'),
+      fileUrl: cleanFileUrl(item?.fileUrl ?? fb.fileUrl ?? ''),
     }
   }).filter((item) => item.title)
   if (!docs.length) docs = structuredClone(fallback.docs)
+
+  const featuredDocs = docs
+    .filter((item) => item.featured)
+    .slice(0, 4)
+    .map((item) => ({
+      title: item.title,
+      date: item.date,
+      badge: item.badge || '推荐',
+      tone: item.tone || 'blue',
+      art: item.art || 'lines',
+      fileUrl: item.fileUrl || '',
+      id: item.id,
+    }))
+  if (!featuredDocs.length) {
+    featuredDocs.push(...structuredClone(fallback.featuredDocs).map((item) => ({ ...item, fileUrl: '', id: '' })))
+  }
 
   const updatesSource = Array.isArray(source.updates) ? source.updates : fallback.updates
   let updates = updatesSource.slice(0, 20).map((item, index) => {

@@ -359,17 +359,17 @@ const defaultHelpContent = {
     { icon: 'folder', name: '项目服务' },
   ],
   featuredDocs: [
-    { title: 'Aspace空间智能快速入门指南', date: '2026-09-12', badge: '新手必读', tone: 'blue', art: 'lines' },
-    { title: '能源能耗数据接入说明', date: '2026-09-10', badge: '热门文档', tone: 'teal', art: 'chart' },
+    { title: 'Aspace空间智能快速入门指南', date: '2026-09-12', badge: '新手必读', tone: 'blue', art: 'lines', fileUrl: '' },
+    { title: '能源能耗数据接入说明', date: '2026-09-10', badge: '热门文档', tone: 'teal', art: 'chart', fileUrl: '' },
   ],
   docs: [
-    { title: 'Aspace空间智能快速入门指南', category: '全部文档', date: '2026-09-12', featured: true, keywords: '权限申请 账号绑定 入门' },
-    { title: '能源能耗数据接入说明', category: '能源能耗', date: '2026-09-10', featured: true, keywords: '能耗数据接入 网关 采集' },
-    { title: 'AI画报使用手册', category: 'AI画报', date: '2026-09-08', featured: false, keywords: '模板 发布' },
-    { title: '电子相册发布流程', category: '电子相册', date: '2026-09-06', featured: false, keywords: '电子相册发布 多屏同步' },
-    { title: '会议室预约配置操作指南', category: '会议室预约系统', date: '2026-09-03', featured: false, keywords: '会议室预约 中控屏配置 设备绑定' },
-    { title: '设备管理平台 API 文档', category: '会议与空间', date: '2026-08-28', featured: false, keywords: '接口 对接' },
-    { title: '项目实施规范', category: '项目服务', date: '2026-08-20', featured: false, keywords: '权限申请 交付 验收' },
+    { id: 'doc-getting-started', title: 'Aspace空间智能快速入门指南', category: '全部文档', date: '2026-09-12', featured: true, keywords: '权限申请 账号绑定 入门', badge: '新手必读', tone: 'blue', art: 'lines', fileUrl: '' },
+    { id: 'doc-energy', title: '能源能耗数据接入说明', category: '能源能耗', date: '2026-09-10', featured: true, keywords: '能耗数据接入 网关 采集', badge: '热门文档', tone: 'teal', art: 'chart', fileUrl: '' },
+    { id: 'doc-poster', title: 'AI画报使用手册', category: 'AI画报', date: '2026-09-08', featured: false, keywords: '模板 发布', badge: '推荐', tone: 'blue', art: 'lines', fileUrl: '' },
+    { id: 'doc-album', title: '电子相册发布流程', category: '电子相册', date: '2026-09-06', featured: false, keywords: '电子相册发布 多屏同步', badge: '推荐', tone: 'blue', art: 'lines', fileUrl: '' },
+    { id: 'doc-meeting', title: '会议室预约配置操作指南', category: '会议室预约系统', date: '2026-09-03', featured: false, keywords: '会议室预约 中控屏配置 设备绑定', badge: '推荐', tone: 'blue', art: 'lines', fileUrl: '' },
+    { id: 'doc-device-api', title: '设备管理平台 API 文档', category: '会议与空间', date: '2026-08-28', featured: false, keywords: '接口 对接', badge: '推荐', tone: 'blue', art: 'lines', fileUrl: '' },
+    { id: 'doc-delivery', title: '项目实施规范', category: '项目服务', date: '2026-08-20', featured: false, keywords: '权限申请 交付 验收', badge: '推荐', tone: 'blue', art: 'lines', fileUrl: '' },
   ],
   updates: [
     { date: '2026-09-18', title: '设备管理平台 v3.2 正式发布', desc: '新增设备批量配置能力，优化告警通知机制。' },
@@ -566,10 +566,10 @@ function docRows(category = '全部文档', keyword = '') {
   })
   if (!filtered.length) return '<p class="aso-empty">没有找到匹配的文档。</p>'
   return filtered.map((item) => `
-    <button class="aso-doc-row" type="button" data-doc="${item.title}">
+    <button class="aso-doc-row" type="button" data-doc="${escapeHtml(item.title)}" data-doc-id="${escapeHtml(item.id || '')}" data-doc-url="${escapeHtml(item.fileUrl || '')}">
       <i>${icon('description')}</i>
-      <span class="aso-doc-row__title">${item.title}</span>
-      <time>${item.date}</time>
+      <span class="aso-doc-row__title">${escapeHtml(item.title)}</span>
+      <time>${escapeHtml(item.date)}</time>
       ${icon('chevron_right')}
     </button>`).join('')
 }
@@ -1000,7 +1000,7 @@ function renderPortal() {
                 ${featuredDocs
                   .map(
                     (doc) => `
-                <button class="aso-doc-card aso-doc-card--${escapeHtml(doc.tone)}" type="button" data-doc="${escapeHtml(doc.title)}">
+                <button class="aso-doc-card aso-doc-card--${escapeHtml(doc.tone)}" type="button" data-doc="${escapeHtml(doc.title)}" data-doc-id="${escapeHtml(doc.id || '')}" data-doc-url="${escapeHtml(doc.fileUrl || '')}">
                   <span class="aso-doc-art aso-doc-art--${escapeHtml(doc.art)}" aria-hidden="true">
                     <i class="aso-doc-art__back"></i>
                     <i class="aso-doc-art__page"><span></span><span></span><span></span><span></span></i>
@@ -2102,9 +2102,20 @@ function applyHelpContent(help) {
     ? helpContent.categories.map((item) => [item.icon || 'description', item.name || ''])
     : defaultHelpContent.categories.map((item) => [item.icon, item.name])
   hotSearches = Array.isArray(helpContent.hotSearches) ? [...helpContent.hotSearches] : [...defaultHelpContent.hotSearches]
-  featuredDocs = Array.isArray(helpContent.featuredDocs)
-    ? helpContent.featuredDocs.map((item) => ({ ...item }))
-    : structuredClone(defaultHelpContent.featuredDocs)
+  const fromDocs = docs.filter((item) => item.featured).slice(0, 4).map((item) => ({
+    id: item.id || '',
+    title: item.title,
+    date: item.date,
+    badge: item.badge || '推荐',
+    tone: item.tone || 'blue',
+    art: item.art || 'lines',
+    fileUrl: item.fileUrl || '',
+  }))
+  featuredDocs = fromDocs.length
+    ? fromDocs
+    : Array.isArray(helpContent.featuredDocs)
+      ? helpContent.featuredDocs.map((item) => ({ ...item }))
+      : structuredClone(defaultHelpContent.featuredDocs)
   updates = Array.isArray(helpContent.updates)
     ? helpContent.updates.map((item) => [item.date, item.title, item.desc])
     : defaultHelpContent.updates.map((item) => [item.date, item.title, item.desc])
@@ -2507,7 +2518,12 @@ export async function initAspaceOne() {
 
     const doc = event.target.closest('[data-doc]')
     if (doc) {
-      showToast(`正在打开《${doc.dataset.doc}》（文档接口待接入）`)
+      const fileUrl = doc.dataset.docUrl || docs.find((item) => item.id === doc.dataset.docId || item.title === doc.dataset.doc)?.fileUrl || ''
+      if (fileUrl) {
+        window.open(fileUrl, '_blank', 'noopener,noreferrer')
+        return
+      }
+      showToast(`《${doc.dataset.doc || '文档'}》尚未上传文件`)
       return
     }
 

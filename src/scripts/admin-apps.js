@@ -232,6 +232,7 @@ function openTab(name, options = {}) {
 
 let aspaceEditorTab = 'home'
 let aspaceHomeSection = 'hero'
+let aspaceHelpSection = 'page'
 
 async function loadAspaceCatalog() {
   try {
@@ -272,6 +273,19 @@ function setAspaceHomeSection(section) {
   })
   host.querySelectorAll('[data-aspace-home-panel]').forEach((panel) => {
     panel.hidden = panel.dataset.aspaceHomePanel !== next
+  })
+}
+
+function setAspaceHelpSection(section) {
+  const next = ['page', 'content'].includes(section) ? section : 'page'
+  aspaceHelpSection = next
+  const host = document.querySelector('[data-aspace-editor]')
+  if (!host) return
+  host.querySelectorAll('[data-aspace-help-section]').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.aspaceHelpSection === next)
+  })
+  host.querySelectorAll('[data-aspace-help-panel]').forEach((panel) => {
+    panel.hidden = panel.dataset.aspaceHelpPanel !== next
   })
 }
 
@@ -372,10 +386,18 @@ function renderAspaceHelpEditor(help) {
   const artOptions = (selected) => ['lines', 'chart', 'grid', 'book']
     .map((art) => `<option value="${art}" ${art === selected ? 'selected' : ''}>${art}</option>`)
     .join('')
+  const categoryNames = (data.categories || []).map((item) => item.name).filter(Boolean)
+  const categorySelect = (selected) => categoryNames
+    .map((name) => `<option value="${escapeHtml(name)}" ${name === selected ? 'selected' : ''}>${escapeHtml(name)}</option>`)
+    .join('')
   return `
     <section class="admin-aspace-section" data-aspace-tab-panel="help" hidden>
-      <header><div><h3>知识库</h3><p>编辑帮助中心页头、热门搜索、分类、精选文档、文档列表与最新更新；保存后同步到前台「知识库」。</p></div></header>
-      <div class="admin-aspace-help">
+      <header><div><h3>知识库</h3><p>页面配置负责帮助中心展示；内容管理负责文档上传与资料维护，保存后同步到前台。</p></div></header>
+      <nav class="admin-aspace-help-nav" aria-label="知识库配置分组">
+        <button type="button" data-aspace-help-section="page">页面配置</button>
+        <button type="button" data-aspace-help-section="content">内容管理</button>
+      </nav>
+      <div class="admin-aspace-help" data-aspace-help-panel="page">
         <div class="admin-aspace-help__block">
           <h4>页头文案</h4>
           <div class="admin-aspace-help__grid">
@@ -403,42 +425,6 @@ function renderAspaceHelpEditor(help) {
         </div>
         <div class="admin-aspace-help__block">
           <header class="admin-aspace-help__block-head">
-            <h4>精选文档</h4>
-            <button type="button" data-aspace-help-add="featured" ${(data.featuredDocs || []).length >= 4 ? 'disabled' : ''}>新增精选</button>
-          </header>
-          <div class="admin-aspace-help__rows" data-aspace-help-featured>
-            ${(data.featuredDocs || []).map((item) => `
-              <article class="admin-aspace-help__row admin-aspace-help__row--featured" data-aspace-help-featured-item>
-                <label><span>标题</span><input name="feat-title" maxlength="80" value="${escapeHtml(item.title || '')}" required /></label>
-                <label><span>日期</span><input name="feat-date" maxlength="20" value="${escapeHtml(item.date || '')}" /></label>
-                <label><span>角标</span><input name="feat-badge" maxlength="20" value="${escapeHtml(item.badge || '')}" /></label>
-                <label><span>色调</span><select name="feat-tone">${toneOptions(item.tone)}</select></label>
-                <label><span>插画</span><select name="feat-art">${artOptions(item.art)}</select></label>
-                <button type="button" data-aspace-help-remove="featured" title="删除">删除</button>
-              </article>
-            `).join('')}
-          </div>
-        </div>
-        <div class="admin-aspace-help__block">
-          <header class="admin-aspace-help__block-head">
-            <h4>文档列表</h4>
-            <button type="button" data-aspace-help-add="doc">新增文档</button>
-          </header>
-          <div class="admin-aspace-help__rows" data-aspace-help-docs>
-            ${(data.docs || []).map((item) => `
-              <article class="admin-aspace-help__row admin-aspace-help__row--doc" data-aspace-help-doc>
-                <label><span>标题</span><input name="doc-title" maxlength="80" value="${escapeHtml(item.title || '')}" required /></label>
-                <label><span>分类</span><input name="doc-category" maxlength="40" value="${escapeHtml(item.category || '')}" /></label>
-                <label><span>日期</span><input name="doc-date" maxlength="20" value="${escapeHtml(item.date || '')}" /></label>
-                <label><span>关键词</span><input name="doc-keywords" maxlength="120" value="${escapeHtml(item.keywords || '')}" /></label>
-                <label class="admin-aspace-help__check"><input name="doc-featured" type="checkbox" ${item.featured ? 'checked' : ''} /><span>精选</span></label>
-                <button type="button" data-aspace-help-remove="doc" title="删除">删除</button>
-              </article>
-            `).join('')}
-          </div>
-        </div>
-        <div class="admin-aspace-help__block">
-          <header class="admin-aspace-help__block-head">
             <h4>最新更新</h4>
             <button type="button" data-aspace-help-add="update">新增更新</button>
           </header>
@@ -458,6 +444,51 @@ function renderAspaceHelpEditor(help) {
           <div class="admin-aspace-help__grid">
             <label class="admin-aspace-help__full"><span>标题</span><input name="help-support-title" maxlength="80" value="${escapeHtml(data.support?.title || '')}" /></label>
             <label class="admin-aspace-help__full"><span>副文案</span><input name="help-support-subtitle" maxlength="120" value="${escapeHtml(data.support?.subtitle || '')}" /></label>
+          </div>
+        </div>
+      </div>
+      <div class="admin-aspace-help" data-aspace-help-panel="content" hidden>
+        <div class="admin-aspace-help__block">
+          <header class="admin-aspace-help__block-head">
+            <div>
+              <h4>文档资料</h4>
+              <p class="admin-aspace-help__hint">上传 PDF / Word，维护标题、分类与关键词；勾选精选后会出现在前台精选卡片（最多 4 篇）。</p>
+            </div>
+            <button type="button" data-aspace-help-add="doc">上传新文档</button>
+          </header>
+          <div class="admin-aspace-help-docs" data-aspace-help-docs>
+            ${(data.docs || []).map((item) => `
+              <article class="admin-aspace-help-doc" data-aspace-help-doc data-doc-id="${escapeHtml(item.id || '')}">
+                <div class="admin-aspace-help-doc__main">
+                  <label><span>标题</span><input name="doc-title" maxlength="80" value="${escapeHtml(item.title || '')}" required /></label>
+                  <label><span>分类</span><select name="doc-category">${categorySelect(item.category || '全部文档')}</select></label>
+                  <label><span>日期</span><input name="doc-date" maxlength="20" value="${escapeHtml(item.date || '')}" /></label>
+                  <label><span>关键词</span><input name="doc-keywords" maxlength="120" value="${escapeHtml(item.keywords || '')}" placeholder="空格或逗号分隔，便于搜索" /></label>
+                </div>
+                <div class="admin-aspace-help-doc__meta">
+                  <label class="admin-aspace-help__check"><input name="doc-featured" type="checkbox" ${item.featured ? 'checked' : ''} /><span>设为精选</span></label>
+                  <label><span>精选角标</span><input name="doc-badge" maxlength="20" value="${escapeHtml(item.badge || '')}" /></label>
+                  <label><span>色调</span><select name="doc-tone">${toneOptions(item.tone || 'blue')}</select></label>
+                  <label><span>插画</span><select name="doc-art">${artOptions(item.art || 'lines')}</select></label>
+                </div>
+                <div class="admin-aspace-help-doc__file">
+                  <input type="hidden" name="doc-id" value="${escapeHtml(item.id || '')}" />
+                  <input type="hidden" name="doc-file-url" value="${escapeHtml(item.fileUrl || '')}" />
+                  <div class="admin-aspace-help-doc__file-status">
+                    <span class="material-symbols-outlined">${item.fileUrl ? 'description' : 'upload_file'}</span>
+                    <div>
+                      <b>${item.fileUrl ? '已上传文件' : '尚未上传文件'}</b>
+                      <a href="${escapeHtml(item.fileUrl || '#')}" target="_blank" rel="noopener" data-aspace-help-file-link ${item.fileUrl ? '' : 'hidden'}>查看 / 下载</a>
+                    </div>
+                  </div>
+                  <div class="admin-aspace-help-doc__file-actions">
+                    <label class="admin-aspace-help-doc__upload">上传 PDF / Word<input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" data-aspace-help-file-upload /></label>
+                    <button type="button" data-aspace-help-file-clear ${item.fileUrl ? '' : 'hidden'}>清除文件</button>
+                    <button type="button" data-aspace-help-remove="doc">删除文档</button>
+                  </div>
+                </div>
+              </article>
+            `).join('') || '<p class="admin-aspace-help__empty">还没有文档，点击右上角「上传新文档」开始添加。</p>'}
           </div>
         </div>
       </div>
@@ -555,6 +586,7 @@ function renderAspaceCatalog() {
   })
   setAspaceEditorTab(aspaceEditorTab)
   setAspaceHomeSection(aspaceHomeSection)
+  setAspaceHelpSection(aspaceHelpSection)
 }
 
 function collectAspaceHome() {
@@ -657,6 +689,18 @@ function collectAspaceHelp() {
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 12)
+  const docs = [...panel.querySelectorAll('[data-aspace-help-doc]')].map((row, index) => ({
+    id: row.querySelector('[name="doc-id"]')?.value.trim() || row.dataset.docId || `doc-${Date.now()}-${index}`,
+    title: row.querySelector('[name="doc-title"]')?.value.trim() || '',
+    category: row.querySelector('[name="doc-category"]')?.value.trim() || '全部文档',
+    date: row.querySelector('[name="doc-date"]')?.value.trim() || '',
+    keywords: row.querySelector('[name="doc-keywords"]')?.value.trim() || '',
+    featured: Boolean(row.querySelector('[name="doc-featured"]')?.checked),
+    badge: row.querySelector('[name="doc-badge"]')?.value.trim() || '推荐',
+    tone: row.querySelector('[name="doc-tone"]')?.value || 'blue',
+    art: row.querySelector('[name="doc-art"]')?.value || 'lines',
+    fileUrl: row.querySelector('[name="doc-file-url"]')?.value.trim() || '',
+  })).filter((item) => item.title)
   return {
     title: panel.querySelector('[name="help-title"]')?.value.trim() || '知识库',
     lead: panel.querySelector('[name="help-lead"]')?.value.trim() || '',
@@ -667,20 +711,16 @@ function collectAspaceHelp() {
       icon: row.querySelector('[name="cat-icon"]')?.value.trim() || 'description',
       name: row.querySelector('[name="cat-name"]')?.value.trim() || '',
     })).filter((item) => item.name),
-    featuredDocs: [...panel.querySelectorAll('[data-aspace-help-featured-item]')].map((row) => ({
-      title: row.querySelector('[name="feat-title"]')?.value.trim() || '',
-      date: row.querySelector('[name="feat-date"]')?.value.trim() || '',
-      badge: row.querySelector('[name="feat-badge"]')?.value.trim() || '',
-      tone: row.querySelector('[name="feat-tone"]')?.value || 'blue',
-      art: row.querySelector('[name="feat-art"]')?.value || 'lines',
-    })).filter((item) => item.title),
-    docs: [...panel.querySelectorAll('[data-aspace-help-doc]')].map((row) => ({
-      title: row.querySelector('[name="doc-title"]')?.value.trim() || '',
-      category: row.querySelector('[name="doc-category"]')?.value.trim() || '全部文档',
-      date: row.querySelector('[name="doc-date"]')?.value.trim() || '',
-      keywords: row.querySelector('[name="doc-keywords"]')?.value.trim() || '',
-      featured: Boolean(row.querySelector('[name="doc-featured"]')?.checked),
-    })).filter((item) => item.title),
+    featuredDocs: docs.filter((item) => item.featured).slice(0, 4).map((item) => ({
+      title: item.title,
+      date: item.date,
+      badge: item.badge,
+      tone: item.tone,
+      art: item.art,
+      fileUrl: item.fileUrl,
+      id: item.id,
+    })),
+    docs,
     updates: [...panel.querySelectorAll('[data-aspace-help-update]')].map((row) => ({
       date: row.querySelector('[name="upd-date"]')?.value.trim() || '',
       title: row.querySelector('[name="upd-title"]')?.value.trim() || '',
@@ -2505,16 +2545,57 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
     setAspaceHomeSection(homeSection.dataset.aspaceHomeSection)
     return
   }
+  const helpSection = event.target.closest('[data-aspace-help-section]')
+  if (helpSection) {
+    setAspaceHelpSection(helpSection.dataset.aspaceHelpSection)
+    return
+  }
+  const helpFileClear = event.target.closest('[data-aspace-help-file-clear]')
+  if (helpFileClear) {
+    const row = helpFileClear.closest('[data-aspace-help-doc]')
+    if (!row) return
+    const input = row.querySelector('[name="doc-file-url"]')
+    if (input) input.value = ''
+    const link = row.querySelector('[data-aspace-help-file-link]')
+    if (link) {
+      link.href = '#'
+      link.hidden = true
+    }
+    const status = row.querySelector('.admin-aspace-help-doc__file-status b')
+    if (status) status.textContent = '尚未上传文件'
+    const icon = row.querySelector('.admin-aspace-help-doc__file-status .material-symbols-outlined')
+    if (icon) icon.textContent = 'upload_file'
+    helpFileClear.hidden = true
+    return
+  }
   const helpAdd = event.target.closest('[data-aspace-help-add]')
   if (helpAdd) {
     const nextHelp = collectAspaceHelp() || { categories: [], featuredDocs: [], docs: [], updates: [], hotSearches: [], support: {} }
     const kind = helpAdd.dataset.aspaceHelpAdd
-    if (kind === 'category') nextHelp.categories.push({ icon: 'folder', name: '新分类' })
-    if (kind === 'featured' && nextHelp.featuredDocs.length < 4) {
-      nextHelp.featuredDocs.push({ title: '新精选文档', date: '', badge: '推荐', tone: 'blue', art: 'lines' })
+    if (kind === 'category') {
+      nextHelp.categories.push({ icon: 'folder', name: '新分类' })
+      aspaceHelpSection = 'page'
     }
-    if (kind === 'doc') nextHelp.docs.push({ title: '新文档', category: '全部文档', date: '', featured: false, keywords: '' })
-    if (kind === 'update') nextHelp.updates.push({ date: '', title: '新更新', desc: '' })
+    if (kind === 'doc') {
+      const defaultCategory = nextHelp.categories.find((item) => item.name !== '全部文档')?.name || '全部文档'
+      nextHelp.docs.unshift({
+        id: `doc-${Date.now()}`,
+        title: '新文档',
+        category: defaultCategory,
+        date: new Date().toISOString().slice(0, 10),
+        featured: false,
+        keywords: '',
+        badge: '推荐',
+        tone: 'blue',
+        art: 'lines',
+        fileUrl: '',
+      })
+      aspaceHelpSection = 'content'
+    }
+    if (kind === 'update') {
+      nextHelp.updates.unshift({ date: new Date().toISOString().slice(0, 10), title: '新更新', desc: '' })
+      aspaceHelpSection = 'page'
+    }
     state.aspaceHelp = nextHelp
     aspaceEditorTab = 'help'
     renderAspaceCatalog()
@@ -2525,22 +2606,21 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
     const nextHelp = collectAspaceHelp()
     if (!nextHelp) return
     const kind = helpRemove.dataset.aspaceHelpRemove
-    const row = helpRemove.closest('[data-aspace-help-category], [data-aspace-help-featured-item], [data-aspace-help-doc], [data-aspace-help-update]')
+    const row = helpRemove.closest('[data-aspace-help-category], [data-aspace-help-doc], [data-aspace-help-update]')
     if (kind === 'category') {
       const index = [...document.querySelectorAll('[data-aspace-help-category]')].indexOf(row)
       if (index > 0) nextHelp.categories.splice(index, 1)
-    }
-    if (kind === 'featured') {
-      const index = [...document.querySelectorAll('[data-aspace-help-featured-item]')].indexOf(row)
-      if (index >= 0) nextHelp.featuredDocs.splice(index, 1)
+      aspaceHelpSection = 'page'
     }
     if (kind === 'doc') {
       const index = [...document.querySelectorAll('[data-aspace-help-doc]')].indexOf(row)
       if (index >= 0) nextHelp.docs.splice(index, 1)
+      aspaceHelpSection = 'content'
     }
     if (kind === 'update') {
       const index = [...document.querySelectorAll('[data-aspace-help-update]')].indexOf(row)
       if (index >= 0) nextHelp.updates.splice(index, 1)
+      aspaceHelpSection = 'page'
     }
     state.aspaceHelp = nextHelp
     aspaceEditorTab = 'help'
@@ -2614,6 +2694,43 @@ document.querySelector('[data-aspace-editor]').addEventListener('change', async 
     } else {
       preview.innerHTML = '<span class="material-symbols-outlined">image</span>'
       if (clear) clear.hidden = true
+    }
+    return
+  }
+
+  const helpFileUpload = event.target.closest('[data-aspace-help-file-upload]')
+  if (helpFileUpload) {
+    const file = helpFileUpload.files?.[0]
+    if (!file) return
+    const row = helpFileUpload.closest('[data-aspace-help-doc]')
+    if (!row) return
+    helpFileUpload.disabled = true
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const { url } = await api('/pages/media/file', { method: 'POST', body: formData })
+      const input = row.querySelector('[name="doc-file-url"]')
+      if (input) input.value = url
+      const link = row.querySelector('[data-aspace-help-file-link]')
+      if (link) {
+        link.href = url
+        link.hidden = false
+      }
+      const status = row.querySelector('.admin-aspace-help-doc__file-status b')
+      if (status) status.textContent = '已上传文件'
+      const icon = row.querySelector('.admin-aspace-help-doc__file-status .material-symbols-outlined')
+      if (icon) icon.textContent = 'description'
+      const clear = row.querySelector('[data-aspace-help-file-clear]')
+      if (clear) clear.hidden = false
+      if (!row.querySelector('[name="doc-title"]')?.value.trim() && file.name) {
+        row.querySelector('[name="doc-title"]').value = file.name.replace(/\.(pdf|docx?)$/i, '')
+      }
+      toast('文档已上传，点击保存后发布到前台')
+    } catch (error) {
+      toast(error.message, true)
+    } finally {
+      helpFileUpload.disabled = false
+      helpFileUpload.value = ''
     }
     return
   }
