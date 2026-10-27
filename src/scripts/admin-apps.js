@@ -7,6 +7,7 @@ import { bindSolutionsVisualAdmin, collectSolutionsVisualContent, renderSolution
 import { bindAgentsVisualAdmin, collectAgentsVisualContent, renderAgentsVisualEditor } from './admin-agents.js'
 import { bindAboutVisualAdmin, collectAboutVisualContent, renderAboutVisualEditor } from './admin-about.js'
 import { bindAspaceHomeVisualAdmin, collectAspaceHomeVisual, renderAspaceHomeVisualMarkup, scrollAspaceHomeSection } from './admin-aspace-home.js'
+import { bindAspaceAppsVisualAdmin, renderAspaceAppsVisualMarkup } from './admin-aspace-apps.js'
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 
 const API = '/api/admin'
@@ -50,7 +51,7 @@ const titles = {
   'content-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
   'page-news': ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
   'page-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
-  aspace: ['Aspace 空间智能', '路径 /aspace-one/ · 可视化编辑首页；另可配业务分类、应用归属、封面文案与知识库'],
+  aspace: ['Aspace 空间智能', '路径 /aspace-one/ · 可视化编辑首页与应用广场；另可配知识库'],
   config: ['App 下载页', '路径 /app-download/ · 可视化编辑下载页'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
   leads: ['预约与资料', '查看客户提交的预约演示、获取资料与联系客服线索'],
@@ -271,7 +272,9 @@ async function loadAspaceCatalog() {
 }
 
 function setAspaceEditorTab(tab) {
-  const next = ['home', 'categories', 'ownership', 'profiles', 'help'].includes(tab) ? tab : 'home'
+  // 旧 tab 名兼容：业务分类 / 应用归属 / 应用资料 → 应用广场
+  const mapped = ['categories', 'ownership', 'profiles'].includes(tab) ? 'apps' : tab
+  const next = ['home', 'apps', 'help'].includes(mapped) ? mapped : 'home'
   aspaceEditorTab = next
   const host = document.querySelector('[data-aspace-editor]')
   if (!host) return
@@ -657,91 +660,15 @@ function renderAspaceCatalog() {
   const host = document.querySelector('[data-aspace-editor]')
   const catalog = state.aspaceCatalog
   if (!host || !catalog) return
-  const categoryOptions = catalog.categories.map((category) => (
-    `<option value="${escapeHtml(category.id)}">${escapeHtml(category.label)}</option>`
-  )).join('')
   host.innerHTML = `
     <nav class="admin-aspace-tabs" aria-label="Aspace 配置分组">
       <button type="button" data-aspace-tab="home">首页内容</button>
-      <button type="button" data-aspace-tab="categories">业务分类</button>
-      <button type="button" data-aspace-tab="ownership">应用归属</button>
-      <button type="button" data-aspace-tab="profiles">应用资料</button>
+      <button type="button" data-aspace-tab="apps">应用广场</button>
       <button type="button" data-aspace-tab="help">知识库</button>
     </nav>
     ${renderAspaceHomeEditor(state.aspaceHome)}
-    <section class="admin-aspace-section" data-aspace-tab-panel="categories" hidden>
-      <header><div><h3>业务分类</h3><p>可编辑标题和说明、上传自定义图标，并使用箭头调整前台显示顺序。</p></div></header>
-      <div class="admin-aspace-categories">
-        ${catalog.categories.map((category, index) => `
-          <article class="admin-aspace-category" data-aspace-category="${escapeHtml(category.id)}">
-            <div class="admin-aspace-category__order">
-              <span>${String(index + 1).padStart(2, '0')}</span>
-              <button type="button" data-aspace-move="-1" ${index === 0 ? 'disabled' : ''} title="上移"><span class="material-symbols-outlined">arrow_upward</span></button>
-              <button type="button" data-aspace-move="1" ${index === catalog.categories.length - 1 ? 'disabled' : ''} title="下移"><span class="material-symbols-outlined">arrow_downward</span></button>
-            </div>
-            <label><span>栏目标题</span><input name="category-label" maxlength="40" value="${escapeHtml(category.label)}" required /></label>
-            <div class="admin-aspace-category__icon">
-              <span>栏目图标</span>
-              <div>
-                <i data-aspace-icon-preview>${category.iconUrl
-                  ? `<img src="${escapeHtml(category.iconUrl)}" alt="" />`
-                  : `<span class="material-symbols-outlined">${escapeHtml(category.icon)}</span>`}</i>
-                <label>上传替换<input type="file" accept="image/jpeg,image/png,image/webp" data-aspace-icon-upload /></label>
-                <button type="button" data-aspace-icon-reset ${category.iconUrl ? '' : 'hidden'}>恢复默认</button>
-              </div>
-              <input type="hidden" name="category-icon" value="${escapeHtml(category.icon)}" />
-              <input type="hidden" name="category-icon-url" value="${escapeHtml(category.iconUrl || '')}" />
-            </div>
-            <label class="admin-aspace-category__description"><span>栏目说明</span><input name="category-description" maxlength="160" value="${escapeHtml(category.description)}" /></label>
-          </article>
-        `).join('')}
-      </div>
-    </section>
-    <section class="admin-aspace-section" data-aspace-tab-panel="ownership" hidden>
-      <header><div><h3>应用归属</h3><p>为每个应用选择一个栏目，避免重复配置；调整后前台分类和数量会同步更新。</p></div></header>
-      <div class="admin-aspace-apps">
-        ${catalog.apps.map((app) => `
-          <label data-aspace-app="${escapeHtml(app.id)}">
-            <span><b>${escapeHtml(app.name)}</b><small>${escapeHtml(app.id)}</small></span>
-            <select name="app-category">${categoryOptions}</select>
-          </label>
-        `).join('')}
-      </div>
-    </section>
-    <section class="admin-aspace-section" data-aspace-tab-panel="profiles" hidden>
-      <header><div><h3>应用资料</h3><p>为每个应用设置封面图、标题和简介；保存后同步到前台能力卡片。</p></div></header>
-      <div class="admin-aspace-profiles">
-        ${catalog.apps.map((app) => `
-          <article class="admin-aspace-profile" data-aspace-profile="${escapeHtml(app.id)}">
-            <div class="admin-aspace-profile__cover">
-              <figure data-aspace-cover-preview>
-                ${app.image
-                  ? `<img src="${escapeHtml(app.image)}" alt="" />`
-                  : `<span class="material-symbols-outlined">image</span>`}
-              </figure>
-              <label class="admin-aspace-profile__url">
-                <span>图片链接</span>
-                <input name="app-image" type="text" maxlength="500" value="${escapeHtml(app.image || '')}" placeholder="https://… 或 /images/…" data-aspace-cover-url />
-              </label>
-              <div>
-                <label class="admin-aspace-profile__upload">上传封面<input type="file" accept="image/jpeg,image/png,image/webp" data-aspace-cover-upload /></label>
-                <button type="button" data-aspace-cover-clear ${app.image ? '' : 'hidden'}>清除封面</button>
-              </div>
-            </div>
-            <div class="admin-aspace-profile__fields">
-              <p class="admin-aspace-profile__id">${escapeHtml(app.id)}</p>
-              <label><span>标题</span><input name="app-name" maxlength="40" value="${escapeHtml(app.name || '')}" required /></label>
-              <label><span>简介</span><input name="app-description" maxlength="160" value="${escapeHtml(app.description || '')}" placeholder="显示在卡片上的一行说明" /></label>
-            </div>
-          </article>
-        `).join('')}
-      </div>
-    </section>
+    ${renderAspaceAppsVisualMarkup(catalog)}
     ${renderAspaceHelpEditor(state.aspaceHelp)}`
-  catalog.apps.forEach((app) => {
-    const select = host.querySelector(`[data-aspace-app="${CSS.escape(app.id)}"] select`)
-    if (select) select.value = app.category
-  })
   setAspaceEditorTab(aspaceEditorTab)
   setAspaceHomeSection(aspaceHomeSection)
   setAspaceHelpSection(aspaceHelpSection)
@@ -765,7 +692,7 @@ function collectAspaceCatalog() {
     description: row.querySelector('[name="category-description"]').value.trim(),
   }))
   const ownership = new Map([...document.querySelectorAll('[data-aspace-app]')].map((row) => (
-    [row.dataset.aspaceApp, row.querySelector('select').value]
+    [row.dataset.aspaceApp, row.querySelector('[name="app-category"]')?.value || row.querySelector('select')?.value]
   )))
   const profiles = new Map([...document.querySelectorAll('[data-aspace-profile]')].map((row) => [
     row.dataset.aspaceProfile,
@@ -2826,9 +2753,14 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
   if (reset) {
     const row = reset.closest('[data-aspace-category]')
     const icon = row.querySelector('[name="category-icon"]').value
-    row.querySelector('[name="category-icon-url"]').value = ''
+    const urlInput = row.querySelector('[name="category-icon-url"]')
+    urlInput.value = ''
     row.querySelector('[data-aspace-icon-preview]').innerHTML = `<span class="material-symbols-outlined">${escapeHtml(icon)}</span>`
     reset.hidden = true
+    urlInput.dispatchEvent(new Event('input', { bubbles: true }))
+    const catId = row.dataset.aspaceCategory
+    const previewBtn = document.querySelector(`[data-aso-plaza-edit-cat="${CSS.escape(catId)}"] [data-aso-plaza-cat-icon]`)
+    if (previewBtn) previewBtn.innerHTML = `<span class="material-symbols-outlined">${escapeHtml(icon)}</span>`
     return
   }
   const clearCover = event.target.closest('[data-aspace-cover-clear]')
@@ -2838,10 +2770,12 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
     if (imageInput) imageInput.value = ''
     row.querySelector('[data-aspace-cover-preview]').innerHTML = '<span class="material-symbols-outlined">image</span>'
     clearCover.hidden = true
+    imageInput?.dispatchEvent(new Event('input', { bubbles: true }))
     return
   }
   const button = event.target.closest('[data-aspace-move]')
   if (!button || !state.aspaceCatalog) return
+  aspaceEditorTab = 'apps'
   const nextCatalog = collectAspaceCatalog()
   const categoryId = button.closest('[data-aspace-category]').dataset.aspaceCategory
   const index = nextCatalog.categories.findIndex((category) => category.id === categoryId)
@@ -2892,6 +2826,9 @@ document.querySelector('[data-aspace-editor]').addEventListener('change', async 
       row.querySelector('[name="category-icon-url"]').value = url
       row.querySelector('[data-aspace-icon-preview]').innerHTML = `<img src="${escapeHtml(url)}" alt="" />`
       row.querySelector('[data-aspace-icon-reset]').hidden = false
+      const catId = row.dataset.aspaceCategory
+      const previewBtn = document.querySelector(`[data-aso-plaza-edit-cat="${CSS.escape(catId)}"] [data-aso-plaza-cat-icon]`)
+      if (previewBtn) previewBtn.innerHTML = `<img src="${escapeHtml(url)}" alt="" />`
       toast('图标上传成功，点击保存后发布到前台')
     } catch (error) {
       toast(error.message, true)
@@ -3658,6 +3595,12 @@ bindAboutVisualAdmin({
   state,
 })
 bindAspaceHomeVisualAdmin({
+  api,
+  toast,
+  escapeHtml,
+  state,
+})
+bindAspaceAppsVisualAdmin({
   api,
   toast,
   escapeHtml,
