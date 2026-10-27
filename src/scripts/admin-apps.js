@@ -8,6 +8,7 @@ import { bindAgentsVisualAdmin, collectAgentsVisualContent, renderAgentsVisualEd
 import { bindAboutVisualAdmin, collectAboutVisualContent, renderAboutVisualEditor } from './admin-about.js'
 import { bindAspaceHomeVisualAdmin, collectAspaceHomeVisual, renderAspaceHomeVisualMarkup, scrollAspaceHomeSection } from './admin-aspace-home.js'
 import { bindAspaceAppsVisualAdmin, renderAspaceAppsVisualMarkup } from './admin-aspace-apps.js'
+import { bindAspaceHelpVisualAdmin, flushAspaceHelpVisualDrawer, renderAspaceHelpPageVisualMarkup } from './admin-aspace-help.js'
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 
 const API = '/api/admin'
@@ -309,14 +310,7 @@ function setAspaceHelpSection(section) {
 function setAspaceHelpPageGroup(group) {
   const next = ['basics', 'search', 'categories', 'updates', 'support'].includes(group) ? group : 'basics'
   aspaceHelpPageGroup = next
-  const host = document.querySelector('[data-aspace-editor]')
-  if (!host) return
-  host.querySelectorAll('[data-aspace-help-page-group]').forEach((button) => {
-    button.classList.toggle('is-active', button.dataset.aspaceHelpPageGroup === next)
-  })
-  host.querySelectorAll('[data-aspace-help-page-panel]').forEach((panel) => {
-    panel.hidden = panel.dataset.aspaceHelpPagePanel !== next
-  })
+  // 可视化模式下由抽屉承载分组编辑；保留状态供新增后自动打开
 }
 
 function helpCategoryIconSelect(selected, readonly = false) {
@@ -334,114 +328,7 @@ function helpCategoryIconSelect(selected, readonly = false) {
 }
 
 function renderAspaceHelpPageSettings(data) {
-  const groups = [
-    ['basics', '基础信息', '标题与导语', 'page_info'],
-    ['search', '搜索热词', '占位与热门搜索', 'manage_search'],
-    ['categories', '文档分类', '侧栏分类目录', 'folder_managed'],
-    ['updates', '最新更新', '右侧动态列表', 'campaign'],
-    ['support', '客服引导', '底部联系入口', 'support_agent'],
-  ]
-  return `
-    <div class="admin-help-settings" data-aspace-help-page-settings>
-      <aside class="admin-help-settings__nav" aria-label="页面配置分组">
-        <p class="admin-help-settings__nav-title">配置分组</p>
-        ${groups.map(([id, title, desc, icon]) => `
-          <button type="button" data-aspace-help-page-group="${id}">
-            <span class="material-symbols-outlined">${icon}</span>
-            <span><b>${title}</b><small>${desc}</small></span>
-          </button>
-        `).join('')}
-      </aside>
-      <div class="admin-help-settings__main">
-        <section class="admin-help-settings__panel" data-aspace-help-page-panel="basics">
-          <header>
-            <div>
-              <h4>基础信息</h4>
-              <p>控制知识库页头的主标题与导语，用户进入帮助中心时最先看到。</p>
-            </div>
-          </header>
-          <div class="admin-help-settings__fields">
-            <label><span>标题</span><input name="help-title" maxlength="40" value="${escapeHtml(data.title || '')}" /></label>
-            <label class="admin-help-settings__wide"><span>导语</span><input name="help-lead" maxlength="120" value="${escapeHtml(data.lead || '')}" /></label>
-            <label class="admin-help-settings__wide"><span>文档中心说明</span><input name="help-docs-lead" maxlength="120" value="${escapeHtml(data.docsLead || '')}" /></label>
-          </div>
-        </section>
-        <section class="admin-help-settings__panel" data-aspace-help-page-panel="search" hidden>
-          <header>
-            <div>
-              <h4>搜索热词</h4>
-              <p>配置搜索框提示，以及热门搜索词；词与词之间用逗号分隔。</p>
-            </div>
-          </header>
-          <div class="admin-help-settings__fields">
-            <label class="admin-help-settings__wide"><span>搜索占位文案</span><input name="help-search-placeholder" maxlength="120" value="${escapeHtml(data.searchPlaceholder || '')}" /></label>
-            <label class="admin-help-settings__wide"><span>热门搜索</span><input name="help-hot-searches" maxlength="240" value="${escapeHtml((data.hotSearches || []).join('，'))}" placeholder="例如：会议室预约，权限申请" /></label>
-          </div>
-        </section>
-        <section class="admin-help-settings__panel" data-aspace-help-page-panel="categories" hidden>
-          <header>
-            <div>
-              <h4>文档分类</h4>
-              <p>对应前台知识库左侧目录。第一项「全部文档」固定保留，其余可增删与排序。</p>
-            </div>
-            <button type="button" data-aspace-help-add="category">新增分类</button>
-          </header>
-          <div class="admin-help-settings__list" data-aspace-help-categories>
-            ${(data.categories || []).map((item, index) => `
-              <article class="admin-help-settings__item" data-aspace-help-category>
-                <div class="admin-help-settings__item-order">
-                  <span>${String(index + 1).padStart(2, '0')}</span>
-                  <button type="button" data-aspace-help-cat-move="-1" ${index <= 1 ? 'disabled' : ''} title="上移"><span class="material-symbols-outlined">arrow_upward</span></button>
-                  <button type="button" data-aspace-help-cat-move="1" ${index === 0 || index === (data.categories || []).length - 1 ? 'disabled' : ''} title="下移"><span class="material-symbols-outlined">arrow_downward</span></button>
-                </div>
-                <div class="admin-help-settings__item-icon">
-                  <span class="material-symbols-outlined" data-aspace-help-cat-icon-preview>${escapeHtml(item.icon || 'folder')}</span>
-                  ${helpCategoryIconSelect(item.icon || 'folder', index === 0)}
-                </div>
-                <label><span>分类名称</span><input name="cat-name" maxlength="40" value="${escapeHtml(item.name || '')}" ${index === 0 ? 'readonly' : ''} required /></label>
-                <button type="button" class="admin-help-settings__item-remove" data-aspace-help-remove="category" ${index === 0 ? 'hidden' : ''}>删除</button>
-              </article>
-            `).join('')}
-          </div>
-        </section>
-        <section class="admin-help-settings__panel" data-aspace-help-page-panel="updates" hidden>
-          <header>
-            <div>
-              <h4>最新更新</h4>
-              <p>展示在知识库右侧的产品动态，建议保留 3–5 条精炼内容。</p>
-            </div>
-            <button type="button" data-aspace-help-add="update">新增更新</button>
-          </header>
-          <div class="admin-help-settings__list" data-aspace-help-updates>
-            ${(data.updates || []).map((item, index) => `
-              <article class="admin-help-settings__item admin-help-settings__item--update" data-aspace-help-update>
-                <span class="admin-help-settings__item-index">${String(index + 1).padStart(2, '0')}</span>
-                <div class="admin-help-settings__item-body">
-                  <div class="admin-help-settings__fields">
-                    <label><span>日期</span><input name="upd-date" maxlength="20" value="${escapeHtml(item.date || '')}" /></label>
-                    <label><span>标题</span><input name="upd-title" maxlength="80" value="${escapeHtml(item.title || '')}" required /></label>
-                    <label class="admin-help-settings__wide"><span>说明</span><input name="upd-desc" maxlength="200" value="${escapeHtml(item.desc || '')}" /></label>
-                  </div>
-                </div>
-                <button type="button" class="admin-help-settings__item-remove" data-aspace-help-remove="update">删除</button>
-              </article>
-            `).join('') || '<p class="admin-help-settings__empty">还没有更新动态，点击右上角新增。</p>'}
-          </div>
-        </section>
-        <section class="admin-help-settings__panel" data-aspace-help-page-panel="support" hidden>
-          <header>
-            <div>
-              <h4>客服引导</h4>
-              <p>知识库底部联系客服条的主文案与补充说明。</p>
-            </div>
-          </header>
-          <div class="admin-help-settings__fields">
-            <label class="admin-help-settings__wide"><span>主文案</span><input name="help-support-title" maxlength="80" value="${escapeHtml(data.support?.title || '')}" /></label>
-            <label class="admin-help-settings__wide"><span>补充说明</span><input name="help-support-subtitle" maxlength="120" value="${escapeHtml(data.support?.subtitle || '')}" /></label>
-          </div>
-        </section>
-      </div>
-    </div>`
+  return renderAspaceHelpPageVisualMarkup(data, { helpCategoryIconSelect, escapeHtml, toast })
 }
 
 function renderAspaceHomeEditor(home) {
@@ -642,7 +529,7 @@ function renderAspaceHelpEditor(help) {
   }
   return `
     <section class="admin-aspace-section" data-aspace-tab-panel="help" hidden>
-      <header><div><h3>知识库</h3><p>页面配置按分组编辑展示层；内容管理用目录 + 列表维护文档资料。</p></div></header>
+      <header><div><h3>知识库</h3><p>页面配置为可视化编辑；内容管理用目录 + 列表维护文档资料。</p></div></header>
       <nav class="admin-aspace-help-nav" aria-label="知识库配置分组">
         <button type="button" data-aspace-help-section="page">页面配置</button>
         <button type="button" data-aspace-help-section="content">内容管理</button>
@@ -719,6 +606,7 @@ function collectAspaceHelp() {
   const panel = document.querySelector('[data-aspace-tab-panel="help"]')
   if (!panel) return state.aspaceHelp ? structuredClone(state.aspaceHelp) : null
   flushHelpDocDrawer()
+  flushAspaceHelpVisualDrawer()
   const hotRaw = panel.querySelector('[name="help-hot-searches"]')?.value || ''
   const hotSearches = hotRaw
     .split(/[,，、]/)
@@ -2634,6 +2522,9 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
     aspaceHelpPageGroup = 'categories'
     aspaceEditorTab = 'help'
     renderAspaceCatalog()
+    window.requestAnimationFrame(() => {
+      document.querySelector('[data-aso-help-open="categories"]')?.click()
+    })
     return
   }
   const helpRemove = event.target.closest('[data-aspace-help-remove]')
@@ -2664,6 +2555,11 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
     state.aspaceHelp = nextHelp
     aspaceEditorTab = 'help'
     renderAspaceCatalog()
+    if (kind === 'category' || kind === 'update') {
+      window.requestAnimationFrame(() => {
+        document.querySelector(`[data-aso-help-open="${kind === 'category' ? 'categories' : 'updates'}"]`)?.click()
+      })
+    }
     return
   }
   const helpFilter = event.target.closest('[data-aspace-help-filter]')
@@ -2747,6 +2643,11 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
     state.aspaceHelp = nextHelp
     aspaceEditorTab = 'help'
     renderAspaceCatalog()
+    if (kind === 'category' || kind === 'update') {
+      window.requestAnimationFrame(() => {
+        document.querySelector(`[data-aso-help-open="${kind === 'category' ? 'categories' : 'updates'}"]`)?.click()
+      })
+    }
     return
   }
   const reset = event.target.closest('[data-aspace-icon-reset]')
@@ -3605,6 +3506,11 @@ bindAspaceAppsVisualAdmin({
   toast,
   escapeHtml,
   state,
+})
+bindAspaceHelpVisualAdmin({
+  toast,
+  escapeHtml,
+  helpCategoryIconSelect,
 })
 bindContentCenter({
   api,
