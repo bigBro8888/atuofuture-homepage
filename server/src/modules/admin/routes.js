@@ -193,11 +193,54 @@ adminRouter.post('/users', requireAuth('users:write'), async (request, response)
     role,
     enabled: true,
     createdAt: new Date().toISOString(),
+    passwordUpdatedAt: new Date().toISOString(),
   }
   db().adminUsers.push(user)
   await save()
   await addAudit(request.admin, 'admin_user.create', user.id, { account, role })
   response.status(201).json({ user: publicUser(user) })
+})
+
+adminRouter.patch('/users/:id', requireAuth('users:write'), async (request, response) => {
+  const user = db().adminUsers.find((item) => item.id === request.params.id)
+  if (!user) {
+    return response.status(404).json({ error: 'user_not_found', message: '账号不存在' })
+  }
+
+  const nextRole = request.body.role === undefined ? user.role : String(request.body.role || '')
+  const password = request.body.password === undefined ? '' : String(request.body.password || '')
+  const enabled = request.body.enabled === undefined ? user.enabled : Boolean(request.body.enabled)
+
+  if (!validRoles.has(nextRole)) {
+    return response.status(400).json({ error: 'invalid_user', message: '请选择角色' })
+  }
+  if (password && (password.length < 6 || password.length > 128)) {
+    return response.status(400).json({ error: 'invalid_user', message: '密码至少 6 位即可，格式不限' })
+  }
+
+  const superAdmins = db().adminUsers.filter((item) => item.role === 'super_admin' && item.enabled)
+  const demotingLastSuper = user.role === 'super_admin' && user.enabled
+    && (nextRole !== 'super_admin' || !enabled)
+    && superAdmins.length <= 1
+  if (demotingLastSuper) {
+    return response.status(400).json({ error: 'invalid_user', message: '至少保留一位可用的超级管理员' })
+  }
+
+  user.role = nextRole
+  user.enabled = enabled
+  user.name = String(request.body.name || user.name || user.email).trim().slice(0, 80) || user.email
+  if (password) {
+    user.passwordHash = await bcrypt.hash(password, 12)
+    user.passwordUpdatedAt = new Date().toISOString()
+  }
+  await save()
+  await addAudit(request.admin, 'admin_user.update', user.id, {
+    account: user.email,
+    role: user.role,
+    enabled: user.enabled,
+    passwordChanged: Boolean(password),
+  })
+  response.json({ user: publicUser(user) })
 })
 
 adminRouter.get('/audit-logs', requireAuth('audit:read'), (request, response) => {

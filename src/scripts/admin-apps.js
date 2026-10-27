@@ -2723,11 +2723,40 @@ async function loadStats() {
   } catch (error) { toast(error.message, true) }
 }
 
+function closeUserDrawer() {
+  const drawer = document.querySelector('[data-user-drawer]')
+  if (!drawer) return
+  drawer.hidden = true
+  const form = drawer.querySelector('[data-user-edit-form]')
+  form?.reset()
+}
+
+function openUserDrawer(user) {
+  const drawer = document.querySelector('[data-user-drawer]')
+  const form = document.querySelector('[data-user-edit-form]')
+  if (!drawer || !form || !user) return
+  form.elements.id.value = user.id || ''
+  form.elements.account.value = user.email || ''
+  form.elements.role.value = user.role || 'editor'
+  form.elements.password.value = ''
+  form.elements.password.type = 'password'
+  const toggle = form.querySelector('[data-password-toggle] .material-symbols-outlined')
+  if (toggle) toggle.textContent = 'visibility'
+  drawer.hidden = false
+}
+
 async function loadUsers() {
   try {
     const { users } = await api('/users')
+    state.adminUsers = users
     document.querySelector('[data-user-list]').innerHTML = users.map((user) => `
-      <div class="admin-user-item"><div><strong>${escapeHtml(user.email)}</strong><small>${escapeHtml(roleNames[user.role] || user.role)} · ${dateTime(user.createdAt)}</small></div></div>
+      <div class="admin-user-item" data-user-id="${escapeHtml(user.id)}">
+        <div>
+          <strong>${escapeHtml(user.email)}</strong>
+          <small>${escapeHtml(roleNames[user.role] || user.role)} · ${dateTime(user.createdAt)}${user.passwordUpdatedAt ? ` · 密码更新 ${dateTime(user.passwordUpdatedAt)}` : ''}</small>
+        </div>
+        <button type="button" data-user-edit="${escapeHtml(user.id)}">编辑</button>
+      </div>
     `).join('')
   } catch (error) { toast(error.message, true) }
 }
@@ -3569,6 +3598,55 @@ document.querySelector('[data-user-form]').addEventListener('submit', async (eve
     toast('管理员账号已创建')
     loadUsers()
   } catch (error) { toast(error.message, true) }
+})
+
+document.querySelector('[data-user-list]')?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-user-edit]')
+  if (!button) return
+  const user = (state.adminUsers || []).find((item) => item.id === button.dataset.userEdit)
+  if (!user) {
+    toast('账号不存在或列表已过期，请刷新后重试', true)
+    return
+  }
+  openUserDrawer(user)
+})
+
+document.querySelector('[data-user-drawer]')?.addEventListener('click', (event) => {
+  if (event.target.closest('[data-user-drawer-close]')) closeUserDrawer()
+})
+
+document.querySelector('[data-user-edit-form]')?.addEventListener('submit', async (event) => {
+  event.preventDefault()
+  const form = event.currentTarget
+  const submit = form.querySelector('button[type="submit"]')
+  const id = form.elements.id.value
+  const role = form.elements.role.value
+  const password = form.elements.password.value
+  const body = { role }
+  if (password) body.password = password
+  submit.disabled = true
+  try {
+    await api(`/users/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(body) })
+    toast(password ? '账号与密码已更新' : '账号角色已更新')
+    closeUserDrawer()
+    await loadUsers()
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    submit.disabled = false
+  }
+})
+
+document.addEventListener('click', (event) => {
+  const toggle = event.target.closest('[data-password-toggle]')
+  if (!toggle) return
+  const field = toggle.closest('.admin-password-field')?.querySelector('input')
+  const icon = toggle.querySelector('.material-symbols-outlined')
+  if (!field) return
+  const show = field.type === 'password'
+  field.type = show ? 'text' : 'password'
+  if (icon) icon.textContent = show ? 'visibility_off' : 'visibility'
+  toggle.setAttribute('aria-label', show ? '隐藏密码' : '显示密码')
 })
 
 document.querySelector('[data-refresh-releases]').addEventListener('click', loadReleases)
