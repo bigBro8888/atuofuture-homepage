@@ -14,6 +14,7 @@ import { getNewsFeedConfig, validateNewsFeedContent } from './news-feed-service.
 import { getProductLibraryConfig, presentProductLibrary, publicProductLibraryContent, validateProductLibraryContent } from './product-library-service.js'
 import { getSolutionsLibraryConfig, presentSolutionsLibrary, publicSolutionsLibraryContent, validateSolutionsLibraryContent } from './solutions-library-service.js'
 import { getAgentsLibraryConfig, presentAgentsLibrary, publicAgentsLibraryContent, validateAgentsLibraryContent } from './agents-library-service.js'
+import { assertExpectedUpdatedAt, conflictResponse } from './version-guard.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -199,12 +200,14 @@ adminPagesRouter.get('/home', requireAuth(), (request, response) => {
 adminPagesRouter.put('/home/draft', requireAuth('config:write'), async (request, response) => {
   try {
     const page = getHomePageConfig()
+    assertExpectedUpdatedAt(page, request.body?.expectedUpdatedAt)
     page.draftContent = validateHomeContent(request.body?.content)
     page.updatedAt = new Date().toISOString()
     await save()
     await addAudit(request.admin, 'home.content.update', 'home', { sections: Object.keys(page.draftContent) })
     response.json({ page })
   } catch (error) {
+    if (error?.status === 409) return conflictResponse(response, error)
     const validation = /http\(s\)|链接|URL|Invalid URL/i.test(String(error?.message || ''))
     console.error('home.draft failed:', error)
     response.status(validation ? 400 : 500).json({
@@ -217,6 +220,7 @@ adminPagesRouter.put('/home/draft', requireAuth('config:write'), async (request,
 adminPagesRouter.post('/home/publish', requireAuth('config:write'), async (request, response) => {
   try {
     const page = getHomePageConfig()
+    assertExpectedUpdatedAt(page, request.body?.expectedUpdatedAt)
     page.publishedContent = structuredClone(page.draftContent)
     page.status = 'published'
     page.publishedAt = new Date().toISOString()
@@ -225,6 +229,7 @@ adminPagesRouter.post('/home/publish', requireAuth('config:write'), async (reque
     await addAudit(request.admin, 'home.content.publish', 'home', { publishedAt: page.publishedAt })
     response.json({ page })
   } catch (error) {
+    if (error?.status === 409) return conflictResponse(response, error)
     console.error('home.publish failed:', error)
     response.status(500).json({ error: 'service_error', message: error.message || '发布失败，请稍后重试' })
   }
@@ -252,25 +257,33 @@ adminPagesRouter.get('/about', requireAuth(), (request, response) => {
 adminPagesRouter.put('/about/draft', requireAuth('config:write'), async (request, response) => {
   try {
     const page = getAboutPageConfig()
+    assertExpectedUpdatedAt(page, request.body?.expectedUpdatedAt)
     page.draftContent = validateAboutContent(request.body?.content)
     page.updatedAt = new Date().toISOString()
     await save()
     await addAudit(request.admin, 'about.content.update', 'about', { sections: Object.keys(page.draftContent) })
     response.json({ page })
   } catch (error) {
+    if (error?.status === 409) return conflictResponse(response, error)
     response.status(400).json({ error: 'invalid_about_content', message: error.message })
   }
 })
 
 adminPagesRouter.post('/about/publish', requireAuth('config:write'), async (request, response) => {
-  const page = getAboutPageConfig()
-  page.publishedContent = structuredClone(page.draftContent)
-  page.status = 'published'
-  page.publishedAt = new Date().toISOString()
-  page.updatedAt = page.publishedAt
-  await save()
-  await addAudit(request.admin, 'about.content.publish', 'about', { publishedAt: page.publishedAt })
-  response.json({ page })
+  try {
+    const page = getAboutPageConfig()
+    assertExpectedUpdatedAt(page, request.body?.expectedUpdatedAt)
+    page.publishedContent = structuredClone(page.draftContent)
+    page.status = 'published'
+    page.publishedAt = new Date().toISOString()
+    page.updatedAt = page.publishedAt
+    await save()
+    await addAudit(request.admin, 'about.content.publish', 'about', { publishedAt: page.publishedAt })
+    response.json({ page })
+  } catch (error) {
+    if (error?.status === 409) return conflictResponse(response, error)
+    response.status(500).json({ error: 'service_error', message: error.message || '发布失败' })
+  }
 })
 
 publicPagesRouter.get('/site', (request, response) => {
@@ -290,25 +303,33 @@ adminPagesRouter.get('/site', requireAuth(), (request, response) => {
 adminPagesRouter.put('/site/draft', requireAuth('config:write'), async (request, response) => {
   try {
     const page = getSiteSettingsPage()
+    assertExpectedUpdatedAt(page, request.body?.expectedUpdatedAt)
     page.draftContent = validateSiteSettings(request.body?.content)
     page.updatedAt = new Date().toISOString()
     await save()
     await addAudit(request.admin, 'site.settings.update', 'site', {})
     response.json({ page })
   } catch (error) {
+    if (error?.status === 409) return conflictResponse(response, error)
     response.status(400).json({ error: 'invalid_site_settings', message: error.message })
   }
 })
 
 adminPagesRouter.post('/site/publish', requireAuth('config:write'), async (request, response) => {
-  const page = getSiteSettingsPage()
-  page.publishedContent = structuredClone(page.draftContent)
-  page.status = 'published'
-  page.publishedAt = new Date().toISOString()
-  page.updatedAt = page.publishedAt
-  await save()
-  await addAudit(request.admin, 'site.settings.publish', 'site', { publishedAt: page.publishedAt })
-  response.json({ page })
+  try {
+    const page = getSiteSettingsPage()
+    assertExpectedUpdatedAt(page, request.body?.expectedUpdatedAt)
+    page.publishedContent = structuredClone(page.draftContent)
+    page.status = 'published'
+    page.publishedAt = new Date().toISOString()
+    page.updatedAt = page.publishedAt
+    await save()
+    await addAudit(request.admin, 'site.settings.publish', 'site', { publishedAt: page.publishedAt })
+    response.json({ page })
+  } catch (error) {
+    if (error?.status === 409) return conflictResponse(response, error)
+    response.status(500).json({ error: 'service_error', message: error.message || '发布失败' })
+  }
 })
 
 publicPagesRouter.get('/news-feed', (request, response) => {
@@ -483,26 +504,34 @@ adminPagesRouter.put('/simple/:key/draft', requireAuth('config:write'), async (r
   try {
     const page = getSimplePageConfig(request.params.key)
     if (!page) return response.status(404).json({ error: 'unknown_page' })
+    assertExpectedUpdatedAt(page, request.body?.expectedUpdatedAt)
     page.draftContent = validateSimplePage(request.params.key, request.body?.content)
     page.updatedAt = new Date().toISOString()
     await save()
     await addAudit(request.admin, 'simple.page.update', request.params.key, {})
     response.json({ page })
   } catch (error) {
+    if (error?.status === 409) return conflictResponse(response, error)
     response.status(400).json({ error: 'invalid_page_content', message: error.message })
   }
 })
 
 adminPagesRouter.post('/simple/:key/publish', requireAuth('config:write'), async (request, response) => {
-  const page = getSimplePageConfig(request.params.key)
-  if (!page) return response.status(404).json({ error: 'unknown_page' })
-  page.publishedContent = structuredClone(page.draftContent)
-  page.status = 'published'
-  page.publishedAt = new Date().toISOString()
-  page.updatedAt = page.publishedAt
-  await save()
-  await addAudit(request.admin, 'simple.page.publish', request.params.key, { publishedAt: page.publishedAt })
-  response.json({ page })
+  try {
+    const page = getSimplePageConfig(request.params.key)
+    if (!page) return response.status(404).json({ error: 'unknown_page' })
+    assertExpectedUpdatedAt(page, request.body?.expectedUpdatedAt)
+    page.publishedContent = structuredClone(page.draftContent)
+    page.status = 'published'
+    page.publishedAt = new Date().toISOString()
+    page.updatedAt = page.publishedAt
+    await save()
+    await addAudit(request.admin, 'simple.page.publish', request.params.key, { publishedAt: page.publishedAt })
+    response.json({ page })
+  } catch (error) {
+    if (error?.status === 409) return conflictResponse(response, error)
+    response.status(500).json({ error: 'service_error', message: error.message || '发布失败' })
+  }
 })
 
 adminPagesRouter.post('/media/image', requireAuth('config:write'), imageUpload.single('image'), async (request, response) => {

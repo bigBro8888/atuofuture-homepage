@@ -9,6 +9,7 @@ import { addAudit, db, normalizeAppButtons, normalizeAppFeatures, publicUser, sa
 import { getLatestAndroidVersion } from '../apps/version-service.js'
 import { publishRelease, rollbackRelease } from '../apps/release-service.js'
 import { createSession, requireAuth, sessionCookieOptions } from './auth.js'
+import { heartbeatPresence, leavePresence, listPresence } from './presence-service.js'
 
 export const adminRouter = Router()
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 300 * 1024 * 1024, files: 1 } })
@@ -246,4 +247,33 @@ adminRouter.patch('/users/:id', requireAuth('users:write'), async (request, resp
 adminRouter.get('/audit-logs', requireAuth('audit:read'), (request, response) => {
   const limit = Math.min(200, Math.max(20, Number(request.query.limit || 100)))
   response.json({ logs: [...db().auditLogs].reverse().slice(0, limit) })
+})
+
+adminRouter.put('/presence', requireAuth(), (request, response) => {
+  try {
+    const peers = heartbeatPresence({
+      clientId: request.body?.clientId,
+      user: request.admin,
+      room: request.body?.room,
+      cursor: request.body?.cursor,
+      editing: request.body?.editing,
+    })
+    response.json({ peers, serverTime: Date.now() })
+  } catch (error) {
+    response.status(error.status || 400).json({
+      error: error.code || 'invalid_presence',
+      message: error.message || '在场同步失败',
+    })
+  }
+})
+
+adminRouter.get('/presence', requireAuth(), (request, response) => {
+  const room = String(request.query.room || '').trim()
+  const clientId = String(request.query.clientId || '').trim()
+  response.json({ peers: listPresence(room, clientId), serverTime: Date.now() })
+})
+
+adminRouter.post('/presence/leave', requireAuth(), (request, response) => {
+  leavePresence(request.body?.clientId)
+  response.json({ ok: true })
 })

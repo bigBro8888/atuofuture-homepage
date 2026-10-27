@@ -11,6 +11,7 @@ import { bindAspaceAppsVisualAdmin, renderAspaceAppsVisualMarkup } from './admin
 import { alignHelpWithCatalog } from '../lib/aspace-help-categories.js'
 import { bindAspaceHelpVisualAdmin, flushAspaceHelpVisualDrawer, renderAspaceHelpPageVisualMarkup } from './admin-aspace-help.js'
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
+import { createAdminPresence } from './admin-presence.js'
 
 const API = '/api/admin'
 const state = { user: null, app: null, aspaceCatalog: null, aspaceHome: null, homePage: null, aboutPage: null, aboutSection: 'hero', sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, productLibrary: null, homeSection: 'hero', configSection: 'basic' }
@@ -71,6 +72,29 @@ const API_ERROR_TEXT = {
   too_many_attempts: '尝试次数过多，请稍后再试',
   account_exists: '该账号已存在',
   email_exists: '该账号已存在',
+  version_conflict: '内容已被其他人更新，请刷新后再保存或发布',
+}
+
+const presence = createAdminPresence({
+  api: (...args) => api(...args),
+  toast: (...args) => toast(...args),
+})
+
+function presenceRoomForTab(name) {
+  if (!name || name === 'overview' || name === 'releases' || name === 'leads' || name === 'analytics' || name === 'users' || name === 'audit') return ''
+  if (name === 'aspace') return `aspace-${aspaceEditorTab || 'home'}`
+  if (name === 'home') return 'page-home'
+  if (name === 'about') return 'page-about'
+  if (name === 'site') return 'page-site'
+  if (name === 'config') return 'page-app-download'
+  if (name.startsWith('page-') || name.startsWith('content-')) return name
+  if (name === 'content') return `content-${contentKindFromHash(location.hash) || 'news'}`
+  return ''
+}
+
+function syncPresenceRoom(tabName = location.hash.replace(/^#/, '') || 'overview') {
+  presence.setRoom(presenceRoomForTab(tabName))
+  window.requestAnimationFrame(() => presence.refresh())
 }
 
 async function api(path, options = {}) {
@@ -92,7 +116,11 @@ async function api(path, options = {}) {
     if (!response.ok) {
       if (response.status === 401 && path !== '/login' && path !== '/me') showLogin()
       if (response.status === 413) throw new Error('正文过大，请把插图改成上传图片后再发布')
-      throw new Error(API_ERROR_TEXT[data.error] || data.message || data.error || `请求失败（${response.status}）`)
+      const err = new Error(API_ERROR_TEXT[data.error] || data.message || data.error || `请求失败（${response.status}）`)
+      err.status = response.status
+      err.code = data.error
+      err.updatedAt = data.updatedAt
+      throw err
     }
     return data
   } catch (error) {
@@ -227,6 +255,7 @@ function openTab(name, options = {}) {
   else if (name.startsWith('page-')) loadSimplePage(name.slice('page-'.length))
   if (name === 'home') loadHomePage()
   if (name === 'about') loadAboutPage()
+  syncPresenceRoom(name)
   if (name === 'releases') loadReleases()
   if (name === 'leads') loadLeads()
   if (name === 'analytics') loadStats()
@@ -290,6 +319,7 @@ function setAspaceEditorTab(tab) {
   host.querySelectorAll('[data-aspace-tab-panel]').forEach((panel) => {
     panel.hidden = panel.dataset.aspaceTabPanel !== next
   })
+  syncPresenceRoom('aspace')
 }
 
 function setAspaceHomeSection(section) {
@@ -1329,13 +1359,17 @@ async function loadHomePage() {
 }
 
 async function saveHomeDraft({ quiet = false } = {}) {
+  presence.markEditing()
   const content = collectHomeContent()
   try {
     await mergeHomeNewsFromFeed(content)
   } catch {
     // 新闻中心暂不可用时，保留首页里现有新闻配置
   }
-  const { page } = await api('/pages/home/draft', { method: 'PUT', body: JSON.stringify({ content }) })
+  const { page } = await api('/pages/home/draft', {
+    method: 'PUT',
+    body: JSON.stringify({ content, expectedUpdatedAt: state.homePage?.updatedAt || '' }),
+  })
   state.homePage = page
   updateHomeStatus(page)
   if (!quiet) toast('PC 首页草稿已保存，线上内容尚未改变')
@@ -1486,8 +1520,12 @@ async function loadAboutPage() {
 }
 
 async function saveAboutDraft({ quiet = false } = {}) {
+  presence.markEditing()
   const content = collectAboutContent()
-  const { page } = await api('/pages/about/draft', { method: 'PUT', body: JSON.stringify({ content }) })
+  const { page } = await api('/pages/about/draft', {
+    method: 'PUT',
+    body: JSON.stringify({ content, expectedUpdatedAt: state.aboutPage?.updatedAt || '' }),
+  })
   state.aboutPage = page
   updateAboutStatus(page)
   if (!quiet) toast('关于我们草稿已保存，线上内容尚未改变')
@@ -1554,8 +1592,12 @@ async function loadSitePage() {
 }
 
 async function saveSiteDraft({ quiet = false } = {}) {
+  presence.markEditing()
   const content = collectSiteContent()
-  const { page } = await api('/pages/site/draft', { method: 'PUT', body: JSON.stringify({ content }) })
+  const { page } = await api('/pages/site/draft', {
+    method: 'PUT',
+    body: JSON.stringify({ content, expectedUpdatedAt: state.sitePage?.updatedAt || '' }),
+  })
   state.sitePage = page
   updateSiteStatus(page)
   if (!quiet) toast('全站设置草稿已保存')
@@ -1939,8 +1981,12 @@ async function loadSimplePage(key) {
 }
 
 async function saveSimpleDraft({ quiet = false } = {}) {
+  presence.markEditing()
   const content = collectSimpleContent()
-  const { page } = await api(`/pages/simple/${encodeURIComponent(state.simpleKey)}/draft`, { method: 'PUT', body: JSON.stringify({ content }) })
+  const { page } = await api(`/pages/simple/${encodeURIComponent(state.simpleKey)}/draft`, {
+    method: 'PUT',
+    body: JSON.stringify({ content, expectedUpdatedAt: state.simplePage?.updatedAt || '' }),
+  })
   state.simplePage = page
   updateSimpleStatus(page)
   if (!quiet) toast('页面草稿已保存，线上内容尚未改变')
@@ -2798,6 +2844,8 @@ document.querySelector('[data-aspace-editor]').addEventListener('change', async 
 
 document.querySelector('[data-aspace-form]').addEventListener('submit', async (event) => {
   event.preventDefault()
+  if (!presence.confirmIfPeersEditing('保存并发布')) return
+  presence.markEditing()
   const form = event.currentTarget
   const submit = form.querySelector('button[type="submit"]')
   submit.disabled = true
@@ -2966,12 +3014,16 @@ document.querySelector('[data-home-save]').addEventListener('click', async (even
 })
 
 document.querySelector('[data-home-publish]').addEventListener('click', async (event) => {
+  if (!presence.confirmIfPeersEditing('发布')) return
   if (!window.confirm('确认将当前草稿发布到 PC 首页？发布后访客将看到新内容。')) return
   const button = event.currentTarget
   button.disabled = true
   try {
     await saveHomeDraft({ quiet: true })
-    const { page } = await api('/pages/home/publish', { method: 'POST' })
+    const { page } = await api('/pages/home/publish', {
+      method: 'POST',
+      body: JSON.stringify({ expectedUpdatedAt: state.homePage?.updatedAt || '' }),
+    })
     state.homePage = page
     updateHomeStatus(page)
     toast('PC 首页内容已正式发布')
@@ -2997,12 +3049,16 @@ document.querySelector('[data-about-save]').addEventListener('click', async (eve
 })
 
 document.querySelector('[data-about-publish]').addEventListener('click', async (event) => {
+  if (!presence.confirmIfPeersEditing('发布')) return
   if (!window.confirm('确认将当前草稿发布到关于我们？发布后访客将看到新内容。')) return
   const button = event.currentTarget
   button.disabled = true
   try {
     await saveAboutDraft({ quiet: true })
-    const { page } = await api('/pages/about/publish', { method: 'POST' })
+    const { page } = await api('/pages/about/publish', {
+      method: 'POST',
+      body: JSON.stringify({ expectedUpdatedAt: state.aboutPage?.updatedAt || '' }),
+    })
     state.aboutPage = page
     updateAboutStatus(page)
     toast('关于我们内容已正式发布')
@@ -3131,12 +3187,16 @@ document.querySelector('[data-site-save]').addEventListener('click', async (even
   try { await saveSiteDraft() } catch (error) { toast(error.message, true) } finally { button.disabled = false }
 })
 document.querySelector('[data-site-publish]').addEventListener('click', async (event) => {
+  if (!presence.confirmIfPeersEditing('发布')) return
   if (!window.confirm('确认发布全站设置？Logo 与联系方式会立即出现在所有页面。')) return
   const button = event.currentTarget
   button.disabled = true
   try {
     await saveSiteDraft({ quiet: true })
-    const { page } = await api('/pages/site/publish', { method: 'POST' })
+    const { page } = await api('/pages/site/publish', {
+      method: 'POST',
+      body: JSON.stringify({ expectedUpdatedAt: state.sitePage?.updatedAt || '' }),
+    })
     state.sitePage = page
     updateSiteStatus(page)
     toast('全站设置已发布')
@@ -3204,12 +3264,16 @@ document.querySelector('[data-simple-save]').addEventListener('click', async (ev
   try { await saveSimpleDraft() } catch (error) { toast(error.message, true) } finally { button.disabled = false }
 })
 document.querySelector('[data-simple-publish]').addEventListener('click', async (event) => {
+  if (!presence.confirmIfPeersEditing('发布')) return
   if (!window.confirm('确认发布该页内容到前台？')) return
   const button = event.currentTarget
   button.disabled = true
   try {
     await saveSimpleDraft({ quiet: true })
-    const { page } = await api(`/pages/simple/${encodeURIComponent(state.simpleKey)}/publish`, { method: 'POST' })
+    const { page } = await api(`/pages/simple/${encodeURIComponent(state.simpleKey)}/publish`, {
+      method: 'POST',
+      body: JSON.stringify({ expectedUpdatedAt: state.simplePage?.updatedAt || '' }),
+    })
     state.simplePage = page
     updateSimpleStatus(page)
     toast('页面内容已发布')
