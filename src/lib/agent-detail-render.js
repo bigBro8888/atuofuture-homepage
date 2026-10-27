@@ -228,10 +228,10 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
             .map((s, i) => {
               const checks = editable
                 ? [...(s.checks || []), '', '', '', ''].slice(0, Math.max(4, s.checks?.length || 0))
-                : s.checks || []
+                : (s.checks || []).filter((c) => String(c || '').trim())
               const actions = editable
                 ? [...(s.actions || []), {}, {}, {}, {}].slice(0, Math.max(4, s.actions?.length || 0))
-                : s.actions || []
+                : (s.actions || []).filter((act) => String(act?.label || '').trim())
               const pasteCopy = editable
                 ? `<button type="button" class="space-ad__scenario-paste-entry" data-agents-scenario-paste-open data-scenario-index="${i}" data-scenario-mode="copy" title="批量粘贴左侧标题与打勾项">
                     <span class="material-symbols-outlined" aria-hidden="true">content_paste</span>
@@ -254,14 +254,19 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
                   ${textNode(`spacePage.scenarios.${i}.desc`, s.desc || '', { editable, tag: 'p', placeholder: '场景说明' })}
                   <ul>
                     ${checks
-                      .map(
-                        (c, ci) => `
-                      <li><span class="material-symbols-outlined">check_circle</span>${textNode(
-                        `spacePage.scenarios.${i}.checks.${ci}`,
-                        typeof c === 'string' ? c : '',
-                        { editable, tag: 'span', placeholder: '能力点' }
-                      )}</li>`
-                      )
+                      .map((c, ci) => {
+                        const label = typeof c === 'string' ? c : ''
+                        const empty = !String(label || '').trim()
+                        return `
+                      <li class="${empty && editable ? 'is-empty' : ''}"${empty && editable ? ' data-scenario-check-empty' : ''}>
+                        <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                        ${textNode(`spacePage.scenarios.${i}.checks.${ci}`, label, {
+                          editable,
+                          tag: 'span',
+                          placeholder: '能力点',
+                        })}
+                      </li>`
+                      })
                       .join('')}
                   </ul>
                 </div>
@@ -286,17 +291,19 @@ function renderSpaceAgentDetail(agent, { editable = false } = {}) {
                 ${pasteActions}
                 <ul class="space-ad__scenario-actions">
                   ${actions
-                    .map(
-                      (act, ai) => `
-                    <li>
-                      <span class="material-symbols-outlined">${act?.icon || 'chevron_right'}</span>
-                      ${textNode(`spacePage.scenarios.${i}.actions.${ai}.label`, act?.label || '', {
+                    .map((act, ai) => {
+                      const label = act?.label || ''
+                      const empty = !String(label || '').trim()
+                      return `
+                    <li class="${empty && editable ? 'is-empty' : ''}"${empty && editable ? ' data-scenario-action-empty' : ''}>
+                      <span class="material-symbols-outlined" aria-hidden="true">${act?.icon || 'chevron_right'}</span>
+                      ${textNode(`spacePage.scenarios.${i}.actions.${ai}.label`, label, {
                         editable,
                         tag: 'span',
                         placeholder: '动作',
                       })}
                     </li>`
-                    )
+                    })
                     .join('')}
                 </ul>
               </div>

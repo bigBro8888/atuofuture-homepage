@@ -314,6 +314,7 @@ function applyScenarioCopyPasteToCanvas(compose, index, parsed) {
     if (!el) continue
     const value = parsed.checks?.[ci] || ''
     el.textContent = value
+    syncScenarioEmptyRow(el)
     if (value) filled += 1
   }
   return filled
@@ -328,6 +329,7 @@ function applyScenarioActionsPasteToCanvas(compose, index, labels) {
     if (!el) continue
     const value = labels[ai] || ''
     el.textContent = value
+    syncScenarioEmptyRow(el)
     if (value) filled += 1
   }
   return filled
@@ -904,6 +906,22 @@ function collectAgentArticle(compose) {
       .map((s) => s.trim())
       .filter(Boolean)
   }
+  // 场景打勾项 / 右侧动作：去掉空文案，避免前台只剩图标
+  if (article.spacePage && Array.isArray(article.spacePage.scenarios)) {
+    article.spacePage.scenarios = article.spacePage.scenarios.map((scene) => {
+      if (!scene || typeof scene !== 'object') return scene
+      const next = { ...scene }
+      if (Array.isArray(next.checks)) {
+        next.checks = next.checks.map((c) => String(c || '').trim()).filter(Boolean)
+      }
+      if (Array.isArray(next.actions)) {
+        next.actions = next.actions
+          .map((act) => ({ ...(act || {}), label: String(act?.label || '').trim() }))
+          .filter((act) => act.label)
+      }
+      return next
+    })
+  }
   if (Array.isArray(article.capabilities)) {
     article.capabilities = article.capabilities.filter((row) => row && (row.title || row.desc || row.icon))
   }
@@ -914,6 +932,13 @@ function collectAgentArticle(compose) {
     article.metrics = article.metrics.filter((row) => row && (row.value || row.label))
   }
   return article
+}
+
+function syncScenarioEmptyRow(el) {
+  const li = el?.closest?.('li')
+  if (!li?.closest?.('.space-ad__scenario-copy, .space-ad__scenario-actions')) return
+  const empty = !readEditableText(el)
+  li.classList.toggle('is-empty', empty)
 }
 
 function setAgentsDetailMediaType(modal, type) {
@@ -1420,12 +1445,20 @@ function bindKind(kind) {
         : String(raw).replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim()
       document.execCommand('insertText', false, clean)
       sanitizeAgentEditable(editable)
+      syncScenarioEmptyRow(editable)
+    })
+    compose.addEventListener('input', (event) => {
+      const editable = event.target.closest?.('[data-edit-path]')
+      if (editable) syncScenarioEmptyRow(editable)
     })
     compose.addEventListener(
       'blur',
       (event) => {
         const editable = event.target.closest?.('[data-edit-path]')
-        if (editable) sanitizeAgentEditable(editable)
+        if (editable) {
+          sanitizeAgentEditable(editable)
+          syncScenarioEmptyRow(editable)
+        }
       },
       true,
     )
@@ -1435,6 +1468,7 @@ function bindKind(kind) {
       if (event.key === 'Enter' && editable.dataset.editMultiline !== 'true') {
         event.preventDefault()
         sanitizeAgentEditable(editable)
+        syncScenarioEmptyRow(editable)
         editable.blur()
       }
     })

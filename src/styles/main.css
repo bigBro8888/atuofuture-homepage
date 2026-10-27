@@ -6069,6 +6069,15 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   font-size: 18px;
   margin-top: 1px;
 }
+/* 未填文案时不显示打勾图标（后台编辑空槽） */
+.space-ad__scenario-copy li.is-empty .material-symbols-outlined,
+.space-ad__scenario-actions li.is-empty .material-symbols-outlined {
+  visibility: hidden;
+}
+.space-ad__scenario-copy li.is-empty,
+.space-ad__scenario-actions li.is-empty {
+  opacity: 0.55;
+}
 /* 仅左侧斜切、右侧竖直；高度随左右文案拉伸，不单独撑高 */
 .space-ad__scenario-media {
   position: relative;
