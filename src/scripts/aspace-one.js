@@ -343,38 +343,51 @@ function loadAppPreferences() {
   }
 }
 
-const docs = [
-  { title: 'Aspace空间智能快速入门指南', category: '全部文档', date: '2026-09-12', featured: true, keywords: '权限申请 账号绑定 入门' },
-  { title: '能源能耗数据接入说明', category: '能源能耗', date: '2026-09-10', featured: true, keywords: '能耗数据接入 网关 采集' },
-  { title: 'AI画报使用手册', category: 'AI画报', date: '2026-09-08', keywords: '模板 发布' },
-  { title: '电子相册发布流程', category: '电子相册', date: '2026-09-06', keywords: '电子相册发布 多屏同步' },
-  { title: '会议室预约配置操作指南', category: '会议室预约系统', date: '2026-09-03', keywords: '会议室预约 中控屏配置 设备绑定' },
-  { title: '设备管理平台 API 文档', category: '会议与空间', date: '2026-08-28', keywords: '接口 对接' },
-  { title: '项目实施规范', category: '项目服务', date: '2026-08-20', keywords: '权限申请 交付 验收' },
-]
+const defaultHelpContent = {
+  title: '知识库',
+  lead: '搜索知识、获取帮助，让问题更快解决',
+  searchPlaceholder: '搜索帮助文档、问题或关键词，例如：如何预约会议室、如何申请权限',
+  docsLead: '精选指南与操作说明，快速上手 Aspace空间智能。',
+  hotSearches: ['会议室预约', '权限申请', '能耗数据接入', '电子相册发布'],
+  categories: [
+    { icon: 'description', name: '全部文档' },
+    { icon: 'bar_chart', name: '能源能耗' },
+    { icon: 'image', name: 'AI画报' },
+    { icon: 'photo_library', name: '电子相册' },
+    { icon: 'desktop_windows', name: '会议室预约系统' },
+    { icon: 'groups', name: '会议与空间' },
+    { icon: 'folder', name: '项目服务' },
+  ],
+  featuredDocs: [
+    { title: 'Aspace空间智能快速入门指南', date: '2026-09-12', badge: '新手必读', tone: 'blue', art: 'lines' },
+    { title: '能源能耗数据接入说明', date: '2026-09-10', badge: '热门文档', tone: 'teal', art: 'chart' },
+  ],
+  docs: [
+    { title: 'Aspace空间智能快速入门指南', category: '全部文档', date: '2026-09-12', featured: true, keywords: '权限申请 账号绑定 入门' },
+    { title: '能源能耗数据接入说明', category: '能源能耗', date: '2026-09-10', featured: true, keywords: '能耗数据接入 网关 采集' },
+    { title: 'AI画报使用手册', category: 'AI画报', date: '2026-09-08', featured: false, keywords: '模板 发布' },
+    { title: '电子相册发布流程', category: '电子相册', date: '2026-09-06', featured: false, keywords: '电子相册发布 多屏同步' },
+    { title: '会议室预约配置操作指南', category: '会议室预约系统', date: '2026-09-03', featured: false, keywords: '会议室预约 中控屏配置 设备绑定' },
+    { title: '设备管理平台 API 文档', category: '会议与空间', date: '2026-08-28', featured: false, keywords: '接口 对接' },
+    { title: '项目实施规范', category: '项目服务', date: '2026-08-20', featured: false, keywords: '权限申请 交付 验收' },
+  ],
+  updates: [
+    { date: '2026-09-18', title: '设备管理平台 v3.2 正式发布', desc: '新增设备批量配置能力，优化告警通知机制。' },
+    { date: '2026-09-10', title: 'AI画报新增模板库', desc: '新增多套行业模板，支持企业文化发布。' },
+    { date: '2026-09-03', title: '电子相册发布流程优化', desc: '支持定时发布与多屏同步。' },
+  ],
+  support: {
+    title: '有任何问题，请联系我们的客服人员',
+    subtitle: '留下手机号，客服将尽快与您联系',
+  },
+}
 
-const docCategories = [
-  ['description', '全部文档'],
-  ['bar_chart', '能源能耗'],
-  ['image', 'AI画报'],
-  ['photo_library', '电子相册'],
-  ['desktop_windows', '会议室预约系统'],
-  ['groups', '会议与空间'],
-  ['folder', '项目服务'],
-]
-
-const hotSearches = ['会议室预约', '权限申请', '能耗数据接入', '电子相册发布']
-
-const featuredDocs = [
-  { title: 'Aspace空间智能快速入门指南', date: '2026-09-12', badge: '新手必读', tone: 'blue', art: 'lines' },
-  { title: '能源能耗数据接入说明', date: '2026-09-10', badge: '热门文档', tone: 'teal', art: 'chart' },
-]
-
-const updates = [
-  ['2026-09-18', '设备管理平台 v3.2 正式发布', '新增设备批量配置能力，优化告警通知机制。'],
-  ['2026-09-10', 'AI画报新增模板库', '新增多套行业模板，支持企业文化发布。'],
-  ['2026-09-03', '电子相册发布流程优化', '支持定时发布与多屏同步。'],
-]
+let helpContent = structuredClone(defaultHelpContent)
+let docs = helpContent.docs.map((item) => ({ ...item }))
+let docCategories = helpContent.categories.map((item) => [item.icon, item.name])
+let hotSearches = [...helpContent.hotSearches]
+let featuredDocs = helpContent.featuredDocs.map((item) => ({ ...item }))
+let updates = helpContent.updates.map((item) => [item.date, item.title, item.desc])
 
 const defaultQuickActions = [
   { id: 'energy', icon: 'bar_chart', label: '查看今日能耗', url: 'app:energy' },
@@ -957,18 +970,18 @@ function renderPortal() {
           <header class="aso-help__head">
             <div class="aso-help__intro">
               <p class="aso-eyebrow">HELP CENTER</p>
-              <h2>知识库</h2>
-              <p class="aso-help__lead">搜索知识、获取帮助，让问题更快解决</p>
+              <h2>${escapeHtml(helpContent.title || '知识库')}</h2>
+              <p class="aso-help__lead">${escapeHtml(helpContent.lead || '')}</p>
             </div>
             <div class="aso-help__find">
               <form class="aso-search" data-help-search>
                 ${icon('search')}
-                <input type="search" aria-label="搜索文档" placeholder="搜索帮助文档、问题或关键词，例如：如何预约会议室、如何申请权限" />
+                <input type="search" aria-label="搜索文档" placeholder="${escapeHtml(helpContent.searchPlaceholder || '')}" />
                 <button type="submit">搜索</button>
               </form>
               <div class="aso-hot">
                 <span>热门搜索：</span>
-                ${hotSearches.map((word) => `<button type="button" data-hot-search="${word}">${word}</button>`).join('')}
+                ${hotSearches.map((word) => `<button type="button" data-hot-search="${escapeHtml(word)}">${escapeHtml(word)}</button>`).join('')}
               </div>
             </div>
             <figure class="aso-help__deco" aria-hidden="true">
@@ -978,24 +991,24 @@ function renderPortal() {
           </header>
           <div class="aso-help__grid">
             <nav class="aso-doc-cats" aria-label="文档分类">
-              ${docCategories.map(([ico, name], index) => `<button class="${index === 0 ? 'is-active' : ''}" type="button" data-doc-category="${name}">${icon(ico)}<span>${name}</span></button>`).join('')}
+              ${docCategories.map(([ico, name], index) => `<button class="${index === 0 ? 'is-active' : ''}" type="button" data-doc-category="${escapeHtml(name)}">${icon(ico)}<span>${escapeHtml(name)}</span></button>`).join('')}
             </nav>
             <div class="aso-docs">
               <h3>文档中心</h3>
-              <p class="aso-docs__lead">精选指南与操作说明，快速上手 Aspace空间智能。</p>
+              <p class="aso-docs__lead">${escapeHtml(helpContent.docsLead || '')}</p>
               <div class="aso-docs__feature">
                 ${featuredDocs
                   .map(
                     (doc) => `
-                <button class="aso-doc-card aso-doc-card--${doc.tone}" type="button" data-doc="${doc.title}">
-                  <span class="aso-doc-art aso-doc-art--${doc.art}" aria-hidden="true">
+                <button class="aso-doc-card aso-doc-card--${escapeHtml(doc.tone)}" type="button" data-doc="${escapeHtml(doc.title)}">
+                  <span class="aso-doc-art aso-doc-art--${escapeHtml(doc.art)}" aria-hidden="true">
                     <i class="aso-doc-art__back"></i>
                     <i class="aso-doc-art__page"><span></span><span></span><span></span><span></span></i>
                   </span>
                   <span class="aso-doc-card__copy">
-                    <em>${doc.badge}</em>
-                    <b>${doc.title}</b>
-                    <time>${doc.date}</time>
+                    <em>${escapeHtml(doc.badge)}</em>
+                    <b>${escapeHtml(doc.title)}</b>
+                    <time>${escapeHtml(doc.date)}</time>
                   </span>
                   <i class="aso-doc-card__go">${icon('chevron_right')}</i>
                 </button>`
@@ -1007,15 +1020,15 @@ function renderPortal() {
             <aside class="aso-updates">
               <header><h3>${icon('campaign')} 最新更新</h3><button type="button" data-show-all>查看更多 ${icon('arrow_forward')}</button></header>
               <ol class="aso-updates__list">
-                ${updates.map(([date, title, desc]) => `<li><time>${date}</time><div><b>${title}</b><p>${desc}</p></div></li>`).join('')}
+                ${updates.map(([date, title, desc]) => `<li><time>${escapeHtml(date)}</time><div><b>${escapeHtml(title)}</b><p>${escapeHtml(desc)}</p></div></li>`).join('')}
               </ol>
             </aside>
           </div>
           <button class="aso-support-cta" id="support" type="button" data-contact-open>
             <span class="aso-support-cta__icon">${icon('headset_mic')}</span>
             <span class="aso-support-cta__copy">
-              <b>有任何问题，请联系我们的客服人员</b>
-              <small>留下手机号，客服将尽快与您联系</small>
+              <b>${escapeHtml(helpContent.support?.title || '')}</b>
+              <small>${escapeHtml(helpContent.support?.subtitle || '')}</small>
             </span>
             <span class="aso-support-cta__action">立即联系 ${icon('arrow_forward')}</span>
           </button>
@@ -2077,6 +2090,37 @@ async function loadHomeContent() {
   }
 }
 
+function applyHelpContent(help) {
+  if (!help || typeof help !== 'object') return
+  helpContent = {
+    ...structuredClone(defaultHelpContent),
+    ...help,
+    support: { ...defaultHelpContent.support, ...(help.support || {}) },
+  }
+  docs = Array.isArray(helpContent.docs) ? helpContent.docs.map((item) => ({ ...item })) : structuredClone(defaultHelpContent.docs)
+  docCategories = Array.isArray(helpContent.categories)
+    ? helpContent.categories.map((item) => [item.icon || 'description', item.name || ''])
+    : defaultHelpContent.categories.map((item) => [item.icon, item.name])
+  hotSearches = Array.isArray(helpContent.hotSearches) ? [...helpContent.hotSearches] : [...defaultHelpContent.hotSearches]
+  featuredDocs = Array.isArray(helpContent.featuredDocs)
+    ? helpContent.featuredDocs.map((item) => ({ ...item }))
+    : structuredClone(defaultHelpContent.featuredDocs)
+  updates = Array.isArray(helpContent.updates)
+    ? helpContent.updates.map((item) => [item.date, item.title, item.desc])
+    : defaultHelpContent.updates.map((item) => [item.date, item.title, item.desc])
+}
+
+async function loadHelpContent() {
+  try {
+    const response = await fetch('/api/public/aspace/help', { cache: 'no-store' })
+    const data = await response.json()
+    if (!response.ok || !data.help) return
+    applyHelpContent(data.help)
+  } catch {
+    applyHelpContent(defaultHelpContent)
+  }
+}
+
 async function loadRecentActivities() {
   try {
     const response = await fetch('/api/public/aspace/activities', { cache: 'no-store' })
@@ -2264,7 +2308,7 @@ export async function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
   await initPortalAuth()
-  await Promise.all([loadCatalog(), loadHomeContent()])
+  await Promise.all([loadCatalog(), loadHomeContent(), loadHelpContent()])
   loadAppPreferences()
   await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { randomUUID } from 'node:crypto'
 import { config } from '../../config.js'
-import { addAudit, db, defaultAspaceCatalog, defaultAspaceHome, defaultAspaceQuickActions, save } from '../../lib/store.js'
+import { addAudit, db, defaultAspaceCatalog, defaultAspaceHelp, defaultAspaceHome, defaultAspaceQuickActions, save } from '../../lib/store.js'
 import { requireAuth } from '../admin/auth.js'
 
 export const publicAspaceRouter = Router()
@@ -249,6 +249,97 @@ function currentHome() {
   }
 }
 
+const helpTones = new Set(['blue', 'teal', 'amber', 'violet'])
+const helpArts = new Set(['lines', 'chart', 'grid', 'book'])
+
+function normalizeHelp(raw = {}) {
+  const fallback = defaultAspaceHelp
+  const text = (input, def, max) => String(input ?? def ?? '').trim().slice(0, max) || def
+  const source = raw && typeof raw === 'object' ? raw : {}
+
+  const hotSource = Array.isArray(source.hotSearches) ? source.hotSearches : fallback.hotSearches
+  const hotSearches = hotSource
+    .map((item) => String(item ?? '').trim().slice(0, 40))
+    .filter(Boolean)
+    .slice(0, 12)
+  if (!hotSearches.length) hotSearches.push(...fallback.hotSearches)
+
+  const catSource = Array.isArray(source.categories) ? source.categories : fallback.categories
+  let categories = catSource.slice(0, 20).map((item, index) => {
+    const fb = fallback.categories[Math.min(index, fallback.categories.length - 1)]
+    return {
+      icon: text(item?.icon, fb.icon, 40),
+      name: text(item?.name, fb.name, 40),
+    }
+  }).filter((item) => item.name)
+  if (!categories.length) categories = structuredClone(fallback.categories)
+  if (categories[0].name !== '全部文档') {
+    categories = [{ icon: 'description', name: '全部文档' }, ...categories.filter((item) => item.name !== '全部文档')]
+  }
+
+  const featuredSource = Array.isArray(source.featuredDocs) ? source.featuredDocs : fallback.featuredDocs
+  const featuredDocs = featuredSource.slice(0, 4).map((item, index) => {
+    const fb = fallback.featuredDocs[Math.min(index, fallback.featuredDocs.length - 1)]
+    return {
+      title: text(item?.title, fb.title, 80),
+      date: text(item?.date, fb.date, 20),
+      badge: text(item?.badge, fb.badge, 20),
+      tone: helpTones.has(item?.tone) ? item.tone : fb.tone,
+      art: helpArts.has(item?.art) ? item.art : fb.art,
+    }
+  })
+  if (!featuredDocs.length) featuredDocs.push(...structuredClone(fallback.featuredDocs))
+
+  const docsSource = Array.isArray(source.docs) ? source.docs : fallback.docs
+  let docs = docsSource.slice(0, 40).map((item, index) => {
+    const fb = fallback.docs[Math.min(index, fallback.docs.length - 1)] || fallback.docs[0]
+    return {
+      title: text(item?.title, fb.title, 80),
+      category: text(item?.category, fb.category, 40),
+      date: text(item?.date, fb.date, 20),
+      featured: Boolean(item?.featured),
+      keywords: text(item?.keywords, fb.keywords || '', 120),
+    }
+  }).filter((item) => item.title)
+  if (!docs.length) docs = structuredClone(fallback.docs)
+
+  const updatesSource = Array.isArray(source.updates) ? source.updates : fallback.updates
+  let updates = updatesSource.slice(0, 20).map((item, index) => {
+    const fb = fallback.updates[Math.min(index, fallback.updates.length - 1)] || fallback.updates[0]
+    return {
+      date: text(item?.date, fb.date, 20),
+      title: text(item?.title, fb.title, 80),
+      desc: text(item?.desc, fb.desc, 200),
+    }
+  }).filter((item) => item.title)
+  if (!updates.length) updates = structuredClone(fallback.updates)
+
+  const supportSource = source.support && typeof source.support === 'object' ? source.support : {}
+  return {
+    title: text(source.title, fallback.title, 40),
+    lead: text(source.lead, fallback.lead, 120),
+    searchPlaceholder: text(source.searchPlaceholder, fallback.searchPlaceholder, 120),
+    docsLead: text(source.docsLead, fallback.docsLead, 120),
+    hotSearches,
+    categories,
+    featuredDocs,
+    docs,
+    updates,
+    support: {
+      title: text(supportSource.title, fallback.support.title, 80),
+      subtitle: text(supportSource.subtitle, fallback.support.subtitle, 120),
+    },
+  }
+}
+
+function currentHelp() {
+  try {
+    return normalizeHelp(db().aspaceHelp)
+  } catch {
+    return structuredClone(defaultAspaceHelp)
+  }
+}
+
 publicAspaceRouter.get('/quick-actions', (_request, response) => {
   response.json({ actions: currentQuickActions() })
 })
@@ -261,6 +352,11 @@ publicAspaceRouter.get('/catalog', (_request, response) => {
 publicAspaceRouter.get('/home', (_request, response) => {
   response.setHeader('Cache-Control', 'no-store')
   response.json({ home: currentHome() })
+})
+
+publicAspaceRouter.get('/help', (_request, response) => {
+  response.setHeader('Cache-Control', 'no-store')
+  response.json({ help: currentHelp() })
 })
 
 publicAspaceRouter.get('/activities', (request, response) => {
@@ -364,6 +460,29 @@ adminAspaceRouter.put('/home', requireAuth('config:write'), async (request, resp
     response.status(400).json({
       error: 'invalid_aspace_home',
       message: error instanceof Error ? error.message : '首页配置无效',
+    })
+  }
+})
+
+adminAspaceRouter.get('/help', requireAuth(), (_request, response) => {
+  response.json({ help: currentHelp() })
+})
+
+adminAspaceRouter.put('/help', requireAuth('config:write'), async (request, response) => {
+  try {
+    const help = normalizeHelp(request.body?.help)
+    db().aspaceHelp = help
+    await save()
+    await addAudit(request.admin, 'aspace.help.update', 'aspace-one', {
+      title: help.title,
+      docs: help.docs.length,
+      updates: help.updates.length,
+    })
+    response.json({ help })
+  } catch (error) {
+    response.status(400).json({
+      error: 'invalid_aspace_help',
+      message: error instanceof Error ? error.message : '知识库配置无效',
     })
   }
 })

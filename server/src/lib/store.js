@@ -235,6 +235,45 @@ export const defaultAspaceHome = {
   },
 }
 
+export const defaultAspaceHelp = {
+  title: '知识库',
+  lead: '搜索知识、获取帮助，让问题更快解决',
+  searchPlaceholder: '搜索帮助文档、问题或关键词，例如：如何预约会议室、如何申请权限',
+  docsLead: '精选指南与操作说明，快速上手 Aspace空间智能。',
+  hotSearches: ['会议室预约', '权限申请', '能耗数据接入', '电子相册发布'],
+  categories: [
+    { icon: 'description', name: '全部文档' },
+    { icon: 'bar_chart', name: '能源能耗' },
+    { icon: 'image', name: 'AI画报' },
+    { icon: 'photo_library', name: '电子相册' },
+    { icon: 'desktop_windows', name: '会议室预约系统' },
+    { icon: 'groups', name: '会议与空间' },
+    { icon: 'folder', name: '项目服务' },
+  ],
+  featuredDocs: [
+    { title: 'Aspace空间智能快速入门指南', date: '2026-09-12', badge: '新手必读', tone: 'blue', art: 'lines' },
+    { title: '能源能耗数据接入说明', date: '2026-09-10', badge: '热门文档', tone: 'teal', art: 'chart' },
+  ],
+  docs: [
+    { title: 'Aspace空间智能快速入门指南', category: '全部文档', date: '2026-09-12', featured: true, keywords: '权限申请 账号绑定 入门' },
+    { title: '能源能耗数据接入说明', category: '能源能耗', date: '2026-09-10', featured: true, keywords: '能耗数据接入 网关 采集' },
+    { title: 'AI画报使用手册', category: 'AI画报', date: '2026-09-08', featured: false, keywords: '模板 发布' },
+    { title: '电子相册发布流程', category: '电子相册', date: '2026-09-06', featured: false, keywords: '电子相册发布 多屏同步' },
+    { title: '会议室预约配置操作指南', category: '会议室预约系统', date: '2026-09-03', featured: false, keywords: '会议室预约 中控屏配置 设备绑定' },
+    { title: '设备管理平台 API 文档', category: '会议与空间', date: '2026-08-28', featured: false, keywords: '接口 对接' },
+    { title: '项目实施规范', category: '项目服务', date: '2026-08-20', featured: false, keywords: '权限申请 交付 验收' },
+  ],
+  updates: [
+    { date: '2026-09-18', title: '设备管理平台 v3.2 正式发布', desc: '新增设备批量配置能力，优化告警通知机制。' },
+    { date: '2026-09-10', title: 'AI画报新增模板库', desc: '新增多套行业模板，支持企业文化发布。' },
+    { date: '2026-09-03', title: '电子相册发布流程优化', desc: '支持定时发布与多屏同步。' },
+  ],
+  support: {
+    title: '有任何问题，请联系我们的客服人员',
+    subtitle: '留下手机号，客服将尽快与您联系',
+  },
+}
+
 export function normalizeAppButtons(value = {}) {
   const clean = (input, fallback) => String(input ?? fallback ?? '').trim().slice(0, 40) || fallback
   // 角标允许清空，因此只有字段缺失时才回退到默认值。
@@ -274,6 +313,7 @@ const initialData = {
   aspaceQuickActions: structuredClone(defaultAspaceQuickActions),
   aspaceCatalog: structuredClone(defaultAspaceCatalog),
   aspaceHome: structuredClone(defaultAspaceHome),
+  aspaceHelp: structuredClone(defaultAspaceHelp),
   aspaceActivities: [],
   downloadEvents: [],
   demoRequests: [],

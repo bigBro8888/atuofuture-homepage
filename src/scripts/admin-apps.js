@@ -49,7 +49,7 @@ const titles = {
   'content-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
   'page-news': ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
   'page-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
-  aspace: ['Aspace 空间智能', '路径 /aspace-one/ · 分标签管理首页内容、业务分类、应用归属与封面文案'],
+  aspace: ['Aspace 空间智能', '路径 /aspace-one/ · 分标签页首页内容、业务分类、应用归属、封面文案与知识库'],
   config: ['App 下载页', '路径 /app-download/ · 可视化编辑下载页'],
   releases: ['版本发布', '上传、发布和回滚 Android 版本'],
   leads: ['预约与资料', '查看客户提交的预约演示、获取资料与联系客服线索'],
@@ -235,12 +235,14 @@ let aspaceHomeSection = 'hero'
 
 async function loadAspaceCatalog() {
   try {
-    const [{ catalog }, { home }] = await Promise.all([
+    const [{ catalog }, { home }, { help }] = await Promise.all([
       api('/aspace/catalog'),
       api('/aspace/home'),
+      api('/aspace/help'),
     ])
     state.aspaceCatalog = catalog
     state.aspaceHome = home
+    state.aspaceHelp = help
     renderAspaceCatalog()
   } catch (error) {
     toast(error.message, true)
@@ -248,7 +250,7 @@ async function loadAspaceCatalog() {
 }
 
 function setAspaceEditorTab(tab) {
-  const next = ['home', 'categories', 'ownership', 'profiles'].includes(tab) ? tab : 'home'
+  const next = ['home', 'categories', 'ownership', 'profiles', 'help'].includes(tab) ? tab : 'home'
   aspaceEditorTab = next
   const host = document.querySelector('[data-aspace-editor]')
   if (!host) return
@@ -357,6 +359,111 @@ function renderAspaceHomeEditor(home) {
     </section>`
 }
 
+function renderAspaceHelpEditor(help) {
+  const data = help || state.aspaceHelp
+  if (!data) {
+    return `<section class="admin-aspace-section" data-aspace-tab-panel="help" hidden>
+      <p class="admin-aspace-loading">知识库配置加载中…</p>
+    </section>`
+  }
+  const toneOptions = (selected) => ['blue', 'teal', 'amber', 'violet']
+    .map((tone) => `<option value="${tone}" ${tone === selected ? 'selected' : ''}>${tone}</option>`)
+    .join('')
+  const artOptions = (selected) => ['lines', 'chart', 'grid', 'book']
+    .map((art) => `<option value="${art}" ${art === selected ? 'selected' : ''}>${art}</option>`)
+    .join('')
+  return `
+    <section class="admin-aspace-section" data-aspace-tab-panel="help" hidden>
+      <header><div><h3>知识库</h3><p>编辑帮助中心页头、热门搜索、分类、精选文档、文档列表与最新更新；保存后同步到前台「知识库」。</p></div></header>
+      <div class="admin-aspace-help">
+        <div class="admin-aspace-help__block">
+          <h4>页头文案</h4>
+          <div class="admin-aspace-help__grid">
+            <label><span>标题</span><input name="help-title" maxlength="40" value="${escapeHtml(data.title || '')}" /></label>
+            <label><span>导语</span><input name="help-lead" maxlength="120" value="${escapeHtml(data.lead || '')}" /></label>
+            <label class="admin-aspace-help__full"><span>搜索占位</span><input name="help-search-placeholder" maxlength="120" value="${escapeHtml(data.searchPlaceholder || '')}" /></label>
+            <label class="admin-aspace-help__full"><span>文档中心说明</span><input name="help-docs-lead" maxlength="120" value="${escapeHtml(data.docsLead || '')}" /></label>
+            <label class="admin-aspace-help__full"><span>热门搜索（逗号分隔）</span><input name="help-hot-searches" maxlength="240" value="${escapeHtml((data.hotSearches || []).join('，'))}" /></label>
+          </div>
+        </div>
+        <div class="admin-aspace-help__block">
+          <header class="admin-aspace-help__block-head">
+            <h4>文档分类</h4>
+            <button type="button" data-aspace-help-add="category">新增分类</button>
+          </header>
+          <div class="admin-aspace-help__rows" data-aspace-help-categories>
+            ${(data.categories || []).map((item, index) => `
+              <article class="admin-aspace-help__row" data-aspace-help-category>
+                <label><span>图标名</span><input name="cat-icon" maxlength="40" value="${escapeHtml(item.icon || '')}" ${index === 0 ? 'readonly' : ''} /></label>
+                <label><span>分类名称</span><input name="cat-name" maxlength="40" value="${escapeHtml(item.name || '')}" ${index === 0 ? 'readonly' : ''} required /></label>
+                <button type="button" data-aspace-help-remove="category" ${index === 0 ? 'hidden' : ''} title="删除">删除</button>
+              </article>
+            `).join('')}
+          </div>
+        </div>
+        <div class="admin-aspace-help__block">
+          <header class="admin-aspace-help__block-head">
+            <h4>精选文档</h4>
+            <button type="button" data-aspace-help-add="featured" ${(data.featuredDocs || []).length >= 4 ? 'disabled' : ''}>新增精选</button>
+          </header>
+          <div class="admin-aspace-help__rows" data-aspace-help-featured>
+            ${(data.featuredDocs || []).map((item) => `
+              <article class="admin-aspace-help__row admin-aspace-help__row--featured" data-aspace-help-featured-item>
+                <label><span>标题</span><input name="feat-title" maxlength="80" value="${escapeHtml(item.title || '')}" required /></label>
+                <label><span>日期</span><input name="feat-date" maxlength="20" value="${escapeHtml(item.date || '')}" /></label>
+                <label><span>角标</span><input name="feat-badge" maxlength="20" value="${escapeHtml(item.badge || '')}" /></label>
+                <label><span>色调</span><select name="feat-tone">${toneOptions(item.tone)}</select></label>
+                <label><span>插画</span><select name="feat-art">${artOptions(item.art)}</select></label>
+                <button type="button" data-aspace-help-remove="featured" title="删除">删除</button>
+              </article>
+            `).join('')}
+          </div>
+        </div>
+        <div class="admin-aspace-help__block">
+          <header class="admin-aspace-help__block-head">
+            <h4>文档列表</h4>
+            <button type="button" data-aspace-help-add="doc">新增文档</button>
+          </header>
+          <div class="admin-aspace-help__rows" data-aspace-help-docs>
+            ${(data.docs || []).map((item) => `
+              <article class="admin-aspace-help__row admin-aspace-help__row--doc" data-aspace-help-doc>
+                <label><span>标题</span><input name="doc-title" maxlength="80" value="${escapeHtml(item.title || '')}" required /></label>
+                <label><span>分类</span><input name="doc-category" maxlength="40" value="${escapeHtml(item.category || '')}" /></label>
+                <label><span>日期</span><input name="doc-date" maxlength="20" value="${escapeHtml(item.date || '')}" /></label>
+                <label><span>关键词</span><input name="doc-keywords" maxlength="120" value="${escapeHtml(item.keywords || '')}" /></label>
+                <label class="admin-aspace-help__check"><input name="doc-featured" type="checkbox" ${item.featured ? 'checked' : ''} /><span>精选</span></label>
+                <button type="button" data-aspace-help-remove="doc" title="删除">删除</button>
+              </article>
+            `).join('')}
+          </div>
+        </div>
+        <div class="admin-aspace-help__block">
+          <header class="admin-aspace-help__block-head">
+            <h4>最新更新</h4>
+            <button type="button" data-aspace-help-add="update">新增更新</button>
+          </header>
+          <div class="admin-aspace-help__rows" data-aspace-help-updates>
+            ${(data.updates || []).map((item) => `
+              <article class="admin-aspace-help__row admin-aspace-help__row--update" data-aspace-help-update>
+                <label><span>日期</span><input name="upd-date" maxlength="20" value="${escapeHtml(item.date || '')}" /></label>
+                <label><span>标题</span><input name="upd-title" maxlength="80" value="${escapeHtml(item.title || '')}" required /></label>
+                <label class="admin-aspace-help__full"><span>说明</span><input name="upd-desc" maxlength="200" value="${escapeHtml(item.desc || '')}" /></label>
+                <button type="button" data-aspace-help-remove="update" title="删除">删除</button>
+              </article>
+            `).join('')}
+          </div>
+        </div>
+        <div class="admin-aspace-help__block">
+          <h4>客服引导</h4>
+          <div class="admin-aspace-help__grid">
+            <label class="admin-aspace-help__full"><span>标题</span><input name="help-support-title" maxlength="80" value="${escapeHtml(data.support?.title || '')}" /></label>
+            <label class="admin-aspace-help__full"><span>副文案</span><input name="help-support-subtitle" maxlength="120" value="${escapeHtml(data.support?.subtitle || '')}" /></label>
+          </div>
+        </div>
+      </div>
+    </section>`
+}
+
 function renderAspaceCatalog() {
   const host = document.querySelector('[data-aspace-editor]')
   const catalog = state.aspaceCatalog
@@ -370,6 +477,7 @@ function renderAspaceCatalog() {
       <button type="button" data-aspace-tab="categories">业务分类</button>
       <button type="button" data-aspace-tab="ownership">应用归属</button>
       <button type="button" data-aspace-tab="profiles">应用资料</button>
+      <button type="button" data-aspace-tab="help">知识库</button>
     </nav>
     ${renderAspaceHomeEditor(state.aspaceHome)}
     <section class="admin-aspace-section" data-aspace-tab-panel="categories" hidden>
@@ -439,7 +547,8 @@ function renderAspaceCatalog() {
           </article>
         `).join('')}
       </div>
-    </section>`
+    </section>
+    ${renderAspaceHelpEditor(state.aspaceHelp)}`
   catalog.apps.forEach((app) => {
     const select = host.querySelector(`[data-aspace-app="${CSS.escape(app.id)}"] select`)
     if (select) select.value = app.category
@@ -537,6 +646,51 @@ function collectAspaceCatalog() {
     }
   })
   return { categories, apps }
+}
+
+function collectAspaceHelp() {
+  const panel = document.querySelector('[data-aspace-tab-panel="help"]')
+  if (!panel) return state.aspaceHelp ? structuredClone(state.aspaceHelp) : null
+  const hotRaw = panel.querySelector('[name="help-hot-searches"]')?.value || ''
+  const hotSearches = hotRaw
+    .split(/[,，、]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 12)
+  return {
+    title: panel.querySelector('[name="help-title"]')?.value.trim() || '知识库',
+    lead: panel.querySelector('[name="help-lead"]')?.value.trim() || '',
+    searchPlaceholder: panel.querySelector('[name="help-search-placeholder"]')?.value.trim() || '',
+    docsLead: panel.querySelector('[name="help-docs-lead"]')?.value.trim() || '',
+    hotSearches,
+    categories: [...panel.querySelectorAll('[data-aspace-help-category]')].map((row) => ({
+      icon: row.querySelector('[name="cat-icon"]')?.value.trim() || 'description',
+      name: row.querySelector('[name="cat-name"]')?.value.trim() || '',
+    })).filter((item) => item.name),
+    featuredDocs: [...panel.querySelectorAll('[data-aspace-help-featured-item]')].map((row) => ({
+      title: row.querySelector('[name="feat-title"]')?.value.trim() || '',
+      date: row.querySelector('[name="feat-date"]')?.value.trim() || '',
+      badge: row.querySelector('[name="feat-badge"]')?.value.trim() || '',
+      tone: row.querySelector('[name="feat-tone"]')?.value || 'blue',
+      art: row.querySelector('[name="feat-art"]')?.value || 'lines',
+    })).filter((item) => item.title),
+    docs: [...panel.querySelectorAll('[data-aspace-help-doc]')].map((row) => ({
+      title: row.querySelector('[name="doc-title"]')?.value.trim() || '',
+      category: row.querySelector('[name="doc-category"]')?.value.trim() || '全部文档',
+      date: row.querySelector('[name="doc-date"]')?.value.trim() || '',
+      keywords: row.querySelector('[name="doc-keywords"]')?.value.trim() || '',
+      featured: Boolean(row.querySelector('[name="doc-featured"]')?.checked),
+    })).filter((item) => item.title),
+    updates: [...panel.querySelectorAll('[data-aspace-help-update]')].map((row) => ({
+      date: row.querySelector('[name="upd-date"]')?.value.trim() || '',
+      title: row.querySelector('[name="upd-title"]')?.value.trim() || '',
+      desc: row.querySelector('[name="upd-desc"]')?.value.trim() || '',
+    })).filter((item) => item.title),
+    support: {
+      title: panel.querySelector('[name="help-support-title"]')?.value.trim() || '',
+      subtitle: panel.querySelector('[name="help-support-subtitle"]')?.value.trim() || '',
+    },
+  }
 }
 
 const featureIconOptions = [
@@ -2351,6 +2505,48 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
     setAspaceHomeSection(homeSection.dataset.aspaceHomeSection)
     return
   }
+  const helpAdd = event.target.closest('[data-aspace-help-add]')
+  if (helpAdd) {
+    const nextHelp = collectAspaceHelp() || { categories: [], featuredDocs: [], docs: [], updates: [], hotSearches: [], support: {} }
+    const kind = helpAdd.dataset.aspaceHelpAdd
+    if (kind === 'category') nextHelp.categories.push({ icon: 'folder', name: '新分类' })
+    if (kind === 'featured' && nextHelp.featuredDocs.length < 4) {
+      nextHelp.featuredDocs.push({ title: '新精选文档', date: '', badge: '推荐', tone: 'blue', art: 'lines' })
+    }
+    if (kind === 'doc') nextHelp.docs.push({ title: '新文档', category: '全部文档', date: '', featured: false, keywords: '' })
+    if (kind === 'update') nextHelp.updates.push({ date: '', title: '新更新', desc: '' })
+    state.aspaceHelp = nextHelp
+    aspaceEditorTab = 'help'
+    renderAspaceCatalog()
+    return
+  }
+  const helpRemove = event.target.closest('[data-aspace-help-remove]')
+  if (helpRemove) {
+    const nextHelp = collectAspaceHelp()
+    if (!nextHelp) return
+    const kind = helpRemove.dataset.aspaceHelpRemove
+    const row = helpRemove.closest('[data-aspace-help-category], [data-aspace-help-featured-item], [data-aspace-help-doc], [data-aspace-help-update]')
+    if (kind === 'category') {
+      const index = [...document.querySelectorAll('[data-aspace-help-category]')].indexOf(row)
+      if (index > 0) nextHelp.categories.splice(index, 1)
+    }
+    if (kind === 'featured') {
+      const index = [...document.querySelectorAll('[data-aspace-help-featured-item]')].indexOf(row)
+      if (index >= 0) nextHelp.featuredDocs.splice(index, 1)
+    }
+    if (kind === 'doc') {
+      const index = [...document.querySelectorAll('[data-aspace-help-doc]')].indexOf(row)
+      if (index >= 0) nextHelp.docs.splice(index, 1)
+    }
+    if (kind === 'update') {
+      const index = [...document.querySelectorAll('[data-aspace-help-update]')].indexOf(row)
+      if (index >= 0) nextHelp.updates.splice(index, 1)
+    }
+    state.aspaceHelp = nextHelp
+    aspaceEditorTab = 'help'
+    renderAspaceCatalog()
+    return
+  }
   const reset = event.target.closest('[data-aspace-icon-reset]')
   if (reset) {
     const row = reset.closest('[data-aspace-category]')
@@ -2452,12 +2648,15 @@ document.querySelector('[data-aspace-form]').addEventListener('submit', async (e
   try {
     const catalog = collectAspaceCatalog()
     const home = collectAspaceHome()
-    const [catalogResult, homeResult] = await Promise.all([
+    const help = collectAspaceHelp()
+    const [catalogResult, homeResult, helpResult] = await Promise.all([
       api('/aspace/catalog', { method: 'PUT', body: JSON.stringify({ catalog }) }),
       home ? api('/aspace/home', { method: 'PUT', body: JSON.stringify({ home }) }) : Promise.resolve({ home: state.aspaceHome }),
+      help ? api('/aspace/help', { method: 'PUT', body: JSON.stringify({ help }) }) : Promise.resolve({ help: state.aspaceHelp }),
     ])
     state.aspaceCatalog = catalogResult.catalog
     state.aspaceHome = homeResult.home
+    state.aspaceHelp = helpResult.help
     renderAspaceCatalog()
     toast('Aspace 配置已保存并发布')
   } catch (error) {
