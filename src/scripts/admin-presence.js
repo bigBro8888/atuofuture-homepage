@@ -1,8 +1,59 @@
-/** 后台协作在场：心跳轮询 + 顶部在线警示 + 全页焦点高亮 + 远程光标 */
+/** 后台协作在场：心跳轮询 + 顶部在线警示 + 全页焦点高亮 + 未保存文案实时预览 */
 
 const COLORS = ['#0879f9', '#0f9f6e', '#d97706', '#db2777', '#7c3aed', '#0891b2']
 const HEARTBEAT_MS = 1500
 const DEFAULT_ROOM = '__admin__'
+const LIVE_DRAFT_MAX_KEYS = 40
+const LIVE_DRAFT_MAX_VALUE = 800
+
+function draftKeyFromElement(el) {
+  if (!el || !(el instanceof Element)) return ''
+  if (el.dataset.editPath) return `path:${el.dataset.editPath}`
+  if (el.dataset.homeField) return `field:${el.dataset.homeField}`
+  if (el.dataset.aboutField) return `about-field:${el.dataset.aboutField}`
+  return ''
+}
+
+function findDraftTarget(key) {
+  if (!key) return null
+  const active = '.admin-panel.is-active'
+  const colon = key.indexOf(':')
+  const kind = colon === -1 ? '' : key.slice(0, colon)
+  const id = colon === -1 ? key : key.slice(colon + 1)
+  try {
+    if (kind === 'path') return document.querySelector(`${active} [data-edit-path="${safeEscape(id)}"]`)
+    if (kind === 'field') return document.querySelector(`${active} [data-home-field="${safeEscape(id)}"]`)
+    if (kind === 'about-field') return document.querySelector(`${active} [data-about-field="${safeEscape(id)}"]`)
+  } catch {
+    return null
+  }
+  return null
+}
+
+function readDraftValue(el) {
+  if (!el) return ''
+  if (el.matches('input, textarea, select')) return String(el.value ?? '')
+  const clone = el.cloneNode(true)
+  clone.querySelectorAll('[data-admin-presence-live-tag], [data-admin-presence-focus-tag]').forEach((node) => node.remove())
+  return String(clone.innerText || clone.textContent || '').replace(/\u00a0/g, ' ').trim()
+}
+
+function writeDraftValue(el, value) {
+  if (!el) return
+  if (el.matches('input, textarea, select')) {
+    if (el.value !== value) el.value = value
+    return
+  }
+  const next = value || ''
+  const current = readDraftValue(el)
+  if (current !== next) el.textContent = next || '\u00a0'
+}
+
+function tagHostFor(el) {
+  if (!el) return null
+  if (el.isContentEditable || el.getAttribute?.('contenteditable') === 'true') return el.parentElement || el
+  return el
+}
 
 function makeClientId() {
   try {
@@ -147,10 +198,117 @@ export function createAdminPresence({ api } = {}) {
   let alertEl = null
   let warnEl = null
   const taggedEls = new Set()
+  const liveDraft = {}
+  /** @type {Map<string, { original: string, peerName: string }>} */
+  const remoteApplied = new Map()
 
   const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
   }[ch]))
+
+  const isLocallyFocused = (el) => {
+    const active = document.activeElement
+    return Boolean(el && active && (el === active || el.contains(active)))
+  }
+
+  const trimLiveDraft = () => {
+    const keys = Object.keys(liveDraft)
+    if (keys.length <= LIVE_DRAFT_MAX_KEYS) return
+    keys.slice(0, keys.length - LIVE_DRAFT_MAX_KEYS).forEach((key) => { delete liveDraft[key] })
+  }
+
+  const recordLocalDraft = (el) => {
+    const key = draftKeyFromElement(el)
+    if (!key) return
+    liveDraft[key] = readDraftValue(el).slice(0, LIVE_DRAFT_MAX_VALUE)
+    trimLiveDraft()
+    editing = true
+    // 本地开始改这个字段时，不再跟对方的实时预览
+    if (remoteApplied.has(key)) {
+      remoteApplied.delete(key)
+      el.classList.remove('is-remote-editing')
+      el.querySelectorAll('[data-admin-presence-live-tag]').forEach((tag) => tag.remove())
+    }
+  }
+
+  const clearRemoteLiveMarks = (el) => {
+    if (!el) return
+    el.classList.remove('is-remote-editing')
+    const host = tagHostFor(el)
+    host?.querySelectorAll('[data-admin-presence-live-tag]').forEach((tag) => {
+      if (tag.dataset.liveFor === (draftKeyFromElement(el) || tag.dataset.liveFor)) tag.remove()
+    })
+    // 兜底：清掉挂在元素自身上的旧标签
+    el.querySelectorAll('[data-admin-presence-live-tag]').forEach((tag) => tag.remove())
+  }
+
+  const markRemoteEditing = (el, peerName, color, key = '') => {
+    if (!el) return
+    el.classList.add('is-remote-editing')
+    const host = tagHostFor(el)
+    if (!host) return
+    const style = getComputedStyle(host)
+    if (style.position === 'static') host.style.position = 'relative'
+    let tag = host.querySelector(`[data-admin-presence-live-tag][data-live-for="${safeEscape(key)}"]`)
+    if (!tag) {
+      tag = document.createElement('span')
+      tag.className = 'admin-presence-live-tag'
+      tag.dataset.adminPresenceLiveTag = ''
+      if (key) tag.dataset.liveFor = key
+      tag.contentEditable = 'false'
+      host.appendChild(tag)
+    }
+    tag.style.setProperty('--presence-color', color)
+    tag.textContent = `${peerName} · 编辑中`
+  }
+
+  const applyRemoteLiveDrafts = () => {
+    if (!room || room === DEFAULT_ROOM) {
+      remoteApplied.forEach((_, key) => {
+        const el = findDraftTarget(key)
+        if (el && !isLocallyFocused(el)) {
+          const saved = remoteApplied.get(key)
+          if (saved) writeDraftValue(el, saved.original)
+          clearRemoteLiveMarks(el)
+        }
+      })
+      remoteApplied.clear()
+      return
+    }
+
+    // 合并同房间对方文案：后写入的 peer 覆盖同字段
+    const merged = new Map()
+    peers.forEach((peer) => {
+      const draft = peer.liveDraft && typeof peer.liveDraft === 'object' ? peer.liveDraft : {}
+      Object.entries(draft).forEach(([key, value]) => {
+        merged.set(key, { value: String(value ?? ''), peer })
+      })
+    })
+
+    // 恢复对方已不再广播的字段
+    [...remoteApplied.keys()].forEach((key) => {
+      if (merged.has(key)) return
+      const el = findDraftTarget(key)
+      const saved = remoteApplied.get(key)
+      if (el && saved && !isLocallyFocused(el)) writeDraftValue(el, saved.original)
+      clearRemoteLiveMarks(el)
+      remoteApplied.delete(key)
+    })
+
+    merged.forEach(({ value, peer }, key) => {
+      // 自己正在改的字段不覆盖
+      if (Object.prototype.hasOwnProperty.call(liveDraft, key) && isLocallyFocused(findDraftTarget(key))) return
+      const el = findDraftTarget(key)
+      if (!el || isLocallyFocused(el)) return
+      if (!remoteApplied.has(key)) {
+        remoteApplied.set(key, { original: readDraftValue(el), peerName: peer.name })
+      } else {
+        remoteApplied.get(key).peerName = peer.name
+      }
+      writeDraftValue(el, value)
+      markRemoteEditing(el, peer.name, colorFor(peer.userId || peer.clientId), key)
+    })
+  }
 
   const ensureUi = () => {
     const main = document.querySelector('.admin-main')
@@ -225,18 +383,21 @@ export function createAdminPresence({ api } = {}) {
     byFocus.forEach((group, focusId) => {
       const target = findFocusTarget(focusId)
       if (!target) return
-      const style = getComputedStyle(target)
-      if (style.position === 'static') target.style.position = 'relative'
+      const host = tagHostFor(target)
+      const style = getComputedStyle(host)
+      if (style.position === 'static') host.style.position = 'relative'
       target.classList.add('is-remote-focus')
       const names = group.map((peer) => peer.name).join('、')
       const color = colorFor(group[0].userId || group[0].clientId)
       const tag = document.createElement('span')
       tag.className = 'admin-presence-focus-tag'
       tag.dataset.adminPresenceFocusTag = ''
+      tag.contentEditable = 'false'
       tag.style.setProperty('--presence-color', color)
       tag.textContent = names
-      target.appendChild(tag)
+      host.appendChild(tag)
       taggedEls.add(target)
+      taggedEls.add(host)
     })
   }
 
@@ -296,13 +457,14 @@ export function createAdminPresence({ api } = {}) {
     try {
       const data = await api('/presence', {
         method: 'PUT',
-        body: JSON.stringify({ clientId, room, cursor, editing, focus }),
+        body: JSON.stringify({ clientId, room, cursor, editing, focus, liveDraft }),
       })
       peers = Array.isArray(data?.peers) ? data.peers : []
       online = Array.isArray(data?.online) ? data.online : []
       renderAlert()
       renderWarn()
       renderFocus()
+      applyRemoteLiveDrafts()
       renderCursors()
     } catch {
       // 心跳失败不打断编辑
@@ -330,6 +492,8 @@ export function createAdminPresence({ api } = {}) {
 
   const onActivity = (event) => {
     editing = true
+    const draftEl = event.target?.closest?.('[data-edit-path], [data-home-field], [data-about-field]')
+    if (draftEl && (event.type === 'input' || event.type === 'change')) recordLocalDraft(draftEl)
     const hit = event.target?.closest?.('[data-edit-path], [data-edit-image], [data-home-field], [data-about-field], [data-home-goto], [data-about-goto], [data-simple-goto], [data-aspace-home-section], [data-aspace-help-section], [data-aspace-tab], [data-home-section], [data-simple-section], [data-ag-select], [data-aso-app], [data-aspace-profile], [data-aspace-category], section[id]')
     const next = encodeFocusFromElement(hit)
     if (next) applyLocalFocus(next)
@@ -397,6 +561,8 @@ export function createAdminPresence({ api } = {}) {
       cursor = null
       focus = ''
       peers = []
+      Object.keys(liveDraft).forEach((key) => { delete liveDraft[key] })
+      applyRemoteLiveDrafts()
       clearFocusTags()
     }
     ensureUi()
@@ -404,6 +570,7 @@ export function createAdminPresence({ api } = {}) {
     renderAlert()
     renderWarn()
     renderFocus()
+    applyRemoteLiveDrafts()
     renderCursors()
     if (!timer || !sameRoom) startHeartbeat()
   }

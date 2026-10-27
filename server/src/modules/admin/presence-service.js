@@ -2,6 +2,8 @@
 
 const TTL_MS = 8000
 const DEFAULT_ROOM = '__admin__'
+const LIVE_DRAFT_MAX_KEYS = 40
+const LIVE_DRAFT_MAX_VALUE = 800
 const sessions = new Map()
 
 function prune(now = Date.now()) {
@@ -35,6 +37,22 @@ function cleanFocus(focus) {
   return value || null
 }
 
+/** 未保存文案草稿：限键数量与单值长度，仅用于同页实时预览 */
+function cleanLiveDraft(liveDraft) {
+  if (!liveDraft || typeof liveDraft !== 'object' || Array.isArray(liveDraft)) return {}
+  const out = {}
+  let count = 0
+  for (const [rawKey, rawValue] of Object.entries(liveDraft)) {
+    if (count >= LIVE_DRAFT_MAX_KEYS) break
+    const key = String(rawKey || '').trim().slice(0, 120)
+    if (!key) continue
+    const value = String(rawValue ?? '').slice(0, LIVE_DRAFT_MAX_VALUE)
+    out[key] = value
+    count += 1
+  }
+  return out
+}
+
 function presentSession(item) {
   return {
     clientId: item.clientId,
@@ -44,11 +62,12 @@ function presentSession(item) {
     focus: item.focus || null,
     editing: item.editing,
     cursor: item.cursor,
+    liveDraft: item.liveDraft || {},
     lastSeen: item.lastSeen,
   }
 }
 
-export function heartbeatPresence({ clientId, user, room, cursor, editing, focus }) {
+export function heartbeatPresence({ clientId, user, room, cursor, editing, focus, liveDraft }) {
   prune()
   const id = cleanClientId(clientId)
   const nextRoom = cleanRoom(room)
@@ -67,6 +86,7 @@ export function heartbeatPresence({ clientId, user, room, cursor, editing, focus
     focus: cleanFocus(focus),
     cursor: cleanCursor(cursor),
     editing: Boolean(editing),
+    liveDraft: cleanLiveDraft(liveDraft),
     lastSeen: Date.now(),
   }
   sessions.set(id, session)

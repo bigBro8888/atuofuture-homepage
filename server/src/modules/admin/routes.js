@@ -258,6 +258,7 @@ adminRouter.put('/presence', requireAuth(), (request, response) => {
       cursor: request.body?.cursor,
       editing: request.body?.editing,
       focus: request.body?.focus,
+      liveDraft: request.body?.liveDraft,
     })
     response.json({ peers, online, serverTime: Date.now() })
   } catch (error) {
