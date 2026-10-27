@@ -201,17 +201,17 @@ export function renderHomeVisualEditor(content, { section = 'hero' } = {}) {
   editor.innerHTML = `
     <div class="admin-vedit admin-vedit--home">
       <div class="admin-vedit-toolbar">
-        <p class="admin-vedit-hint">点文字直接改，点图片换图。左侧可跳转区块；增删条目在对应区块右上角。</p>
+        <p class="admin-vedit-hint">按官网首页通栏预览编辑：点文字改文案，点图换图；增删在区块顶栏。</p>
+        <nav class="admin-home-jump" aria-label="跳转区块">
+          ${HOME_SECTIONS.map((item) => `
+            <button type="button" data-home-goto="${item.id}" class="${item.id === active ? 'is-active' : ''}">${item.label}</button>
+          `).join('')}
+        </nav>
         <button type="button" class="admin-vedit-fullscreen-btn" data-home-fullscreen>
           <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
           全屏编辑
         </button>
       </div>
-      <nav class="admin-home-visual__nav" aria-label="首页区块">
-        ${HOME_SECTIONS.map((item) => `
-          <button type="button" data-home-goto="${item.id}" class="${item.id === active ? 'is-active' : ''}">${item.label}</button>
-        `).join('')}
-      </nav>
       <div class="admin-vedit-canvas" data-home-visual>
         <div class="admin-vedit-fullscreen-bar" hidden>
           <strong>官网首页 · 全屏编辑</strong>
