@@ -308,7 +308,7 @@ function setAspaceHelpSection(section) {
 }
 
 function setAspaceHelpPageGroup(group) {
-  const next = ['basics', 'search', 'categories', 'updates', 'support'].includes(group) ? group : 'basics'
+  const next = ['basics', 'search', 'docs', 'categories', 'updates', 'support'].includes(group) ? group : 'basics'
   aspaceHelpPageGroup = next
   // 可视化模式下由抽屉承载分组编辑；保留状态供新增后自动打开
 }
@@ -621,6 +621,17 @@ function collectAspaceHelp() {
     lead: panel.querySelector('[name="help-lead"]')?.value.trim() || '',
     searchPlaceholder: panel.querySelector('[name="help-search-placeholder"]')?.value.trim() || '',
     docsLead: panel.querySelector('[name="help-docs-lead"]')?.value.trim() || '',
+    docsList: {
+      mode: panel.querySelector('[name="help-docs-list-mode"]')?.value === 'manual' ? 'manual' : 'auto',
+      sort: panel.querySelector('[name="help-docs-list-sort"]')?.value || 'catalog',
+      limit: Number(panel.querySelector('[name="help-docs-list-limit"]')?.value || 0) || 0,
+      hideFeatured: panel.querySelector('[name="help-docs-list-hide-featured"]')?.value !== '0',
+      manualIds: String(panel.querySelector('[name="help-docs-list-manual-ids"]')?.value || '')
+        .split(/[,，\s]+/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .slice(0, 40),
+    },
     hotSearches,
     categories: [...panel.querySelectorAll('[data-aspace-help-category]')].map((row) => ({
       icon: row.querySelector('[name="cat-icon"]')?.value.trim() || 'description',
@@ -3511,6 +3522,7 @@ bindAspaceHelpVisualAdmin({
   toast,
   escapeHtml,
   helpCategoryIconSelect,
+  state,
 })
 bindContentCenter({
   api,

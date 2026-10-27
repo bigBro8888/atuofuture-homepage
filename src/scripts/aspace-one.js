@@ -1,5 +1,6 @@
 import createGlobe from 'cobe'
 import { renderSiteFooter } from '../components/site-footer.js'
+import { defaultDocsListRules, resolveHelpDocList } from '../lib/aspace-help-list.js'
 import { clearPortalTokens, readPortalTokens, writePortalTokens } from '../lib/site-account.js'
 import { fetchAboutPageContent, mountAboutContent } from './about-page.js'
 
@@ -348,6 +349,7 @@ const defaultHelpContent = {
   lead: '搜索知识、获取帮助，让问题更快解决',
   searchPlaceholder: '搜索帮助文档、问题或关键词，例如：如何预约会议室、如何申请权限',
   docsLead: '精选指南与操作说明，快速上手 Aspace空间智能。',
+  docsList: structuredClone(defaultDocsListRules),
   hotSearches: ['会议室预约', '权限申请', '能耗数据接入', '电子相册发布'],
   categories: [
     { icon: 'description', name: '全部文档' },
@@ -556,14 +558,7 @@ function capabilityGroupHeadingsMarkup() {
 }
 
 function docRows(category = '全部文档', keyword = '') {
-  const query = keyword.trim().toLowerCase()
-  // 默认视图里精选文档已在上方卡片展示，不再重复出现在列表中。
-  const isDefaultView = category === '全部文档' && !query
-  const filtered = docs.filter((item) => {
-    if (isDefaultView && item.featured) return false
-    const categoryMatch = category === '全部文档' || item.category === category
-    return categoryMatch && (!query || `${item.title} ${item.category} ${item.keywords || ''}`.toLowerCase().includes(query))
-  })
+  const filtered = resolveHelpDocList(docs, helpContent.docsList || defaultDocsListRules, { category, keyword })
   if (!filtered.length) return '<p class="aso-empty">没有找到匹配的文档。</p>'
   return filtered.map((item) => `
     <button class="aso-doc-row" type="button" data-doc="${escapeHtml(item.title)}" data-doc-id="${escapeHtml(item.id || '')}" data-doc-url="${escapeHtml(item.fileUrl || '')}">
@@ -643,7 +638,7 @@ function renderShellHeader(activeView = 'home') {
       <div class="aso-shell__inner">
         <a class="aso-shell__brand" href="/" title="返回官网首页">
           <img src="/assets/artink-logo-light.png" alt="Artink 安墨客" width="120" height="28" />
-          <span>空间智能应用平台</span>
+          <span>空间智能开放平台</span>
         </a>
         <nav class="aso-shell__nav" aria-label="门户导航">
           ${items.map(([id, label]) => `
@@ -2121,6 +2116,7 @@ function applyHelpContent(help) {
   helpContent = {
     ...structuredClone(defaultHelpContent),
     ...help,
+    docsList: { ...defaultDocsListRules, ...(help.docsList || {}) },
     support: { ...defaultHelpContent.support, ...(help.support || {}) },
   }
   docs = Array.isArray(helpContent.docs) ? helpContent.docs.map((item) => ({ ...item })) : structuredClone(defaultHelpContent.docs)

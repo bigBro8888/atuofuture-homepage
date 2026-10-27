@@ -342,11 +342,33 @@ function normalizeHelp(raw = {}) {
   if (!updates.length) updates = structuredClone(fallback.updates)
 
   const supportSource = source.support && typeof source.support === 'object' ? source.support : {}
+  const listSource = source.docsList && typeof source.docsList === 'object' ? source.docsList : {}
+  const listFallback = fallback.docsList || {}
+  const listMode = listSource.mode === 'manual' ? 'manual' : 'auto'
+  const listSort = ['catalog', 'date-desc', 'date-asc'].includes(listSource.sort)
+    ? listSource.sort
+    : (listFallback.sort || 'catalog')
+  const rawLimit = Number(listSource.limit ?? listFallback.limit ?? 0)
+  const listLimit = Number.isFinite(rawLimit) ? Math.max(0, Math.min(80, Math.floor(rawLimit))) : 0
+  const listHideFeatured = listSource.hideFeatured === undefined
+    ? (listFallback.hideFeatured !== false)
+    : Boolean(listSource.hideFeatured)
+  const listManualIds = Array.isArray(listSource.manualIds)
+    ? [...new Set(listSource.manualIds.map((id) => String(id || '').trim()).filter(Boolean))].slice(0, 40)
+    : []
+
   return {
     title: text(source.title, fallback.title, 40),
     lead: text(source.lead, fallback.lead, 120),
     searchPlaceholder: text(source.searchPlaceholder, fallback.searchPlaceholder, 120),
     docsLead: text(source.docsLead, fallback.docsLead, 120),
+    docsList: {
+      mode: listMode,
+      sort: listSort,
+      limit: listLimit,
+      hideFeatured: listHideFeatured,
+      manualIds: listManualIds,
+    },
     hotSearches,
     categories,
     featuredDocs,

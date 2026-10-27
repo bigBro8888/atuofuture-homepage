@@ -1,5 +1,12 @@
 /** Aspace 知识库「页面配置」可视化编辑 */
 
+import {
+  defaultDocsListRules,
+  describeDocsListRules,
+  normalizeDocsListRules,
+  resolveHelpDocList,
+} from '../lib/aspace-help-list.js'
+
 const HELP_CAT_ICONS = [
   'description', 'folder', 'folder_managed', 'bar_chart', 'image', 'photo_library',
   'desktop_windows', 'groups', 'bolt', 'shield', 'sensors', 'campaign', 'support_agent',
@@ -9,6 +16,7 @@ let ctx = {
   escapeHtml: (v) => String(v ?? ''),
   toast: () => {},
   helpCategoryIconSelect: () => '',
+  state: null,
 }
 
 function esc(value) {
@@ -80,12 +88,14 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
   const hot = Array.isArray(data.hotSearches) ? data.hotSearches : []
   const featured = Array.isArray(data.featuredDocs) ? data.featuredDocs.slice(0, 4) : []
   const docs = Array.isArray(data.docs) ? data.docs.filter((item) => item.title) : []
-  const listDocs = docs.filter((item) => !item.featured).slice(0, 12)
+  const docsList = normalizeDocsListRules(data.docsList || defaultDocsListRules)
+  const listDocs = resolveHelpDocList(docs, docsList).slice(0, 20)
+  const ruleHint = describeDocsListRules(docsList)
 
   return `
     <div class="admin-vedit admin-vedit--aspace-help" data-aspace-help-page-settings>
       <div class="admin-vedit-toolbar">
-        <p class="admin-vedit-hint">点页面区块直接改：标题/导语/搜索热词/分类/更新/客服。左侧分类可拖拽排序。点精选卡片或下方文档列表可进入「内容管理」编辑资料。</p>
+        <p class="admin-vedit-hint">点页面区块直接改。文档列表可配置「自动规则 / 手动编排」；精选卡片与单篇资料在「内容管理」维护。</p>
         <button type="button" class="admin-vedit-fullscreen-btn" data-aso-help-fullscreen>
           <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
           全屏编辑
@@ -145,8 +155,12 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
                 <h3>文档中心</h3>
                 <p class="admin-aso-help__docs-lead" contenteditable="true" spellcheck="false" data-aso-help-preview="help-docs-lead" data-placeholder="文档中心说明">${esc(data.docsLead || '')}</p>
               </div>
-              <button type="button" class="admin-aso-help__edit-chip" data-aspace-help-section="content">编辑文档</button>
+              <div class="admin-aso-help__docs-actions">
+                <button type="button" class="admin-aso-help__edit-chip" data-aso-help-open="docs">展示规则</button>
+                <button type="button" class="admin-aso-help__edit-chip admin-aso-help__edit-chip--ghost" data-aspace-help-section="content">内容管理</button>
+              </div>
             </div>
+            <p class="admin-aso-help__rule-badge" data-aso-help-rule-badge>${esc(ruleHint)}</p>
             <div class="admin-aso-help__features">
               ${featured.map((doc) => `
                 <button type="button" class="admin-aso-help__doc-card" data-aspace-help-open="${esc(doc.id || '')}" title="点击编辑该文档">
@@ -164,9 +178,7 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
                   <time>${esc(doc.date || '')}</time>
                   <i class="material-symbols-outlined" aria-hidden="true">chevron_right</i>
                 </button>
-              `).join('') || (docs.length
-                ? '<p class="admin-form-section__hint">当前文档均已设为精选，普通列表为空。</p>'
-                : '<p class="admin-form-section__hint">暂无文档，点击下方新建。</p>')}
+              `).join('') || '<p class="admin-form-section__hint">按当前展示规则，列表为空。点「展示规则」调整，或去内容管理添加文档。</p>'}
             </div>
             <button type="button" class="admin-aso-help__add" data-aspace-help-add="doc">+ 新建文档</button>
           </div>
@@ -209,6 +221,11 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
         <input name="help-hot-searches" maxlength="240" value="${esc(hotSearchesText(hot))}" />
         <input name="help-support-title" maxlength="80" value="${esc(data.support?.title || '')}" />
         <input name="help-support-subtitle" maxlength="120" value="${esc(data.support?.subtitle || '')}" />
+        <input name="help-docs-list-mode" value="${esc(docsList.mode)}" />
+        <input name="help-docs-list-sort" value="${esc(docsList.sort)}" />
+        <input name="help-docs-list-limit" value="${esc(String(docsList.limit || 0))}" />
+        <input name="help-docs-list-hide-featured" value="${docsList.hideFeatured ? '1' : '0'}" />
+        <input name="help-docs-list-manual-ids" value="${esc(docsList.manualIds.join(','))}" />
       </div>
       <div hidden data-aso-help-cat-sync>
         ${categories.map((item, index) => categoryFields(item, index, categories.length)).join('')}
@@ -219,9 +236,137 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
 
       ${renderDrawer('basics', '基础信息')}
       ${renderDrawer('search', '搜索热词')}
+      ${renderDrawer('docs', '文档列表展示规则')}
       ${renderDrawer('categories', '文档分类')}
       ${renderDrawer('updates', '最新更新')}
       ${renderDrawer('support', '客服引导')}
+    </div>`
+}
+
+function readDocsListFromSync() {
+  const sync = document.querySelector('[data-aso-help-field-sync]')
+  if (!sync) return normalizeDocsListRules(defaultDocsListRules)
+  return normalizeDocsListRules({
+    mode: sync.querySelector('[name="help-docs-list-mode"]')?.value,
+    sort: sync.querySelector('[name="help-docs-list-sort"]')?.value,
+    limit: sync.querySelector('[name="help-docs-list-limit"]')?.value,
+    hideFeatured: sync.querySelector('[name="help-docs-list-hide-featured"]')?.value !== '0',
+    manualIds: String(sync.querySelector('[name="help-docs-list-manual-ids"]')?.value || '')
+      .split(/[,，\s]+/)
+      .map((item) => item.trim())
+      .filter(Boolean),
+  })
+}
+
+function writeDocsListToSync(rules) {
+  const sync = document.querySelector('[data-aso-help-field-sync]')
+  if (!sync) return
+  const cfg = normalizeDocsListRules(rules)
+  const set = (name, value) => {
+    const el = sync.querySelector(`[name="${name}"]`)
+    if (el) el.value = value
+  }
+  set('help-docs-list-mode', cfg.mode)
+  set('help-docs-list-sort', cfg.sort)
+  set('help-docs-list-limit', String(cfg.limit || 0))
+  set('help-docs-list-hide-featured', cfg.hideFeatured ? '1' : '0')
+  set('help-docs-list-manual-ids', cfg.manualIds.join(','))
+}
+
+function currentHelpDocs() {
+  const docs = ctx.state?.aspaceHelp?.docs
+  return Array.isArray(docs) ? docs.filter((item) => item.title) : []
+}
+
+function refreshDocListPreview() {
+  const list = document.querySelector('[data-aso-help-doc-list]')
+  const badge = document.querySelector('[data-aso-help-rule-badge]')
+  if (!list) return
+  const rules = readDocsListFromSync()
+  const docs = currentHelpDocs()
+  const rows = resolveHelpDocList(docs, rules).slice(0, 20)
+  if (badge) badge.textContent = describeDocsListRules(rules)
+  list.innerHTML = rows.length
+    ? rows.map((doc) => `
+        <button type="button" class="admin-aso-help__doc-row" data-aspace-help-open="${esc(doc.id || '')}" title="点击编辑该文档">
+          <span class="material-symbols-outlined" aria-hidden="true">description</span>
+          <b>${esc(doc.title || '')}</b>
+          <time>${esc(doc.date || '')}</time>
+          <i class="material-symbols-outlined" aria-hidden="true">chevron_right</i>
+        </button>`).join('')
+    : '<p class="admin-form-section__hint">按当前展示规则，列表为空。点「展示规则」调整，或去内容管理添加文档。</p>'
+}
+
+function collectDocsListFromDrawer(body) {
+  if (!body) return readDocsListFromSync()
+  const mode = body.querySelector('[name="docs-list-mode"]:checked')?.value === 'manual' ? 'manual' : 'auto'
+  const sort = body.querySelector('[name="docs-list-sort"]')?.value || 'catalog'
+  const limit = body.querySelector('[name="docs-list-limit"]')?.value || '0'
+  const hideFeatured = Boolean(body.querySelector('[name="docs-list-hide-featured"]')?.checked)
+  const manualIds = [...body.querySelectorAll('[data-docs-manual-item]')]
+    .filter((row) => row.querySelector('[name="docs-manual-check"]')?.checked)
+    .map((row) => row.dataset.docId || '')
+    .filter(Boolean)
+  return normalizeDocsListRules({ mode, sort, limit, hideFeatured, manualIds })
+}
+
+function renderDocsListDrawerBody(body) {
+  const rules = readDocsListFromSync()
+  const docs = currentHelpDocs()
+  const selected = new Set(rules.manualIds)
+  const ordered = [
+    ...rules.manualIds.map((id) => docs.find((item) => item.id === id)).filter(Boolean),
+    ...docs.filter((item) => !selected.has(item.id)),
+  ]
+  body.innerHTML = `
+    <div class="admin-aso-help-rules">
+      <p class="admin-form-section__hint">控制前台「全部文档」默认列表怎么出。精选大卡片仍由内容管理里「设为精选」决定。</p>
+      <fieldset class="admin-aso-help-rules__mode">
+        <legend>展示方式</legend>
+        <label><input type="radio" name="docs-list-mode" value="auto" ${rules.mode !== 'manual' ? 'checked' : ''} /><span>自动按规则</span></label>
+        <label><input type="radio" name="docs-list-mode" value="manual" ${rules.mode === 'manual' ? 'checked' : ''} /><span>手动编排</span></label>
+      </fieldset>
+      <div class="admin-aso-help-rules__auto" data-docs-list-auto ${rules.mode === 'manual' ? 'hidden' : ''}>
+        <div class="admin-help-settings__fields">
+          <label>
+            <span>排序</span>
+            <select name="docs-list-sort">
+              <option value="catalog" ${rules.sort === 'catalog' ? 'selected' : ''}>内容管理顺序</option>
+              <option value="date-desc" ${rules.sort === 'date-desc' ? 'selected' : ''}>更新日期新 → 旧</option>
+              <option value="date-asc" ${rules.sort === 'date-asc' ? 'selected' : ''}>更新日期旧 → 新</option>
+            </select>
+          </label>
+          <label>
+            <span>显示条数</span>
+            <input name="docs-list-limit" type="number" min="0" max="80" value="${esc(String(rules.limit || 0))}" />
+          </label>
+          <label class="admin-help-settings__wide admin-aso-help-rules__check">
+            <input name="docs-list-hide-featured" type="checkbox" ${rules.hideFeatured ? 'checked' : ''} />
+            <span>列表中排除已精选文档（避免与上方卡片重复）</span>
+          </label>
+        </div>
+        <p class="admin-form-section__hint">显示条数填 0 表示不限制。</p>
+      </div>
+      <div class="admin-aso-help-rules__manual" data-docs-list-manual ${rules.mode === 'manual' ? '' : 'hidden'}>
+        <p class="admin-form-section__hint">勾选要展示的文档，用上下按钮调整顺序。未勾选的不会出现在默认列表。</p>
+        <div class="admin-aso-help-rules__manual-list" data-docs-manual-list>
+          ${ordered.map((doc, index) => `
+            <article class="admin-aso-help-rules__manual-item" data-docs-manual-item data-doc-id="${esc(doc.id || '')}">
+              <label class="admin-aso-help-rules__manual-check">
+                <input type="checkbox" name="docs-manual-check" ${selected.has(doc.id) ? 'checked' : ''} />
+                <span>
+                  <b>${esc(doc.title || '未命名')}</b>
+                  <small>${doc.featured ? '精选 · ' : ''}${esc(doc.category || '')} · ${esc(doc.date || '—')}</small>
+                </span>
+              </label>
+              <div class="admin-aso-help-rules__manual-order">
+                <button type="button" data-docs-manual-move="-1" ${index === 0 ? 'disabled' : ''} title="上移"><span class="material-symbols-outlined">arrow_upward</span></button>
+                <button type="button" data-docs-manual-move="1" ${index === ordered.length - 1 ? 'disabled' : ''} title="下移"><span class="material-symbols-outlined">arrow_downward</span></button>
+              </div>
+            </article>
+          `).join('') || '<p class="admin-form-section__hint">暂无文档，请先去内容管理新建。</p>'}
+        </div>
+      </div>
     </div>`
 }
 
@@ -316,14 +461,17 @@ function closeHelpDrawer() {
     basics: '[data-aso-help-field-sync]',
     search: '[data-aso-help-field-sync]',
     support: '[data-aso-help-field-sync]',
+    docs: '[data-aso-help-field-sync]',
     categories: '[data-aso-help-cat-sync]',
     updates: '[data-aso-help-update-sync]',
   }
   const sync = document.querySelector(syncMap[kind] || '')
   if (body && sync && ['categories', 'updates'].includes(kind)) {
     [...body.children].forEach((child) => sync.appendChild(child))
+  } else if (body && kind === 'docs') {
+    writeDocsListToSync(collectDocsListFromDrawer(body))
+    body.innerHTML = ''
   } else if (body && sync && ['basics', 'search', 'support'].includes(kind)) {
-    // fields were cloned/moved? we use templates in body - write back
     body.querySelectorAll('[name]').forEach((field) => {
       const target = sync.querySelector(`[name="${CSS.escape(field.name)}"]`)
       if (target) target.value = field.value
@@ -333,6 +481,7 @@ function closeHelpDrawer() {
   if (kind === 'categories') refreshCategoryPreview()
   if (kind === 'updates') refreshUpdatePreview()
   if (kind === 'search') refreshHotPreview()
+  if (kind === 'docs') refreshDocListPreview()
   if (kind === 'basics') {
     syncInputToPreview('help-title')
     syncInputToPreview('help-lead')
@@ -374,6 +523,8 @@ function openHelpDrawer(kind) {
         <label class="admin-help-settings__wide"><span>主文案</span><input name="help-support-title" maxlength="80" value="${esc(sync.querySelector('[name="help-support-title"]')?.value || '')}" /></label>
         <label class="admin-help-settings__wide"><span>补充说明</span><input name="help-support-subtitle" maxlength="120" value="${esc(sync.querySelector('[name="help-support-subtitle"]')?.value || '')}" /></label>
       </div>`
+  } else if (kind === 'docs') {
+    renderDocsListDrawerBody(body)
   } else if (kind === 'categories') {
     const sync = document.querySelector('[data-aso-help-cat-sync]')
     const header = document.createElement('div')
@@ -504,6 +655,24 @@ export function bindAspaceHelpVisualAdmin(helpers = {}) {
       closeHelpDrawer()
       return
     }
+    const manualMove = event.target.closest('[data-docs-manual-move]')
+    if (manualMove) {
+      event.preventDefault()
+      const list = manualMove.closest('[data-docs-manual-list]')
+      const row = manualMove.closest('[data-docs-manual-item]')
+      if (!list || !row) return
+      const delta = Number(manualMove.dataset.docsManualMove || 0)
+      const rows = [...list.querySelectorAll('[data-docs-manual-item]')]
+      const index = rows.indexOf(row)
+      const target = index + delta
+      if (index < 0 || target < 0 || target >= rows.length) return
+      if (delta < 0) list.insertBefore(row, rows[target])
+      else list.insertBefore(row, rows[target].nextSibling)
+      writeDocsListToSync(collectDocsListFromDrawer(manualMove.closest('[data-aso-help-drawer-body]')))
+      refreshDocListPreview()
+      renderDocsListDrawerBody(manualMove.closest('[data-aso-help-drawer-body]'))
+      return
+    }
     const open = event.target.closest('[data-aso-help-open]')
     if (open && editor.contains(open)) {
       const nav = open.closest('[data-aso-help-cat-nav]')
@@ -523,6 +692,19 @@ export function bindAspaceHelpVisualAdmin(helpers = {}) {
     }
     const drawerField = event.target.closest('.admin-aso-help-drawer [name]')
     if (drawerField) {
+      if (drawerField.name?.startsWith('docs-list-') || drawerField.name === 'docs-manual-check') {
+        const body = drawerField.closest('[data-aso-help-drawer-body]')
+        if (drawerField.name === 'docs-list-mode') {
+          const auto = body?.querySelector('[data-docs-list-auto]')
+          const manual = body?.querySelector('[data-docs-list-manual]')
+          const isManual = drawerField.value === 'manual' && drawerField.checked
+          if (auto) auto.hidden = isManual
+          if (manual) manual.hidden = !isManual
+        }
+        writeDocsListToSync(collectDocsListFromDrawer(body))
+        refreshDocListPreview()
+        return
+      }
       const sync = document.querySelector(`[data-aso-help-field-sync] [name="${CSS.escape(drawerField.name)}"]`)
       if (sync) sync.value = drawerField.value
       if (drawerField.name === 'help-hot-searches') refreshHotPreview()
@@ -538,6 +720,17 @@ export function bindAspaceHelpVisualAdmin(helpers = {}) {
       const preview = iconSelect.closest('[data-aspace-help-category]')?.querySelector('[data-aspace-help-cat-icon-preview]')
       if (preview) preview.textContent = iconSelect.value || 'folder'
       refreshCategoryPreview()
+    }
+    const docsMode = event.target.closest('[name="docs-list-mode"]')
+    if (docsMode) {
+      const body = docsMode.closest('[data-aso-help-drawer-body]')
+      const auto = body?.querySelector('[data-docs-list-auto]')
+      const manual = body?.querySelector('[data-docs-list-manual]')
+      const isManual = body?.querySelector('[name="docs-list-mode"]:checked')?.value === 'manual'
+      if (auto) auto.hidden = isManual
+      if (manual) manual.hidden = !isManual
+      writeDocsListToSync(collectDocsListFromDrawer(body))
+      refreshDocListPreview()
     }
   })
 

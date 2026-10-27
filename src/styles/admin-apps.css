@@ -4918,7 +4918,108 @@ body.admin-aspace-help-fullscreen { overflow: hidden; }
   gap: 10px;
   margin-bottom: 4px;
 }
-.admin-aso-help__docs-head .admin-aso-help__edit-chip { flex-shrink: 0; margin-top: 2px; }
+.admin-aso-help__docs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.admin-aso-help__edit-chip--ghost {
+  background: #eef3f9;
+  color: #50637c;
+}
+.admin-aso-help__rule-badge {
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(8, 121, 249, .08);
+  color: #0879f9;
+  font-size: 11px;
+  font-weight: 650;
+  width: fit-content;
+}
+.admin-aso-help-rules {
+  display: grid;
+  gap: 14px;
+}
+.admin-aso-help-rules__mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #e3ebf5;
+  border-radius: 12px;
+}
+.admin-aso-help-rules__mode legend {
+  padding: 0 4px;
+  color: #50637c;
+  font-size: 12px;
+  font-weight: 700;
+}
+.admin-aso-help-rules__mode label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 650;
+  color: #31445f;
+}
+.admin-aso-help-rules__check {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 8px;
+}
+.admin-aso-help-rules__check input { margin-top: 3px; }
+.admin-aso-help-rules__manual-list {
+  display: grid;
+  gap: 8px;
+  max-height: min(52vh, 420px);
+  overflow: auto;
+}
+.admin-aso-help-rules__manual-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #e3ebf5;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+.admin-aso-help-rules__manual-check {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+.admin-aso-help-rules__manual-check b {
+  display: block;
+  font-size: 13px;
+}
+.admin-aso-help-rules__manual-check small {
+  color: #8b98aa;
+  font-size: 11px;
+}
+.admin-aso-help-rules__manual-order {
+  display: inline-flex;
+  gap: 4px;
+}
+.admin-aso-help-rules__manual-order button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #d7e3f2;
+  border-radius: 8px;
+  background: #fff;
+  color: #50637c;
+  cursor: pointer;
+}
+.admin-aso-help-rules__manual-order button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+.admin-aso-help-rules__manual-order .material-symbols-outlined { font-size: 16px; }
 .admin-aso-help__docs-lead {
   margin: 8px 0 12px;
   color: #6f7c96;

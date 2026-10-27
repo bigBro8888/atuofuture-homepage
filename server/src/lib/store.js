@@ -245,6 +245,13 @@ export const defaultAspaceHelp = {
   lead: '搜索知识、获取帮助，让问题更快解决',
   searchPlaceholder: '搜索帮助文档、问题或关键词，例如：如何预约会议室、如何申请权限',
   docsLead: '精选指南与操作说明，快速上手 Aspace空间智能。',
+  docsList: {
+    mode: 'auto',
+    sort: 'catalog',
+    limit: 0,
+    hideFeatured: true,
+    manualIds: [],
+  },
   hotSearches: ['会议室预约', '权限申请', '能耗数据接入', '电子相册发布'],
   categories: [
     { icon: 'description', name: '全部文档' },
