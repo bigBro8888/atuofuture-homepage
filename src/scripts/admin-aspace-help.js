@@ -79,11 +79,13 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
   const updates = Array.isArray(data.updates) ? data.updates : []
   const hot = Array.isArray(data.hotSearches) ? data.hotSearches : []
   const featured = Array.isArray(data.featuredDocs) ? data.featuredDocs.slice(0, 4) : []
+  const docs = Array.isArray(data.docs) ? data.docs.filter((item) => item.title) : []
+  const listDocs = docs.filter((item) => !item.featured).slice(0, 12)
 
   return `
     <div class="admin-vedit admin-vedit--aspace-help" data-aspace-help-page-settings>
       <div class="admin-vedit-toolbar">
-        <p class="admin-vedit-hint">点页面区块直接改：标题/导语/搜索热词/分类/更新/客服。左侧分类可拖拽排序。文档卡片内容在「内容管理」维护。</p>
+        <p class="admin-vedit-hint">点页面区块直接改：标题/导语/搜索热词/分类/更新/客服。左侧分类可拖拽排序。点精选卡片或下方文档列表可进入「内容管理」编辑资料。</p>
         <button type="button" class="admin-vedit-fullscreen-btn" data-aso-help-fullscreen>
           <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
           全屏编辑
@@ -138,17 +140,35 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
           </nav>
 
           <div class="admin-aso-help__docs" data-aso-help-anchor="docs">
-            <h3>文档中心</h3>
-            <p class="admin-aso-help__docs-lead" contenteditable="true" spellcheck="false" data-aso-help-preview="help-docs-lead" data-placeholder="文档中心说明">${esc(data.docsLead || '')}</p>
+            <div class="admin-aso-help__docs-head">
+              <div>
+                <h3>文档中心</h3>
+                <p class="admin-aso-help__docs-lead" contenteditable="true" spellcheck="false" data-aso-help-preview="help-docs-lead" data-placeholder="文档中心说明">${esc(data.docsLead || '')}</p>
+              </div>
+              <button type="button" class="admin-aso-help__edit-chip" data-aspace-help-section="content">编辑文档</button>
+            </div>
             <div class="admin-aso-help__features">
               ${featured.map((doc) => `
-                <article class="admin-aso-help__doc-card">
-                  <em>${esc(doc.badge || '文档')}</em>
+                <button type="button" class="admin-aso-help__doc-card" data-aspace-help-open="${esc(doc.id || '')}" title="点击编辑该文档">
+                  <em>${esc(doc.badge || '精选')}</em>
                   <b>${esc(doc.title || '')}</b>
                   <time>${esc(doc.date || '')}</time>
-                </article>
-              `).join('') || '<p class="admin-form-section__hint">精选文档来自「内容管理」里勾选推荐的资料。</p>'}
+                </button>
+              `).join('') || '<p class="admin-form-section__hint">暂无精选。在「内容管理」勾选推荐后会显示在这里。</p>'}
             </div>
+            <div class="admin-aso-help__doc-list" data-aso-help-doc-list>
+              ${listDocs.map((doc) => `
+                <button type="button" class="admin-aso-help__doc-row" data-aspace-help-open="${esc(doc.id || '')}" title="点击编辑该文档">
+                  <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                  <b>${esc(doc.title || '')}</b>
+                  <time>${esc(doc.date || '')}</time>
+                  <i class="material-symbols-outlined" aria-hidden="true">chevron_right</i>
+                </button>
+              `).join('') || (docs.length
+                ? '<p class="admin-form-section__hint">当前文档均已设为精选，普通列表为空。</p>'
+                : '<p class="admin-form-section__hint">暂无文档，点击下方新建。</p>')}
+            </div>
+            <button type="button" class="admin-aso-help__add" data-aspace-help-add="doc">+ 新建文档</button>
           </div>
 
           <aside class="admin-aso-help__updates" data-aso-help-anchor="updates">

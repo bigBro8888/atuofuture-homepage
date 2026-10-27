@@ -4911,6 +4911,14 @@ body.admin-aspace-help-fullscreen { overflow: hidden; }
   font-size: 16px;
   font-weight: 750;
 }
+.admin-aso-help__docs-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.admin-aso-help__docs-head .admin-aso-help__edit-chip { flex-shrink: 0; margin-top: 2px; }
 .admin-aso-help__docs-lead {
   margin: 8px 0 12px;
   color: #6f7c96;
@@ -4931,6 +4939,14 @@ body.admin-aspace-help-fullscreen { overflow: hidden; }
   border: 1px solid #e3ebf5;
   border-radius: 12px;
   background: #f8fbff;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.admin-aso-help__doc-card:hover {
+  border-color: rgba(8, 121, 249, .35);
+  box-shadow: 0 8px 18px rgba(18, 48, 96, .08);
 }
 .admin-aso-help__doc-card em {
   color: #0879f9;
@@ -4940,6 +4956,51 @@ body.admin-aspace-help-fullscreen { overflow: hidden; }
 }
 .admin-aso-help__doc-card b { font-size: 13px; }
 .admin-aso-help__doc-card time { color: #8b98aa; font-size: 11px; }
+.admin-aso-help__doc-list {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+}
+.admin-aso-help__doc-row {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto 18px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #31445f;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.admin-aso-help__doc-row:hover {
+  border-color: rgba(126, 180, 242, .35);
+  background: rgba(235, 244, 255, .9);
+}
+.admin-aso-help__doc-row > .material-symbols-outlined:first-child {
+  color: #0879f9;
+  font-size: 18px;
+}
+.admin-aso-help__doc-row b {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-aso-help__doc-row time {
+  color: #8b98aa;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.admin-aso-help__doc-row > i {
+  color: #b0bbc9;
+  font-size: 18px;
+}
 
 .admin-aso-help__updates > header {
   display: flex;
