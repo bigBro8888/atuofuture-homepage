@@ -291,6 +291,20 @@ function remapHelpDocCategory(category, categories) {
   return '全部文档'
 }
 
+function updatesFromHelpDocs(docs = [], limit = 5) {
+  const max = Math.max(1, Math.min(20, Number(limit) || 5))
+  return [...(Array.isArray(docs) ? docs : [])]
+    .filter((item) => item?.title && item?.date)
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+    .slice(0, max)
+    .map((item) => ({
+      date: String(item.date || '').trim().slice(0, 20),
+      title: String(item.title || '').trim().slice(0, 80),
+      desc: String(item.keywords || '').trim().slice(0, 200)
+        || (item.featured ? '精选文档已更新' : `${item.category || '文档'} · 已发布`),
+    }))
+}
+
 function alignHelpWithCatalog(help, catalog) {
   const categories = helpCategoriesFromCatalog(catalog)
   const docs = (Array.isArray(help.docs) ? help.docs : []).map((item) => ({
@@ -316,6 +330,7 @@ function alignHelpWithCatalog(help, catalog) {
     featuredDocs: featuredDocs.length
       ? featuredDocs
       : structuredClone(defaultAspaceHelp.featuredDocs).map((item) => ({ ...item, fileUrl: '', id: '' })),
+    updates: updatesFromHelpDocs(docs, 5),
   }
 }
 

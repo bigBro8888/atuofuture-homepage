@@ -2480,6 +2480,19 @@ body.aso-settings-open { overflow: hidden; }
 .aso-updates__list div { grid-area: 2 / 2; margin-top: 8px; }
 .aso-updates__list b { display: block; color: var(--aso-text); font-size: 14px; font-weight: 720; }
 .aso-updates__list p { margin: 7px 0 0; color: var(--aso-muted); font-size: 12.5px; line-height: 1.65; }
+.aso-updates__doc {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.aso-updates__doc:hover b { color: #1373db; }
 
 .aso-page .aso-support-cta {
   display: grid;

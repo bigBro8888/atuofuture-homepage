@@ -61,6 +61,21 @@ export function resolveHelpDocList(docs = [], rules = {}, view = {}) {
   return list
 }
 
+/** 最新更新：按文档发布/更新日期倒序自动生成 */
+export function updatesFromHelpDocs(docs = [], limit = 5) {
+  const max = Math.max(1, Math.min(20, Number(limit) || 5))
+  return [...(Array.isArray(docs) ? docs : [])]
+    .filter((item) => item?.title && item?.date)
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+    .slice(0, max)
+    .map((item) => ({
+      date: String(item.date || '').trim(),
+      title: String(item.title || '').trim(),
+      desc: String(item.keywords || '').trim()
+        || (item.featured ? '精选文档已更新' : `${item.category || '文档'} · 已发布`),
+    }))
+}
+
 export function describeDocsListRules(rules = {}) {
   const cfg = normalizeDocsListRules(rules)
   if (cfg.mode === 'manual') {

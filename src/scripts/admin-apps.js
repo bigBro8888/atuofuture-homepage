@@ -313,7 +313,7 @@ function setAspaceHelpSection(section) {
 }
 
 function setAspaceHelpPageGroup(group) {
-  const next = ['basics', 'search', 'docs', 'categories', 'updates', 'support'].includes(group) ? group : 'basics'
+  const next = ['basics', 'search', 'docs', 'categories', 'support'].includes(group) ? group : 'basics'
   aspaceHelpPageGroup = next
   // 可视化模式下由抽屉承载分组编辑；保留状态供新增后自动打开
 }
@@ -2542,20 +2542,12 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
       aspaceHelpSection = 'content'
     }
     if (kind === 'update') {
-      const row = helpRemove.closest('[data-aspace-help-update]')
-      const index = [...document.querySelectorAll('[data-aspace-help-update]')].indexOf(row)
-      if (index >= 0) nextHelp.updates.splice(index, 1)
-      aspaceHelpSection = 'page'
-      aspaceHelpPageGroup = 'updates'
+      toast('最新更新已改为按文档日期自动展示，无需手动维护', true)
+      return
     }
     state.aspaceHelp = nextHelp
     aspaceEditorTab = 'help'
     renderAspaceCatalog()
-    if (kind === 'category' || kind === 'update') {
-      window.requestAnimationFrame(() => {
-        document.querySelector(`[data-aso-help-open="${kind === 'category' ? 'categories' : 'updates'}"]`)?.click()
-      })
-    }
     return
   }
   const helpFilter = event.target.closest('[data-aspace-help-filter]')
@@ -2629,19 +2621,12 @@ document.querySelector('[data-aspace-editor]').addEventListener('click', (event)
       aspaceHelpEditingDocId = id
     }
     if (kind === 'update') {
-      nextHelp.updates.unshift({ date: new Date().toISOString().slice(0, 10), title: '新更新', desc: '' })
-      aspaceHelpSection = 'page'
-      aspaceHelpPageGroup = 'updates'
-      aspaceHelpEditingDocId = ''
+      toast('最新更新已改为按文档日期自动展示，无需手动维护', true)
+      return
     }
     state.aspaceHelp = nextHelp
     aspaceEditorTab = 'help'
     renderAspaceCatalog()
-    if (kind === 'category' || kind === 'update') {
-      window.requestAnimationFrame(() => {
-        document.querySelector(`[data-aso-help-open="${kind === 'category' ? 'categories' : 'updates'}"]`)?.click()
-      })
-    }
     return
   }
   const reset = event.target.closest('[data-aspace-icon-reset]')

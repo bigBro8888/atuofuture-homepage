@@ -185,7 +185,7 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
           <aside class="admin-aso-help__updates" data-aso-help-anchor="updates">
             <header>
               <h3><span class="material-symbols-outlined">campaign</span> 最新更新</h3>
-              <button type="button" data-aso-help-open="updates">编辑</button>
+              <span class="admin-aso-help__rule-badge">按文档日期</span>
             </header>
             <ol data-aso-help-update-preview>
               ${updates.map((item) => `
@@ -196,9 +196,9 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
                     <p>${esc(item.desc || '')}</p>
                   </div>
                 </li>
-              `).join('') || '<li class="admin-form-section__hint">暂无更新，点击编辑添加</li>'}
+              `).join('') || '<li class="admin-form-section__hint">暂无文档更新日期</li>'}
             </ol>
-            <button type="button" class="admin-aso-help__add" data-aspace-help-add="update">+ 新增更新</button>
+            <p class="admin-aso-help__sync-hint">自动取内容管理中文档的发布/更新日期，按新→旧展示最近 5 篇。</p>
           </aside>
         </div>
 
@@ -236,7 +236,6 @@ export function renderAspaceHelpPageVisualMarkup(data = {}, helpers = {}) {
       ${renderDrawer('basics', '基础信息')}
       ${renderDrawer('search', '搜索热词')}
       ${renderDrawer('docs', '文档列表展示规则')}
-      ${renderDrawer('updates', '最新更新')}
       ${renderDrawer('support', '客服引导')}
     </div>`
 }

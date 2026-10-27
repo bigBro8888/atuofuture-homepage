@@ -1,5 +1,7 @@
 /** 知识库分类与应用广场分类对齐 */
 
+import { updatesFromHelpDocs } from './aspace-help-list.js'
+
 export const HELP_CATEGORY_ALIASES = {
   AI画报: '信息发布',
   电子相册: '信息发布',
@@ -52,5 +54,6 @@ export function alignHelpWithCatalog(help, catalog) {
     categories,
     docs,
     featuredDocs: featuredDocs.length ? featuredDocs : (help.featuredDocs || []),
+    updates: updatesFromHelpDocs(docs, 5),
   }
 }

@@ -279,9 +279,11 @@ export const defaultAspaceHelp = {
     { id: 'doc-delivery', title: '项目实施规范', category: '智能底座', date: '2026-08-20', featured: false, keywords: '权限申请 交付 验收', badge: '推荐', tone: 'blue', art: 'lines', fileUrl: '' },
   ],
   updates: [
-    { date: '2026-09-18', title: '设备管理平台 v3.2 正式发布', desc: '新增设备批量配置能力，优化告警通知机制。' },
-    { date: '2026-09-10', title: 'AI画报新增模板库', desc: '新增多套行业模板，支持企业文化发布。' },
-    { date: '2026-09-03', title: '电子相册发布流程优化', desc: '支持定时发布与多屏同步。' },
+    { date: '2026-09-12', title: 'Aspace空间智能快速入门指南', desc: '权限申请 账号绑定 入门' },
+    { date: '2026-09-10', title: '能源能耗数据接入说明', desc: '能耗数据接入 网关 采集' },
+    { date: '2026-09-08', title: 'AI画报使用手册', desc: '模板 发布' },
+    { date: '2026-09-06', title: '电子相册发布流程', desc: '电子相册发布 多屏同步' },
+    { date: '2026-09-03', title: '会议室预约配置操作指南', desc: '会议室预约 中控屏配置 设备绑定' },
   ],
   support: {
     title: '有任何问题，请联系我们的客服人员',

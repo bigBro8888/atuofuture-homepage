@@ -378,9 +378,11 @@ const defaultHelpContent = {
     { id: 'doc-delivery', title: '项目实施规范', category: '智能底座', date: '2026-08-20', featured: false, keywords: '权限申请 交付 验收', badge: '推荐', tone: 'blue', art: 'lines', fileUrl: '' },
   ],
   updates: [
-    { date: '2026-09-18', title: '设备管理平台 v3.2 正式发布', desc: '新增设备批量配置能力，优化告警通知机制。' },
-    { date: '2026-09-10', title: 'AI画报新增模板库', desc: '新增多套行业模板，支持企业文化发布。' },
-    { date: '2026-09-03', title: '电子相册发布流程优化', desc: '支持定时发布与多屏同步。' },
+    { date: '2026-09-12', title: 'Aspace空间智能快速入门指南', desc: '权限申请 账号绑定 入门' },
+    { date: '2026-09-10', title: '能源能耗数据接入说明', desc: '能耗数据接入 网关 采集' },
+    { date: '2026-09-08', title: 'AI画报使用手册', desc: '模板 发布' },
+    { date: '2026-09-06', title: '电子相册发布流程', desc: '电子相册发布 多屏同步' },
+    { date: '2026-09-03', title: '会议室预约配置操作指南', desc: '会议室预约 中控屏配置 设备绑定' },
   ],
   support: {
     title: '有任何问题，请联系我们的客服人员',
@@ -1027,7 +1029,16 @@ function renderPortal() {
             <aside class="aso-updates">
               <header><h3>${icon('campaign')} 最新更新</h3><button type="button" data-show-all>查看更多 ${icon('arrow_forward')}</button></header>
               <ol class="aso-updates__list">
-                ${updates.map(([date, title, desc]) => `<li><time>${escapeHtml(date)}</time><div><b>${escapeHtml(title)}</b><p>${escapeHtml(desc)}</p></div></li>`).join('')}
+                ${updates.map(([date, title, desc, id, fileUrl]) => `
+                  <li>
+                    <time>${escapeHtml(date)}</time>
+                    <div>
+                      <button type="button" class="aso-updates__doc" data-doc="${escapeHtml(title)}" data-doc-id="${escapeHtml(id || '')}" data-doc-url="${escapeHtml(fileUrl || '')}">
+                        <b>${escapeHtml(title)}</b>
+                        <p>${escapeHtml(desc)}</p>
+                      </button>
+                    </div>
+                  </li>`).join('') || '<li class="aso-empty">暂无文档更新</li>'}
               </ol>
             </aside>
           </div>
@@ -2154,9 +2165,14 @@ function applyHelpContent(help) {
     : Array.isArray(helpContent.featuredDocs)
       ? helpContent.featuredDocs.map((item) => ({ ...item }))
       : structuredClone(defaultHelpContent.featuredDocs)
-  updates = Array.isArray(helpContent.updates)
-    ? helpContent.updates.map((item) => [item.date, item.title, item.desc])
-    : defaultHelpContent.updates.map((item) => [item.date, item.title, item.desc])
+  const updateSource = Array.isArray(helpContent.updates) && helpContent.updates.length
+    ? helpContent.updates
+    : defaultHelpContent.updates
+  const docsByTitle = new Map(docs.map((item) => [item.title, item]))
+  updates = updateSource.map((item) => {
+    const matched = docsByTitle.get(item.title)
+    return [item.date, item.title, item.desc, matched?.id || '', matched?.fileUrl || '']
+  })
 }
 
 async function loadHelpContent() {
@@ -2588,7 +2604,13 @@ export async function initAspaceOne() {
       return
     }
 
-    if (event.target.closest('[data-show-all]')) showToast('完整列表将在对应模块接口接入后开放')
+    if (event.target.closest('[data-show-all]')) {
+      const list = root.querySelector('[data-doc-list]')
+      const allBtn = root.querySelector('[data-doc-category="全部文档"]')
+      allBtn?.click()
+      list?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
   })
 
   root.addEventListener('submit', (event) => {
