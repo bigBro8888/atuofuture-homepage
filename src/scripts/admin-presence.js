@@ -227,39 +227,12 @@ export function createAdminPresence({ api } = {}) {
     if (remoteApplied.has(key)) {
       remoteApplied.delete(key)
       el.classList.remove('is-remote-editing')
-      el.querySelectorAll('[data-admin-presence-live-tag]').forEach((tag) => tag.remove())
     }
   }
 
   const clearRemoteLiveMarks = (el) => {
     if (!el) return
     el.classList.remove('is-remote-editing')
-    const host = tagHostFor(el)
-    host?.querySelectorAll('[data-admin-presence-live-tag]').forEach((tag) => {
-      if (tag.dataset.liveFor === (draftKeyFromElement(el) || tag.dataset.liveFor)) tag.remove()
-    })
-    // 兜底：清掉挂在元素自身上的旧标签
-    el.querySelectorAll('[data-admin-presence-live-tag]').forEach((tag) => tag.remove())
-  }
-
-  const markRemoteEditing = (el, peerName, color, key = '') => {
-    if (!el) return
-    el.classList.add('is-remote-editing')
-    const host = tagHostFor(el)
-    if (!host) return
-    const style = getComputedStyle(host)
-    if (style.position === 'static') host.style.position = 'relative'
-    let tag = host.querySelector(`[data-admin-presence-live-tag][data-live-for="${safeEscape(key)}"]`)
-    if (!tag) {
-      tag = document.createElement('span')
-      tag.className = 'admin-presence-live-tag'
-      tag.dataset.adminPresenceLiveTag = ''
-      if (key) tag.dataset.liveFor = key
-      tag.contentEditable = 'false'
-      host.appendChild(tag)
-    }
-    tag.style.setProperty('--presence-color', color)
-    tag.textContent = `${peerName} · 编辑中`
   }
 
   const applyRemoteLiveDrafts = () => {
@@ -306,7 +279,7 @@ export function createAdminPresence({ api } = {}) {
         remoteApplied.get(key).peerName = peer.name
       }
       writeDraftValue(el, value)
-      markRemoteEditing(el, peer.name, colorFor(peer.userId || peer.clientId), key)
+      el.classList.add('is-remote-editing')
     })
   }
 
@@ -363,38 +336,54 @@ export function createAdminPresence({ api } = {}) {
   const clearFocusTags = () => {
     taggedEls.forEach((el) => {
       el.classList.remove('is-remote-focus')
-      el.querySelectorAll('[data-admin-presence-focus-tag]').forEach((tag) => tag.remove())
+      el.querySelectorAll('[data-admin-presence-focus-tag], [data-admin-presence-live-tag]').forEach((tag) => tag.remove())
     })
+    document.querySelectorAll('.admin-panel.is-active [data-admin-presence-focus-tag], .admin-panel.is-active [data-admin-presence-live-tag]').forEach((tag) => tag.remove())
     taggedEls.clear()
   }
 
+  /** 每个目标只挂一个标签：仅在场显示名字，有文案改动则「名字 · 编辑中」 */
   const renderFocus = () => {
     clearFocusTags()
     if (!room || room === DEFAULT_ROOM) return
 
-    const byFocus = new Map()
+    /** @type {Map<Element, { names: string[], editing: boolean, color: string }>} */
+    const byTarget = new Map()
+
+    const addPeerToTarget = (el, peer, editing) => {
+      if (!el) return
+      const prev = byTarget.get(el) || { names: [], editing: false, color: colorFor(peer.userId || peer.clientId) }
+      if (!prev.names.includes(peer.name)) prev.names.push(peer.name)
+      prev.editing = prev.editing || editing
+      byTarget.set(el, prev)
+    }
+
     peers.forEach((peer) => {
-      if (!peer.focus) return
-      const list = byFocus.get(peer.focus) || []
-      list.push(peer)
-      byFocus.set(peer.focus, list)
+      const draft = peer.liveDraft && typeof peer.liveDraft === 'object' ? peer.liveDraft : {}
+      const draftKeys = Object.keys(draft)
+      const isEditingCopy = Boolean(peer.editing && draftKeys.length) || draftKeys.length > 0
+
+      if (peer.focus) addPeerToTarget(findFocusTarget(peer.focus), peer, isEditingCopy)
+
+      draftKeys.forEach((key) => {
+        addPeerToTarget(findDraftTarget(key), peer, true)
+      })
     })
 
-    byFocus.forEach((group, focusId) => {
-      const target = findFocusTarget(focusId)
-      if (!target) return
+    byTarget.forEach((info, target) => {
       const host = tagHostFor(target)
+      if (!host) return
       const style = getComputedStyle(host)
       if (style.position === 'static') host.style.position = 'relative'
       target.classList.add('is-remote-focus')
-      const names = group.map((peer) => peer.name).join('、')
-      const color = colorFor(group[0].userId || group[0].clientId)
+      if (info.editing) target.classList.add('is-remote-editing')
+      const names = info.names.join('、')
       const tag = document.createElement('span')
       tag.className = 'admin-presence-focus-tag'
       tag.dataset.adminPresenceFocusTag = ''
       tag.contentEditable = 'false'
-      tag.style.setProperty('--presence-color', color)
-      tag.textContent = names
+      tag.style.setProperty('--presence-color', info.color)
+      tag.textContent = info.editing ? `${names} · 编辑中` : names
       host.appendChild(tag)
       taggedEls.add(target)
       taggedEls.add(host)
@@ -463,8 +452,8 @@ export function createAdminPresence({ api } = {}) {
       online = Array.isArray(data?.online) ? data.online : []
       renderAlert()
       renderWarn()
-      renderFocus()
       applyRemoteLiveDrafts()
+      renderFocus()
       renderCursors()
     } catch {
       // 心跳失败不打断编辑
@@ -569,8 +558,8 @@ export function createAdminPresence({ api } = {}) {
     ensureLayer()
     renderAlert()
     renderWarn()
-    renderFocus()
     applyRemoteLiveDrafts()
+    renderFocus()
     renderCursors()
     if (!timer || !sameRoom) startHeartbeat()
   }

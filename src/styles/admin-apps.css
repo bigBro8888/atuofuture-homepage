@@ -5341,8 +5341,7 @@ body.admin-aspace-help-fullscreen { overflow: hidden; }
   background: #fff5f5 !important;
   z-index: 2;
 }
-.admin-presence-focus-tag,
-.admin-presence-live-tag {
+.admin-presence-focus-tag {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -5360,12 +5359,6 @@ body.admin-aspace-help-fullscreen { overflow: hidden; }
   text-overflow: ellipsis;
   pointer-events: none;
   box-shadow: 0 4px 12px rgba(138, 28, 22, 0.22);
-}
-.admin-presence-live-tag {
-  top: auto;
-  bottom: 100%;
-  right: 0;
-  margin-bottom: 4px;
 }
 .is-remote-editing {
   outline: 2px dashed #d92d20 !important;
