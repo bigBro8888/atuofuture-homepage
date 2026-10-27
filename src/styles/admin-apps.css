@@ -4358,12 +4358,12 @@ body.admin-aspace-apps-fullscreen { overflow: hidden; }
 .admin-aso-plaza__categories { display: grid; gap: 4px; }
 .admin-aso-plaza__cat {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto auto;
+  grid-template-columns: 16px 24px minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   min-height: 42px;
-  padding: 0 10px;
+  padding: 0 10px 0 6px;
   border: 1px solid transparent;
   border-radius: 10px;
   background: transparent;
@@ -4372,13 +4372,25 @@ body.admin-aspace-apps-fullscreen { overflow: hidden; }
   font-size: 12px;
   font-weight: 650;
   text-align: left;
-  cursor: pointer;
-  transition: background .15s, border-color .15s, color .15s;
+  cursor: grab;
+  transition: background .15s, border-color .15s, color .15s, opacity .15s, box-shadow .15s;
 }
 .admin-aso-plaza__cat:hover {
   border-color: rgba(126, 180, 242, .35);
   background: rgba(235, 244, 255, .85);
   color: #1769ff;
+}
+.admin-aso-plaza__cat:active { cursor: grabbing; }
+.admin-aso-plaza__cat.is-dragging {
+  opacity: .45;
+  border-color: rgba(8, 121, 249, .45);
+  background: rgba(222, 238, 255, .95);
+  box-shadow: 0 10px 22px rgba(18, 48, 96, .12);
+}
+.admin-aso-plaza__cat-drag {
+  color: #b0bbc9;
+  font-size: 16px;
+  justify-self: center;
 }
 .admin-aso-plaza__cat i {
   display: grid;

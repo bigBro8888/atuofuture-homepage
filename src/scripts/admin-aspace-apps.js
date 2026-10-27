@@ -157,7 +157,7 @@ export function renderAspaceAppsVisualMarkup(catalog) {
       </header>
       <div class="admin-vedit admin-vedit--aspace-apps" data-aspace-apps-editor>
         <div class="admin-vedit-toolbar">
-          <p class="admin-vedit-hint">左侧 = 业务分类 · 右侧卡片 = 应用资料 + 归属。原先「业务分类 / 应用归属 / 应用资料」已合并到这里。</p>
+          <p class="admin-vedit-hint">左侧分类可拖拽排序，点击编辑名称/图标；右侧点卡片改资料与归属。保存后前台同步。</p>
           <button type="button" class="admin-vedit-fullscreen-btn" data-aso-plaza-fullscreen>
             <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
             全屏编辑
@@ -191,14 +191,15 @@ export function renderAspaceAppsVisualMarkup(catalog) {
                 <span><i class="material-symbols-outlined">history</i>最近访问</span>
               </nav>
               <div class="admin-aso-plaza__divider"></div>
-              <p class="admin-aso-plaza__side-label"><span>业务分类</span><small>点击编辑</small></p>
+              <p class="admin-aso-plaza__side-label"><span>业务分类</span><small>拖拽排序 · 点击编辑</small></p>
               <nav class="admin-aso-plaza__categories" data-aso-plaza-categories>
                 ${categories.map((category, index) => `
-                <button type="button" class="admin-aso-plaza__cat" data-aso-plaza-edit-cat="${esc(category.id)}" title="编辑分类：${esc(category.label)}">
+                <button type="button" class="admin-aso-plaza__cat" draggable="true" data-aso-plaza-edit-cat="${esc(category.id)}" title="拖拽排序，点击编辑：${esc(category.label)}">
+                  <span class="admin-aso-plaza__cat-drag material-symbols-outlined" aria-hidden="true">drag_indicator</span>
                   <i data-aso-plaza-cat-icon>${categoryIconMarkup(category)}</i>
                   <span data-aso-plaza-cat-label>${esc(category.label)}</span>
                   <em data-aso-plaza-cat-count>${appCountByCategory(allApps, category.id)}</em>
-                  <b>${String(index + 1).padStart(2, '0')}</b>
+                  <b data-aso-plaza-cat-index>${String(index + 1).padStart(2, '0')}</b>
                 </button>`).join('') || '<p class="admin-form-section__hint">暂无分类</p>'}
               </nav>
             </aside>
@@ -396,10 +397,119 @@ function openAppDrawer(appId) {
   drawer.hidden = false
 }
 
+function renumberCategoryButtons(nav) {
+  [...nav.querySelectorAll('[data-aso-plaza-edit-cat]')].forEach((button, index) => {
+    const badge = button.querySelector('[data-aso-plaza-cat-index]')
+    if (badge) badge.textContent = String(index + 1).padStart(2, '0')
+  })
+}
+
+function syncCategoryOrderFromNav(nav) {
+  const sync = document.querySelector('[data-aso-plaza-cat-sync]')
+  if (!nav || !sync) return
+  const order = [...nav.querySelectorAll('[data-aso-plaza-edit-cat]')].map((button) => button.dataset.asoPlazaEditCat)
+  const articles = new Map([...sync.querySelectorAll('[data-aspace-category]')].map((row) => [row.dataset.aspaceCategory, row]))
+  // also include article currently in open drawer
+  const drawerArticle = document.querySelector('[data-aso-plaza-cat-body] [data-aspace-category]')
+  if (drawerArticle) articles.set(drawerArticle.dataset.aspaceCategory, drawerArticle)
+  order.forEach((id) => {
+    const row = articles.get(id)
+    if (row && row.parentElement === sync) sync.appendChild(row)
+    else if (row && row.parentElement !== sync) {
+      // keep in drawer, but ensure siblings in sync follow order for the rest
+    }
+  })
+  // Rebuild sync order: move all to sync in order except the one in drawer
+  const fragment = document.createDocumentFragment()
+  order.forEach((id) => {
+    const row = articles.get(id)
+    if (!row) return
+    if (row.parentElement?.matches?.('[data-aso-plaza-cat-body]')) return
+    fragment.appendChild(row)
+  })
+  sync.appendChild(fragment)
+  // Update move button disabled states inside sync + drawer
+  const allRows = order.map((id) => articles.get(id)).filter(Boolean)
+  allRows.forEach((row, index) => {
+    const up = row.querySelector('[data-aspace-move="-1"]')
+    const down = row.querySelector('[data-aspace-move="1"]')
+    if (up) up.disabled = index === 0
+    if (down) down.disabled = index >= allRows.length - 1
+    const orderLabel = row.querySelector('.admin-aso-plaza-cat-fields__order span')
+    if (orderLabel) orderLabel.textContent = `顺序 ${String(index + 1).padStart(2, '0')}`
+  })
+  renumberCategoryButtons(nav)
+  if (ctx.state?.aspaceCatalog) {
+    const byId = new Map(ctx.state.aspaceCatalog.categories.map((item) => [item.id, item]))
+    ctx.state.aspaceCatalog.categories = order.map((id) => byId.get(id)).filter(Boolean)
+  }
+}
+
+function initCategoryDrag(editor) {
+  const nav = editor.querySelector('[data-aso-plaza-categories]')
+  if (!nav || nav.dataset.dragBound === '1') return
+  nav.dataset.dragBound = '1'
+  let dragged = null
+  let didDrag = false
+
+  nav.addEventListener('dragstart', (event) => {
+    const button = event.target.closest('[data-aso-plaza-edit-cat]')
+    if (!button || !nav.contains(button)) return
+    dragged = button
+    didDrag = false
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', button.dataset.asoPlazaEditCat || '')
+    window.requestAnimationFrame(() => button.classList.add('is-dragging'))
+  })
+
+  nav.addEventListener('dragover', (event) => {
+    if (!dragged) return
+    const target = event.target.closest('[data-aso-plaza-edit-cat]')
+    if (!target || target === dragged || !nav.contains(target)) return
+    event.preventDefault()
+    didDrag = true
+    event.dataTransfer.dropEffect = 'move'
+    const rect = target.getBoundingClientRect()
+    nav.insertBefore(dragged, event.clientY > rect.top + rect.height / 2 ? target.nextSibling : target)
+  })
+
+  nav.addEventListener('drop', (event) => {
+    if (!dragged) return
+    event.preventDefault()
+    didDrag = true
+  })
+
+  nav.addEventListener('dragend', () => {
+    dragged?.classList.remove('is-dragging')
+    if (didDrag) {
+      syncCategoryOrderFromNav(nav)
+      ctx.toast?.('分类顺序已调整，点击保存后发布')
+      nav.dataset.suppressClick = '1'
+      window.setTimeout(() => { delete nav.dataset.suppressClick }, 0)
+    }
+    dragged = null
+    didDrag = false
+  })
+
+  nav.addEventListener('click', (event) => {
+    if (nav.dataset.suppressClick === '1') {
+      event.preventDefault()
+      event.stopPropagation()
+    }
+  }, true)
+}
+
 export function bindAspaceAppsVisualAdmin(helpers = {}) {
   ctx = { ...ctx, ...helpers }
   const editor = document.querySelector('[data-aspace-editor]')
   if (!editor) return
+  initCategoryDrag(editor)
+
+  // catalog re-render replaces DOM; re-bind via delegated MutationObserver-free approach:
+  // re-init on any click into plaza if not bound
+  editor.addEventListener('pointerdown', () => {
+    initCategoryDrag(editor)
+  }, true)
 
   editor.addEventListener('click', (event) => {
     if (event.target.closest('[data-aso-plaza-fullscreen]')) {
@@ -424,6 +534,8 @@ export function bindAspaceAppsVisualAdmin(helpers = {}) {
     }
     const catBtn = event.target.closest('[data-aso-plaza-edit-cat]')
     if (catBtn && editor.contains(catBtn)) {
+      const nav = catBtn.closest('[data-aso-plaza-categories]')
+      if (nav?.dataset.suppressClick === '1') return
       event.preventDefault()
       openCatDrawer(catBtn.dataset.asoPlazaEditCat)
       return
