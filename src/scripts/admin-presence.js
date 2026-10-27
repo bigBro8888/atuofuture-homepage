@@ -286,7 +286,7 @@ export function createAdminPresence({ api } = {}) {
     })
 
     // 恢复对方已不再广播的字段
-    [...remoteApplied.keys()].forEach((key) => {
+    Array.from(remoteApplied.keys()).forEach((key) => {
       if (merged.has(key)) return
       const el = findDraftTarget(key)
       const saved = remoteApplied.get(key)
