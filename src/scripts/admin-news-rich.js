@@ -22,10 +22,7 @@ export function newsRichEditorMarkup(item = {}) {
   const html = sanitizeNewsHtml(item.bodyHtml || htmlFromPlainBody(item.body || ''))
   return `
     <div class="admin-form-wide">
-      <div class="admin-rich__head">
-        <span class="admin-rich__label">主题正文</span>
-        <button type="button" class="admin-news-import-btn" data-rich-cmd="importUrl" data-rich-import-url title="粘贴公众号等文章链接，自动抓取正文并转存图片">链接解析</button>
-      </div>
+      <span class="admin-rich__label">主题正文</span>
       <div class="admin-rich" data-news-rich>
         <div class="admin-rich__bar" data-news-rich-bar>
           <button type="button" tabindex="-1" data-rich-cmd="h3">标题</button>
@@ -44,7 +41,7 @@ export function newsRichEditorMarkup(item = {}) {
         <textarea class="admin-rich__code" hidden data-news-html-code spellcheck="false" aria-label="新闻正文源码">${escapeTextarea(html)}</textarea>
         <input type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,image/*" data-news-rich-file />
         <input type="file" hidden accept="video/mp4,video/webm,video/quicktime,video/*" data-news-rich-video />
-        <small data-news-rich-hint>粘贴会去掉原网站的加粗、颜色和字号。插图建议宽度不少于 1200px。点「链接解析」可抓取公众号等文章并转存图片；点「代码」可粘贴 HTML 源码。</small>
+        <small data-news-rich-hint>粘贴会去掉原网站的加粗、颜色和字号。插图建议宽度不少于 1200px。右上角「链接解析」可抓取公众号等文章并转存图片；点「代码」可粘贴 HTML 源码。</small>
         <div class="admin-link-modal admin-news-import-modal" data-news-import-modal hidden>
           <div class="admin-link-modal__backdrop" data-news-import-close></div>
           <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="admin-news-import-title">
@@ -392,10 +389,17 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     rememberRange()
   })
 
-  modal.querySelector('[data-rich-import-url]')?.addEventListener('click', (event) => {
-    event.preventDefault()
-    setImportOpen(true)
-  })
+  // 顶栏按钮在 compose 外壳里常驻，每次打开编辑要换掉旧监听，避免重复触发
+  modal._newsImportAbort?.abort()
+  modal._newsImportAbort = new AbortController()
+  modal.querySelector('[data-rich-import-url]')?.addEventListener(
+    'click',
+    (event) => {
+      event.preventDefault()
+      setImportOpen(true)
+    },
+    { signal: modal._newsImportAbort.signal },
+  )
 
   modal.querySelector('[data-news-rich-bar]')?.addEventListener('mousedown', (event) => {
     const button = event.target.closest('[data-rich-cmd]')

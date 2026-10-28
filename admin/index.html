@@ -189,7 +189,10 @@
                 <button type="button" data-news-type-btn="article">图文</button>
                 <button type="button" data-news-type-btn="video">视频</button>
               </div>
-              <button type="button" class="admin-news-compose__publish" data-news-compose-publish>发布上线</button>
+              <div class="admin-news-compose__actions">
+                <button type="button" class="admin-news-import-btn" data-rich-cmd="importUrl" data-rich-import-url title="粘贴公众号等文章链接，自动抓取正文并转存图片">链接解析</button>
+                <button type="button" class="admin-news-compose__publish" data-news-compose-publish>发布上线</button>
+              </div>
             </header>
             <div class="admin-news-compose__body" data-news-compose-body></div>
           </div>
