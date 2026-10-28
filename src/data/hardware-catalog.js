@@ -246,34 +246,6 @@ export const HARDWARE_PRODUCTS = [
     icon: 'print',
   },
   {
-    id: 'smart-locker',
-    slug: 'smart-locker',
-    productLine: 'space',
-    category: 'meeting-office',
-    name: '智能存储柜',
-    shortDescription: '物品存取、授权开柜与空间服务联动。',
-    coverImage: '/images/hardware/office-device.jpg',
-    capabilities: ['授权开柜', '存取记录', '空间服务联动'],
-    scenarios: ['办公空间', '会务接待', '园区服务'],
-    sortOrder: 112,
-    published: true,
-    icon: 'lock',
-  },
-  {
-    id: 'meeting-bar',
-    slug: 'meeting-bar',
-    productLine: 'space',
-    category: 'meeting-office',
-    name: '会议吧',
-    shortDescription: '会议配套服务与空间场景联动终端。',
-    coverImage: '/images/hardware/smart-meeting.jpg',
-    capabilities: ['会议配套服务', '场景联动'],
-    scenarios: ['会议室', '多功能厅'],
-    sortOrder: 114,
-    published: true,
-    icon: 'local_cafe',
-  },
-  {
     id: 'cast-box',
     slug: 'cast-box',
     productLine: 'space',
@@ -432,8 +404,9 @@ export const HARDWARE_MEGA_GROUPS = [
       { id: 'sensor' },
       { id: 'aap', label: 'RFID设备' },
       { id: 'gateway', label: '网关产品' },
-      { id: 'smart-locker', label: '智能存储柜' },
-      { id: 'meeting-bar', label: '会议吧' },
+      // 已有商品库条目，仅挂到顶栏下拉
+      { id: 'product-mv9h4k4k', label: '智能存储柜', href: '/hardware/product/?id=product-mv9h4k4k' },
+      { id: 'product-mv9gt3ng', label: '会议吧', href: '/hardware/product/?id=product-mv9gt3ng' },
       { id: 'cast-box', label: '投屏盒子' },
       { id: 'info-publish-box', label: '信息发布盒子' },
     ],
@@ -663,7 +636,7 @@ function megaSourceGroups() {
         // 代码写明的显示名优先，保证顶栏与后台默认清单一致
         label: entry.label || saved.label || '',
         imageUrl: saved.imageUrl || '',
-        href: saved.href || '',
+        href: entry.href || saved.href || '',
       }
     })
     return {
