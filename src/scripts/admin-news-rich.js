@@ -33,6 +33,7 @@ export function newsRichEditorMarkup(item = {}) {
           <button type="button" tabindex="-1" data-rich-cmd="table">表格</button>
           <button type="button" tabindex="-1" data-rich-cmd="image">插图</button>
           <button type="button" tabindex="-1" data-rich-cmd="video">视频</button>
+          <button type="button" tabindex="-1" data-rich-cmd="importUrl" data-rich-import-url title="粘贴公众号等文章链接，自动抓取正文并转存图片">链接解析</button>
           <label class="admin-rich__color">颜色<input type="color" value="#333333" data-rich-color /></label>
           <button type="button" tabindex="-1" data-rich-cmd="removeFormat">清除格式</button>
           <button type="button" tabindex="-1" data-rich-cmd="codeMode" data-rich-code-toggle title="粘贴 HTML / 源码，前台解析展示">代码</button>
@@ -41,7 +42,29 @@ export function newsRichEditorMarkup(item = {}) {
         <textarea class="admin-rich__code" hidden data-news-html-code spellcheck="false" aria-label="新闻正文源码">${escapeTextarea(html)}</textarea>
         <input type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,image/*" data-news-rich-file />
         <input type="file" hidden accept="video/mp4,video/webm,video/quicktime,video/*" data-news-rich-video />
-        <small data-news-rich-hint>粘贴会去掉原网站的加粗、颜色和字号。插图建议宽度不少于 1200px，视频可上传或粘贴链接。点「代码」可粘贴 HTML 源码，发布后前台解析展示。</small>
+        <small data-news-rich-hint>粘贴会去掉原网站的加粗、颜色和字号。插图建议宽度不少于 1200px。点「链接解析」可抓取公众号等文章并转存图片；点「代码」可粘贴 HTML 源码。</small>
+        <div class="admin-link-modal admin-news-import-modal" data-news-import-modal hidden>
+          <div class="admin-link-modal__backdrop" data-news-import-close></div>
+          <div class="admin-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="admin-news-import-title">
+            <header>
+              <h3 id="admin-news-import-title">链接解析</h3>
+              <button type="button" data-news-import-close aria-label="关闭">×</button>
+            </header>
+            <div class="admin-link-modal__body">
+              <p class="admin-news-import__lead">粘贴微信公众号或其他可公开打开的文章链接。系统会抓取标题、正文与图片，并把图片上传到本站后写入编辑器。</p>
+              <label class="admin-news-field is-wide">
+                <span>文章链接</span>
+                <input type="url" data-news-import-url placeholder="https://mp.weixin.qq.com/s/…" autocomplete="off" />
+              </label>
+              <p class="admin-news-import__hint" data-news-import-hint>支持公众号文章；若目标站有验证码/环境检测，可能解析失败，可改为浏览器打开后复制正文粘贴。</p>
+              <p class="admin-news-import__status" data-news-import-status hidden></p>
+            </div>
+            <footer>
+              <button type="button" data-news-import-close>取消</button>
+              <button type="button" class="admin-link-modal__ok" data-news-import-run>开始解析</button>
+            </footer>
+          </div>
+        </div>
       </div>
     </div>`
 }
@@ -245,6 +268,60 @@ export async function ingestEditorVideos(modal, { api, toast }) {
   }
 }
 
+function setNewsFieldValue(scope, name, value) {
+  if (value == null || value === '') return
+  const field = scope.querySelector(`[data-news-field="${name}"]`)
+  if (!field) return
+  field.value = value
+  if (name === 'cover') {
+    const preview = scope.querySelector(`[data-news-preview-for="${name}"]`)
+    if (preview) {
+      preview.src = value
+      preview.hidden = !value
+    }
+  }
+}
+
+function applyImportedArticle(scope, result, { replaceBody }) {
+  if (!result) return
+  const titleField = scope.querySelector('[data-news-field="title"]')
+  const shouldFillTitle = !String(titleField?.value || '').trim() || replaceBody
+  if (shouldFillTitle && result.title) setNewsFieldValue(scope, 'title', result.title)
+  if (result.summary) {
+    const summaryField = scope.querySelector('[data-news-field="summary"]')
+    if (!String(summaryField?.value || '').trim() || replaceBody) {
+      setNewsFieldValue(scope, 'summary', result.summary)
+    }
+  }
+  if (result.author) {
+    const authorField = scope.querySelector('[data-news-field="author"]')
+    if (!String(authorField?.value || '').trim() || replaceBody) {
+      setNewsFieldValue(scope, 'author', result.author)
+    }
+  }
+  if (result.date) setNewsFieldValue(scope, 'date', result.date)
+  if (result.cover) {
+    const coverField = scope.querySelector('[data-news-field="cover"]')
+    if (!String(coverField?.value || '').trim() || replaceBody) {
+      setNewsFieldValue(scope, 'cover', result.cover)
+    }
+  }
+  const editor = scope.querySelector('[data-news-html-editor]')
+  const codeInput = scope.querySelector('[data-news-html-code]')
+  const rich = scope.querySelector('[data-news-rich]')
+  if (!editor || !result.bodyHtml) return
+  const nextHtml = sanitizeNewsHtml(result.bodyHtml, { keepColor: true })
+  if (replaceBody || !String(editor.innerText || '').trim()) {
+    editor.innerHTML = nextHtml
+  } else {
+    editor.insertAdjacentHTML('beforeend', nextHtml)
+  }
+  if (codeInput) codeInput.value = editor.innerHTML
+  if (rich?.dataset.codeMode === '1') {
+    codeInput.value = editor.innerHTML
+  }
+}
+
 export function bindNewsRichEditor(modal, { api, toast }) {
   const rich = modal.querySelector('[data-news-rich]')
   const editor = modal.querySelector('[data-news-html-editor]')
@@ -253,10 +330,27 @@ export function bindNewsRichEditor(modal, { api, toast }) {
   const codeToggle = modal.querySelector('[data-rich-code-toggle]')
   const fileInput = modal.querySelector('[data-news-rich-file]')
   const videoInput = modal.querySelector('[data-news-rich-video]')
+  const importModal = modal.querySelector('[data-news-import-modal]')
+  const importUrlInput = modal.querySelector('[data-news-import-url]')
+  const importStatus = modal.querySelector('[data-news-import-status]')
+  const importRun = modal.querySelector('[data-news-import-run]')
   if (!editor || !rich) return
   let savedRange = null
   const rememberRange = () => {
     savedRange = saveEditorRange(editor) || savedRange
+  }
+
+  const setImportOpen = (open) => {
+    if (!importModal) return
+    importModal.hidden = !open
+    if (open) {
+      if (importStatus) {
+        importStatus.hidden = true
+        importStatus.textContent = ''
+      }
+      importUrlInput?.focus()
+      importUrlInput?.select?.()
+    }
   }
 
   const setCodeMode = (enabled) => {
@@ -311,6 +405,10 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     }
     rememberRange()
     restoreEditorRange(editor, savedRange)
+    if (command === 'importUrl') {
+      setImportOpen(true)
+      return
+    }
     if (command === 'h3') document.execCommand('formatBlock', false, 'h3')
     else if (command === 'p') document.execCommand('formatBlock', false, 'p')
     else if (command === 'link') {
@@ -354,6 +452,59 @@ export function bindNewsRichEditor(modal, { api, toast }) {
   editor.addEventListener('keydown', (event) => {
     if (event.key !== 'Enter') return
     event.stopPropagation()
+  })
+
+  importModal?.addEventListener('click', (event) => {
+    if (event.target.closest('[data-news-import-close]')) {
+      event.preventDefault()
+      setImportOpen(false)
+    }
+  })
+
+  importUrlInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      importRun?.click()
+    }
+  })
+
+  importRun?.addEventListener('click', async () => {
+    const url = String(importUrlInput?.value || '').trim()
+    if (!url) {
+      toast?.('请先粘贴文章链接', true)
+      return
+    }
+    const hasBody = Boolean(String(editor.innerText || '').trim())
+    const replaceBody = !hasBody || window.confirm('当前正文已有内容。确定用解析结果覆盖正文，并尽量补全标题/封面/简介吗？')
+    if (hasBody && !replaceBody) return
+    importRun.disabled = true
+    if (importStatus) {
+      importStatus.hidden = false
+      importStatus.textContent = '正在抓取文章并转存图片，请稍候…'
+    }
+    try {
+      toast?.('正在解析链接…')
+      const result = await api('/pages/news/import-url', {
+        method: 'POST',
+        body: JSON.stringify({ url }),
+        timeoutMs: 180000,
+      })
+      applyImportedArticle(modal, result, { replaceBody: true })
+      setImportOpen(false)
+      const warnText = Array.isArray(result.warnings) && result.warnings.length
+        ? `（${result.warnings.length} 张图未转存成功）`
+        : ''
+      toast?.(`已导入「${result.title || '文章'}」，转存 ${result.imageCount || 0} 张图片${warnText}`)
+      editor.focus()
+    } catch (error) {
+      if (importStatus) {
+        importStatus.hidden = false
+        importStatus.textContent = error.message || '解析失败'
+      }
+      toast?.(error.message || '链接解析失败', true)
+    } finally {
+      importRun.disabled = false
+    }
   })
 
   fileInput?.addEventListener('change', async () => {

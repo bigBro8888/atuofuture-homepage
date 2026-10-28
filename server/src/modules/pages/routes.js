@@ -15,6 +15,7 @@ import { getProductLibraryConfig, presentProductLibrary, publicProductLibraryCon
 import { getSolutionsLibraryConfig, presentSolutionsLibrary, publicSolutionsLibraryContent, validateSolutionsLibraryContent } from './solutions-library-service.js'
 import { getAgentsLibraryConfig, presentAgentsLibrary, publicAgentsLibraryContent, validateAgentsLibraryContent } from './agents-library-service.js'
 import { assertExpectedUpdatedAt, conflictResponse } from './version-guard.js'
+import { importArticleFromUrl } from './article-import-service.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -156,7 +157,7 @@ function assertPublicImageUrl(raw) {
   return parsed.toString()
 }
 
-async function fetchRemoteImage(remoteUrl) {
+async function fetchRemoteImage(remoteUrl, referer) {
   const origin = new URL(remoteUrl).origin
   const remote = await fetch(remoteUrl, {
     redirect: 'follow',
@@ -164,7 +165,7 @@ async function fetchRemoteImage(remoteUrl) {
     headers: {
       Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      Referer: `${origin}/`,
+      Referer: referer || `${origin}/`,
     },
   })
   if (!remote.ok) throw new Error(`远程图片无法下载（${remote.status}）`)
@@ -564,10 +565,31 @@ adminPagesRouter.post('/media/file', requireAuth('config:write'), fileUpload.sin
 adminPagesRouter.post('/media/image-from-url', requireAuth('config:write'), async (request, response) => {
   try {
     const remoteUrl = assertPublicImageUrl(request.body?.url)
-    const { buffer, mimeType } = await fetchRemoteImage(remoteUrl)
+    const { buffer, mimeType } = await fetchRemoteImage(remoteUrl, request.body?.referer)
     const url = await saveImageBuffer(buffer, mimeType, request.admin, { source: remoteUrl })
     response.status(201).json({ url })
   } catch (error) {
     response.status(400).json({ error: 'invalid_remote_image', message: error.message || '远程图片导入失败' })
+  }
+})
+
+adminPagesRouter.post('/news/import-url', requireAuth('config:write'), async (request, response) => {
+  try {
+    const result = await importArticleFromUrl(request.body?.url, {
+      fetchRemoteImage,
+      saveImageBuffer: (buffer, mimeType, extra = {}) => saveImageBuffer(buffer, mimeType, request.admin, extra),
+    })
+    await addAudit(request.admin, 'news.import.url', 'news-feed', {
+      sourceUrl: result.sourceUrl,
+      imageCount: result.imageCount,
+      title: result.title?.slice(0, 80),
+    })
+    response.json(result)
+  } catch (error) {
+    console.error('news.import-url failed:', error)
+    response.status(error.status || 400).json({
+      error: 'import_failed',
+      message: error.message || '链接解析失败',
+    })
   }
 })
