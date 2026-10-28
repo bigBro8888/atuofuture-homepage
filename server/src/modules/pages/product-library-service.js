@@ -20,6 +20,7 @@ const PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID = {
   gateway: 'control-interaction',
   'switch-control': 'control-interaction',
   'e-table-sign': 'control-interaction',
+  'smart-door-sign': 'space-business',
   'desk-screen': 'control-interaction',
   'smart-hvac': 'control-interaction',
   'smart-lighting': 'sense-iot',

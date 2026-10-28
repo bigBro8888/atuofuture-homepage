@@ -106,6 +106,20 @@ export const HARDWARE_PRODUCTS = [
     icon: 'badge',
   },
   {
+    id: 'smart-door-sign',
+    slug: 'smart-door-sign',
+    productLine: 'space',
+    category: 'meeting-office',
+    name: '智慧门牌',
+    shortDescription: '门口会议信息、占用状态与空间引导显示。',
+    coverImage: '/images/hardware/e-table-sign.jpg',
+    capabilities: ['会议信息展示', '占用状态同步', '空间引导'],
+    scenarios: ['会议室门口', '会务接待'],
+    sortOrder: 25,
+    published: true,
+    icon: 'door_front',
+  },
+  {
     id: 'desk-screen',
     slug: 'desk-screen',
     productLine: 'space',
@@ -355,11 +369,13 @@ export const HARDWARE_MEGA_GROUPS = [
     icon: 'domain',
     products: [
       { id: 'control-screen' },
+      { id: 'smart-door-sign', label: '智慧门牌' },
       { id: 'e-table-sign' },
       { id: 'desk-screen' },
       { id: 'smart-lighting', label: '照明与空调' },
       { id: 'sensor' },
-      { id: 'gateway' },
+      { id: 'aap', label: 'RFID设备' },
+      { id: 'gateway', label: '网关产品' },
     ],
   },
   {
@@ -370,7 +386,7 @@ export const HARDWARE_MEGA_GROUPS = [
       { id: 'eink-price-tag' },
       { id: 'lcd-price-tag' },
       { id: 'cold-tag' },
-      { id: 'aap' },
+      { id: 'aap', label: 'AAP 资产盘点' },
     ],
   },
   {
@@ -584,26 +600,25 @@ export function resolveHardwareSpaceMatrixRows() {
 }
 
 function megaSourceGroups() {
+  // 产品清单以代码 HARDWARE_MEGA_GROUPS 为准；CMS 仅覆盖同 id 的文案/图/链接
   if (!Array.isArray(navGroupOverride) || !navGroupOverride.length) return HARDWARE_MEGA_GROUPS
   return HARDWARE_MEGA_GROUPS.map((base) => {
     const extra = navGroupOverride.find((group) => group.id === base.id) || {}
-    const hasSavedProducts = Array.isArray(extra.products)
-    const sourceProducts = hasSavedProducts ? extra.products : base.products
-    const products = sourceProducts.map((entry) => {
-      const id = entry.id
-      const fallback = base.products.find((item) => item.id === id)
+    const savedProducts = Array.isArray(extra.products) ? extra.products : []
+    const products = base.products.map((entry) => {
+      const saved = savedProducts.find((item) => item.id === entry.id) || {}
       return {
-        id,
-        label: entry.label || fallback?.label || '',
-        imageUrl: entry.imageUrl || '',
-        href: entry.href || '',
+        id: entry.id,
+        label: saved.label || entry.label || '',
+        imageUrl: saved.imageUrl || '',
+        href: saved.href || '',
       }
-    }).filter((entry) => entry.id)
+    })
     return {
       id: base.id,
       title: extra.title || base.title,
       icon: extra.icon || base.icon,
-      products: hasSavedProducts ? products : (products.length ? products : base.products),
+      products,
     }
   })
 }

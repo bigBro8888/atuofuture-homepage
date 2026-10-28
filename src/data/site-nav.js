@@ -25,7 +25,7 @@ export const SITE_NAV_ITEMS = [
     segment: 'hardware/',
     mega: 'hardware',
     children: [
-      { id: 'hw-space', label: '空间智能', desc: '中控屏、传感、网关与会议办公硬件', segment: 'hardware/?line=space#hwc-browser' },
+      { id: 'hw-space', label: '空间智能', desc: '中控屏、智慧门牌、工位屏与传感网关', segment: 'hardware/?line=space#hwc-browser' },
       { id: 'hw-retail', label: '新零售与行业电子纸', desc: '电子价签、低温标签与资产盘点', segment: 'hardware/?line=retail#hwc-browser' },
       { id: 'hw-consumer', label: '3C 数码', desc: 'AI 墨水屏手机壳与电子纸相框', segment: 'hardware/?line=consumer#hwc-browser' },
     ],
