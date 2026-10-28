@@ -54,8 +54,6 @@ function buildSolutionNavChildren() {
 /** 全站顶部导航：一级 + 二级（mega menu） */
 export const SITE_NAV_ITEMS = [
   { id: 'home', label: '首页', segment: '' },
-  // 门户独立开页；登录 token 已同步 localStorage，新标签可保留登录态
-  { id: 'aspace-one', label: 'Aspace空间智能', segment: 'aspace-one/', href: '/aspace-one/', newTab: true },
   {
     id: 'agents',
     label: '空间智能体',
