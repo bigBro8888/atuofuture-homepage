@@ -470,12 +470,12 @@
 
   .site-mega__hardware {
     display: grid;
-    grid-template-columns: minmax(280px, 440px) minmax(200px, 280px) minmax(220px, 260px);
+    grid-template-columns: minmax(360px, 560px) minmax(200px, 280px) minmax(220px, 260px);
     justify-content: center;
     align-items: start;
     gap: 0;
     width: 100%;
-    max-width: 1040px;
+    max-width: 1160px;
     margin-inline: auto;
     padding: 22px 8px 10px;
     border: 0;
@@ -489,7 +489,7 @@
     align-items: center;
     justify-content: flex-start;
     width: 100%;
-    max-width: 1040px;
+    max-width: 1160px;
     margin-inline: auto;
     padding: 10px 22px 18px;
     border: 0;
@@ -627,6 +627,11 @@
 
   .site-mega-col__grid--triple {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 4px;
+  }
+
+  .site-mega-col__grid--quad {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     column-gap: 4px;
   }
 

@@ -97,7 +97,7 @@ function renderHardwareMega(root) {
             <a class="site-mega-col__head" href="${root}hardware/?line=${group.id}#hwc-browser" data-stagger style="--stagger:${step++}">
               <strong>${group.title}</strong>
             </a>
-            <div class="site-mega-col__grid${group.id === 'space' && group.products.length >= 6 ? ' site-mega-col__grid--triple' : group.products.length >= 4 ? ' site-mega-col__grid--dense' : ''}">
+            <div class="site-mega-col__grid${group.id === 'space' && group.products.length >= 10 ? ' site-mega-col__grid--quad' : group.id === 'space' && group.products.length >= 6 ? ' site-mega-col__grid--triple' : group.products.length >= 4 ? ' site-mega-col__grid--dense' : ''}">
               ${group.products
                 .map(
                   (p) => `

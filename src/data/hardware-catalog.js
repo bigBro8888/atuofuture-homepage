@@ -395,19 +395,19 @@ export const HARDWARE_MEGA_GROUPS = [
     id: 'space',
     title: '空间智能',
     icon: 'domain',
+    // 四列排版：前三列原有九项，第四列放会议吧 / 投屏盒子 / 信息发布盒子
     products: [
       { id: 'control-screen' },
       { id: 'smart-door-sign', label: '智慧门牌' },
       { id: 'e-table-sign' },
+      { id: 'product-mv9gt3ng', label: '会议吧', href: '/hardware/product/?id=product-mv9gt3ng' },
       { id: 'desk-screen' },
       { id: 'smart-lighting', label: '照明与空调' },
       { id: 'sensor' },
+      { id: 'cast-box', label: '投屏盒子' },
       { id: 'aap', label: 'RFID设备' },
       { id: 'gateway', label: '网关产品' },
-      // 已有商品库条目，仅挂到顶栏下拉
       { id: 'product-mv9h4k4k', label: '智能存储柜', href: '/hardware/product/?id=product-mv9h4k4k' },
-      { id: 'product-mv9gt3ng', label: '会议吧', href: '/hardware/product/?id=product-mv9gt3ng' },
-      { id: 'cast-box', label: '投屏盒子' },
       { id: 'info-publish-box', label: '信息发布盒子' },
     ],
   },
