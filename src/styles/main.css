@@ -579,12 +579,40 @@
   }
 
   .site-mega-col__head {
-    display: block;
-    margin: 0 0 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
     padding: 0 8px;
     color: #62758f;
     text-decoration: none;
     transition: color 0.4s cubic-bezier(0.475, 0.425, 0, 0.995);
+  }
+
+  .site-mega-col__icon {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    place-items: center;
+    border-radius: 8px;
+    color: #0f9f90;
+    background: #e7f8f5;
+  }
+
+  .site-mega-col__icon--retail {
+    color: #1769ff;
+    background: #edf4ff;
+  }
+
+  .site-mega-col__icon--consumer {
+    color: #d97706;
+    background: #fff6e8;
+  }
+
+  .site-mega-col__icon .material-symbols-outlined {
+    font-size: 18px;
+    line-height: 1;
   }
 
   .site-mega-col__head strong {
@@ -756,12 +784,26 @@
   }
 
   .site-mobile-nav-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin: 12px 0 4px;
     padding: 0 4px;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.04em;
     color: rgba(255, 255, 255, 0.5);
+  }
+
+  .site-mobile-nav-group .site-mega-col__icon {
+    width: 24px;
+    height: 24px;
+    flex-basis: 24px;
+    border-radius: 6px;
+  }
+
+  .site-mobile-nav-group .site-mega-col__icon .material-symbols-outlined {
+    font-size: 15px;
   }
 
   .site-mobile-acc {
