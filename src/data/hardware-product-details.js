@@ -87,6 +87,30 @@ export const PRODUCT_ROLES = {
     headline: '让数字内容以电子纸形态进入空间。',
     description: 'AI 电子纸艺术相框连接内容生成与实体空间展示。',
   },
+  'smart-locker': {
+    heroTitle: '智能存储柜',
+    role: '连接物品存取、授权开柜与空间服务',
+    headline: '让物品存取进入可授权、可追踪的服务闭环。',
+    description: '智能存储柜服务办公与会务场景的物品暂存、授权开柜与存取记录。',
+  },
+  'meeting-bar': {
+    heroTitle: '会议吧',
+    role: '连接会议配套服务与空间场景',
+    headline: '让会议配套服务随场景自动就绪。',
+    description: '会议吧面向会议室与多功能厅，支撑会议配套服务与空间场景联动。',
+  },
+  'cast-box': {
+    heroTitle: '投屏盒子',
+    role: '连接无线投屏与会议显示',
+    headline: '让投屏进入会议与协作场景的标准能力。',
+    description: '投屏盒子服务会议室、培训室与开放协作区的无线投屏与显示联动。（详情可后续补充）',
+  },
+  'info-publish-box': {
+    heroTitle: '信息发布盒子',
+    role: '连接内容下发与多终端信息发布',
+    headline: '让公共区域信息按场景及时发布。',
+    description: '信息发布盒子服务楼宇公共区、门厅与办公信息屏的内容下发与展示。（详情可后续补充）',
+  },
 }
 
 const CONTROL_SCREEN_STORY = {

@@ -30,6 +30,10 @@ const PRODUCT_LIBRARY_CATEGORY_BY_PRODUCT_ID = {
   'smart-meeting': 'space-business',
   'office-device': 'space-business',
   aap: 'space-business',
+  'smart-locker': 'space-business',
+  'meeting-bar': 'space-business',
+  'cast-box': 'space-business',
+  'info-publish-box': 'space-business',
 }
 
 /** 旧分类 id → 新分类 */
@@ -691,6 +695,20 @@ export function validateProductLibraryContent(value = {}) {
     usedSlugs.add(slug)
     return { ...next, slug }
   })
+  // 代码目录新增商品自动进入商品库，便于后台补详情（已有同 id/slug 不覆盖）
+  const known = new Set(items.flatMap((item) => [item.id, item.slug].filter(Boolean)))
+  for (const product of HARDWARE_PRODUCTS.filter((row) => row.published !== false)) {
+    const key = product.slug || product.id
+    if (!key || known.has(key) || known.has(product.id)) continue
+    if (items.length >= 80) break
+    const seeded = validateItem(seedItem(product), {}, allowedCategories)
+    let slug = seeded.slug
+    if (usedSlugs.has(slug)) slug = `${slug}-new`.slice(0, 60)
+    usedSlugs.add(slug)
+    known.add(seeded.id)
+    known.add(slug)
+    items.push({ ...seeded, slug })
+  }
   return { categories, items }
 }
 
