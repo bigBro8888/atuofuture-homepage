@@ -42,7 +42,7 @@ export function loginPage({ uid, clientName, dingTalkEnabled, passwordEnabled, m
 <body>
   <main class="auth-shell">
     <section class="auth-card" aria-labelledby="auth-title">
-      <header class="auth-brand"><span>A</span><div><strong>安托未来统一身份</strong><small>Atuo Future Identity</small></div></header>
+      <header class="auth-brand"><span>A</span><div><strong>安托未来统一身份</strong><small>AtuoFuture Identity</small></div></header>
       <p class="auth-eyebrow">UNIFIED AUTHENTICATION</p>
       <h1 id="auth-title">${registering ? '注册普通账号' : `登录到 ${escapeHtml(clientName)}`}</h1>
       <p class="auth-lead">${registering ? '创建一个用于收藏、排序与最近访问的个人账号。' : '使用同一个身份安全访问已授权的内部系统。'}</p>

@@ -3,7 +3,7 @@ import { db } from '../../lib/store.js'
 
 export const defaultSiteSettings = {
   brandZh: '安托未来',
-  brandEn: 'Atuo Future',
+  brandEn: 'AtuoFuture',
   logoLightUrl: '/assets/artink-logo-light.png',
   logoDarkUrl: '/assets/artink-logo.png',
   downloadLabel: '下载 App',

@@ -1,5 +1,5 @@
 [Unit]
-Description=Atuo Future unified OAuth and OIDC service
+Description=AtuoFuture unified OAuth and OIDC service
 After=network-online.target
 Wants=network-online.target
 

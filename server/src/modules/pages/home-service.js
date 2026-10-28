@@ -75,7 +75,7 @@ export const defaultHomeContent = {
     imageUrl: '/images/home-agents/space.jpg',
   },
   agents: {
-    kicker: 'Atuo Future · 安托未来',
+    kicker: 'AtuoFuture · 安托未来',
     title: '空间智能体，让空间自己完成工作',
     subtitle: '它是空间里的执行者：看懂现场，调用设备与系统，把一类任务做完。会议、访客、能耗、展厅……每一类工作对应一个智能体。现在是八个，以后会更多，目标是让楼宇、园区和酒店真正能自己运行。',
     items: [

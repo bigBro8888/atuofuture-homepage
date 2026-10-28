@@ -2,7 +2,7 @@
 
 export const BRAND = {
   zhName: '安托未来',
-  enName: 'Atuo Future',
+  enName: 'AtuoFuture',
   domain: 'atuofuture',
   logoAlt: '安托未来',
   positioning:

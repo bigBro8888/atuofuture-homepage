@@ -55,7 +55,7 @@ function stripStitchHead(html) {
 function injectHead(html) {
   return html.replace(/<head>\s*([\s\S]*?)<\/head>/, (_, inner) => {
     const titleMatch = inner.match(/<title>[\s\S]*?<\/title>/)
-    const title = titleMatch ? titleMatch[0] : '<title>Atuo Future</title>'
+    const title = titleMatch ? titleMatch[0] : '<title>AtuoFuture</title>'
     return `<head>\n${headReplacement}\n${title}\n</head>`
   })
 }
@@ -133,8 +133,8 @@ for (const { source, target, page, activeNav } of pages) {
   html = normalizeSpacing(html)
 
   html = html.replace(
-    /<span class="font-headline-md text-headline-md font-bold text-primary">Atuo Future<\/span>/g,
-    `<a href="${depth === 0 ? './' : '../'.repeat(depth)}" class="font-headline-md text-headline-md font-bold text-primary">Atuo Future</a>`
+    /<span class="font-headline-md text-headline-md font-bold text-primary">AtuoFuture<\/span>/g,
+    `<a href="${depth === 0 ? './' : '../'.repeat(depth)}" class="font-headline-md text-headline-md font-bold text-primary">AtuoFuture</a>`
   )
 
   if (page === 'home') {

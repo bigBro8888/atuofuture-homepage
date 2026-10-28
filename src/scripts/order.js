@@ -259,7 +259,7 @@ function renderPage() {
   const root = document.getElementById('order-root')
   if (!root) return
   const o = computeOrder()
-  document.title = `确认订单 · ${o.title} | Atuo Future`
+  document.title = `确认订单 · ${o.title} | AtuoFuture`
 
   root.innerHTML = `
     <section class="order-hero">

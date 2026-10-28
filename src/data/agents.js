@@ -6,7 +6,7 @@ export const AGENTS = [
     role: '总览咨询',
     icon: 'support_agent',
     description: '了解您的空间类型与业务目标，推荐合适的智能化路径',
-    greeting: '您好，我是 Atuo Future 空间顾问。请告诉我您的空间类型（总部、园区、商业等）和核心诉求，我来帮您梳理方案方向。',
+    greeting: '您好，我是 AtuoFuture 空间顾问。请告诉我您的空间类型（总部、园区、商业等）和核心诉求，我来帮您梳理方案方向。',
     quickPrompts: ['我想做智慧总部', '园区智能化怎么做', '想了解 AI Token 服务'],
   },
   {

@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Aspace 空间智能快速入门指南</title>
+  <style>
+    @page { size: A4; margin: 16mm 14mm 18mm; }
+    :root {
+      --blue: #0879f9;
+      --blue-deep: #0b4fad;
+      --ink: #15233a;
+      --muted: #5f6f86;
+      --line: #d9e4f2;
+      --soft: #f3f8ff;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      color: var(--ink);
+      background: #fff;
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+      font-size: 11.5pt;
+      line-height: 1.65;
+    }
+    img { max-width: 100%; display: block; }
+    h1, h2, h3, h4 { color: var(--ink); line-height: 1.3; page-break-after: avoid; }
+    h1 { font-size: 28pt; margin: 0 0 12px; }
+    h2 {
+      font-size: 18pt;
+      margin: 0 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--blue);
+    }
+    h3 { font-size: 13.5pt; margin: 22px 0 8px; color: var(--blue-deep); }
+    h4 { font-size: 12pt; margin: 14px 0 6px; }
+    p { margin: 0 0 10px; }
+    ul, ol { margin: 0 0 12px; padding-left: 1.3em; }
+    li { margin: 4px 0; }
+    strong { color: var(--ink); }
+    .muted { color: var(--muted); }
+    .page { page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .cover {
+      min-height: 250mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 8mm 2mm 4mm;
+    }
+    .cover-hero {
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 18px 40px rgba(18, 48, 96, .16);
+    }
+    .cover-hero img { width: 100%; height: 112mm; object-fit: cover; }
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(8, 121, 249, .1);
+      color: var(--blue);
+      font-size: 10pt;
+      font-weight: 700;
+      letter-spacing: .08em;
+    }
+    .cover-meta {
+      display: grid;
+      grid-template-columns: 1.4fr .8fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .cover-card {
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--soft);
+    }
+    .cover-card b { display: block; margin-bottom: 6px; color: var(--blue-deep); }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 18px;
+      margin-top: 8px;
+    }
+    .toc-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+    .toc-item span { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .figure {
+      margin: 12px 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fff;
+      page-break-inside: avoid;
+    }
+    .figure img { width: 100%; height: auto; max-height: 88mm; object-fit: cover; }
+    .figure figcaption {
+      padding: 8px 12px 10px;
+      color: var(--muted);
+      font-size: 9.5pt;
+      background: var(--soft);
+      border-top: 1px solid var(--line);
+    }
+    .figure.tall img { max-height: 105mm; }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 12px 0;
+    }
+    .card {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--card);
+      page-break-inside: avoid;
+    }
+    .card h4 { margin-top: 0; color: var(--blue-deep); }
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 14px;
+    }
+    .steps li {
+      position: relative;
+      margin: 0 0 10px;
+      padding: 12px 12px 12px 48px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      page-break-inside: avoid;
+    }
+    .steps li::before {
+      counter-increment: step;
+      content: counter(step, decimal-leading-zero);
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-size: 10pt;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 28px;
+      text-align: center;
+    }
+    .tip, .note, .warn {
+      margin: 12px 0;
+      padding: 12px 14px;
+      border-radius: 12px;
+      page-break-inside: avoid;
+    }
+    .tip { background: #eef7ff; border: 1px solid #c7e0ff; }
+    .note { background: #f7f9fc; border: 1px solid var(--line); }
+    .warn { background: #fff8eb; border: 1px solid #f0d7a0; }
+    .tip strong, .note strong, .warn strong { display: inline-block; margin-right: 6px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 14px;
+      font-size: 10.5pt;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th { background: var(--soft); color: var(--blue-deep); }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(8, 121, 249, .12);
+      color: var(--blue-deep);
+      font-size: 9.5pt;
+      font-weight: 700;
+    }
+    .footer-note {
+      margin-top: 18px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 9.5pt;
+    }
+    .scene-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .scene-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+    .scene-card img { width: 100%; height: 42mm; object-fit: cover; }
+    .scene-card .body { padding: 10px 12px 12px; }
+    .scene-card h4 { margin: 0 0 6px; }
+    .kicker { color: var(--blue); font-size: 10pt; font-weight: 700; letter-spacing: .04em; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+  <!-- 封面 -->
+  <section class="page cover">
+    <div>
+      <div class="eyebrow">ASPACE SPACE INTELLIGENCE · QUICK START</div>
+      <h1>Aspace 空间智能<br />快速入门指南</h1>
+      <p class="muted" style="font-size:13pt;max-width:150mm;">面向企业员工、空间管理员与业务负责人的图文手册。带你从登录门户、找到应用，到完成会议室预约、能耗查看、访客邀约等常用任务。</p>
+    </div>
+    <figure class="cover-hero">
+      <img src="img/aspace-guide-cover.jpg" alt="Aspace 空间智能封面" />
+    </figure>
+    <div class="cover-meta">
+      <div class="cover-card">
+        <b>适用对象</b>
+        <p style="margin:0;">新入职员工、行政与物业、会议室管理员、能源与安防运营人员、项目交付与实施同学。</p>
+      </div>
+      <div class="cover-card">
+        <b>文档信息</b>
+        <p style="margin:0;">版本 V1.0<br />更新日期 2026-10-27<br />安托未来 · Aspace 空间智能开放平台</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 目录 -->
+  <section class="page">
+    <h2>目录</h2>
+    <div class="toc-grid">
+      <div class="toc-item"><div>01 认识 Aspace 空间智能</div><span>03</span></div>
+      <div class="toc-item"><div>02 平台结构与导航</div><span>04</span></div>
+      <div class="toc-item"><div>03 登录、账号与权限</div><span>05</span></div>
+      <div class="toc-item"><div>04 首页与业务全景</div><span>06</span></div>
+      <div class="toc-item"><div>05 应用广场怎么用</div><span>07</span></div>
+      <div class="toc-item"><div>06 场景一：会议室预约</div><span>08</span></div>
+      <div class="toc-item"><div>07 场景二：查看能源能耗</div><span>09</span></div>
+      <div class="toc-item"><div>08 场景三：访客邀约</div><span>10</span></div>
+      <div class="toc-item"><div>09 场景四：信息发布与电子相册</div><span>11</span></div>
+      <div class="toc-item"><div>10 场景五：数字孪生与空间态势</div><span>12</span></div>
+      <div class="toc-item"><div>11 知识库与自助排障</div><span>13</span></div>
+      <div class="toc-item"><div>12 常见问题 FAQ</div><span>14</span></div>
+      <div class="toc-item"><div>附录 A 业务能力一览</div><span>15</span></div>
+      <div class="toc-item"><div>附录 B 建议学习路径</div><span>16</span></div>
+    </div>
+    <div class="note" style="margin-top:22px;">
+      <strong>阅读建议：</strong>如果你是第一次使用，请按第 1–5 章走完「认识 → 登录 → 找应用」；然后按你的岗位选择第 6–10 章任一场景实操。遇到问题先查知识库，再联系客服。
+    </div>
+    <figure class="figure" style="margin-top:18px;">
+      <img src="img/aspace-guide-journey.jpg" alt="入门路径示意" />
+      <figcaption>图 0-1 推荐入门路径：登录账号 → 浏览应用广场 → 打开业务应用 → 遇到问题查知识库</figcaption>
+    </figure>
+  </section>
+
+  <!-- 01 -->
+  <section class="page">
+    <p class="kicker">CHAPTER 01</p>
+    <h2>认识 Aspace 空间智能</h2>
+    <p>Aspace 空间智能开放平台，是安托未来面向园区、楼宇与企业办公空间打造的统一业务入口。它把分散的会议室、设备、能耗、门禁、访客、信息发布等能力，收敛到同一个门户中，让员工「找得到、用得上、问得清」。</p>
+    <figure class="figure">
+      <img src="img/aspace-guide-architecture.jpg" alt="平台分层架构" />
+      <figcaption>图 1-1 平台分层示意：底层设备与空间数据 → 中层能力与应用 → 上层面向不同角色的业务入口</figcaption>
+    </figure>
+    <h3>它解决什么问题？</h3>
+    <div class="two-col">
+      <div class="card">
+        <h4>对普通员工</h4>
+        <ul>
+          <li>快速预约会议室、申请权限</li>
+          <li>发起访客邀约、查看通行结果</li>
+          <li>在一个入口打开常用空间应用</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>对管理与运营</h4>
+        <ul>
+          <li>掌握空间使用、能耗与设备状态</li>
+          <li>统一发布公告、画报与电子相册</li>
+          <li>按业务场景编排协同链路</li>
+        </ul>
+      </div>
+    </div>
+    <h3>你可以把它理解成</h3>
+    <ol>
+      <li><strong>门户</strong>：登录后看到首页、应用广场、知识库、关于我们。</li>
+      <li><strong>应用市场</strong>：按会议、能源、安防、孪生等分类浏览 20+ 空间智能应用。</li>
+      <li><strong>帮助中心</strong>：用搜索、分类与文档中心自助学习与排障。</li>
+    </ol>
+    <div class="tip">
+      <strong>提示：</strong>不同园区/企业开通的应用清单可能不同。你在应用广场里看到的，才是当前环境已授权给你的能力。
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="page">
+    <p class="kicker">CHAPTER 02</p>
+    <h2>平台结构与导航</h2>
+    <p>进入 Aspace 空间智能开放平台后，顶部导航通常包含四个主入口：</p>
+    <table>
+      <thead>
+        <tr><th>导航</th><th>做什么</th><th>适合谁</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>首页</strong></td><td>了解业务全景、典型场景与平台能力概览，快速跳转到应用。</td><td>所有用户</td></tr>
+        <tr><td><strong>应用广场</strong></td><td>按分类、搜索、收藏浏览并打开具体业务应用。</td><td>日常办事的主力入口</td></tr>
+        <tr><td><strong>知识库</strong></td><td>搜索帮助文档、查看精选指南、阅读最新更新。</td><td>自学与排障</td></tr>
+        <tr><td><strong>关于我们</strong></td><td>了解公司与联系方式，必要时联系客服。</td><td>商务/咨询</td></tr>
+      </tbody>
+    </table>
+    <figure class="figure">
+      <img src="img/showcase-space.jpg" alt="空间门户场景" />
+      <figcaption>图 2-1 空间智能门户强调「一个入口连接多种业务」，而不是让员工记住十几套独立系统地址。</figcaption>
+    </figure>
+    <h3>右侧/账号区常见能力</h3>
+    <ul>
+      <li><strong>登录 / 已登录头像</strong>：统一认证登录；登录后可退出。</li>
+      <li><strong>收藏应用</strong>：在应用广场把高频应用加入「我的收藏」，下次更快打开。</li>
+      <li><strong>搜索</strong>：在应用广场按名称、场景关键词搜索；在知识库按问题关键词搜索。</li>
+    </ul>
+    <div class="note">
+      <strong>小技巧：</strong>把「会议预约」「能耗」「访客邀约」先收藏。新用户前两周 80% 的操作通常集中在这三类。
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="page">
+    <p class="kicker">CHAPTER 03</p>
+    <h2>登录、账号与权限</h2>
+    <h3>3.1 如何登录</h3>
+    <ol class="steps">
+      <li><strong>打开门户</strong>：通过企业提供的 Aspace 空间智能入口进入首页。</li>
+      <li><strong>点击「登录」</strong>：右上角进入统一认证授权流程（OIDC）。</li>
+      <li><strong>完成企业身份验证</strong>：按企业账号体系输入凭证或扫码。</li>
+      <li><strong>返回门户</strong>：认证成功后自动回到 Aspace，右上角显示你的姓名/头像。</li>
+    </ol>
+    <div class="warn">
+      <strong>注意：</strong>若登录后仍看不到某些应用，通常不是登录失败，而是<strong>应用权限尚未开通</strong>。请继续看 3.2。
+    </div>
+    <h3>3.2 申请产品/应用权限</h3>
+    <p>权限决定你能打开哪些应用、能看哪些楼层/会议室/能耗分区。常见路径：</p>
+    <ol>
+      <li>在应用广场找到目标应用，若提示无权限，按页面引导发起申请。</li>
+      <li>或在快捷入口中选择「申请产品权限」，填写用途、所属部门、所需空间范围。</li>
+      <li>等待管理员审批；审批通过后刷新页面或重新进入应用。</li>
+    </ol>
+    <div class="two-col">
+      <div class="card">
+        <h4>申请时建议写清</h4>
+        <ul>
+          <li>业务用途（例：每周例会预约）</li>
+          <li>使用频率与时段</li>
+          <li>涉及楼宇/楼层/会议室</li>
+          <li>是否需要代订、审批、数据导出</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>常见权限类型</h4>
+        <ul>
+          <li>应用可见/可打开</li>
+          <li>空间资源可预约范围</li>
+          <li>能耗数据可见分区</li>
+          <li>管理配置（仅管理员）</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tip">
+      <strong>安全提醒：</strong>不要共享个人登录态。代他人预约时，使用系统提供的代订/授权能力，而不是借用账号。
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="page">
+    <p class="kicker">CHAPTER 04</p>
+    <h2>首页与业务全景</h2>
+    <p>首页帮助你快速理解「平台能做什么」，并按业务链路跳转，而不是一上来面对密密麻麻的功能清单。</p>
+    <figure class="figure">
+      <img src="img/showcase-building.jpg" alt="园区楼宇场景" />
+      <figcaption>图 4-1 首页场景卡会把「园区楼宇 / 企业办公 / 生产制造 / 智慧仓储」等典型场景与相关应用绑在一起。</figcaption>
+    </figure>
+    <h3>4.1 业务全景在讲什么</h3>
+    <p>业务全景通常按链路展示，例如：</p>
+    <ul>
+      <li><strong>协同</strong>：会议预约、智能门牌、会议控制</li>
+      <li><strong>资产</strong>：资产台账、盘点、借还</li>
+      <li><strong>运维</strong>：设备监测、空调控制、能耗分析</li>
+      <li><strong>服务</strong>：访客接待、门禁通行、工单巡检</li>
+      <li><strong>洞察</strong>：数字孪生、信息发布、电子相框</li>
+    </ul>
+    <h3>4.2 建议你怎么用首页</h3>
+    <ol class="steps">
+      <li>先看与自己岗位最接近的场景卡（如行政看「企业办公」，物业看「园区楼宇」）。</li>
+      <li>点场景下挂的应用标签，进入应用广场对应能力。</li>
+      <li>确认能打开后，立即收藏，形成个人工作台习惯。</li>
+    </ol>
+    <div class="note">
+      <strong>说明：</strong>首页是「导览」，真正办事请进入<strong>应用广场</strong>。首页配置可能由运营更新，但不影响你已收藏的应用。
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section class="page">
+    <p class="kicker">CHAPTER 05</p>
+    <h2>应用广场怎么用</h2>
+    <p>应用广场是日常最高频入口。你可以按分类浏览，也可以直接搜索。</p>
+    <h3>5.1 分类浏览</h3>
+    <p>左侧/顶部分类常见包括：数字孪生、会议管理、信息发布、资产管理、能源能耗、双碳管理、门禁安防、智能底座、访客管理等。</p>
+    <div class="scene-grid">
+      <div class="scene-card">
+        <img src="img/showcase-meeting.jpg" alt="会议管理" />
+        <div class="body"><h4>会议管理</h4><p class="muted" style="margin:0;">预约、门牌、会控与投屏协同。</p></div>
+      </div>
+      <div class="scene-card">
+        <img src="img/app-energy.jpg" alt="能源能耗" />
+        <div class="body"><h4>能源能耗</h4><p class="muted" style="margin:0;">看用量、找异常、支撑节能。</p></div>
+      </div>
+      <div class="scene-card">
+        <img src="img/app-resource.jpg" alt="资产管理" />
+        <div class="body"><h4>资产管理</h4><p class="muted" style="margin:0;">台账、流转、盘点与借还。</p></div>
+      </div>
+      <div class="scene-card">
+        <img src="img/app-security.jpg" alt="门禁安防" />
+        <div class="body"><h4>门禁安防</h4><p class="muted" style="margin:0;">通行权限、事件与告警。</p></div>
+      </div>
+    </div>
+    <h3>5.2 搜索与收藏</h3>
+    <ul>
+      <li>搜索框支持应用名、场景词，例如：<em>会议预约</em>、<em>能耗</em>、<em>访客</em>、<em>电子相册</em>。</li>
+      <li>打开应用详情/卡片后可加入收藏；在「我的收藏」集中管理。</li>
+      <li>部分应用会跳转到独立业务系统；请允许浏览器弹窗或在企业内网环境打开。</li>
+    </ul>
+    <div class="tip">
+      <strong>打不开应用时按这个顺序排查：</strong>① 是否已登录 ② 是否有权限 ③ 是否企业网络/白名单 ④ 浏览器是否拦截弹窗 ⑤ 查知识库或联系管理员。
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="page">
+    <p class="kicker">CHAPTER 06</p>
+    <h2>场景一：会议室预约</h2>
+    <figure class="figure">
+      <img src="img/aspace-guide-meeting.jpg" alt="会议室预约场景" />
+      <figcaption>图 6-1 会议室预约通常覆盖：选空间 → 选时段 → 填写会议信息 → 确认资源 → 门牌/会控联动</figcaption>
+    </figure>
+    <h3>6.1 标准操作步骤</h3>
+    <ol class="steps">
+      <li>进入<strong>应用广场 → 会议管理 → 会议预约</strong>（或搜索「会议室」）。</li>
+      <li>选择园区/楼宇/楼层，筛选人数、是否有投屏、视频会议设备等条件。</li>
+      <li>在日历中选择日期与时段，确认无冲突。</li>
+      <li>填写主题、组织人、参会人；如需服务（茶水、台卡）按表单勾选。</li>
+      <li>提交预约。成功后可在「我的会议」查看，并同步到门牌显示。</li>
+    </ol>
+    <h3>6.2 会中与会后</h3>
+    <ul>
+      <li><strong>智能门牌</strong>：门口屏显示会议主题、时段、占用状态，减少撞房。</li>
+      <li><strong>会议控制 / 无线投屏</strong>：会中一键投屏、场景切换（会议模式灯光/空调）。</li>
+      <li><strong>释放与延时</strong>：提前结束请释放房间；需要延长时在可预约规则内申请延时。</li>
+    </ul>
+    <div class="two-col">
+      <div class="card">
+        <h4>预约成功检查清单</h4>
+        <ul>
+          <li>时间、房间、人数是否正确</li>
+          <li>参会人是否收到通知</li>
+          <li>是否需要访客通行权限</li>
+          <li>设备（投屏/视频）是否勾选</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>常见失败原因</h4>
+        <ul>
+          <li>时段已被占用或保洁锁定</li>
+          <li>你没有该楼层预约权限</li>
+          <li>最短/最长时长不满足规则</li>
+          <li>需要审批但尚未通过</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section class="page">
+    <p class="kicker">CHAPTER 07</p>
+    <h2>场景二：查看能源能耗</h2>
+    <figure class="figure">
+      <img src="img/aspace-guide-energy.jpg" alt="能源能耗场景" />
+      <figcaption>图 7-1 能耗应用帮助你从「楼宇总量」下钻到分区、回路或设备，发现异常用能。</figcaption>
+    </figure>
+    <h3>7.1 谁需要看能耗</h3>
+    <ul>
+      <li>物业/能源管理员：日报、月报、同比环比、异常告警</li>
+      <li>行政与部门负责人：了解责任区域用能趋势</li>
+      <li>项目与双碳同事：为核算与减排提供数据入口</li>
+    </ul>
+    <h3>7.2 快速上手</h3>
+    <ol class="steps">
+      <li>应用广场打开<strong>能源能耗</strong>（或首页「设备与能源」链路）。</li>
+      <li>先看总览：今日用电/用水、同比、峰值时段。</li>
+      <li>按楼宇 → 楼层 → 分区筛选；对异常点标记或下钻设备。</li>
+      <li>需要汇报时导出报表，或把关键图表加入收藏视图。</li>
+    </ol>
+    <div class="note">
+      <strong>数据延迟说明：</strong>采集与网关上传存在分钟级到小时级延迟。若刚完成回路改造，请先确认测点已接入（详见知识库《能源能耗数据接入说明》）。
+    </div>
+    <h3>7.3 和智能控制的关系</h3>
+    <p>能耗看「用了多少」，智能控制（空调、照明、场景）管「怎么用」。发现夜间空房间仍高负载时，可协同空调/照明策略或工单巡检处理。</p>
+  </section>
+
+  <!-- 08 -->
+  <section class="page">
+    <p class="kicker">CHAPTER 08</p>
+    <h2>场景三：访客邀约</h2>
+    <figure class="figure">
+      <img src="img/aspace-guide-visitor.jpg" alt="访客邀约场景" />
+      <figcaption>图 8-1 完整闭环：员工发起邀约 → 访客确认 → 审批/凭证 → 门岗或闸机核验 → 签到签退</figcaption>
+    </figure>
+    <h3>8.1 员工侧：发起邀约</h3>
+    <ol class="steps">
+      <li>打开<strong>访客邀约</strong>应用，新建邀约。</li>
+      <li>填写访客姓名、手机号、来访目的、到访时段、被访人、通行区域。</li>
+      <li>提交后等待审批（若企业开启审批流）。</li>
+      <li>通过后系统向访客发送确认与动态访客凭证。</li>
+    </ol>
+    <h3>8.2 访客侧与门岗核验</h3>
+    <ul>
+      <li>访客在小程序/短信链接中查看状态，届时出示动态码。</li>
+      <li>自助访客机或前台核验后，可打印访客卡；有门禁的园区可直接联动闸机。</li>
+      <li>核验界面应能看到被访员工、目的、有效时段与授权区域，避免“只扫码不管范围”。</li>
+    </ul>
+    <div class="warn">
+      <strong>合规提醒：</strong>仅邀约真实到访人员；过期凭证勿转发。涉及机房、实验室等敏感区域，务必按最小权限勾选通行范围。
+    </div>
+    <figure class="figure">
+      <img src="img/app-visitor.jpg" alt="访客应用配图" />
+      <figcaption>图 8-2 访客能力属于「通行与服务」链路，常与门禁安防、会议室预约一起使用（外部参会人）。</figcaption>
+    </figure>
+  </section>
+
+  <!-- 09 -->
+  <section class="page">
+    <p class="kicker">CHAPTER 09</p>
+    <h2>场景四：信息发布与电子相册</h2>
+    <div class="two-col">
+      <div class="scene-card">
+        <img src="img/app-poster.jpg" alt="AI画报" />
+        <div class="body"><h4>AI 画报 / 信息发布</h4><p class="muted" style="margin:0;">做企业文化、通知与活动视觉，并投放到楼宇屏。</p></div>
+      </div>
+      <div class="scene-card">
+        <img src="img/app-album.jpg" alt="电子相册" />
+        <div class="body"><h4>电子相册</h4><p class="muted" style="margin:0;">多屏同步展示相册内容，支持定时发布。</p></div>
+      </div>
+    </div>
+    <h3>9.1 信息发布建议流程</h3>
+    <ol class="steps">
+      <li>明确投放位置：电梯厅、餐厅、会议室走廊、前台等。</li>
+      <li>在内容应用中选择模板或上传素材，注意品牌与合规审核。</li>
+      <li>选择终端/分组，设置生效时段与下线时间。</li>
+      <li>发布后到现场或远程预览确认；过期自动下线或手动撤销。</li>
+    </ol>
+    <h3>9.2 电子相册注意点</h3>
+    <ul>
+      <li>统一分辨率与方向，避免竖图在横屏上严重裁切。</li>
+      <li>多屏同步时，先确认终端在线与分组正确。</li>
+      <li>涉及人物肖像、客户案例需有授权。</li>
+    </ul>
+    <div class="tip">
+      <strong>和会议的结合：</strong>大型活动可把「日程画报 + 导视 + 电子相册回顾」串成一套发布计划，减少临时改屏成本。
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="page">
+    <p class="kicker">CHAPTER 10</p>
+    <h2>场景五：数字孪生与空间态势</h2>
+    <figure class="figure tall">
+      <img src="img/showcase-control.jpg" alt="空间控制与态势" />
+      <figcaption>图 10-1 数字孪生把楼宇、设备与运行数据放在同一空间视图中，适合运营调度与领导驾驶舱。</figcaption>
+    </figure>
+    <h3>10.1 适合做什么</h3>
+    <ul>
+      <li>园区/楼宇运行总览：空间占用、关键设备、告警聚合</li>
+      <li>事件定位：从告警跳到对应楼层与设备</li>
+      <li>汇报演示：用三维/空间视图讲清「哪里出了问题、影响多大」</li>
+    </ul>
+    <h3>10.2 使用建议</h3>
+    <ol>
+      <li>先选择正确的园区与楼栋模型，再打开图层（能耗、门禁、会议占用等）。</li>
+      <li>不要一次打开全部图层；按当前任务叠加 1–2 类数据。</li>
+      <li>发现异常后，从孪生跳转到对应业务应用（工单、设备中心、能耗）闭环处理。</li>
+    </ol>
+    <div class="note">
+      <strong>性能小贴士：</strong>首次加载模型可能较慢。建议企业网络环境下使用；演示前预先打开并缓存关键楼栋。
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="page">
+    <p class="kicker">CHAPTER 11</p>
+    <h2>知识库与自助排障</h2>
+    <p>知识库是门户内的帮助中心，结构一般包括：搜索与热词、文档分类、精选文档、文档列表、最新更新、客服引导。</p>
+    <h3>11.1 怎么高效找文档</h3>
+    <ol class="steps">
+      <li>先用顶部搜索：输入「预约」「权限」「能耗接入」等结果词。</li>
+      <li>点热门搜索词，快速进入高频问题。</li>
+      <li>左侧按分类筛选（能源能耗、会议室预约系统、项目服务等）。</li>
+      <li>精选卡片看「新手必读 / 热门文档」；下方列表浏览普通文档。</li>
+    </ol>
+    <h3>11.2 打开文档</h3>
+    <p>文档可能是 PDF / Word。点击后将在新窗口预览或下载。若无法打开，检查是否登录、是否有文件、浏览器是否拦截。</p>
+    <h3>11.3 联系客服</h3>
+    <p>页面底部「客服引导」可留下联系方式。提交前请准备：发生时间、账号、应用名称、截图、已尝试步骤，便于更快定位。</p>
+    <div class="tip">
+      <strong>推荐收藏文档：</strong>《Aspace 空间智能快速入门指南》（本文）、《会议室预约配置操作指南》、《能源能耗数据接入说明》、《项目实施规范》。
+    </div>
+  </section>
+
+  <!-- 12 FAQ -->
+  <section class="page">
+    <p class="kicker">CHAPTER 12</p>
+    <h2>常见问题 FAQ</h2>
+    <h3>Q1. 登录成功但应用广场是空的？</h3>
+    <p>可能是企业尚未给该账号分配应用可见权限，或当前环境未发布应用目录。联系空间管理员开通，并确认你进入的是正确园区门户。</p>
+    <h3>Q2. 会议室总是提示冲突？</h3>
+    <p>换相邻时段或邻近房间；检查是否有周期性会议占用；确认是否存在保洁/维护锁定。管理员可在预约后台查看锁定来源。</p>
+    <h3>Q3. 能耗数字和电表不一致？</h3>
+    <p>先核对测点映射与采集周期，排除显示时区/汇总口径差异。改造后需重新校验接入，参考《能源能耗数据接入说明》。</p>
+    <h3>Q4. 访客码核验失败？</h3>
+    <p>检查是否在有效时段、是否已审批通过、手机时间是否准确、是否走错门禁点。过期请重新发送邀约。</p>
+    <h3>Q5. 信息发布了现场没变化？</h3>
+    <p>确认终端在线、分组选对、生效时间已到、素材分辨率适配，并在终端侧执行刷新/重新拉取。</p>
+    <h3>Q6. 可以不登录就用吗？</h3>
+    <p>浏览介绍可以；涉及预约、邀约、能耗、配置等业务操作需要登录并具备相应权限。</p>
+    <div class="footer-note">若 FAQ 未覆盖你的问题，请到知识库搜索，或通过页面客服入口联系我们。</div>
+  </section>
+
+  <!-- 附录 A -->
+  <section class="page">
+    <p class="kicker">APPENDIX A</p>
+    <h2>业务能力一览</h2>
+    <table>
+      <thead>
+        <tr><th>分类</th><th>典型能力</th><th>一句话</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>数字孪生</td><td>园区/楼宇孪生</td><td>统一呈现运行态势</td></tr>
+        <tr><td>会议管理</td><td>预约、门牌、会控、投屏</td><td>覆盖会前到会中</td></tr>
+        <tr><td>信息发布</td><td>信息发布、AI 画报、电子相册</td><td>内容生产到多终端展示</td></tr>
+        <tr><td>资产管理</td><td>台账、RFID 盘点、借还</td><td>资产全生命周期</td></tr>
+        <tr><td>能源能耗</td><td>能耗分析、用能异常</td><td>看清用量与节能空间</td></tr>
+        <tr><td>双碳管理</td><td>碳排核算与分析</td><td>支撑减排目标管理</td></tr>
+        <tr><td>门禁安防</td><td>通行权限、告警</td><td>人员与区域安全</td></tr>
+        <tr><td>智能底座</td><td>设备中心、传感、场景、权限中心</td><td>空间与控制基础能力</td></tr>
+        <tr><td>访客管理</td><td>访客邀约与到访服务</td><td>邀约到核验闭环</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">实际以你所在环境的应用广场为准；上表用于建立「分类心智模型」，方便搜索与权限申请时描述需求。</p>
+    <figure class="figure">
+      <img src="img/showcase-space.jpg" alt="能力协同" />
+      <figcaption>图 A-1 能力不是孤立按钮：会议、访客、门禁、能耗、发布往往在同一业务日中被串联使用。</figcaption>
+    </figure>
+  </section>
+
+  <!-- 附录 B -->
+  <section class="page">
+    <p class="kicker">APPENDIX B</p>
+    <h2>建议学习路径</h2>
+    <h3>B.1 三天上手计划</h3>
+    <table>
+      <thead>
+        <tr><th>时间</th><th>目标</th><th>练习</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>第 1 天</td><td>能登录、能找到应用</td><td>完成登录；收藏 3 个常用应用；浏览知识库首页</td></tr>
+        <tr><td>第 2 天</td><td>完成一个真实业务</td><td>预约 1 次会议室，或发起 1 次访客邀约</td></tr>
+        <tr><td>第 3 天</td><td>建立排障习惯</td><td>故意用搜索解决 1 个问题；记下管理员联系方式</td></tr>
+      </tbody>
+    </table>
+    <h3>B.2 分角色重点</h3>
+    <div class="two-col">
+      <div class="card">
+        <h4>行政 / 秘书</h4>
+        <p>会议预约、门牌、访客邀约、信息发布。</p>
+      </div>
+      <div class="card">
+        <h4>物业 / 能源</h4>
+        <p>能耗、设备中心、工单巡检、门禁告警。</p>
+      </div>
+      <div class="card">
+        <h4>IT / 实施</h4>
+        <p>权限中心、数据接入、终端发布、项目规范。</p>
+      </div>
+      <div class="card">
+        <h4>管理者</h4>
+        <p>首页场景、数字孪生态势、报表与异常。</p>
+      </div>
+    </div>
+    <div class="note">
+      <strong>下一步阅读：</strong>
+      <ul style="margin-bottom:0;">
+        <li>《会议室预约配置操作指南》——管理员侧房间、设备与规则</li>
+        <li>《能源能耗数据接入说明》——测点、网关与校验</li>
+        <li>《项目实施规范》——交付、验收与权限基线</li>
+      </ul>
+    </div>
+    <div class="footer-note">
+      文档名称：Aspace 空间智能快速入门指南（PDF）<br />
+      编制：安托未来 Aspace 空间智能开放平台<br />
+      用途：新人培训、客户交付附件、知识库「新手必读」<br />
+      © 安托未来 · 可在企业内部培训与交付中使用
+    </div>
+  </section>
+
+</body>
+</html>
