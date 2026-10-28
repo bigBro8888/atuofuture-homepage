@@ -11,6 +11,42 @@ function normalizeImgSrc(src) {
   return value
 }
 
+/** 微信等站点真实地址常在 data-src，src 是占位 SVG / 空 */
+function promoteImgDataSrc(html) {
+  return String(html || '').replace(/<img\b([^>]*?)\/?>/gi, (full, attrs) => {
+    const pick = (...names) => {
+      for (const name of names) {
+        const match = new RegExp(`${name}\\s*=\\s*("([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i').exec(attrs)
+        const value = match?.[2] ?? match?.[3] ?? match?.[4] ?? ''
+        const url = normalizeImgSrc(value)
+        if (url && !url.startsWith('data:') && !url.startsWith('blob:')) return url
+      }
+      return ''
+    }
+    const lazy = pick('data-src', 'data-original', 'data-lazy-src', 'data-actualsrc')
+    const src = pick('src')
+    if (!lazy) return full
+    if (src && src === lazy) return full
+    let next = String(attrs || '').replace(/\s*(?:data-src|data-original|data-lazy-src|data-actualsrc|src)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/gi, '')
+    next = ` src="${lazy.replace(/"/g, '&quot;')}"${next}`
+    return `<img${next}>`
+  })
+}
+
+function promoteEditorLazyImages(root) {
+  root?.querySelectorAll?.('img').forEach((image) => {
+    const lazy =
+      normalizeImgSrc(image.getAttribute('data-src') || '') ||
+      normalizeImgSrc(image.getAttribute('data-original') || '') ||
+      normalizeImgSrc(image.getAttribute('data-lazy-src') || '')
+    const src = normalizeImgSrc(image.getAttribute('src') || '')
+    if (!lazy) return
+    if (!src || src.startsWith('data:') || src.startsWith('blob:') || /svg\+xml/i.test(src)) {
+      image.setAttribute('src', lazy)
+    }
+  })
+}
+
 function escapeTextarea(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -62,10 +98,18 @@ export function newsRichEditorMarkup(item = {}) {
                   <li>在原文里用鼠标选中正文（或 Ctrl+A），再 Ctrl+C</li>
                   <li>回到此框 Ctrl+V 粘贴，再点「解析粘贴内容」</li>
                 </ol>
-                <label class="admin-news-field is-wide" style="margin-top:10px">
-                  <span>粘贴原文（推荐）</span>
-                  <textarea data-news-import-paste rows="6" placeholder="在原文复制后，回到这里 Ctrl+V 粘贴全文…"></textarea>
-                </label>
+                <div class="admin-news-field is-wide" style="margin-top:10px">
+                  <span>粘贴原文（推荐，可带图片）</span>
+                  <div
+                    class="admin-news-import__paste"
+                    contenteditable="true"
+                    data-news-import-paste
+                    role="textbox"
+                    aria-multiline="true"
+                    data-placeholder="在原文复制后，回到这里 Ctrl+V 粘贴全文（不要粘到正文编辑器）"
+                  ></div>
+                  <small>必须粘到这个黄框里；粘到下面正文编辑器时，微信常会把图变成「图片」二字。</small>
+                </div>
               </div>
               <p class="admin-news-import__hint" data-news-import-hint>非微信链接一般可直接解析。微信若提示环境验证，不是链接坏了，是机房 IP 被风控。</p>
               <p class="admin-news-import__status" data-news-import-status hidden></p>
@@ -353,6 +397,7 @@ export function bindNewsRichEditor(modal, { api, toast }) {
   const importClipboard = modal.querySelector('[data-news-import-clipboard]')
   if (!editor || !rich) return
   let savedRange = null
+  let importPasteHtml = ''
   const rememberRange = () => {
     savedRange = saveEditorRange(editor) || savedRange
   }
@@ -380,7 +425,8 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     importModal.hidden = !open
     if (open) {
       showWeixinAssist(isWeixinUrl(importUrlInput?.value), '')
-      if (importPaste) importPaste.value = ''
+      importPasteHtml = ''
+      if (importPaste) importPaste.innerHTML = ''
       importUrlInput?.focus()
       importUrlInput?.select?.()
     }
@@ -585,17 +631,34 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     window.open(url, '_blank', 'noopener,noreferrer')
     showWeixinAssist(
       true,
-      '已打开原文。请在原文页 Ctrl+A 全选、Ctrl+C 复制，再点「从剪贴板导入」。',
+      '已打开原文。请全选复制后，回到这个黄框里 Ctrl+V，再点「解析粘贴内容」。',
     )
+    window.setTimeout(() => importPaste?.focus(), 300)
   })
 
-  importPaste?.addEventListener('paste', () => {
-    // 粘贴后稍微等 DOM 更新，便于用户看到内容
-    window.setTimeout(() => {
-      if (importPaste.value.trim()) {
-        showWeixinAssist(true, '已收到粘贴内容，点「解析粘贴内容」即可导入。')
-      }
-    }, 0)
+  importPaste?.addEventListener('paste', (event) => {
+    event.preventDefault()
+    const html = promoteImgDataSrc(event.clipboardData?.getData('text/html') || '')
+    const text = String(event.clipboardData?.getData('text/plain') || '').trim()
+    importPasteHtml = html || text
+    if (html) {
+      importPaste.innerHTML = sanitizeNewsHtml(html, { keepColor: true })
+      promoteEditorLazyImages(importPaste)
+    } else {
+      importPaste.textContent = text
+    }
+    const hasImg = Boolean(html && /<img\b/i.test(html))
+    const previewText = (importPaste.innerText || '').replace(/\s+/g, '')
+    if (!previewText && !hasImg) {
+      showWeixinAssist(true, '粘贴内容为空。请在微信原文页选中正文后再复制。')
+      return
+    }
+    showWeixinAssist(
+      true,
+      hasImg
+        ? '已收到粘贴内容（含图片）。点「解析粘贴内容」将转存到本站。'
+        : '已收到文字。若原文有图但这里没有，请重新在原文里选中带图区域再复制粘贴到本框。',
+    )
   })
 
   importClipboard?.addEventListener('click', async (event) => {
@@ -605,10 +668,14 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     showWeixinAssist(true, '正在解析粘贴内容并转存图片…')
     try {
       toast?.('正在导入…')
-      let raw = String(importPaste?.value || '').trim()
-      if (!raw) raw = await readClipboardHtml()
-      const html = normalizePastedArticle(raw)
-      if (!html) throw new Error('还没有正文。请先打开原文复制，再粘贴到黄色区域的文本框里。')
+      let raw = String(importPasteHtml || '').trim()
+      if (!raw) raw = String(importPaste?.innerHTML || '').trim()
+      if (!raw || raw === '<br>') raw = await readClipboardHtml()
+      const html = promoteImgDataSrc(normalizePastedArticle(raw))
+      if (!html) throw new Error('还没有正文。请先打开原文复制，再粘贴到黄色区域里（不要粘到正文编辑器）。')
+      if (!/<img\b/i.test(html) && /图片/.test(html) && html.replace(/图片/g, '').replace(/<[^>]+>/g, '').trim().length < 40) {
+        throw new Error('只读到了「图片」占位文字。请重新复制原文，并粘贴到黄框（可带图的那种复制）。')
+      }
       const result = await api('/pages/news/import-html', {
         method: 'POST',
         body: JSON.stringify({
@@ -715,10 +782,23 @@ export function bindNewsRichEditor(modal, { api, toast }) {
       return
     }
     if (html) {
-      // 微站迁移稿（带 section / 大量 style）保留排版；普通网页粘贴仍清洗字号颜色
-      const migrateHtml = /<section\b/i.test(html) || /border-top\s*:/i.test(html) || /text-indent\s*:/i.test(html)
-      insertHtmlAtCaret(editor, sanitizeNewsHtml(html, { keepColor: migrateHtml }), savedRange)
-    } else if (text) document.execCommand('insertText', false, text)
+      // 微站/公众号：保留排版，并把 data-src 提升为可转存的 src
+      const promoted = promoteImgDataSrc(html)
+      const migrateHtml =
+        /<section\b/i.test(promoted) ||
+        /border-top\s*:/i.test(promoted) ||
+        /text-indent\s*:/i.test(promoted) ||
+        /mmbiz\.qpic\.cn/i.test(promoted) ||
+        /mp\.weixin\.qq\.com/i.test(promoted)
+      insertHtmlAtCaret(editor, sanitizeNewsHtml(promoted, { keepColor: migrateHtml }), savedRange)
+      promoteEditorLazyImages(editor)
+    } else if (text) {
+      document.execCommand('insertText', false, text)
+      if (/图片/.test(text) && !/<img\b/i.test(text)) {
+        toast?.('微信纯文本粘贴带不来图片。请用右上角「链接解析」→ 粘到黄框再「解析粘贴内容」。', true)
+        return
+      }
+    }
     const remoteCount = [...editor.querySelectorAll('img')].filter((image) => {
       const src = normalizeImgSrc(image.getAttribute('src') || '')
       return src && !isLocalMedia(src)
