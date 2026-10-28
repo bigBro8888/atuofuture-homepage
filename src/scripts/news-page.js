@@ -1,4 +1,4 @@
-import { NEWS_ITEMS, formatNewsDate } from '../data/news.js'
+import { NEWS_ITEMS, compareNewsByDateDesc, formatNewsDate } from '../data/news.js'
 import { loadNewsFeedContent, loadSimplePageContent } from '../services/site-settings-api.js'
 import { hydrateNewsItem } from '../lib/format-news-body.js'
 
@@ -42,9 +42,8 @@ function coverBlock(n, className) {
   return `<div class="${className}" style="background-image:url('${esc(n.cover)}')" role="img" aria-hidden="true">${play}</div>`
 }
 
-function rankLabel(n, index) {
-  const rank = Number(n.sortOrder) > 0 ? Number(n.sortOrder) : index + 1
-  return String(rank).padStart(2, '0')
+function rankLabel(_n, index) {
+  return String(index + 1).padStart(2, '0')
 }
 
 function renderLead(n) {
@@ -132,17 +131,12 @@ export async function initNewsPage() {
   const [feed, simple] = await Promise.all([loadNewsFeedContent(), loadSimplePageContent('news')])
   if (feed?.items?.length) {
     newsItems = feed.items
-      .map((item, index) => {
-        const next = hydrateNewsItem(item)
-        if (!next) return null
-        const order = Number(next.sortOrder)
-        return { ...next, sortOrder: Number.isFinite(order) && order > 0 ? order : index + 1 }
-      })
+      .map((item) => hydrateNewsItem(item))
       .filter(Boolean)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .sort(compareNewsByDateDesc)
     cmsHero = { title: feed.title || simple?.title, subtitle: feed.subtitle || simple?.subtitle }
   } else {
-    newsItems = NEWS_ITEMS
+    newsItems = [...NEWS_ITEMS].sort(compareNewsByDateDesc)
     cmsHero = simple
   }
 

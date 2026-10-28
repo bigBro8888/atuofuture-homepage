@@ -226,3 +226,22 @@ export function formatNewsDate(date) {
   if (!m) return date
   return `${m[1]}年${Number(m[2])}月${Number(m[3])}日`
 }
+
+/** 解析新闻发布日期为可比较时间戳；无效日期排到最后 */
+export function newsDateValue(date) {
+  const text = String(date || '').trim()
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text)
+  if (m) {
+    const t = Date.parse(`${m[1]}-${m[2]}-${m[3]}T00:00:00`)
+    return Number.isFinite(t) ? t : 0
+  }
+  const t = Date.parse(text)
+  return Number.isFinite(t) ? t : 0
+}
+
+/** 前台列表：按文章日期从新到旧 */
+export function compareNewsByDateDesc(a, b) {
+  const diff = newsDateValue(b?.date) - newsDateValue(a?.date)
+  if (diff !== 0) return diff
+  return String(a?.id || '').localeCompare(String(b?.id || ''))
+}

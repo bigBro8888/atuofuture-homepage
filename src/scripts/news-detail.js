@@ -1,4 +1,4 @@
-import { NEWS_ITEMS, getNewsById, formatNewsDate } from '../data/news.js'
+import { NEWS_ITEMS, compareNewsByDateDesc, getNewsById, formatNewsDate } from '../data/news.js'
 import { loadNewsFeedContent } from '../services/site-settings-api.js'
 import { hydrateNewsItem } from '../lib/format-news-body.js'
 import { resolveNewsVideo } from '../lib/news-video.js'
@@ -54,7 +54,7 @@ function renderTags(tags = []) {
 }
 
 function renderRelated(currentId, allItems) {
-  const others = allItems.filter((item) => item.id !== currentId).slice(0, 4)
+  const others = [...allItems].filter((item) => item.id !== currentId).sort(compareNewsByDateDesc).slice(0, 4)
   if (!others.length) return ''
   return `
     <aside class="sx-news-article__related">
@@ -138,7 +138,9 @@ export async function initNewsDetailPage() {
   if (!root) return
   const feed = await loadNewsFeedContent()
   if (feed?.items?.length) {
-    allNewsItems = feed.items.map((item) => hydrateNewsItem(item)).filter(Boolean)
+    allNewsItems = feed.items.map((item) => hydrateNewsItem(item)).filter(Boolean).sort(compareNewsByDateDesc)
+  } else {
+    allNewsItems = [...NEWS_ITEMS].sort(compareNewsByDateDesc)
   }
   const rawId = new URLSearchParams(window.location.search).get('id')
   const news = findNews(rawId)
