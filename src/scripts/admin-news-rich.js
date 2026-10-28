@@ -59,9 +59,13 @@ export function newsRichEditorMarkup(item = {}) {
                 <p><b>微信文章请按这三步：</b></p>
                 <ol>
                   <li>点「打开原文」</li>
-                  <li>在原文页按 Ctrl+A 全选，再 Ctrl+C 复制</li>
-                  <li>回到这里点「从剪贴板导入」（图片会自动转存到本站）</li>
+                  <li>在原文里用鼠标选中正文（或 Ctrl+A），再 Ctrl+C</li>
+                  <li>回到此框 Ctrl+V 粘贴，再点「解析粘贴内容」</li>
                 </ol>
+                <label class="admin-news-field is-wide" style="margin-top:10px">
+                  <span>粘贴原文（推荐）</span>
+                  <textarea data-news-import-paste rows="6" placeholder="在原文复制后，回到这里 Ctrl+V 粘贴全文…"></textarea>
+                </label>
               </div>
               <p class="admin-news-import__hint" data-news-import-hint>非微信链接一般可直接解析。微信若提示环境验证，不是链接坏了，是机房 IP 被风控。</p>
               <p class="admin-news-import__status" data-news-import-status hidden></p>
@@ -69,7 +73,7 @@ export function newsRichEditorMarkup(item = {}) {
             <footer>
               <button type="button" data-news-import-close>取消</button>
               <button type="button" data-news-import-open hidden>打开原文</button>
-              <button type="button" data-news-import-clipboard hidden>从剪贴板导入</button>
+              <button type="button" data-news-import-clipboard hidden>解析粘贴内容</button>
               <button type="button" class="admin-link-modal__ok" data-news-import-run>开始解析</button>
             </footer>
           </div>
@@ -343,6 +347,7 @@ export function bindNewsRichEditor(modal, { api, toast }) {
   const importUrlInput = modal.querySelector('[data-news-import-url]')
   const importStatus = modal.querySelector('[data-news-import-status]')
   const importAssist = modal.querySelector('[data-news-import-assist]')
+  const importPaste = modal.querySelector('[data-news-import-paste]')
   const importRun = modal.querySelector('[data-news-import-run]')
   const importOpen = modal.querySelector('[data-news-import-open]')
   const importClipboard = modal.querySelector('[data-news-import-clipboard]')
@@ -375,6 +380,7 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     importModal.hidden = !open
     if (open) {
       showWeixinAssist(isWeixinUrl(importUrlInput?.value), '')
+      if (importPaste) importPaste.value = ''
       importUrlInput?.focus()
       importUrlInput?.select?.()
     }
@@ -396,6 +402,22 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     editor.focus()
   }
 
+  function normalizePastedArticle(raw) {
+    const value = String(raw || '').trim()
+    if (!value) return ''
+    if (/^https?:\/\/\S+$/i.test(value) || /^https?:\/\/mp\.weixin\.qq\.com\/s\S*$/i.test(value)) {
+      throw new Error('你粘贴的好像只是链接。请打开原文，选中文章正文再复制，粘贴到下方文本框。')
+    }
+    if (/<[a-z][\s\S]*>/i.test(value)) return value
+    // 纯文本：按空行拆成段落，便于服务端识别
+    return value
+      .split(/\n{2,}/)
+      .map((chunk) => chunk.trim())
+      .filter(Boolean)
+      .map((chunk) => `<p>${chunk.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`)
+      .join('')
+  }
+
   async function readClipboardHtml() {
     try {
       if (navigator.clipboard?.read) {
@@ -405,6 +427,13 @@ export function bindNewsRichEditor(modal, { api, toast }) {
             const blob = await item.getType('text/html')
             const html = await blob.text()
             if (html?.trim()) return html
+          }
+        }
+        for (const item of items) {
+          if (item.types.includes('text/plain')) {
+            const blob = await item.getType('text/plain')
+            const text = await blob.text()
+            if (text?.trim()) return text
           }
         }
       }
@@ -560,15 +589,26 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     )
   })
 
+  importPaste?.addEventListener('paste', () => {
+    // 粘贴后稍微等 DOM 更新，便于用户看到内容
+    window.setTimeout(() => {
+      if (importPaste.value.trim()) {
+        showWeixinAssist(true, '已收到粘贴内容，点「解析粘贴内容」即可导入。')
+      }
+    }, 0)
+  })
+
   importClipboard?.addEventListener('click', async (event) => {
     event.preventDefault()
     if (!confirmReplaceBody()) return
     importClipboard.disabled = true
-    showWeixinAssist(true, '正在读取剪贴板并转存图片…')
+    showWeixinAssist(true, '正在解析粘贴内容并转存图片…')
     try {
-      toast?.('正在从剪贴板导入…')
-      const html = await readClipboardHtml()
-      if (!html) throw new Error('剪贴板为空。请先在原文页全选复制，再点「从剪贴板导入」')
+      toast?.('正在导入…')
+      let raw = String(importPaste?.value || '').trim()
+      if (!raw) raw = await readClipboardHtml()
+      const html = normalizePastedArticle(raw)
+      if (!html) throw new Error('还没有正文。请先打开原文复制，再粘贴到黄色区域的文本框里。')
       const result = await api('/pages/news/import-html', {
         method: 'POST',
         body: JSON.stringify({
@@ -579,8 +619,8 @@ export function bindNewsRichEditor(modal, { api, toast }) {
       })
       finishImport(result)
     } catch (error) {
-      showWeixinAssist(true, error.message || '剪贴板导入失败')
-      toast?.(error.message || '剪贴板导入失败', true)
+      showWeixinAssist(true, error.message || '导入失败')
+      toast?.(error.message || '导入失败', true)
     } finally {
       importClipboard.disabled = false
     }

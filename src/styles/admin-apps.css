@@ -659,6 +659,17 @@ textarea { resize: vertical; }
   padding-left: 1.2em;
 }
 .admin-news-import__assist li { margin: 0 0 4px; }
+.admin-news-import__assist textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  border: 1px solid #e2c889;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
 .admin-news-import-modal .admin-link-modal__panel {
   width: min(560px, calc(100vw - 32px));
 }

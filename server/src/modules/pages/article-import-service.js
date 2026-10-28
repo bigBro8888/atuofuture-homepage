@@ -324,8 +324,9 @@ export async function importArticleFromHtml(html, pageUrl, deps) {
   if (!bodyRaw || bodyRaw.replace(/<[^>]+>/g, '').trim().length < 20) {
     bodyRaw = rawHtml
   }
-  if (!bodyRaw || bodyRaw.replace(/<[^>]+>/g, '').trim().length < 20) {
-    const error = new Error('未能识别文章正文。请在原文页点正文区域后全选复制，再点「从剪贴板导入」')
+  const plainLen = bodyRaw.replace(/<[^>]+>/g, '').replace(/\s+/g, '').length
+  if (!bodyRaw || plainLen < 8) {
+    const error = new Error('未能识别文章正文。请打开原文，选中正文复制后，粘贴到弹窗黄色区域的文本框，再点「解析粘贴内容」')
     error.status = 400
     throw error
   }
