@@ -45,7 +45,7 @@ export function renderSiteFooter() {
             <h6>产品与能力</h6>
             <ul>
               <li><a href="${root}solutions/">行业解决方案</a></li>
-              <li><a href="${root}agents/">空间智能体</a></li>
+              <li><a href="${root}agents/">空间智能</a></li>
               <li><a href="${root}hardware/">智能硬件</a></li>
               <li><a href="/aspace-one/" target="_blank" rel="noopener noreferrer">Aspace</a></li>
               ${SHOW_APP_DOWNLOAD ? `<li><a href="${root}${APP_DOWNLOAD_PATH}">下载 App</a></li>` : ''}

@@ -56,7 +56,7 @@ export const SITE_NAV_ITEMS = [
   { id: 'home', label: '首页', segment: '' },
   {
     id: 'agents',
-    label: '空间智能体',
+    label: '空间智能',
     segment: 'agents/',
     mega: 'visual',
     children: buildAgentNavChildren(),
