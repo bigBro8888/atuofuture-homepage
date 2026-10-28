@@ -204,12 +204,13 @@ function cleanSpaceMatrixRows(value) {
 function cleanNavGroups(value) {
   const fallback = defaultNavGroups()
   const saved = Array.isArray(value) ? value : []
-  return fallback.map((base, index) => {
-    const extra = saved.find((item) => item.id === base.id) || saved[index] || {}
+  return fallback.map((base) => {
+    // 只按分组 id 对齐，禁止按序号回填（旧 retail/consumer 不能顶替新 epaper）
+    const extra = saved.find((item) => item.id === base.id) || {}
     const extraProducts = Array.isArray(extra.products) ? extra.products : []
     return {
       id: base.id,
-      title: cleanText(extra.title, base.title, 40),
+      title: cleanText(base.title, base.title, 40),
       icon: cleanText(extra.icon, base.icon, 40),
       products: base.products.map((item) => {
         // 只按 id 对齐，禁止按序号回填（否则增删产品会错名、重复）

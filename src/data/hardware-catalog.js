@@ -361,7 +361,7 @@ export const HARDWARE_SPACE_MATRIX_ROWS = [
   },
 ]
 
-/** 顶部「智能硬件」下拉：按产品线展示具体产品（对齐导航设计稿） */
+/** 顶部「智能硬件」下拉：仅影响顶栏，不改动商品库产品线 */
 export const HARDWARE_MEGA_GROUPS = [
   {
     id: 'space',
@@ -379,23 +379,14 @@ export const HARDWARE_MEGA_GROUPS = [
     ],
   },
   {
-    id: 'retail',
-    title: '新零售与行业电子纸',
+    id: 'epaper',
+    title: '电子纸产品线',
     icon: 'shopping_bag',
     products: [
-      { id: 'eink-price-tag' },
-      { id: 'lcd-price-tag' },
-      { id: 'cold-tag' },
-      { id: 'aap', label: 'AAP 资产盘点' },
-    ],
-  },
-  {
-    id: 'consumer',
-    title: '3C 数码',
-    icon: 'smartphone',
-    products: [
-      { id: 'eink-phone-case' },
-      { id: 'eink-frame' },
+      { id: 'eink-price-tag', label: '电子价签' },
+      { id: 'lcd-price-tag', label: 'LCD 电子价签' },
+      { id: 'eink-phone-case', label: '墨水屏手机壳' },
+      { id: 'eink-frame', label: '电子纸艺术相框' },
     ],
   },
 ]
@@ -617,7 +608,8 @@ function megaSourceGroups() {
     })
     return {
       id: base.id,
-      title: extra.title || base.title,
+      // 分类标题以代码为准（与设计稿顶栏一致），避免旧 CMS「新零售 / 3C」覆盖
+      title: base.title,
       icon: extra.icon || base.icon,
       products,
     }
