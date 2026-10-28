@@ -87,12 +87,6 @@ function renderVisualMega(item, root) {
   `
 }
 
-function hardwareMegaIcon(icon, lineId = '') {
-  const name = String(icon || 'category').trim() || 'category'
-  const tone = lineId === 'retail' ? 'retail' : lineId === 'consumer' ? 'consumer' : 'space'
-  return `<span class="site-mega-col__icon site-mega-col__icon--${tone}" aria-hidden="true"><span class="material-symbols-outlined">${name}</span></span>`
-}
-
 function renderHardwareMega(root) {
   const groups = resolveHardwareMegaGroups()
   let step = 0
@@ -101,7 +95,6 @@ function renderHardwareMega(root) {
       (group) => `
           <section class="site-mega-col">
             <a class="site-mega-col__head" href="${root}hardware/?line=${group.id}#hwc-browser" data-stagger style="--stagger:${step++}">
-              ${hardwareMegaIcon(group.icon, group.id)}
               <strong>${group.title}</strong>
             </a>
             <div class="site-mega-col__grid${group.id === 'space' && group.products.length >= 6 ? ' site-mega-col__grid--triple' : group.products.length >= 4 ? ' site-mega-col__grid--dense' : ''}">
@@ -141,7 +134,7 @@ function renderHardwareMobile(root) {
   return `${resolveHardwareMegaGroups()
     .map(
       (group) => `
-            <p class="site-mobile-nav-group">${hardwareMegaIcon(group.icon, group.id)}<span>${group.title}</span></p>
+            <p class="site-mobile-nav-group">${group.title}</p>
             ${group.products
               .map(
                 (p) => `

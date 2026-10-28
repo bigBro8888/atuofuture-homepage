@@ -1588,15 +1588,14 @@ function renderHardwareNavEditor(navGroups, items = []) {
   return `
       <div class="admin-hw-nav-basics">
         <h4 style="margin:0 0 8px;font-size:14px">顶栏下拉菜单</h4>
-        <p class="admin-form-section__hint">只影响全站顶栏「智能硬件」下拉。先看产品图，点「编辑」再改名称、缩略图和跳转链接；保存并发布后官网同步。</p>
+        <p class="admin-form-section__hint">只影响全站顶栏「智能硬件」下拉（前台为文字列表，无分类图标）。点「编辑」改名称、缩略图和跳转；保存并发布后官网同步。</p>
         <div class="admin-nav-groups">${navGroups.map((group, groupIndex) => `
           <article class="admin-nav-col" data-nav-col="${groupIndex}">
             <header class="admin-nav-col__head">
-              <span class="admin-nav-col__icon" aria-hidden="true"><span class="material-symbols-outlined">${escapeHtml(group.icon || 'category')}</span></span>
               <div class="admin-nav-col__meta">
                 <input type="hidden" data-home-field="navGroups.${groupIndex}.id" value="${escapeHtml(group.id || '')}" />
+                <input type="hidden" data-home-field="navGroups.${groupIndex}.icon" value="${escapeHtml(group.icon || '')}" />
                 ${homeField(`navGroups.${groupIndex}.title`, '分类名称', group.title)}
-                ${homeField(`navGroups.${groupIndex}.icon`, '图标', group.icon)}
               </div>
             </header>
             <div class="admin-nav-col__list">
