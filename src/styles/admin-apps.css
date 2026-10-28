@@ -786,12 +786,18 @@ textarea { resize: vertical; }
   box-shadow: none !important;
 }
 .admin-rich__editor img,
-.admin-rich__editor .sx-news-img {
-  max-width: 100%;
-  height: auto;
+.admin-rich__editor .sx-news-img,
+.admin-rich__editor figure img {
+  max-width: 100% !important;
+  width: auto !important;
+  height: auto !important;
   min-height: 120px;
-  display: block;
-  margin: 8px auto;
+  display: block !important;
+  float: none !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 8px !important;
+  margin-bottom: 8px !important;
   border-radius: 8px;
 }
 .admin-rich__editor figure { margin: 8px 0; }

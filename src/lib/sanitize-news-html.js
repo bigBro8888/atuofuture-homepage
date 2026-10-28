@@ -425,13 +425,27 @@ export function adaptStyleForSiteArticle(styleText) {
 
 /**
  * 导入公众号等外站正文后：消毒 + 适配本站文章栏（去黑底/窄宽，保留排版结构）。
+ * 所有图片强制内容居中（清掉微信 margin:0 / float 等）。
  */
 export function adaptImportedArticleHtml(dirty, options = {}) {
   const sanitized = sanitizeNewsHtml(dirty, { keepColor: options.keepColor !== false })
-  return sanitized.replace(/\sstyle=("([^"]*)"|'([^']*)')/gi, (full, _q, double, single) => {
+  const adapted = sanitized.replace(/\sstyle=("([^"]*)"|'([^']*)')/gi, (full, _q, double, single) => {
     const raw = double ?? single ?? ''
     const next = adaptStyleForSiteArticle(raw)
     return next ? ` style="${next}"` : ''
+  })
+  return adapted.replace(/<img\b([^>]*?)\/?>/gi, (full, attrs) => {
+    let nextAttrs = String(attrs || '')
+    const styleMatch = /\sstyle=("([^"]*)"|'([^']*)')/i.exec(nextAttrs)
+    const rawStyle = styleMatch?.[2] ?? styleMatch?.[3] ?? ''
+    const cleaned = adaptStyleForSiteArticle(rawStyle)
+      .split(';')
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .filter((item) => !/^(margin|margin-left|margin-right|margin-top|margin-bottom|float|display|vertical-align)\s*:/i.test(item))
+    cleaned.push('display:block', 'margin:1.2em auto', 'max-width:100%', 'height:auto')
+    nextAttrs = nextAttrs.replace(/\sstyle=("([^"]*)"|'([^']*)')/i, '').trim()
+    return `<img ${nextAttrs} style="${cleaned.join(';')}">`.replace(/\s+/g, ' ')
   })
 }
 

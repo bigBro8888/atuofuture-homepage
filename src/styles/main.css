@@ -13188,12 +13188,25 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 .sx-news-article__content h2 { font-size: 18px; }
 .sx-news-article__content h4 { font-size: 16px; }
 .sx-news-article__content img,
-.sx-news-article__content .sx-news-img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 1.2em auto;
+.sx-news-article__content .sx-news-img,
+.sx-news-article__content figure img {
+  display: block !important;
+  float: none !important;
+  max-width: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  margin-top: 1.2em !important;
+  margin-bottom: 1.2em !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
   border-radius: 8px;
+}
+.sx-news-article__content figure {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 1.2em 0;
+  text-align: center;
 }
 .sx-news-article__content .sx-news-video {
   margin: 1.2em 0 1.6em;
