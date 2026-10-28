@@ -2,7 +2,7 @@
  * 从外站文章链接抓取标题/正文，并把图片转存到本站。
  * 重点适配微信公众号（mp.weixin.qq.com），其余站点做通用兜底。
  */
-import { sanitizeNewsHtml, plainTextFromHtml } from '../../../../src/lib/sanitize-news-html.js'
+import { adaptImportedArticleHtml, plainTextFromHtml } from '../../../../src/lib/sanitize-news-html.js'
 
 const MAX_HTML_BYTES = 4 * 1024 * 1024
 const MAX_IMAGES = 40
@@ -332,7 +332,8 @@ export async function importArticleFromHtml(html, pageUrl, deps) {
   }
 
   bodyRaw = promoteLazyImages(stripNoise(bodyRaw), sourceUrl)
-  let bodyHtml = sanitizeNewsHtml(bodyRaw, { keepColor: true })
+  // 按本站白底阅读栏适配：去微信黑底/手机定宽，保留对齐与段落结构
+  let bodyHtml = adaptImportedArticleHtml(bodyRaw, { keepColor: true })
   if (!bodyHtml.trim()) {
     const error = new Error('正文解析后为空，请检查复制内容后重试')
     error.status = 400

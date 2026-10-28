@@ -328,6 +328,113 @@ export function plainTextFromHtml(html) {
     .trim()
 }
 
+function colorChannels(value) {
+  const text = String(value || '').trim().toLowerCase()
+  if (/^(transparent|inherit|currentcolor)$/i.test(text)) return null
+  const hex = text.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i)
+  if (hex) {
+    let h = hex[1]
+    if (h.length === 3) h = h.split('').map((c) => c + c).join('')
+    return [Number.parseInt(h.slice(0, 2), 16), Number.parseInt(h.slice(2, 4), 16), Number.parseInt(h.slice(4, 6), 16)]
+  }
+  const rgb = text.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i)
+  if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])]
+  return null
+}
+
+function colorLuma(value) {
+  const rgb = colorChannels(value)
+  if (!rgb) return null
+  return 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
+}
+
+/** 把公众号/外站稿适配到本站白底阅读栏：去掉黑底、强制窄宽，保留对齐与间距等排版。 */
+export function adaptStyleForSiteArticle(styleText) {
+  const kept = []
+  String(styleText || '')
+    .split(';')
+    .forEach((chunk) => {
+      const trimmed = chunk.trim()
+      if (!trimmed) return
+      const colon = trimmed.indexOf(':')
+      if (colon < 0) return
+      const prop = trimmed.slice(0, colon).trim().toLowerCase()
+      const rawVal = trimmed.slice(colon + 1).trim()
+      if (!rawVal || !SAFE_STYLE_PROPS.has(prop)) return
+      if (!isSafeStyleValue(rawVal)) return
+
+      if (prop === 'background' || prop === 'background-color') {
+        // 微信长图文常用整页黑底/深灰底，本站正文是白底
+        return
+      }
+      if (prop === 'box-shadow' || prop === 'opacity' || prop.startsWith('overflow')) return
+      if (prop === 'width' || prop === 'min-width' || prop === 'max-width') {
+        // 去掉 375/677 一类手机定宽，交给本站栏宽
+        if (/^100%$/.test(rawVal) || /^auto$/i.test(rawVal)) {
+          if (prop === 'max-width') kept.push('max-width:100%')
+        }
+        return
+      }
+      if (prop === 'height' || prop === 'min-height' || prop === 'max-height') {
+        // 容器定高易裁切；图片高度由 CSS 自适应
+        return
+      }
+      if (prop === 'color') {
+        const luma = colorLuma(rawVal)
+        // 白字（配黑底）和近黑字都交给站点默认正文色
+        if (luma == null || luma > 200 || luma < 45) return
+        const color = safeColor(rawVal)
+        if (color) kept.push(`color:${color}`)
+        return
+      }
+      if (prop === 'font-size') {
+        // 保留相对层次，但避免微信超小/超大字把版式撑坏
+        const px = rawVal.match(/^(\d+(?:\.\d+)?)px$/i)
+        if (px) {
+          const n = Number(px[1])
+          if (n < 12 || n > 28) return
+        }
+        kept.push(`${prop}:${rawVal.replace(/[<>'"]/g, '')}`)
+        return
+      }
+      if (prop === 'display') {
+        // 保留 flex/block 等结构，去掉微信里偶发的 none
+        if (/^none$/i.test(rawVal)) return
+        kept.push(`${prop}:${rawVal.replace(/[<>'"]/g, '')}`)
+        return
+      }
+      if (
+        prop === 'text-align' ||
+        prop === 'font-weight' ||
+        prop === 'font-style' ||
+        prop === 'text-indent' ||
+        prop === 'text-decoration' ||
+        prop === 'letter-spacing' ||
+        prop === 'line-height' ||
+        prop === 'vertical-align' ||
+        prop === 'object-fit' ||
+        prop.startsWith('margin') ||
+        prop.startsWith('padding') ||
+        prop.startsWith('border')
+      ) {
+        kept.push(`${prop}:${rawVal.replace(/[<>'"]/g, '')}`)
+      }
+    })
+  return kept.join(';')
+}
+
+/**
+ * 导入公众号等外站正文后：消毒 + 适配本站文章栏（去黑底/窄宽，保留排版结构）。
+ */
+export function adaptImportedArticleHtml(dirty, options = {}) {
+  const sanitized = sanitizeNewsHtml(dirty, { keepColor: options.keepColor !== false })
+  return sanitized.replace(/\sstyle=("([^"]*)"|'([^']*)')/gi, (full, _q, double, single) => {
+    const raw = double ?? single ?? ''
+    const next = adaptStyleForSiteArticle(raw)
+    return next ? ` style="${next}"` : ''
+  })
+}
+
 export function htmlFromPlainBody(body) {
   const text = String(body || '').trim()
   if (!text) return ''

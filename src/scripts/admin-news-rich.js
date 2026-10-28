@@ -1,4 +1,4 @@
-import { htmlFromPlainBody, sanitizeNewsHtml } from '../lib/sanitize-news-html.js'
+import { adaptImportedArticleHtml, htmlFromPlainBody, sanitizeNewsHtml } from '../lib/sanitize-news-html.js'
 import { newsVideoMarkup } from '../lib/news-video.js'
 
 function isLocalMedia(src) {
@@ -74,7 +74,7 @@ function escapeTextarea(value) {
 }
 
 export function newsRichEditorMarkup(item = {}) {
-  const html = sanitizeNewsHtml(item.bodyHtml || htmlFromPlainBody(item.body || ''))
+  const html = adaptImportedArticleHtml(item.bodyHtml || htmlFromPlainBody(item.body || ''))
   return `
     <div class="admin-form-wide">
       <span class="admin-rich__label">主题正文</span>
@@ -171,7 +171,7 @@ export function readNewsRichContent(modal = document) {
   const root = newsRichRoot(modal) || modal
   if (isNewsCodeMode(root)) syncNewsCodeToEditor(root)
   const editor = root.querySelector('[data-news-html-editor]')
-  const html = sanitizeNewsHtml(editor?.innerHTML || '')
+  const html = adaptImportedArticleHtml(editor?.innerHTML || '')
   const text = (editor?.innerText || '').replace(/\u00a0/g, ' ').trim()
   return { bodyHtml: html, body: text }
 }
@@ -386,7 +386,7 @@ function applyImportedArticle(scope, result, { replaceBody }) {
   const codeInput = scope.querySelector('[data-news-html-code]')
   const rich = scope.querySelector('[data-news-rich]')
   if (!editor || !result.bodyHtml) return
-  const nextHtml = sanitizeNewsHtml(result.bodyHtml, { keepColor: true })
+  const nextHtml = adaptImportedArticleHtml(result.bodyHtml, { keepColor: true })
   if (replaceBody || !String(editor.innerText || '').trim()) {
     editor.innerHTML = nextHtml
   } else {

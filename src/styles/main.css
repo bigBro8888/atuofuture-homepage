@@ -13157,9 +13157,18 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   font-family: inherit;
 }
 .sx-news-article__content a { color: #0052d1; }
-.sx-news-article__content section {
+.sx-news-article__content section,
+.sx-news-article__content div {
   display: block;
   box-sizing: border-box;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+.sx-news-article__content span {
   max-width: 100%;
 }
 .sx-news-article__content h1,

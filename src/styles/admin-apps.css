@@ -775,6 +775,16 @@ textarea { resize: vertical; }
 .admin-rich__editor h1,
 .admin-rich__editor h3 { margin: 0 0 10px; font-size: 16px; }
 .admin-rich__editor p { margin: 0 0 10px; }
+.admin-rich__editor section,
+.admin-rich__editor div {
+  box-sizing: border-box;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
 .admin-rich__editor img,
 .admin-rich__editor .sx-news-img {
   max-width: 100%;
