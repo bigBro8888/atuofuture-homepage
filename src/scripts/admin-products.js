@@ -51,6 +51,29 @@ function fieldHint(options = {}) {
   return parts.length ? `<small>${parts.join(' · ')}</small>` : ''
 }
 
+/** 标签旁可点开的用途备注 */
+function fieldLabelNote(label, noteHtml) {
+  if (!noteHtml) return `<span>${label}</span>`
+  return `<span class="admin-field-label">${label}<details class="admin-field-note"><summary>备注</summary><div class="admin-field-note__body">${noteHtml}</div></details></span>`
+}
+
+const PRODUCT_LINE_NOTE = `
+  <p>粗分桶：空间智能 / 新零售与电子纸 / 3C 数码。</p>
+  <ul>
+    <li>全部产品页：卡片上会显示这条产品线小标签</li>
+    <li>智能硬件首页：配套硬件默认只捞「空间智能」；3C 区块只捞「3C 数码」</li>
+    <li>商品详情页：面包屑归属会用到</li>
+  </ul>
+  <p>不控制顶栏「智能硬件」下拉，也不控制全部产品页顶部的分类 Tab。</p>`
+
+const PRODUCT_CATEGORY_NOTE = `
+  <p>控制前台「全部产品」页顶部的分类页签与筛选。</p>
+  <ul>
+    <li>点右侧「管理分类」可新增、改名、排序或删除</li>
+    <li>可选分类会随上方「所属产品线」过滤</li>
+  </ul>
+  <p>不控制顶栏「智能硬件」下拉菜单。</p>`
+
 function productField(path, label, value, options = {}) {
   const type = options.type || 'text'
   let field
@@ -70,7 +93,9 @@ function productField(path, label, value, options = {}) {
         <label class="admin-home-upload">上传图片<input type="file" accept="image/jpeg,image/png,image/webp" data-product-upload-for="${path}" /></label>
       </div>`
     : ''
-  return `<label class="admin-news-field${options.wide ? ' is-wide' : ''}"><span>${label}</span>${field}${media}${fieldHint(options)}</label>`
+  // 带备注时用 div，避免点「备注」时连带激活表单控件
+  const tag = options.note ? 'div' : 'label'
+  return `<${tag} class="admin-news-field${options.wide ? ' is-wide' : ''}">${fieldLabelNote(label, options.note)}${field}${media}${fieldHint(options)}</${tag}>`
 }
 
 function lines(value) {
@@ -481,17 +506,20 @@ function renderBasicsBar(item) {
         <input type="hidden" data-product-field="id" value="${esc(item.id || '')}" />
         <div class="admin-form-grid">
           ${productField('name', '产品名称', item.name, { wide: true, placeholder: '例如 智能门锁' })}
-          ${productField('hardwareLine', '所属产品线', item.hardwareLine || 'space', { type: 'select', options: LINE_OPTIONS })}
-          <label class="admin-news-field">
-            <span>商品分类</span>
+          ${productField('hardwareLine', '所属产品线', item.hardwareLine || 'space', {
+            type: 'select',
+            options: LINE_OPTIONS,
+            note: PRODUCT_LINE_NOTE,
+          })}
+          <div class="admin-news-field">
+            ${fieldLabelNote('商品分类', PRODUCT_CATEGORY_NOTE)}
             <div class="admin-product-cat-field">
               <select data-product-field="category">
                 ${categoryOptions(item.hardwareLine || 'space', item.category || '').map(([key, text]) => `<option value="${esc(key)}"${String(item.category || '') === String(key) ? ' selected' : ''}>${esc(text)}</option>`).join('')}
               </select>
               <button type="button" class="admin-news-toolbar__link" data-product-cats-open>管理分类</button>
             </div>
-            <small>出现在前台「全部产品」页签；可新增、改名、排序或删除。</small>
-          </label>
+          </div>
           ${productField('coverImage', '列表封面图', item.coverImage, {
             image: true,
             wide: true,
