@@ -53,8 +53,11 @@ export function renderProductHero(story, product, line, { editable = false } = {
   const bulletNodes = (editable ? [...bullets, {}, {}, {}].slice(0, Math.max(bullets.length, 3)) : bullets)
     .map((item, index) => {
       if (!editable && !item.title && !item.desc) return ''
+      const removeBtn = editable
+        ? `<button type="button" class="hpi-intro__bullet-remove" data-bullet-remove="${index}" title="删除这条卖点" aria-label="删除卖点 ${index + 1}">×</button>`
+        : ''
       return `
-        <li class="hpi-intro__bullet">${textNode(`story.capabilities.items.${index}.title`, String(item.title || '').replace(/\s+/g, ' ').trim(), {
+        <li class="hpi-intro__bullet${editable ? ' hpi-intro__bullet--editable' : ''}">${textNode(`story.capabilities.items.${index}.title`, String(item.title || '').replace(/\s+/g, ' ').trim(), {
             editable,
             tag: 'span',
             className: 'hpi-intro__bullet-title',
@@ -68,7 +71,7 @@ export function renderProductHero(story, product, line, { editable = false } = {
                   placeholder: '卖点说明',
                 })
               : ''
-          }</li>`
+          }${removeBtn}</li>`
     })
     .join('')
   const bulletImport = editable
@@ -79,12 +82,12 @@ export function renderProductHero(story, product, line, { editable = false } = {
           </button>
           <div class="hpi-intro__bullets-import-panel" data-bullet-import-panel hidden>
             <label class="hpi-intro__bullets-import-label" for="hpi-bullet-import-text">粘贴卖点文本</label>
-            <textarea id="hpi-bullet-import-text" class="hpi-intro__bullets-import-text" data-bullet-import-text rows="5" placeholder="例如：&#10;现场感知：实时监测管网压力…&#10;数据上云：关键信息汇聚至平台…&#10;也支持一行标题、一行说明，或 Excel 复制"></textarea>
+            <textarea id="hpi-bullet-import-text" class="hpi-intro__bullets-import-text" data-bullet-import-text rows="5" placeholder="例如：&#10;无线投屏，摆脱线缆束缚：减少电脑与显示屏之间的线缆连接…&#10;大屏分享，沟通更直观：将演示文档呈现在大屏上…&#10;也支持「标题：说明」、一行标题一行说明，或 Excel 复制"></textarea>
             <div class="hpi-intro__bullets-import-actions">
-              <button type="button" class="hpi-intro__bullets-import-apply" data-bullet-import-apply>解析并填入</button>
+              <button type="button" class="hpi-intro__bullets-import-apply" data-bullet-import-apply>解析并替换</button>
               <button type="button" class="hpi-intro__bullets-import-cancel" data-bullet-import-cancel>取消</button>
             </div>
-            <p class="hpi-intro__bullets-import-hint">同名卖点以本次为准并更新，其余保留；新卖点追加。最多 4 条。</p>
+            <p class="hpi-intro__bullets-import-hint">按行解析「标题：说明」；结果会替换当前卖点列表（最多 4 条）。单条可点右侧 × 删除。</p>
           </div>
         </div>`
     : ''
@@ -221,7 +224,7 @@ function renderShowcaseVisual(story, product, { editable = false } = {}) {
           </button>
         </div>
       </div>
-      ${editable ? `<p class="hpi-gallery__tip">淘宝式图集：左侧最多 5 张；拖拽缩略图可调顺序，点击可换图。</p>` : ''}
+      ${editable ? `<p class="hpi-gallery__tip">淘宝式图集：左侧最多 5 张；拖拽缩略图可调顺序，点击可换图。主图框为 <strong>4:3</strong>，建议上传 960×720（或同比例）。</p>` : ''}
     </div>`
 }
 

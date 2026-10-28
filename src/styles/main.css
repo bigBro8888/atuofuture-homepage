@@ -18935,6 +18935,33 @@ a.ag-eco__agent:visited {
   overflow: hidden;
   max-width: 100%;
 }
+.hpi-intro__bullet--editable {
+  padding-right: 28px;
+  overflow: visible;
+}
+.hpi-intro__bullet-remove {
+  appearance: none;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid rgba(20, 32, 51, 0.12);
+  border-radius: 4px;
+  background: #fff;
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.hpi-intro__bullet-remove:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+  background: #fef2f2;
+}
 .hpi-intro__bullet::before {
   content: '';
   position: absolute;

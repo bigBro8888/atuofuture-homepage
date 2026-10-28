@@ -1,5 +1,5 @@
 import { HARDWARE_PRODUCTS, getLine } from '../data/hardware-catalog.js'
-import { mergeProductBulletItems, parseProductBulletsText } from '../lib/parse-product-bullets.js'
+import { parseProductBulletsText } from '../lib/parse-product-bullets.js'
 import {
   MAX_PRODUCT_SPEC_ROWS,
   mergeProductSpecRows,
@@ -8,8 +8,8 @@ import {
 import { bindProductStoryTabs, renderProductStory } from '../lib/product-story-render.js'
 
 const IMAGE_SIZE_GUIDE = [
-  { test: (path) => path === 'story.showcase.image', label: '产品主视觉图', size: '960×960', tip: '兼容旧字段；优先用下方 5 张商品轮播图' },
-  { test: (path) => /story\.showcase\.gallery\.\d+\.url/.test(path), label: '商品轮播图', size: '960×960', tip: '淘宝式主图，最多 5 张，建议白底或透明底' },
+  { test: (path) => path === 'story.showcase.image', label: '产品主视觉图', size: '960×720', tip: '兼容旧字段；主图框 4:3，优先用下方 5 张商品轮播图' },
+  { test: (path) => /story\.showcase\.gallery\.\d+\.url/.test(path), label: '商品轮播图', size: '960×720', tip: '主图框 4:3（约 480×360 展示），最多 5 张，建议同比例白底图' },
   { test: (path) => path === 'story.value.diagramImage' || path === 'story.value.deviceImage', label: '原理链路图', size: '1760×900', tip: '整段单图铺满内容宽，标题与说明可设计进图内' },
   { test: (path) => /story\.howItWorks\.stages\.\d+\.image/.test(path), label: '如何工作步骤图', size: '560×360', tip: '四步流程配图，尺寸尽量统一' },
   { test: (path) => /story\.scenarios\.items\.\d+\.sceneImage/.test(path), label: '场景介绍配图', size: '860×560', tip: '卡片左侧大图，约占一半宽度' },
@@ -1507,9 +1507,44 @@ export function bindProductLibraryAdmin(helpers) {
       if (textarea) textarea.value = ''
       return
     }
+    if (event.target.closest('[data-bullet-remove]')) {
+      event.preventDefault()
+      const removeBtn = event.target.closest('[data-bullet-remove]')
+      const index = Number(removeBtn?.dataset?.bulletRemove)
+      if (!Number.isFinite(index) || index < 0) return
+      const article = collectProductFromCompose()
+      if (!article.story) article.story = {}
+      if (!article.story.capabilities || typeof article.story.capabilities !== 'object') {
+        article.story.capabilities = { title: '核心能力', items: [] }
+      }
+      const items = Array.isArray(article.story.capabilities.items)
+        ? article.story.capabilities.items.slice()
+        : []
+      if (!items.length) {
+        ctx.toast('当前没有可删除的卖点', true)
+        return
+      }
+      items.splice(index, 1)
+      const icons = ['sensors', 'cloud_upload', 'notifications_active', 'bolt']
+      article.story.capabilities = {
+        title: String(article.story.capabilities.title || '').trim() || '核心能力',
+        items: items
+          .filter((item) => item && (String(item.title || '').trim() || String(item.desc || '').trim()))
+          .slice(0, 4)
+          .map((item, i) => ({
+            icon: String(item.icon || icons[i] || 'check_circle').trim(),
+            title: String(item.title || '').trim(),
+            desc: String(item.desc || '').trim(),
+          })),
+      }
+      renderProductCompose(article)
+      ctx.toast('已删除该卖点')
+      return
+    }
     if (event.target.closest('[data-bullet-import-apply]')) {
       event.preventDefault()
       const textarea = composeView.querySelector('[data-bullet-import-text]')
+      const panel = composeView.querySelector('[data-bullet-import-panel]')
       const parsed = parseProductBulletsText(textarea?.value || '', { maxRows: 4 })
       if (!parsed.length) {
         ctx.toast('未能解析出卖点，请检查粘贴内容', true)
@@ -1520,33 +1555,20 @@ export function bindProductLibraryAdmin(helpers) {
       if (!article.story.capabilities || typeof article.story.capabilities !== 'object') {
         article.story.capabilities = { title: '核心能力', items: [] }
       }
-      const before = Array.isArray(article.story.capabilities.items) ? article.story.capabilities.items : []
-      const beforeKeys = new Set(
-        before.map((item) => String(item?.title || '').replace(/\s+/g, '').toLowerCase()).filter(Boolean),
-      )
-      let updated = 0
-      let added = 0
-      for (const item of parsed) {
-        const key = String(item.title || '').replace(/\s+/g, '').toLowerCase()
-        if (!key) continue
-        if (beforeKeys.has(key)) updated += 1
-        else added += 1
-      }
       const icons = ['sensors', 'cloud_upload', 'notifications_active', 'bolt']
-      const merged = mergeProductBulletItems(before, parsed, { maxRows: 4 }).map((item, index) => ({
-        icon: String(item.icon || before[index]?.icon || icons[index] || 'check_circle').trim(),
-        title: item.title,
-        desc: item.desc,
-      }))
+      // 粘贴解析：整表替换，避免旧卖点残留挤掉新条目
       article.story.capabilities = {
         title: String(article.story.capabilities.title || '').trim() || '核心能力',
-        items: merged,
+        items: parsed.map((item, index) => ({
+          icon: icons[index] || 'check_circle',
+          title: item.title,
+          desc: item.desc,
+        })),
       }
       renderProductCompose(article)
-      const parts = []
-      if (updated) parts.push(`更新 ${updated} 条`)
-      if (added) parts.push(`新增 ${added} 条`)
-      ctx.toast(parts.length ? `已解析卖点：${parts.join('，')}（同名以最新为准）` : `已解析并填入 ${parsed.length} 条卖点`)
+      if (panel) panel.hidden = true
+      if (textarea) textarea.value = ''
+      ctx.toast(`已解析并替换为 ${parsed.length} 条卖点`)
       return
     }
     if (event.target.closest('[data-spec-import-toggle]')) {
