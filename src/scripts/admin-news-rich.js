@@ -50,16 +50,26 @@ export function newsRichEditorMarkup(item = {}) {
               <button type="button" data-news-import-close aria-label="关闭">×</button>
             </header>
             <div class="admin-link-modal__body">
-              <p class="admin-news-import__lead">粘贴微信公众号或其他可公开打开的文章链接。系统会抓取标题、正文与图片，并把图片上传到本站后写入编辑器。</p>
+              <p class="admin-news-import__lead">粘贴文章链接后点「开始解析」。普通网页可直接抓取；微信公众号常会拦截服务器 IP，这时请用下方「打开原文 → 复制 → 从剪贴板导入」。</p>
               <label class="admin-news-field is-wide">
                 <span>文章链接</span>
                 <input type="url" data-news-import-url placeholder="https://mp.weixin.qq.com/s/…" autocomplete="off" />
               </label>
-              <p class="admin-news-import__hint" data-news-import-hint>支持公众号文章；若目标站有验证码/环境检测，可能解析失败，可改为浏览器打开后复制正文粘贴。</p>
+              <div class="admin-news-import__assist" data-news-import-assist hidden>
+                <p><b>微信文章请按这三步：</b></p>
+                <ol>
+                  <li>点「打开原文」</li>
+                  <li>在原文页按 Ctrl+A 全选，再 Ctrl+C 复制</li>
+                  <li>回到这里点「从剪贴板导入」（图片会自动转存到本站）</li>
+                </ol>
+              </div>
+              <p class="admin-news-import__hint" data-news-import-hint>非微信链接一般可直接解析。微信若提示环境验证，不是链接坏了，是机房 IP 被风控。</p>
               <p class="admin-news-import__status" data-news-import-status hidden></p>
             </div>
             <footer>
               <button type="button" data-news-import-close>取消</button>
+              <button type="button" data-news-import-open hidden>打开原文</button>
+              <button type="button" data-news-import-clipboard hidden>从剪贴板导入</button>
               <button type="button" class="admin-link-modal__ok" data-news-import-run>开始解析</button>
             </footer>
           </div>
@@ -332,24 +342,77 @@ export function bindNewsRichEditor(modal, { api, toast }) {
   const importModal = modal.querySelector('[data-news-import-modal]')
   const importUrlInput = modal.querySelector('[data-news-import-url]')
   const importStatus = modal.querySelector('[data-news-import-status]')
+  const importAssist = modal.querySelector('[data-news-import-assist]')
   const importRun = modal.querySelector('[data-news-import-run]')
+  const importOpen = modal.querySelector('[data-news-import-open]')
+  const importClipboard = modal.querySelector('[data-news-import-clipboard]')
   if (!editor || !rich) return
   let savedRange = null
   const rememberRange = () => {
     savedRange = saveEditorRange(editor) || savedRange
   }
 
+  const isWeixinUrl = (value) => {
+    try {
+      return /(^|\.)mp\.weixin\.qq\.com$/i.test(new URL(String(value || '').trim()).hostname)
+    } catch {
+      return /mp\.weixin\.qq\.com/i.test(String(value || ''))
+    }
+  }
+
+  const showWeixinAssist = (show, message = '') => {
+    if (importAssist) importAssist.hidden = !show
+    if (importOpen) importOpen.hidden = !show
+    if (importClipboard) importClipboard.hidden = !show
+    if (importStatus) {
+      importStatus.hidden = !message
+      importStatus.textContent = message || ''
+    }
+  }
+
   const setImportOpen = (open) => {
     if (!importModal) return
     importModal.hidden = !open
     if (open) {
-      if (importStatus) {
-        importStatus.hidden = true
-        importStatus.textContent = ''
-      }
+      showWeixinAssist(isWeixinUrl(importUrlInput?.value), '')
       importUrlInput?.focus()
       importUrlInput?.select?.()
     }
+  }
+
+  const confirmReplaceBody = () => {
+    const hasBody = Boolean(String(editor.innerText || '').trim())
+    const replaceBody = !hasBody || window.confirm('当前正文已有内容。确定用解析结果覆盖正文，并尽量补全标题/封面/简介吗？')
+    return hasBody && !replaceBody ? null : true
+  }
+
+  const finishImport = (result) => {
+    applyImportedArticle(modal, result, { replaceBody: true })
+    setImportOpen(false)
+    const warnText = Array.isArray(result.warnings) && result.warnings.length
+      ? `（${result.warnings.length} 处图片未转存成功）`
+      : ''
+    toast?.(`已导入「${result.title || '文章'}」，转存 ${result.imageCount || 0} 张图片${warnText}`)
+    editor.focus()
+  }
+
+  async function readClipboardHtml() {
+    try {
+      if (navigator.clipboard?.read) {
+        const items = await navigator.clipboard.read()
+        for (const item of items) {
+          if (item.types.includes('text/html')) {
+            const blob = await item.getType('text/html')
+            const html = await blob.text()
+            if (html?.trim()) return html
+          }
+        }
+      }
+    } catch {
+      /* 权限被拒时退回纯文本 */
+    }
+    const text = (await navigator.clipboard?.readText?.()) || ''
+    return text.trim()
   }
 
   const setCodeMode = (enabled) => {
@@ -472,10 +535,54 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     }
   })
 
+  importUrlInput?.addEventListener('input', () => {
+    showWeixinAssist(isWeixinUrl(importUrlInput.value), '')
+  })
+
   importUrlInput?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault()
       importRun?.click()
+    }
+  })
+
+  importOpen?.addEventListener('click', (event) => {
+    event.preventDefault()
+    const url = String(importUrlInput?.value || '').trim()
+    if (!url) {
+      toast?.('请先粘贴文章链接', true)
+      return
+    }
+    window.open(url, '_blank', 'noopener,noreferrer')
+    showWeixinAssist(
+      true,
+      '已打开原文。请在原文页 Ctrl+A 全选、Ctrl+C 复制，再点「从剪贴板导入」。',
+    )
+  })
+
+  importClipboard?.addEventListener('click', async (event) => {
+    event.preventDefault()
+    if (!confirmReplaceBody()) return
+    importClipboard.disabled = true
+    showWeixinAssist(true, '正在读取剪贴板并转存图片…')
+    try {
+      toast?.('正在从剪贴板导入…')
+      const html = await readClipboardHtml()
+      if (!html) throw new Error('剪贴板为空。请先在原文页全选复制，再点「从剪贴板导入」')
+      const result = await api('/pages/news/import-html', {
+        method: 'POST',
+        body: JSON.stringify({
+          html,
+          sourceUrl: String(importUrlInput?.value || '').trim() || 'https://mp.weixin.qq.com/',
+        }),
+        timeoutMs: 180000,
+      })
+      finishImport(result)
+    } catch (error) {
+      showWeixinAssist(true, error.message || '剪贴板导入失败')
+      toast?.(error.message || '剪贴板导入失败', true)
+    } finally {
+      importClipboard.disabled = false
     }
   })
 
@@ -485,14 +592,9 @@ export function bindNewsRichEditor(modal, { api, toast }) {
       toast?.('请先粘贴文章链接', true)
       return
     }
-    const hasBody = Boolean(String(editor.innerText || '').trim())
-    const replaceBody = !hasBody || window.confirm('当前正文已有内容。确定用解析结果覆盖正文，并尽量补全标题/封面/简介吗？')
-    if (hasBody && !replaceBody) return
+    if (!confirmReplaceBody()) return
     importRun.disabled = true
-    if (importStatus) {
-      importStatus.hidden = false
-      importStatus.textContent = '正在抓取文章并转存图片，请稍候…'
-    }
+    showWeixinAssist(isWeixinUrl(url), '正在抓取文章并转存图片，请稍候…')
     try {
       toast?.('正在解析链接…')
       const result = await api('/pages/news/import-url', {
@@ -500,18 +602,13 @@ export function bindNewsRichEditor(modal, { api, toast }) {
         body: JSON.stringify({ url }),
         timeoutMs: 180000,
       })
-      applyImportedArticle(modal, result, { replaceBody: true })
-      setImportOpen(false)
-      const warnText = Array.isArray(result.warnings) && result.warnings.length
-        ? `（${result.warnings.length} 张图未转存成功）`
-        : ''
-      toast?.(`已导入「${result.title || '文章'}」，转存 ${result.imageCount || 0} 张图片${warnText}`)
-      editor.focus()
+      finishImport(result)
     } catch (error) {
-      if (importStatus) {
-        importStatus.hidden = false
-        importStatus.textContent = error.message || '解析失败'
-      }
+      const weixinBlocked = error.code === 'weixin_ip_block' || isWeixinUrl(url)
+      showWeixinAssist(
+        weixinBlocked || isWeixinUrl(url),
+        error.message || '解析失败',
+      )
       toast?.(error.message || '链接解析失败', true)
     } finally {
       importRun.disabled = false

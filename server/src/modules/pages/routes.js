@@ -15,7 +15,7 @@ import { getProductLibraryConfig, presentProductLibrary, publicProductLibraryCon
 import { getSolutionsLibraryConfig, presentSolutionsLibrary, publicSolutionsLibraryContent, validateSolutionsLibraryContent } from './solutions-library-service.js'
 import { getAgentsLibraryConfig, presentAgentsLibrary, publicAgentsLibraryContent, validateAgentsLibraryContent } from './agents-library-service.js'
 import { assertExpectedUpdatedAt, conflictResponse } from './version-guard.js'
-import { importArticleFromUrl } from './article-import-service.js'
+import { importArticleFromHtml, importArticleFromUrl } from './article-import-service.js'
 
 export const publicPagesRouter = Router()
 export const adminPagesRouter = Router()
@@ -588,8 +588,29 @@ adminPagesRouter.post('/news/import-url', requireAuth('config:write'), async (re
   } catch (error) {
     console.error('news.import-url failed:', error)
     response.status(error.status || 400).json({
-      error: 'import_failed',
+      error: error.code || 'import_failed',
       message: error.message || '链接解析失败',
+    })
+  }
+})
+
+adminPagesRouter.post('/news/import-html', requireAuth('config:write'), async (request, response) => {
+  try {
+    const result = await importArticleFromHtml(request.body?.html, request.body?.sourceUrl || '', {
+      fetchRemoteImage,
+      saveImageBuffer: (buffer, mimeType, extra = {}) => saveImageBuffer(buffer, mimeType, request.admin, extra),
+    })
+    await addAudit(request.admin, 'news.import.html', 'news-feed', {
+      sourceUrl: result.sourceUrl,
+      imageCount: result.imageCount,
+      title: result.title?.slice(0, 80),
+    })
+    response.json(result)
+  } catch (error) {
+    console.error('news.import-html failed:', error)
+    response.status(error.status || 400).json({
+      error: error.code || 'import_failed',
+      message: error.message || '剪贴板内容解析失败',
     })
   }
 })

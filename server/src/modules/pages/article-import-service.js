@@ -246,48 +246,66 @@ async function fetchPageHtml(pageUrl) {
       /* keep utf8 */
     }
   }
-  if (/验证|环境异常|操作频繁|enablejs|security_verify/i.test(html) && !/id=["']js_content["']/i.test(html)) {
-    const error = new Error('目标站开启了访问验证，请换可公开打开的链接，或在浏览器打开后复制正文粘贴')
+  const blocked =
+    /wappoc_appmsgcaptcha|weui-msg__title">环境异常|id=["']js_verify["']|当前环境异常/i.test(html) ||
+    (/环境异常|操作频繁|security_verify/i.test(html) && !/id=["']js_content["']/i.test(html))
+  if (blocked) {
+    const error = new Error(
+      '微信拦截了服务器机房 IP（要求人机验证）。链接本身没问题：请点「打开原文」，在浏览器里 Ctrl+A / Ctrl+C，再点「从剪贴板导入」。',
+    )
     error.status = 400
+    error.code = 'weixin_ip_block'
     throw error
   }
   return html
 }
 
 /**
- * @param {string} rawUrl
+ * 解析已拿到的文章 HTML（服务端抓取或浏览器剪贴板/另存文件），并转存图片。
+ * @param {string} html
+ * @param {string} pageUrl
  * @param {{
  *   fetchRemoteImage: (url: string, referer?: string) => Promise<{ buffer: Buffer, mimeType: string }>,
  *   saveImageBuffer: (buffer: Buffer, mimeType: string, extra?: object) => Promise<string>,
  * }} deps
  */
-export async function importArticleFromUrl(rawUrl, deps) {
-  const pageUrl = assertPublicPageUrl(rawUrl)
-  const html = await fetchPageHtml(pageUrl)
+export async function importArticleFromHtml(html, pageUrl, deps) {
+  const sourceUrl = pageUrl ? assertPublicPageUrl(pageUrl) : 'https://mp.weixin.qq.com/'
+  const rawHtml = String(html || '')
+  if (rawHtml.length < 40) {
+    const error = new Error('未读到网页内容，请先在原文页全选复制后再试')
+    error.status = 400
+    throw error
+  }
+  if (rawHtml.length > MAX_HTML_BYTES) {
+    const error = new Error('网页内容过大，无法解析')
+    error.status = 400
+    throw error
+  }
 
   const title =
-    (isWeixin(pageUrl) ? tagText(html, 'h1') : '') ||
-    metaContent(html, 'og:title') ||
-    metaContent(html, 'twitter:title') ||
-    tagText(html, 'title') ||
+    (isWeixin(sourceUrl) ? tagText(rawHtml, 'h1') : '') ||
+    metaContent(rawHtml, 'og:title') ||
+    metaContent(rawHtml, 'twitter:title') ||
+    tagText(rawHtml, 'title') ||
     ''
 
   const summary =
-    metaContent(html, 'og:description') ||
-    metaContent(html, 'description') ||
-    metaContent(html, 'twitter:description') ||
+    metaContent(rawHtml, 'og:description') ||
+    metaContent(rawHtml, 'description') ||
+    metaContent(rawHtml, 'twitter:description') ||
     ''
 
   const author =
-    metaContent(html, 'author') ||
-    metaContent(html, 'og:article:author') ||
-    (/id=["']js_name["'][^>]*>([^<]+)</i.exec(html)?.[1] || '').trim() ||
+    metaContent(rawHtml, 'author') ||
+    metaContent(rawHtml, 'og:article:author') ||
+    (/id=["']js_name["'][^>]*>([^<]+)</i.exec(rawHtml)?.[1] || '').trim() ||
     ''
 
   let date =
-    metaContent(html, 'article:published_time') ||
-    metaContent(html, 'og:article:published_time') ||
-    (/id=["']publish_time["'][^>]*>([^<]+)</i.exec(html)?.[1] || '').trim() ||
+    metaContent(rawHtml, 'article:published_time') ||
+    metaContent(rawHtml, 'og:article:published_time') ||
+    (/id=["']publish_time["'][^>]*>([^<]+)</i.exec(rawHtml)?.[1] || '').trim() ||
     ''
   if (date) {
     const parsed = Date.parse(date)
@@ -299,24 +317,28 @@ export async function importArticleFromUrl(rawUrl, deps) {
     }
   }
 
-  let cover = normalizeRemoteUrl(metaContent(html, 'og:image') || metaContent(html, 'twitter:image'), pageUrl)
+  let cover = normalizeRemoteUrl(metaContent(rawHtml, 'og:image') || metaContent(rawHtml, 'twitter:image'), sourceUrl)
 
-  let bodyRaw = extractArticleHtml(html, pageUrl)
+  let bodyRaw = extractArticleHtml(rawHtml, sourceUrl)
+  // 剪贴板常常只有正文片段，不一定带 js_content 外壳
   if (!bodyRaw || bodyRaw.replace(/<[^>]+>/g, '').trim().length < 20) {
-    const error = new Error('未能识别文章正文。请确认链接可公开打开（尤其是微信文章），或改为手动粘贴')
+    bodyRaw = rawHtml
+  }
+  if (!bodyRaw || bodyRaw.replace(/<[^>]+>/g, '').trim().length < 20) {
+    const error = new Error('未能识别文章正文。请在原文页点正文区域后全选复制，再点「从剪贴板导入」')
     error.status = 400
     throw error
   }
 
-  bodyRaw = promoteLazyImages(stripNoise(bodyRaw), pageUrl)
+  bodyRaw = promoteLazyImages(stripNoise(bodyRaw), sourceUrl)
   let bodyHtml = sanitizeNewsHtml(bodyRaw, { keepColor: true })
   if (!bodyHtml.trim()) {
-    const error = new Error('正文解析后为空，请检查链接或改用粘贴')
+    const error = new Error('正文解析后为空，请检查复制内容后重试')
     error.status = 400
     throw error
   }
 
-  const imageUrls = collectImageUrls(bodyHtml, pageUrl)
+  const imageUrls = collectImageUrls(bodyHtml, sourceUrl)
   if (cover && !imageUrls.includes(cover)) imageUrls.unshift(cover)
 
   const warnings = []
@@ -325,11 +347,11 @@ export async function importArticleFromUrl(rawUrl, deps) {
   for (const remote of imageUrls) {
     if (rewrite.has(remote)) continue
     try {
-      const referer = isWeixin(pageUrl) || /\.qpic\.cn$/i.test(new URL(remote).hostname)
-        ? 'https://mp.weixin.qq.com/'
-        : pageUrl
+      const host = new URL(remote).hostname
+      const referer =
+        isWeixin(sourceUrl) || /\.qpic\.cn$/i.test(host) ? 'https://mp.weixin.qq.com/' : sourceUrl
       const { buffer, mimeType } = await deps.fetchRemoteImage(remote, referer)
-      const local = await deps.saveImageBuffer(buffer, mimeType, { source: remote, from: 'news.import-url' })
+      const local = await deps.saveImageBuffer(buffer, mimeType, { source: remote, from: 'news.import' })
       rewrite.set(remote, local)
       importedImages += 1
     } catch (error) {
@@ -347,9 +369,9 @@ export async function importArticleFromUrl(rawUrl, deps) {
     try {
       const { buffer, mimeType } = await deps.fetchRemoteImage(
         cover,
-        isWeixin(pageUrl) ? 'https://mp.weixin.qq.com/' : pageUrl,
+        isWeixin(sourceUrl) ? 'https://mp.weixin.qq.com/' : sourceUrl,
       )
-      cover = await deps.saveImageBuffer(buffer, mimeType, { source: cover, from: 'news.import-url.cover' })
+      cover = await deps.saveImageBuffer(buffer, mimeType, { source: cover, from: 'news.import.cover' })
       importedImages += 1
     } catch {
       cover = ''
@@ -361,7 +383,7 @@ export async function importArticleFromUrl(rawUrl, deps) {
   const shortSummary = (summary || plain).replace(/\s+/g, ' ').trim().slice(0, 120)
 
   return {
-    sourceUrl: pageUrl,
+    sourceUrl,
     title: title.slice(0, 200),
     summary: shortSummary,
     author: author.slice(0, 80),
@@ -372,3 +394,18 @@ export async function importArticleFromUrl(rawUrl, deps) {
     warnings: warnings.slice(0, 8),
   }
 }
+
+/**
+ * @param {string} rawUrl
+ * @param {{
+ *   fetchRemoteImage: (url: string, referer?: string) => Promise<{ buffer: Buffer, mimeType: string }>,
+ *   saveImageBuffer: (buffer: Buffer, mimeType: string, extra?: object) => Promise<string>,
+ * }} deps
+ */
+export async function importArticleFromUrl(rawUrl, deps) {
+  const pageUrl = assertPublicPageUrl(rawUrl)
+  const html = await fetchPageHtml(pageUrl)
+  return importArticleFromHtml(html, pageUrl, deps)
+}
+
+export { isWeixin, assertPublicPageUrl }
