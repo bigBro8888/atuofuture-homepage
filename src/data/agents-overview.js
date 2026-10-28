@@ -294,6 +294,43 @@ export const AGENTS_INDUSTRY = [
   },
 ]
 
+/** 生态图默认左右列顺序（左 4 + 右 4） */
+export const AGENTS_ORBIT_DEFAULT_IDS = [
+  'space',
+  'meeting',
+  'visitor',
+  'hospitality',
+  'energy',
+  'exhibition',
+  'opc',
+  'asset',
+]
+
+/** 按 CMS / 拖拽后的 id 列表重排 AGENTS_OVERVIEW，并同步左右侧 */
+export function reorderAgentsOverview(ids = []) {
+  const wanted = (Array.isArray(ids) ? ids : [])
+    .map((id) => String(id || '').trim())
+    .filter(Boolean)
+  const byId = new Map(AGENTS_OVERVIEW.map((agent) => [agent.id, agent]))
+  const next = []
+  for (const id of wanted) {
+    const agent = byId.get(id)
+    if (agent && !next.includes(agent)) next.push(agent)
+  }
+  for (const id of AGENTS_ORBIT_DEFAULT_IDS) {
+    const agent = byId.get(id)
+    if (agent && !next.includes(agent)) next.push(agent)
+  }
+  for (const agent of AGENTS_OVERVIEW) {
+    if (!next.includes(agent)) next.push(agent)
+  }
+  next.forEach((agent, index) => {
+    agent.side = index < 4 ? 'left' : 'right'
+  })
+  AGENTS_OVERVIEW.splice(0, AGENTS_OVERVIEW.length, ...next)
+  return next.map((agent) => agent.id)
+}
+
 export function resolveAgentOverviewId(raw) {
   if (!raw) return null
   const id = String(raw).trim().toLowerCase()

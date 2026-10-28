@@ -16293,6 +16293,33 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
   transition: background .18s ease, color .18s ease;
   box-sizing: border-box;
 }
+.ag-eco__agent--editable {
+  grid-template-columns: 22px 34px minmax(0, 1fr);
+  gap: 8px;
+  max-width: 300px;
+  cursor: default;
+}
+.ag-eco__agent-drag {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #8a97ab;
+  cursor: grab;
+}
+.ag-eco__agent-drag:active { cursor: grabbing; }
+.ag-eco__agent-drag .material-symbols-outlined { font-size: 18px; }
+.ag-eco__orbit-slot.is-dragging {
+  opacity: 0.45;
+}
+.ag-eco__orbit-slot.is-dragging .ag-eco__agent {
+  box-shadow: 0 8px 20px rgba(7, 26, 51, 0.12);
+}
 a.ag-eco__agent:visited {
   color: #071A33;
 }

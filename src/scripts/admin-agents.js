@@ -1,5 +1,10 @@
-import { AGENTS_OVERVIEW } from '../data/agents-overview.js'
+import {
+  AGENTS_ORBIT_DEFAULT_IDS,
+  AGENTS_OVERVIEW,
+  reorderAgentsOverview,
+} from '../data/agents-overview.js'
 import { bindAgentsChannelPreview, renderAgentsChannel } from '../lib/agents-channel-render.js'
+import { layoutAgentOrbitLinks } from '../components/agents/ecosystem-map.js'
 
 const IMAGE_SIZE_GUIDE = [
   { test: (path) => path === 'bannerUrl', label: '首屏 Banner', size: '1920×1080', tip: '横向全宽背景' },
@@ -61,8 +66,23 @@ function applyCmsToOverview(content) {
 
 function ensureItems(content) {
   content.items = Array.isArray(content.items) ? content.items : []
-  const byId = new Map(content.items.map((item) => [item.id || item.group, item]))
-  content.items = Object.keys(BASE_BY_ID).map((id) => {
+  const byId = new Map(
+    content.items
+      .map((item) => [item.id || item.group, item])
+      .filter(([id]) => id && BASE_BY_ID[id])
+  )
+  const orderedIds = []
+  for (const item of content.items) {
+    const id = item.id || item.group
+    if (id && BASE_BY_ID[id] && !orderedIds.includes(id)) orderedIds.push(id)
+  }
+  for (const id of AGENTS_ORBIT_DEFAULT_IDS) {
+    if (BASE_BY_ID[id] && !orderedIds.includes(id)) orderedIds.push(id)
+  }
+  for (const id of Object.keys(BASE_BY_ID)) {
+    if (!orderedIds.includes(id)) orderedIds.push(id)
+  }
+  content.items = orderedIds.map((id) => {
     const base = BASE_BY_ID[id]
     const hit = byId.get(id) || {}
     return {
@@ -80,9 +100,14 @@ function ensureItems(content) {
 function buildModel(content) {
   applyCmsToOverview(content)
   const items = Array.isArray(content.items) ? content.items : []
+  const orderIds = items.map((item) => item.id).filter(Boolean)
+  reorderAgentsOverview(orderIds)
   const resolveItemIndex = (id) => items.findIndex((item) => item.id === id || item.group === id)
   const overlayRaw = Number(content.bannerOverlay)
   const bannerOverlay = Number.isFinite(overlayRaw) ? Math.max(0, Math.min(100, Math.round(overlayRaw))) : 100
+  const orderedAgents = orderIds
+    .map((id) => AGENTS_OVERVIEW.find((agent) => agent.id === id))
+    .filter(Boolean)
   return {
     hero: {
       title: content.title || '',
@@ -91,14 +116,15 @@ function buildModel(content) {
       ctaLabel: content.ctaLabel || '',
       bannerOverlay,
     },
-    agents: AGENTS_OVERVIEW.map((agent) => ({
+    agents: orderedAgents.map((agent) => ({
       id: agent.id,
       name: agent.name,
       blurb: agent.blurb,
       sceneImage: agent.sceneImage,
     })),
+    orderIds,
     resolveItemIndex,
-    selectedAgent: AGENTS_OVERVIEW[0]?.id || 'space',
+    selectedAgent: orderedAgents[0]?.id || 'space',
   }
 }
 
@@ -192,7 +218,7 @@ export function renderAgentsVisualEditor(content) {
         </div>
       </details>
       <div class="admin-vedit-toolbar">
-        <p class="admin-vedit-hint">点生态图卡片改文字；点卡片上的链接图标设跳转。详情页请到「内容中心 → 空间智能体」。</p>
+        <p class="admin-vedit-hint">拖左侧把手可排序八大智能体；点卡片改文字，点链接图标设跳转。详情页请到「内容中心 → 空间智能体」。</p>
         <button type="button" class="admin-vedit-fullscreen-btn" data-agents-fullscreen>
           <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
           全屏编辑
@@ -395,11 +421,113 @@ function setFullscreen(on) {
   if (bar) bar.hidden = !on
   requestAnimationFrame(() => {
     const channel = canvas.querySelector('[data-ag-channel]')
-    if (channel) {
-      import('../components/agents/ecosystem-map.js').then(({ layoutAgentOrbitLinks }) => {
-        layoutAgentOrbitLinks(channel)
-      })
+    if (channel) layoutAgentOrbitLinks(channel)
+  })
+}
+
+function readOrbitOrderFromDom(orbit) {
+  if (!orbit) return []
+  const left = [...orbit.querySelectorAll('[data-ag-orbit-slot][data-ag-orbit-side="left"]')]
+    .map((slot) => slot.dataset.agOrbitId)
+    .filter(Boolean)
+  const right = [...orbit.querySelectorAll('[data-ag-orbit-slot][data-ag-orbit-side="right"]')]
+    .map((slot) => slot.dataset.agOrbitId)
+    .filter(Boolean)
+  return [...left, ...right]
+}
+
+function refreshOrbitSlotMeta(orbit) {
+  ;['left', 'right'].forEach((side) => {
+    ;[...orbit.querySelectorAll(`[data-ag-orbit-slot][data-ag-orbit-side="${side}"]`)].forEach((slot, index) => {
+      slot.style.setProperty('--orbit-row', String(index + 1))
+      const id = slot.querySelector('[data-ag-select]')?.dataset.agSelect || ''
+      if (id) slot.dataset.agOrbitId = id
+    })
+  })
+}
+
+function applyOrbitOrder(orderIds) {
+  if (!ctx.state?.simplePage) return
+  const selected = document.querySelector('[data-agents-visual] [data-ag-select].is-selected')?.dataset.agSelect
+  const content = collectAgentsVisualContent(ctx.state.simplePage.draftContent)
+  const byId = new Map(content.items.map((item) => [item.id, item]))
+  const next = []
+  for (const id of orderIds) {
+    const item = byId.get(id)
+    if (item && !next.includes(item)) next.push(item)
+  }
+  for (const item of content.items) {
+    if (!next.includes(item)) next.push(item)
+  }
+  content.items = next
+  ctx.state.simplePage.draftContent = content
+  renderAgentsVisualEditor(content)
+  if (selected) {
+    const channel = document.querySelector('[data-agents-visual] [data-ag-channel]')
+    const btn = channel?.querySelector(`[data-ag-select="${CSS.escape(selected)}"]`)
+    btn?.click()
+  }
+  ctx.toast('智能体顺序已更新，记得保存并发布')
+}
+
+function bindOrbitSortable(editor) {
+  if (!editor || editor.dataset.orbitSortBound === '1') return
+  editor.dataset.orbitSortBound = '1'
+  let draggedSlot = null
+
+  editor.addEventListener('dragstart', (event) => {
+    if (ctx.state?.simpleKey !== 'agents') return
+    const handle = event.target.closest('[data-ag-drag-handle]')
+    if (!handle || !editor.contains(handle)) return
+    const slot = handle.closest('[data-ag-orbit-slot]')
+    if (!slot) return
+    draggedSlot = slot
+    slot.classList.add('is-dragging')
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', slot.dataset.agOrbitId || '')
+    try {
+      event.dataTransfer.setDragImage(slot, 24, 24)
+    } catch {
+      /* ignore */
     }
+  })
+
+  editor.addEventListener('dragover', (event) => {
+    if (!draggedSlot) return
+    const target = event.target.closest('[data-ag-orbit-slot]')
+    const orbit = draggedSlot.closest('[data-ag-orbit-sortable]')
+    if (!target || !orbit || !orbit.contains(target) || target === draggedSlot) return
+    event.preventDefault()
+    const sameSide = target.dataset.agOrbitSide === draggedSlot.dataset.agOrbitSide
+    if (sameSide) {
+      const rect = target.getBoundingClientRect()
+      const after = event.clientY > rect.top + rect.height / 2
+      target.parentNode.insertBefore(draggedSlot, after ? target.nextSibling : target)
+    } else {
+      // 跨左右列：先改 side，再插入目标列对应位置
+      draggedSlot.dataset.agOrbitSide = target.dataset.agOrbitSide
+      draggedSlot.classList.toggle('ag-eco__orbit-slot--left', target.dataset.agOrbitSide === 'left')
+      draggedSlot.classList.toggle('ag-eco__orbit-slot--right', target.dataset.agOrbitSide === 'right')
+      const rect = target.getBoundingClientRect()
+      const after = event.clientY > rect.top + rect.height / 2
+      target.parentNode.insertBefore(draggedSlot, after ? target.nextSibling : target)
+    }
+    refreshOrbitSlotMeta(orbit)
+    layoutAgentOrbitLinks(orbit.closest('[data-ag-channel]') || orbit)
+  })
+
+  editor.addEventListener('drop', (event) => {
+    if (!draggedSlot) return
+    event.preventDefault()
+  })
+
+  editor.addEventListener('dragend', () => {
+    if (!draggedSlot) return
+    const orbit = draggedSlot.closest('[data-ag-orbit-sortable]')
+    draggedSlot.classList.remove('is-dragging')
+    const orderIds = readOrbitOrderFromDom(orbit)
+    draggedSlot = null
+    if (orderIds.length >= 2) applyOrbitOrder(orderIds)
   })
 }
 
@@ -407,9 +535,15 @@ export function bindAgentsVisualAdmin(helpers) {
   ctx = { ...ctx, ...helpers }
   const editor = document.querySelector('[data-simple-editor]')
   if (!editor) return
+  bindOrbitSortable(editor)
 
   editor.addEventListener('click', async (event) => {
     if (ctx.state?.simpleKey !== 'agents') return
+    if (event.target.closest('[data-ag-drag-handle]')) {
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
     if (event.target.closest('[data-agents-fullscreen]')) {
       event.preventDefault()
       setFullscreen(true)

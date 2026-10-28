@@ -26,13 +26,20 @@ const SOLUTION_NAV_DESC = {
   commercial: '招商获客、带看签约与资产运营',
 }
 
-function buildAgentNavChildren() {
+export function buildAgentNavChildren() {
   return AGENTS_OVERVIEW.filter((agent) => !agent.hidden).map((agent) => ({
     id: agent.id,
     label: agent.name,
     desc: AGENT_NAV_DESC[agent.id] || agent.value || agent.blurb || '',
     segment: `agent-detail/?id=${agent.id}`,
   }))
+}
+
+/** 顶栏智能体下拉与生态图顺序同步 */
+export function syncAgentNavChildren() {
+  const item = SITE_NAV_ITEMS.find((entry) => entry.id === 'agents')
+  if (item) item.children = buildAgentNavChildren()
+  return item?.children || []
 }
 
 function buildSolutionNavChildren() {

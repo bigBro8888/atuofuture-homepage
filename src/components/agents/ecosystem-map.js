@@ -1,4 +1,4 @@
-import { AGENTS_OVERVIEW } from '../../data/agents-overview.js'
+import { AGENTS_ORBIT_DEFAULT_IDS, AGENTS_OVERVIEW } from '../../data/agents-overview.js'
 import { textNode } from '../../lib/vedit-nodes.js'
 
 function esc(str = '') {
@@ -15,9 +15,28 @@ function agentHref(a) {
   return `/agent-detail/?id=${encodeURIComponent(a?.id || '')}`
 }
 
-/** 左右环绕中心的智能体顺序 */
-const AGENT_LEFT_IDS = ['space', 'meeting', 'visitor', 'hospitality']
-const AGENT_RIGHT_IDS = ['energy', 'exhibition', 'opc', 'asset']
+function resolveOrbitColumns(orderIds) {
+  const preferred = (
+    Array.isArray(orderIds) && orderIds.length
+      ? orderIds
+      : AGENTS_OVERVIEW.map((agent) => agent.id)
+  )
+    .map((id) => String(id || '').trim())
+    .filter(Boolean)
+  const seen = new Set()
+  const ordered = []
+  for (const id of [...preferred, ...AGENTS_ORBIT_DEFAULT_IDS]) {
+    if (seen.has(id)) continue
+    const agent = AGENTS_OVERVIEW.find((row) => row.id === id)
+    if (!agent) continue
+    seen.add(id)
+    ordered.push(agent)
+  }
+  return {
+    left: ordered.slice(0, 4),
+    right: ordered.slice(4, 8),
+  }
+}
 
 const HUB_STEPS = [
   { title: '读懂目标', icon: 'track_changes' },
@@ -93,12 +112,15 @@ function renderAgentButton(a, selectedId, { editable = false, itemIndex = -1 } =
   if (editable) {
     return `
     <div
-      class="ag-eco__agent${on ? ' is-selected' : ''}"
+      class="ag-eco__agent ag-eco__agent--editable${on ? ' is-selected' : ''}"
       data-ag-select="${esc(a.id)}"
       role="button"
       tabindex="0"
       aria-pressed="${on ? 'true' : 'false'}"
     >
+      <button type="button" class="ag-eco__agent-drag" data-ag-drag-handle draggable="true" title="拖拽排序" aria-label="拖拽排序">
+        <span class="material-symbols-outlined" aria-hidden="true">drag_indicator</span>
+      </button>
       <span class="ag-eco__agent-icon" aria-hidden="true">
         <span class="material-symbols-outlined">${esc(a.icon)}</span>
       </span>
@@ -122,14 +144,13 @@ function renderAgentButton(a, selectedId, { editable = false, itemIndex = -1 } =
 
 function renderOrbitSlot(a, selectedId, side, row, options = {}) {
   return `
-    <div class="ag-eco__orbit-slot ag-eco__orbit-slot--${side}" style="--orbit-row:${row}">
+    <div class="ag-eco__orbit-slot ag-eco__orbit-slot--${side}" style="--orbit-row:${row}" data-ag-orbit-slot data-ag-orbit-side="${side}" data-ag-orbit-id="${esc(a.id)}">
       ${renderAgentButton(a, selectedId, options)}
     </div>`
 }
 
-function renderAgentsOrbit(selectedId, { editable = false, resolveItemIndex = () => -1 } = {}) {
-  const left = AGENT_LEFT_IDS.map((id) => AGENTS_OVERVIEW.find((a) => a.id === id)).filter(Boolean)
-  const right = AGENT_RIGHT_IDS.map((id) => AGENTS_OVERVIEW.find((a) => a.id === id)).filter(Boolean)
+function renderAgentsOrbit(selectedId, { editable = false, resolveItemIndex = () => -1, orderIds } = {}) {
+  const { left, right } = resolveOrbitColumns(orderIds)
   const linkIds = [...left, ...right].map((a) => a.id)
   const slotOpts = (a) => ({
     editable,
@@ -137,7 +158,7 @@ function renderAgentsOrbit(selectedId, { editable = false, resolveItemIndex = ()
   })
 
   return `
-    <div class="ag-eco__orbit" data-ag-eco>
+    <div class="ag-eco__orbit" data-ag-eco${editable ? ' data-ag-orbit-sortable' : ''}>
       <svg class="ag-eco__orbit-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
         ${linkIds
           .map(
@@ -326,16 +347,16 @@ function renderValueBar() {
 
 /**
  * AgentEcosystemMap — 业务目标 → 八大智能体 → 自主执行 → 人/系统/设备 → 客户价值
- * @param {{ selectedId: string, editable?: boolean, resolveItemIndex?: (id: string) => number }} props
+ * @param {{ selectedId: string, editable?: boolean, resolveItemIndex?: (id: string) => number, orderIds?: string[] }} props
  */
-export function renderAgentEcosystemMap({ selectedId, editable = false, resolveItemIndex } = {}) {
+export function renderAgentEcosystemMap({ selectedId, editable = false, resolveItemIndex, orderIds } = {}) {
   const selected = getAgent(selectedId)
 
   return `
     <section class="ag-eco" id="agent-ecosystem">
       <div class="ag-eco__shell">
         ${renderHeader()}
-        ${renderAgentsOrbit(selected.id, { editable, resolveItemIndex })}
+        ${renderAgentsOrbit(selected.id, { editable, resolveItemIndex, orderIds })}
         ${renderHubPill()}
         ${renderResources()}
         ${renderValueBar()}

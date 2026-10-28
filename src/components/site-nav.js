@@ -1,10 +1,10 @@
-import { SITE_NAV_ITEMS } from '../data/site-nav.js'
+import { SITE_NAV_ITEMS, syncAgentNavChildren } from '../data/site-nav.js'
 import { APP_DOWNLOAD_PATH, OFFICIAL_SITE_URL } from '../data/site-links.js'
 import { bindSiteAccount, renderSiteAccount } from '../lib/site-account.js'
 import { applyHardwareSimpleCms, applyProductLibraryCms, resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
 import { loadProductLibraryContent, loadSimplePageContent } from '../services/site-settings-api.js'
 import { SOLUTIONS } from '../data/solutions.js'
-import { AGENTS_OVERVIEW } from '../data/agents-overview.js'
+import { AGENTS_OVERVIEW, reorderAgentsOverview } from '../data/agents-overview.js'
 
 function getRootPrefix() {
   const depth = Number(document.body.dataset.navDepth || 0)
@@ -458,10 +458,24 @@ export function initSiteNav() {
 
   paint()
   if ((document.body.dataset.page || '') === 'app-download') return
-  void Promise.all([loadSimplePageContent('hardware'), loadProductLibraryContent()])
-    .then(([content, library]) => {
+  void Promise.all([
+    loadSimplePageContent('hardware'),
+    loadProductLibraryContent(),
+    loadSimplePageContent('agents'),
+  ])
+    .then(([content, library, agentsContent]) => {
       applyHardwareSimpleCms(content)
       applyProductLibraryCms(library)
+      if (Array.isArray(agentsContent?.items) && agentsContent.items.length) {
+        reorderAgentsOverview(agentsContent.items.map((item) => item.id).filter(Boolean))
+        for (const agent of AGENTS_OVERVIEW) {
+          const hit = agentsContent.items.find((item) => item.id === agent.id)
+          if (!hit) continue
+          if (hit.title) agent.name = hit.title
+          if (hit.summary) agent.blurb = hit.summary
+        }
+        syncAgentNavChildren()
+      }
       const header = document.getElementById('site-header')
       if (!header) return
       const root = getRootPrefix()
@@ -479,6 +493,21 @@ export function initSiteNav() {
       }
       const mobile = header.querySelector('[data-hardware-mobile]')
       if (mobile) mobile.innerHTML = renderHardwareMobile(root)
+      const agentsItem = SITE_NAV_ITEMS.find((item) => item.id === 'agents')
+      if (agentsItem?.children?.length) {
+        const agentsMega = header.querySelector('[data-mega-panel][data-mega-for="agents"]')
+        if (agentsMega) {
+          const wrap = document.createElement('div')
+          wrap.innerHTML = renderVisualMega(agentsItem, root).trim()
+          const next = wrap.firstElementChild
+          if (next) {
+            next.dataset.megaFor = 'agents'
+            next.setAttribute('aria-hidden', agentsMega.getAttribute('aria-hidden') || 'true')
+            if (agentsMega.classList.contains('is-active')) next.classList.add('is-active')
+            agentsMega.replaceWith(next)
+          }
+        }
+      }
     })
     .catch(() => {})
 }

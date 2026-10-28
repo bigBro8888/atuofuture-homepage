@@ -129,13 +129,14 @@ export function renderAgentsChannel(model, { editable = false } = {}) {
     hero = {},
     agents = [],
     resolveItemIndex = () => -1,
+    orderIds = agents.map((agent) => agent.id).filter(Boolean),
     selectedAgent = agents[0]?.id || 'space',
   } = model
 
   return `
 <div class="ag-channel${editable ? ' ag-channel--editable hpi--editable' : ''}" data-ag-channel>
   ${renderHero(hero, { editable })}
-  ${renderAgentEcosystemMap({ selectedId: selectedAgent, editable, resolveItemIndex })}
+  ${renderAgentEcosystemMap({ selectedId: selectedAgent, editable, resolveItemIndex, orderIds })}
   ${renderAgentTaskStory({ selectedId: selectedAgent })}
   ${renderCta({ editable })}
   ${editable ? renderEditableAgentStrip(agents, resolveItemIndex) : ''}

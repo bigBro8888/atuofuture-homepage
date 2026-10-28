@@ -3,6 +3,7 @@ import {
   AGENTS_CAPABILITY_CHAIN,
   AGENTS_OVERVIEW,
   applyAgentsOverviewCms,
+  reorderAgentsOverview,
   resolveAgentOverviewId,
 } from '../data/agents-overview.js'
 import { applyAgentsLibraryCms } from '../data/agents-detail.js'
@@ -244,6 +245,9 @@ export async function initAgentsPage() {
   applyAgentsLibraryCms(library)
   applyAgentsOverviewCms(library)
   applyProductAgentsCms(library)
+  if (Array.isArray(cmsHero?.items) && cmsHero.items.length) {
+    reorderAgentsOverview(cmsHero.items.map((item) => item.id).filter(Boolean))
+  }
   for (const agent of AGENTS_OVERVIEW) {
     const hit = (cmsHero?.items || []).find((item) => item.id === agent.id)
     if (!hit) continue
