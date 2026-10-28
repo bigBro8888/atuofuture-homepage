@@ -13,6 +13,7 @@ import { alignHelpWithCatalog } from '../lib/aspace-help-categories.js'
 import { bindAspaceHelpVisualAdmin, flushAspaceHelpVisualDrawer, renderAspaceHelpPageVisualMarkup } from './admin-aspace-help.js'
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 import { createAdminPresence } from './admin-presence.js'
+import { getProductBySlug } from '../data/hardware-catalog.js'
 
 const API = '/api/admin'
 const state = { user: null, app: null, aspaceCatalog: null, aspaceHome: null, homePage: null, aboutPage: null, aboutSection: 'hero', sitePage: null, simplePage: null, simpleKey: '', simpleSection: 'hero', newsPage: null, productLibrary: null, homeSection: 'hero', configSection: 'basic' }
@@ -1567,7 +1568,8 @@ function hardwareNavThumb(product, items = []) {
 
 function hardwareNavName(product, items = []) {
   const item = items.find((row) => row.id === product.id) || {}
-  return product.label || item.title || product.id || '未命名'
+  const catalog = getProductBySlug(product.id)
+  return product.label || item.title || catalog?.name || product.id || '未命名'
 }
 
 function hardwareNavProductFields(groupIndex, productIndex, product, items = []) {

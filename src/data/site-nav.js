@@ -1,3 +1,49 @@
+/** 全站顶部导航：一级 + 二级（mega menu）
+ * 智能体 / 方案文案与 AGENTS_OVERVIEW、SOLUTIONS 同源，避免顶栏与频道页不一致。
+ */
+
+import { AGENTS_OVERVIEW } from './agents-overview.js'
+import { SOLUTIONS } from './solutions.js'
+
+/** 顶栏补充说明（比 overview.blurb 更适合导航） */
+const AGENT_NAV_DESC = {
+  space: '空调照明、工单与信息发布统一调度',
+  energy: '分项计量与有无人节能分析',
+  meeting: '预约签到、中控与音视频联动',
+  exhibition: '大屏、孪生、讲解与展项状态',
+  visitor: '邀约登记、通行与接待编排',
+  opc: '空间发布、带看、签约与运营协同（OPC）',
+  hospitality: '分房、门锁、客房与费用管理',
+  asset: '盘点、领用借还与全生命周期',
+}
+
+const SOLUTION_NAV_DESC = {
+  campus: '多楼栋统一运营与园区服务协同',
+  building: '访客、会议、能耗与运维一体联动',
+  school: '教室、通行、能耗与信息发布',
+  hotel: '客房中控、门锁与能耗服务',
+  apartment: '分房、授权、水电与费用管理',
+  commercial: '招商获客、带看签约与资产运营',
+}
+
+function buildAgentNavChildren() {
+  return AGENTS_OVERVIEW.filter((agent) => !agent.hidden).map((agent) => ({
+    id: agent.id,
+    label: agent.name,
+    desc: AGENT_NAV_DESC[agent.id] || agent.value || agent.blurb || '',
+    segment: `agent-detail/?id=${agent.id}`,
+  }))
+}
+
+function buildSolutionNavChildren() {
+  return SOLUTIONS.map((sol) => ({
+    id: `sol-${sol.id}`,
+    label: sol.name,
+    desc: SOLUTION_NAV_DESC[sol.id] || sol.summary || '',
+    segment: `solutions/?id=${sol.id}`,
+  }))
+}
+
 /** 全站顶部导航：一级 + 二级（mega menu） */
 export const SITE_NAV_ITEMS = [
   { id: 'home', label: '首页', segment: '' },
@@ -8,16 +54,7 @@ export const SITE_NAV_ITEMS = [
     label: '空间智能体',
     segment: 'agents/',
     mega: 'visual',
-    children: [
-      { id: 'space', label: '空间服务智能体', desc: '空调照明、工单与信息发布统一调度', segment: 'agent-detail/?id=space' },
-      { id: 'energy', label: '能源能耗智能体', desc: '分项计量与有无人节能分析', segment: 'agent-detail/?id=energy' },
-      { id: 'meeting', label: '会议智能体', desc: '预约签到、中控与音视频联动', segment: 'agent-detail/?id=meeting' },
-      { id: 'exhibition', label: '展厅智能体', desc: '大屏、孪生、讲解与展项状态', segment: 'agent-detail/?id=exhibition' },
-      { id: 'visitor', label: '访客接待智能体', desc: '邀约登记、通行与接待编排', segment: 'agent-detail/?id=visitor' },
-      { id: 'opc', label: '商业空间运营智能体', desc: '空间发布、带看、签约与运营协同（OPC）', segment: 'agent-detail/?id=opc' },
-      { id: 'hospitality', label: '酒店公寓智能体', desc: '分房、门锁、客房与费用管理', segment: 'agent-detail/?id=hospitality' },
-      { id: 'asset', label: '资产管理智能体', desc: '盘点、领用借还与生命周期', segment: 'agent-detail/?id=asset' },
-    ],
+    children: buildAgentNavChildren(),
   },
   {
     id: 'hardware',
@@ -36,14 +73,7 @@ export const SITE_NAV_ITEMS = [
     label: '行业解决方案',
     segment: 'solutions/',
     mega: 'visual',
-    children: [
-      { id: 'sol-campus', label: '智慧园区', desc: '多楼栋统一运营与园区服务协同', segment: 'solutions/?id=campus' },
-      { id: 'sol-building', label: '智慧楼宇', desc: '访客、会议、能耗与运维一体联动', segment: 'solutions/?id=building' },
-      { id: 'sol-school', label: '智慧学校', desc: '教室、通行、能耗与信息发布', segment: 'solutions/?id=school' },
-      { id: 'sol-hotel', label: '智慧酒店', desc: '客房中控、门锁与能耗服务', segment: 'solutions/?id=hotel' },
-      { id: 'sol-apartment', label: '智慧公寓', desc: '分房、授权、水电与费用管理', segment: 'solutions/?id=apartment' },
-      { id: 'sol-commercial', label: '商业资产', desc: '招商获客、带看签约与资产运营', segment: 'solutions/?id=commercial' },
-    ],
+    children: buildSolutionNavChildren(),
   },
   {
     id: 'about',

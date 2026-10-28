@@ -609,7 +609,8 @@ function megaSourceGroups() {
       const saved = savedProducts.find((item) => item.id === entry.id) || {}
       return {
         id: entry.id,
-        label: saved.label || entry.label || '',
+        // 代码写明的显示名优先，保证顶栏与后台默认清单一致
+        label: entry.label || saved.label || '',
         imageUrl: saved.imageUrl || '',
         href: saved.href || '',
       }

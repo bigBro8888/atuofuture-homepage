@@ -211,16 +211,19 @@ function cleanNavGroups(value) {
       id: base.id,
       title: cleanText(extra.title, base.title, 40),
       icon: cleanText(extra.icon, base.icon, 40),
-      products: base.products.map((item, productIndex) => {
+      products: base.products.map((item) => {
+        // 只按 id 对齐，禁止按序号回填（否则增删产品会错名、重复）
         const extraProduct = extraProducts.find((row) => row.id === item.id)
           || (item.id === 'smart-lighting' ? extraProducts.find((row) => row.id === 'switch-control') : null)
-          || extraProducts[productIndex]
           || {}
+        const catalog = HARDWARE_PRODUCTS.find((row) => row.id === item.id || row.slug === item.id)
+        const defaultLabel = item.label || catalog?.name || ''
         const defaultHref = `/hardware/product/?id=${item.id}`
         const defaultImage = `/images/hardware/thumb-${item.id}.png`
         return {
           id: item.id,
-          label: cleanText(extraProduct.label, item.label || '', 40),
+          // 代码侧写了显示名时优先（如「网关产品」「RFID设备」），避免旧草稿覆盖
+          label: cleanText(item.label ? item.label : extraProduct.label, defaultLabel, 40),
           imageUrl: cleanUrl(extraProduct.imageUrl, defaultImage),
           href: cleanHref(extraProduct.href, defaultHref),
         }
