@@ -1,5 +1,5 @@
 import { CONTACT, contactMailto, contactTelHref } from '../data/contact.js'
-import { SHOW_TOKEN_ENTRY, TOKEN_SITE_URL, SHOW_APP_DOWNLOAD, APP_DOWNLOAD_PATH } from '../data/site-links.js'
+import { SHOW_APP_DOWNLOAD, APP_DOWNLOAD_PATH } from '../data/site-links.js'
 
 function getRootPrefix() {
   const depth = Number(document.body.dataset.navDepth || 0)
@@ -47,7 +47,6 @@ export function renderSiteFooter() {
               <li><a href="${root}solutions/">行业解决方案</a></li>
               <li><a href="${root}agents/">空间智能体</a></li>
               <li><a href="${root}hardware/">智能硬件</a></li>
-              ${SHOW_TOKEN_ENTRY ? `<li><a href="${TOKEN_SITE_URL}" target="_blank" rel="noopener noreferrer" data-token-link>AI Token</a></li>` : ''}
               <li><a href="/aspace-one/" target="_blank" rel="noopener noreferrer">Aspace空间智能</a></li>
               ${SHOW_APP_DOWNLOAD ? `<li><a href="${root}${APP_DOWNLOAD_PATH}">下载 App</a></li>` : ''}
             </ul>
