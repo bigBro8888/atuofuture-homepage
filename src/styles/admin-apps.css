@@ -677,11 +677,23 @@ textarea { resize: vertical; }
   color: #a08955;
   pointer-events: none;
 }
-.admin-news-import__paste img {
-  display: block;
-  max-width: 100%;
-  height: auto;
+.admin-news-import__paste img,
+.admin-news-import__img-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 72px;
   margin: 8px 0;
+  padding: 12px;
+  border: 1px dashed #d4b56a;
+  border-radius: 8px;
+  background: #f7f1e2;
+  color: #8a6d2f;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+  object-fit: contain;
 }
 .admin-news-import__assist small {
   display: block;

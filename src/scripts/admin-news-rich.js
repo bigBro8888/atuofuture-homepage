@@ -47,6 +47,25 @@ function promoteEditorLazyImages(root) {
   })
 }
 
+/** 预览里不直接加载微信图（会显示「未经允许不可引用」），真实地址留给服务端转存 */
+function maskWeixinImagesForPreview(html) {
+  const temp = document.createElement('div')
+  temp.innerHTML = sanitizeNewsHtml(promoteImgDataSrc(html), { keepColor: true })
+  promoteEditorLazyImages(temp)
+  let index = 0
+  temp.querySelectorAll('img').forEach((image) => {
+    const src = normalizeImgSrc(image.getAttribute('src') || image.getAttribute('data-src') || '')
+    index += 1
+    if (src) image.setAttribute('data-import-src', src)
+    image.removeAttribute('src')
+    image.removeAttribute('data-src')
+    image.removeAttribute('data-original')
+    image.alt = `图片 ${index}（预览被微信防盗链拦截属正常，点「解析粘贴内容」后会转存到本站）`
+    image.classList.add('admin-news-import__img-ph')
+  })
+  return temp.innerHTML
+}
+
 function escapeTextarea(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -108,7 +127,7 @@ export function newsRichEditorMarkup(item = {}) {
                     aria-multiline="true"
                     data-placeholder="在原文复制后，回到这里 Ctrl+V 粘贴全文（不要粘到正文编辑器）"
                   ></div>
-                  <small>必须粘到这个黄框里；粘到下面正文编辑器时，微信常会把图变成「图片」二字。</small>
+                  <small>必须粘到这个黄框里。预览出现「未经允许不可引用」是微信防盗链，属正常；点「解析粘贴内容」会把图转存到本站。</small>
                 </div>
               </div>
               <p class="admin-news-import__hint" data-news-import-hint>非微信链接一般可直接解析。微信若提示环境验证，不是链接坏了，是机房 IP 被风控。</p>
@@ -642,8 +661,8 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     const text = String(event.clipboardData?.getData('text/plain') || '').trim()
     importPasteHtml = html || text
     if (html) {
-      importPaste.innerHTML = sanitizeNewsHtml(html, { keepColor: true })
-      promoteEditorLazyImages(importPaste)
+      // 预览遮罩防盗链图；真正导入仍用 importPasteHtml 里的原地址
+      importPaste.innerHTML = maskWeixinImagesForPreview(html)
     } else {
       importPaste.textContent = text
     }
@@ -656,7 +675,7 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     showWeixinAssist(
       true,
       hasImg
-        ? '已收到粘贴内容（含图片）。点「解析粘贴内容」将转存到本站。'
+        ? `已收到正文，共识别 ${html.match(/<img\b/gi)?.length || 0} 张图片。黄框里不直接显示原图（微信防盗链），请点「解析粘贴内容」转存到本站。`
         : '已收到文字。若原文有图但这里没有，请重新在原文里选中带图区域再复制粘贴到本框。',
     )
   })
