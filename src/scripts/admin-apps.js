@@ -1561,11 +1561,6 @@ function renderSpaceMatrixEditor(spaceMatrixRows = [], items = []) {
         </div>`
 }
 
-function hardwareNavThumb(product, items = []) {
-  const item = items.find((row) => row.id === product.id) || {}
-  return product.imageUrl || item.imageUrl || (product.id ? `/images/hardware/thumb-${product.id}.png` : '')
-}
-
 function hardwareNavName(product, items = []) {
   const item = items.find((row) => row.id === product.id) || {}
   const catalog = getProductBySlug(product.id)
@@ -1575,20 +1570,18 @@ function hardwareNavName(product, items = []) {
 function hardwareNavProductFields(groupIndex, productIndex, product, items = []) {
   const prefix = `navGroups.${groupIndex}.products.${productIndex}`
   const name = hardwareNavName(product, items)
-  const image = hardwareNavThumb(product, items)
   const href = product.href || (product.id ? `/hardware/product/?id=${encodeURIComponent(product.id)}` : '/hardware/product/')
   return `
     ${homeField(`${prefix}.id`, '产品 ID', product.id || '', { help: '对应商品库 id，如 control-screen' })}
     ${homeField(`${prefix}.label`, '显示名', name)}
-    ${homeField(`${prefix}.href`, '指向链接', href, { wide: true })}
-    ${homeField(`${prefix}.imageUrl`, '缩略图', image, { image: true, wide: true, size: '240×240' })}`
+    ${homeField(`${prefix}.href`, '指向链接', href, { wide: true })}`
 }
 
 function renderHardwareNavEditor(navGroups, items = []) {
   return `
       <div class="admin-hw-nav-basics">
         <h4 style="margin:0 0 8px;font-size:14px">顶栏下拉菜单</h4>
-        <p class="admin-form-section__hint">只影响全站顶栏「智能硬件」下拉（前台为文字列表，无分类图标）。点「编辑」改名称、缩略图和跳转；保存并发布后官网同步。</p>
+        <p class="admin-form-section__hint">与前台顶栏一致：纯文字分类与产品名，无图标/缩略图。点「编辑」改名称与跳转；保存并发布后官网同步。</p>
         <div class="admin-nav-groups">${navGroups.map((group, groupIndex) => `
           <article class="admin-nav-col" data-nav-col="${groupIndex}">
             <header class="admin-nav-col__head">
@@ -1601,12 +1594,8 @@ function renderHardwareNavEditor(navGroups, items = []) {
             <div class="admin-nav-col__list">
               ${(group.products || []).map((product, productIndex) => {
                 const name = hardwareNavName(product, items)
-                const image = hardwareNavThumb(product, items)
                 return `
                 <div class="admin-nav-prod" data-nav-prod data-nav-group="${groupIndex}" data-nav-index="${productIndex}">
-                  ${image
-                    ? `<img class="admin-nav-prod__thumb" src="${escapeHtml(image)}" alt="" />`
-                    : '<span class="admin-nav-prod__thumb is-empty" aria-hidden="true"></span>'}
                   <strong class="admin-nav-prod__name">${escapeHtml(name)}</strong>
                   <span class="admin-slide-tools">
                     <button type="button" data-nav-edit>编辑</button>
@@ -1654,7 +1643,6 @@ function addHardwareNavProduct(groupIndex) {
     id: '',
     label: '新产品',
     href: '/hardware/product/',
-    imageUrl: '',
   })
   refreshHardwareNavEditor(content)
   openHardwareNavModal(groupIndex, group.products.length - 1)

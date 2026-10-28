@@ -420,72 +420,38 @@ textarea { resize: vertical; }
 }
 .admin-nav-col__head {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
   gap: 10px;
   margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid #eef2f6;
 }
-.admin-nav-col__icon {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border-radius: 10px;
-  color: #0f9f90;
-  background: #e7f8f5;
-}
-.admin-nav-col__icon .material-symbols-outlined {
-  width: auto;
-  height: auto;
-  overflow: visible;
-  font-size: 22px;
-}
-.admin-nav-col:nth-child(2) .admin-nav-col__icon { color: #1769ff; background: #edf4ff; }
-.admin-nav-col:nth-child(3) .admin-nav-col__icon { color: #d97706; background: #fff6e8; }
 .admin-nav-col__meta { display: grid; gap: 8px; min-width: 0; }
 .admin-nav-col__meta label { margin: 0; min-width: 0; }
 .admin-nav-col__meta input { padding: 8px 10px; }
 .admin-nav-col__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-  gap: 10px;
+  gap: 6px;
 }
 .admin-nav-col .admin-add-slide { margin-top: 12px; }
 .admin-nav-prod {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
   min-width: 0;
-  padding: 12px 8px 10px;
+  padding: 8px 10px;
   border: 1px solid #eef2f6;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #f8fafc;
-  text-align: center;
 }
-.admin-nav-prod__thumb {
-  width: 88px;
-  height: 88px;
-  border: 1px solid #e7ecf3;
-  border-radius: 10px;
-  object-fit: cover;
-  background: #eef2f7;
-}
-.admin-nav-prod__thumb.is-empty { display: block; }
 .admin-nav-prod__name {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 2.4em;
+  min-width: 0;
   color: #172033;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.3;
 }
-.admin-nav-prod .admin-slide-tools { justify-content: center; }
+.admin-nav-prod .admin-slide-tools { flex: 0 0 auto; justify-content: flex-end; }
 @media (max-width: 1280px) {
   .admin-nav-groups { grid-template-columns: 1fr; }
 }
