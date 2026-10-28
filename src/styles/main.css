@@ -470,9 +470,13 @@
 
   .site-mega__hardware {
     display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 0.85fr) minmax(220px, 0.95fr);
+    grid-template-columns: minmax(280px, 440px) minmax(200px, 280px) minmax(220px, 260px);
+    justify-content: center;
     align-items: start;
     gap: 0;
+    width: 100%;
+    max-width: 1040px;
+    margin-inline: auto;
     padding: 22px 8px 10px;
     border: 0;
     border-radius: 0;
@@ -484,7 +488,10 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    padding: 10px 8px 18px;
+    width: 100%;
+    max-width: 1040px;
+    margin-inline: auto;
+    padding: 10px 22px 18px;
     border: 0;
     border-top: 1px solid rgba(15, 40, 80, 0.1);
     border-radius: 0;
