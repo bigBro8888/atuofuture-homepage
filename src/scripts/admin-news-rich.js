@@ -22,7 +22,10 @@ export function newsRichEditorMarkup(item = {}) {
   const html = sanitizeNewsHtml(item.bodyHtml || htmlFromPlainBody(item.body || ''))
   return `
     <div class="admin-form-wide">
-      <span class="admin-rich__label">主题正文</span>
+      <div class="admin-rich__head">
+        <span class="admin-rich__label">主题正文</span>
+        <button type="button" class="admin-news-import-btn" data-rich-cmd="importUrl" data-rich-import-url title="粘贴公众号等文章链接，自动抓取正文并转存图片">链接解析</button>
+      </div>
       <div class="admin-rich" data-news-rich>
         <div class="admin-rich__bar" data-news-rich-bar>
           <button type="button" tabindex="-1" data-rich-cmd="h3">标题</button>
@@ -33,7 +36,6 @@ export function newsRichEditorMarkup(item = {}) {
           <button type="button" tabindex="-1" data-rich-cmd="table">表格</button>
           <button type="button" tabindex="-1" data-rich-cmd="image">插图</button>
           <button type="button" tabindex="-1" data-rich-cmd="video">视频</button>
-          <button type="button" tabindex="-1" data-rich-cmd="importUrl" data-rich-import-url title="粘贴公众号等文章链接，自动抓取正文并转存图片">链接解析</button>
           <label class="admin-rich__color">颜色<input type="color" value="#333333" data-rich-color /></label>
           <button type="button" tabindex="-1" data-rich-cmd="removeFormat">清除格式</button>
           <button type="button" tabindex="-1" data-rich-cmd="codeMode" data-rich-code-toggle title="粘贴 HTML / 源码，前台解析展示">代码</button>
@@ -390,6 +392,11 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     rememberRange()
   })
 
+  modal.querySelector('[data-rich-import-url]')?.addEventListener('click', (event) => {
+    event.preventDefault()
+    setImportOpen(true)
+  })
+
   modal.querySelector('[data-news-rich-bar]')?.addEventListener('mousedown', (event) => {
     const button = event.target.closest('[data-rich-cmd]')
     if (!button) return
@@ -399,16 +406,16 @@ export function bindNewsRichEditor(modal, { api, toast }) {
       setCodeMode(!isNewsCodeMode(rich))
       return
     }
+    if (command === 'importUrl') {
+      setImportOpen(true)
+      return
+    }
     if (isNewsCodeMode(rich)) {
       toast?.('请先退出代码模式，再使用格式工具', true)
       return
     }
     rememberRange()
     restoreEditorRange(editor, savedRange)
-    if (command === 'importUrl') {
-      setImportOpen(true)
-      return
-    }
     if (command === 'h3') document.execCommand('formatBlock', false, 'h3')
     else if (command === 'p') document.execCommand('formatBlock', false, 'p')
     else if (command === 'link') {

@@ -778,7 +778,29 @@ textarea { resize: vertical; }
 }
 .admin-rich__code:focus { outline: none; }
 .admin-rich__code[hidden] { display: none !important; }
-.admin-rich__label { display: block; margin-bottom: 8px; font-size: 11px; font-weight: 600; }
+.admin-rich__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.admin-rich__label { display: block; margin: 0; font-size: 11px; font-weight: 600; }
+.admin-news-import-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: 1px solid #1769ff;
+  border-radius: 999px;
+  background: #edf4ff;
+  color: #1769ff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.admin-news-import-btn:hover {
+  background: #1769ff;
+  color: #fff;
+}
 .admin-news-type {
   display: inline-flex;
   width: auto;
