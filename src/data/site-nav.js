@@ -74,7 +74,6 @@ export const SITE_NAV_ITEMS = [
       { id: 'hw-consumer', label: '3C 数码', desc: 'AI 墨水屏手机壳与电子纸相框', segment: 'hardware/?line=consumer#hwc-browser' },
     ],
   },
-  { id: 'news', label: '新闻中心', segment: 'news/' },
   {
     id: 'solutions',
     label: '行业解决方案',
@@ -82,6 +81,7 @@ export const SITE_NAV_ITEMS = [
     mega: 'visual',
     children: buildSolutionNavChildren(),
   },
+  { id: 'news', label: '新闻中心', segment: 'news/' },
   {
     id: 'about',
     label: '关于我们',
