@@ -760,14 +760,12 @@ export function bindHardwareVisualAdmin(helpers) {
     if (!path) return
     fileInput.disabled = true
     try {
-      const body = new FormData()
-      body.append('file', fileInput.files[0])
-      const result = await ctx.api('/admin/uploads', { method: 'POST', body })
-      const url = result.url || result.path || ''
+      const { uploadAdminImage } = await import('../lib/admin-image-upload.js')
+      const url = await uploadAdminImage(ctx.api, fileInput.files[0], 'hardware')
       const urlInput = modal.querySelector('[data-hardware-image-modal-url]')
       if (urlInput) urlInput.value = url
       setImageModalPreview(modal, url)
-      ctx.toast('图片已上传，点确定应用')
+      ctx.toast('图片已上传到 OSS，点确定应用')
     } catch (error) {
       ctx.toast(error.message, true)
     } finally {

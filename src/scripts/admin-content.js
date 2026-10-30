@@ -1720,20 +1720,19 @@ function bindKind(kind) {
         const file = modalFile.files[0]
         modalFile.disabled = true
         try {
-          const formData = new FormData()
-          formData.append('image', file)
-          const { url } = await ctx.api('/pages/media/image', { method: 'POST', body: formData })
+          const { uploadAdminImage } = await import('../lib/admin-image-upload.js')
+          const url = await uploadAdminImage(ctx.api, file, 'agents')
           const mediaType = modal?.dataset.mediaType || 'image'
           if (mediaType === 'video') {
             const posterInput = modal?.querySelector('[data-agents-detail-poster-url]')
             if (posterInput) posterInput.value = url
             setAgentsDetailImagePreview(modal, modal.querySelector('[data-agents-detail-image-url]')?.value.trim() || '', 'video')
-            ctx.toast('封面图已上传，点确定应用')
+            ctx.toast('封面图已上传到 OSS，点确定应用')
           } else {
             const urlInput = modal?.querySelector('[data-agents-detail-image-url]')
             if (urlInput) urlInput.value = url
             setAgentsDetailImagePreview(modal, url, 'image')
-            ctx.toast('图片已上传，点确定应用')
+            ctx.toast('图片已上传到 OSS，点确定应用')
           }
         } catch (error) {
           ctx.toast(error.message, true)
@@ -1749,16 +1748,16 @@ function bindKind(kind) {
     if (!upload || !file) return
     upload.disabled = true
     try {
-      const formData = new FormData()
-      formData.append('image', file)
-      const { url } = await ctx.api('/pages/media/image', { method: 'POST', body: formData })
+      const { uploadAdminImage } = await import('../lib/admin-image-upload.js')
+      const folder = kind === 'agents' ? 'agents' : kind === 'solutions' ? 'solutions' : kind === 'products' ? 'hardware' : 'media'
+      const url = await uploadAdminImage(ctx.api, file, folder)
       const path = upload.getAttribute(`data-${kind}-upload-for`)
       const input = compose.querySelector(`[data-${kind}-field="${path}"]`)
       if (input) {
         input.value = url
         input.dispatchEvent(new Event('input', { bubbles: true }))
       }
-      ctx.toast('图片已上传')
+      ctx.toast('图片已上传到 OSS')
     } catch (error) {
       ctx.toast(error.message, true)
     } finally {

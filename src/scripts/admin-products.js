@@ -1131,10 +1131,8 @@ export function productLibraryOptions() {
 }
 
 async function uploadImageFile(file) {
-  const formData = new FormData()
-  formData.append('image', file)
-  const { url } = await ctx.api('/pages/media/image', { method: 'POST', body: formData })
-  return url
+  const { uploadAdminImage } = await import('../lib/admin-image-upload.js')
+  return uploadAdminImage(ctx.api, file, 'hardware')
 }
 
 const ANCHOR_IDS = new Set(['#hpi-value', '#hpi-detail', '#hpi-cases', '#hpi-album', '#hpi-specs', '#hpi-videos', '#hpi-close'])

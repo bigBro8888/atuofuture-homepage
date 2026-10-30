@@ -37,6 +37,26 @@ const imageExtensions = new Map([
   ['image/gif', '.gif'],
 ])
 
+const ALLOWED_IMAGE_FOLDERS = new Set([
+  'news',
+  'agents',
+  'hardware',
+  'solutions',
+  'home',
+  'about',
+  'aspace',
+  'products',
+  'media',
+])
+
+function resolveImageFolder(value, fallback = 'media') {
+  const folder = String(value || fallback)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '')
+  return ALLOWED_IMAGE_FOLDERS.has(folder) ? folder : fallback
+}
+
 function sniffImageMime(buffer, mimeType) {
   const type = String(mimeType || '').split(';')[0].trim().toLowerCase()
   if (imageExtensions.has(type)) return type
@@ -61,7 +81,7 @@ async function saveImageBuffer(buffer, mimeType, admin, extra = {}) {
   let url = ''
   let storage = 'local'
   if (isOssConfigured()) {
-    const folder = String(extra.folder || 'news').trim() || 'news'
+    const folder = resolveImageFolder(extra.folder, 'media')
     const uploaded = await uploadPublicObject({
       buffer: encoded.buffer,
       contentType: encoded.mimeType,
@@ -556,14 +576,25 @@ adminPagesRouter.post('/simple/:key/publish', requireAuth('config:write'), async
   }
 })
 
-adminPagesRouter.post('/media/image', requireAuth('config:write'), imageUpload.single('image'), async (request, response) => {
-  try {
-    const url = await saveImageBuffer(request.file?.buffer, request.file?.mimetype, request.admin)
-    response.status(201).json({ url })
-  } catch (error) {
-    response.status(error.status || 400).json({ error: 'invalid_image', message: error.message })
-  }
-})
+adminPagesRouter.post(
+  '/media/image',
+  requireAuth('config:write'),
+  imageUpload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'file', maxCount: 1 },
+  ]),
+  async (request, response) => {
+    try {
+      // 兼容历史客户端把文件字段写成 file
+      const file = request.files?.image?.[0] || request.files?.file?.[0] || request.file
+      const folder = resolveImageFolder(request.body?.folder || request.query?.folder, 'media')
+      const url = await saveImageBuffer(file?.buffer, file?.mimetype, request.admin, { folder })
+      response.status(201).json({ url, folder, storage: isOssConfigured() ? 'oss' : 'local' })
+    } catch (error) {
+      response.status(error.status || 400).json({ error: 'invalid_image', message: error.message })
+    }
+  },
+)
 
 adminPagesRouter.post('/media/video', requireAuth('config:write'), videoUpload.single('video'), async (request, response) => {
   try {
@@ -587,8 +618,9 @@ adminPagesRouter.post('/media/image-from-url', requireAuth('config:write'), asyn
   try {
     const remoteUrl = assertPublicImageUrl(request.body?.url)
     const { buffer, mimeType } = await fetchRemoteImage(remoteUrl, request.body?.referer)
-    const url = await saveImageBuffer(buffer, mimeType, request.admin, { source: remoteUrl })
-    response.status(201).json({ url })
+    const folder = resolveImageFolder(request.body?.folder, 'media')
+    const url = await saveImageBuffer(buffer, mimeType, request.admin, { source: remoteUrl, folder })
+    response.status(201).json({ url, folder, storage: isOssConfigured() ? 'oss' : 'local' })
   } catch (error) {
     response.status(400).json({ error: 'invalid_remote_image', message: error.message || '远程图片导入失败' })
   }
@@ -598,7 +630,8 @@ adminPagesRouter.post('/news/import-url', requireAuth('config:write'), async (re
   try {
     const result = await importArticleFromUrl(request.body?.url, {
       fetchRemoteImage,
-      saveImageBuffer: (buffer, mimeType, extra = {}) => saveImageBuffer(buffer, mimeType, request.admin, extra),
+      saveImageBuffer: (buffer, mimeType, extra = {}) =>
+        saveImageBuffer(buffer, mimeType, request.admin, { folder: 'news', ...extra }),
     })
     await addAudit(request.admin, 'news.import.url', 'news-feed', {
       sourceUrl: result.sourceUrl,
@@ -619,7 +652,8 @@ adminPagesRouter.post('/news/import-html', requireAuth('config:write'), async (r
   try {
     const result = await importArticleFromHtml(request.body?.html, request.body?.sourceUrl || '', {
       fetchRemoteImage,
-      saveImageBuffer: (buffer, mimeType, extra = {}) => saveImageBuffer(buffer, mimeType, request.admin, extra),
+      saveImageBuffer: (buffer, mimeType, extra = {}) =>
+        saveImageBuffer(buffer, mimeType, request.admin, { folder: 'news', ...extra }),
     })
     await addAudit(request.admin, 'news.import.html', 'news-feed', {
       sourceUrl: result.sourceUrl,

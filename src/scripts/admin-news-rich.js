@@ -290,16 +290,14 @@ function insertHtmlAtCaret(editor, html, range) {
 async function uploadImageFile(file, api) {
   const type = file.type && file.type.startsWith('image/') ? file.type : 'image/jpeg'
   const named = new File([file], file.name || 'image.jpg', { type })
-  const formData = new FormData()
-  formData.append('image', named)
-  const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
-  return url
+  const { uploadAdminImage } = await import('../lib/admin-image-upload.js')
+  return uploadAdminImage(api, named, 'news')
 }
 
 async function importRemoteImage(src, api) {
   const { url } = await api('/pages/media/image-from-url', {
     method: 'POST',
-    body: JSON.stringify({ url: src }),
+    body: JSON.stringify({ url: src, folder: 'news' }),
   })
   return url
 }

@@ -6,6 +6,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { config } from '../../config.js'
 import { encodeImageAsWebp } from '../../lib/image-webp.js'
+import { isOssConfigured, uploadPublicObject } from '../../lib/oss.js'
 import { addAudit, db, normalizeAppButtons, normalizeAppFeatures, publicUser, save } from '../../lib/store.js'
 import { getLatestAndroidVersion } from '../apps/version-service.js'
 import { publishRelease, rollbackRelease } from '../apps/release-service.js'
@@ -112,19 +113,33 @@ adminRouter.post('/app/hero-image', requireAuth('config:write'), imageUpload.sin
 
   try {
     const encoded = await encodeImageAsWebp(request.file.buffer)
-    const imageDirectory = path.join(config.uploadDir, 'images')
     const filename = `hero-${Date.now()}-${randomUUID()}${encoded.extension}`
-    await mkdir(imageDirectory, { recursive: true })
-    await writeFile(path.join(imageDirectory, filename), encoded.buffer)
-    const url = `/api/public/uploads/images/${filename}`
+    let url = ''
+    let storage = 'local'
+    if (isOssConfigured()) {
+      const uploaded = await uploadPublicObject({
+        buffer: encoded.buffer,
+        contentType: encoded.mimeType,
+        folder: 'media',
+        filename,
+      })
+      url = uploaded.url
+      storage = 'oss'
+    } else {
+      const imageDirectory = path.join(config.uploadDir, 'images')
+      await mkdir(imageDirectory, { recursive: true })
+      await writeFile(path.join(imageDirectory, filename), encoded.buffer)
+      url = `/api/public/uploads/images/${filename}`
+    }
     await addAudit(request.admin, 'app.hero_image.upload', 'artink', {
       filename,
       size: encoded.bytesOut,
       bytesIn: encoded.bytesIn,
       mimeType: encoded.mimeType,
       sourceMimeType: request.file.mimetype,
+      storage,
     })
-    response.status(201).json({ url })
+    response.status(201).json({ url, storage })
   } catch (error) {
     response.status(error.status || 400).json({ error: 'invalid_image', message: error.message || '图片处理失败' })
   }

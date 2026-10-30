@@ -1,5 +1,17 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
+import { uploadAdminImage } from '../lib/admin-image-upload.js'
 import { bindNewsRichEditor, ensureRemoteImageOnOss, ingestEditorImages, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
+
+function imageFolderForContext(kind = '') {
+  if (kind === 'hardware' || kind === 'products') return 'hardware'
+  if (kind === 'agents') return 'agents'
+  if (kind === 'solutions') return 'solutions'
+  if (kind === 'news') return 'news'
+  if (kind === 'home') return 'home'
+  if (kind === 'about') return 'about'
+  if (kind === 'aspace' || kind === 'site') return 'aspace'
+  return 'media'
+}
 import { bindProductLibraryAdmin, closeProductCompose, loadProductLibrary, productLibraryOptions } from './admin-products.js'
 import { bindAppDownloadVisualAdmin, collectAppDownloadVisualContent, renderAppDownloadVisualEditor } from './admin-app-download.js'
 import { bindHardwareVisualAdmin, collectHardwareVisualContent, renderHardwareVisualEditor } from './admin-hardware.js'
@@ -2637,16 +2649,14 @@ document.querySelector('[data-aspace-editor]').addEventListener('change', async 
     const row = iconUpload.closest('[data-aspace-category]')
     iconUpload.disabled = true
     try {
-      const formData = new FormData()
-      formData.append('image', file)
-      const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+      const url = await uploadAdminImage(api, file, 'aspace')
       row.querySelector('[name="category-icon-url"]').value = url
       row.querySelector('[data-aspace-icon-preview]').innerHTML = `<img src="${escapeHtml(url)}" alt="" />`
       row.querySelector('[data-aspace-icon-reset]').hidden = false
       const catId = row.dataset.aspaceCategory
       const previewBtn = document.querySelector(`[data-aso-plaza-edit-cat="${CSS.escape(catId)}"] [data-aso-plaza-cat-icon]`)
       if (previewBtn) previewBtn.innerHTML = `<img src="${escapeHtml(url)}" alt="" />`
-      toast('图标上传成功，点击保存后发布到前台')
+      toast('图标已上传到 OSS，点击保存后发布到前台')
     } catch (error) {
       toast(error.message, true)
     } finally {
@@ -2718,13 +2728,11 @@ document.querySelector('[data-aspace-editor]').addEventListener('change', async 
   const row = coverUpload.closest('[data-aspace-profile]')
   coverUpload.disabled = true
   try {
-    const formData = new FormData()
-    formData.append('image', file)
-    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+    const url = await uploadAdminImage(api, file, 'aspace')
     row.querySelector('[name="app-image"]').value = url
     row.querySelector('[data-aspace-cover-preview]').innerHTML = `<img src="${escapeHtml(url)}" alt="" />`
     row.querySelector('[data-aspace-cover-clear]').hidden = false
-    toast('封面上传成功，点击保存后发布到前台')
+    toast('封面已上传到 OSS，点击保存后发布到前台')
   } catch (error) {
     toast(error.message, true)
   } finally {
@@ -2876,13 +2884,11 @@ document.querySelector('[data-home-editor]').addEventListener('change', async (e
   const path = upload.dataset.homeUploadFor
   upload.disabled = true
   try {
-    const formData = new FormData()
-    formData.append('image', file)
-    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+    const url = await uploadAdminImage(api, file, 'home')
     const field = document.querySelector(`[data-home-field="${path}"]`)
     field.value = url
     field.dispatchEvent(new Event('input', { bubbles: true }))
-    toast('图片上传成功，请继续保存草稿')
+    toast('图片已上传到 OSS，请继续保存草稿')
   } catch (error) {
     toast(error.message, true)
   } finally {
@@ -3049,15 +3055,20 @@ document.querySelector('[data-news-compose-view]').addEventListener('change', as
   const isVideo = path === 'videoUrl'
   upload.disabled = true
   try {
-    const formData = new FormData()
-    formData.append(isVideo ? 'video' : 'image', file)
-    const { url } = await api(isVideo ? '/pages/media/video' : '/pages/media/image', { method: 'POST', body: formData })
+    let url = ''
+    if (isVideo) {
+      const formData = new FormData()
+      formData.append('video', file)
+      ;({ url } = await api('/pages/media/video', { method: 'POST', body: formData }))
+    } else {
+      url = await uploadAdminImage(api, file, 'news')
+    }
     const field = document.querySelector(`[data-news-compose-view] [data-news-field="${path}"]`)
     if (field) {
       field.value = url
       field.dispatchEvent(new Event('input', { bubbles: true }))
     }
-    toast(isVideo ? '视频已上传' : '封面已上传')
+    toast(isVideo ? '视频已上传' : '封面已上传到 OSS')
   } catch (error) {
     toast(error.message, true)
   } finally {
@@ -3101,13 +3112,11 @@ document.querySelector('[data-site-editor]').addEventListener('change', async (e
   if (!upload || !file) return
   upload.disabled = true
   try {
-    const formData = new FormData()
-    formData.append('image', file)
-    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+    const url = await uploadAdminImage(api, file, 'aspace')
     const field = document.querySelector(`[data-site-editor] [data-home-field="${upload.dataset.homeUploadFor}"]`)
     field.value = url
     field.dispatchEvent(new Event('input', { bubbles: true }))
-    toast('图片上传成功，请继续保存草稿')
+    toast('图片已上传到 OSS，请继续保存草稿')
   } catch (error) { toast(error.message, true) } finally {
     upload.disabled = false
     upload.value = ''
@@ -3176,13 +3185,11 @@ document.querySelector('[data-simple-editor]').addEventListener('change', async 
   if (!upload || !file) return
   upload.disabled = true
   try {
-    const formData = new FormData()
-    formData.append('image', file)
-    const { url } = await api('/pages/media/image', { method: 'POST', body: formData })
+    const url = await uploadAdminImage(api, file, imageFolderForContext(state.simpleKey))
     const field = document.querySelector(`[data-simple-editor] [data-home-field="${upload.dataset.homeUploadFor}"]`)
     field.value = url
     field.dispatchEvent(new Event('input', { bubbles: true }))
-    toast('图片上传成功，请继续保存草稿')
+    toast('图片已上传到 OSS，请继续保存草稿')
   } catch (error) { toast(error.message, true) } finally {
     upload.disabled = false
     upload.value = ''
@@ -3366,16 +3373,22 @@ document.querySelector('[data-item-modal]').addEventListener('change', async (ev
   const isVideo = Boolean(newsUpload && path === 'videoUrl')
   upload.disabled = true
   try {
-    const formData = new FormData()
-    formData.append(isVideo ? 'video' : 'image', file)
-    const { url } = await api(isVideo ? '/pages/media/video' : '/pages/media/image', { method: 'POST', body: formData })
+    let url = ''
+    if (isVideo) {
+      const formData = new FormData()
+      formData.append('video', file)
+      ;({ url } = await api('/pages/media/video', { method: 'POST', body: formData }))
+    } else {
+      const folder = newsUpload ? 'news' : aboutUpload ? 'about' : 'home'
+      url = await uploadAdminImage(api, file, folder)
+    }
     const selector = homeUpload ? `[data-home-field="${path}"]` : aboutUpload ? `[data-about-field="${path}"]` : `[data-news-field="${path}"]`
     const field = document.querySelector(selector)
     if (field) {
       field.value = url
       field.dispatchEvent(new Event('input', { bubbles: true }))
     }
-    toast(isVideo ? '视频已上传，点发布上线即可' : newsUpload ? '封面已上传，点发布上线即可' : '图片上传成功，请点完成后再保存草稿')
+    toast(isVideo ? '视频已上传，点发布上线即可' : newsUpload ? '封面已上传到 OSS，点发布上线即可' : '图片已上传到 OSS，请点完成后再保存草稿')
   } catch (error) {
     toast(error.message, true)
   } finally {

@@ -523,14 +523,12 @@ export function bindAspaceHomeVisualAdmin(helpers = {}) {
     const modal = document.querySelector('[data-aso-home-image-modal]')
     fileInput.disabled = true
     try {
-      const body = new FormData()
-      body.append('image', fileInput.files[0])
-      const result = await ctx.api('/pages/media/image', { method: 'POST', body })
-      const url = result.url || ''
+      const { uploadAdminImage } = await import('../lib/admin-image-upload.js')
+      const url = await uploadAdminImage(ctx.api, fileInput.files[0], 'aspace')
       const urlInput = modal.querySelector('[data-aso-home-image-modal-url]')
       if (urlInput) urlInput.value = url
       setImageModalPreview(modal, url)
-      ctx.toast('图片已上传，点确定应用')
+      ctx.toast('图片已上传到 OSS，点确定应用')
     } catch (error) {
       ctx.toast(error.message, true)
     } finally {
