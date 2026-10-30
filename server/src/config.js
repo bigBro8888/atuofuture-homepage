@@ -32,10 +32,15 @@ export const config = {
   /** 可选：直接复用已登录会话 Cookie（name=value; 可多条逗号分隔），用于暂无上游 SSO 时静默进入 */
   aapSsoSessionCookie: String(process.env.AAP_SSO_SESSION_COOKIE || '').trim(),
   oss: {
-    region: process.env.OSS_REGION,
+    region: process.env.OSS_REGION || 'oss-cn-shanghai',
     accessKeyId: process.env.OSS_ACCESS_KEY_ID,
     accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
     bucket: process.env.OSS_BUCKET,
     endpoint: process.env.OSS_ENDPOINT,
+    /** 桶内一级目录；官网新闻图用 website/，其它业务可改 meeting/ 等 */
+    prefix: process.env.OSS_PREFIX || 'website/',
+    useHttps: String(process.env.OSS_USE_HTTPS || 'true').toLowerCase() !== 'false',
+    /** 可选：CDN / 自定义域名，如 https://file.atuofuture.com ；不填则用 bucket.endpoint 默认公网地址 */
+    publicBaseUrl: process.env.OSS_PUBLIC_BASE_URL || '',
   },
 }

@@ -4,6 +4,7 @@ import path from 'node:path'
 import { Router } from 'express'
 import multer from 'multer'
 import { config } from '../../config.js'
+import { isOssConfigured, uploadPublicObject } from '../../lib/oss.js'
 import { addAudit, save } from '../../lib/store.js'
 import { requireAuth } from '../admin/auth.js'
 import { getHomePageConfig, validateHomeContent } from './home-service.js'
@@ -54,15 +55,31 @@ async function saveImageBuffer(buffer, mimeType, admin, extra = {}) {
     error.status = 400
     throw error
   }
-  const imageDirectory = path.join(config.uploadDir, 'images')
   const filename = `home-${Date.now()}-${randomUUID()}${extension}`
-  await mkdir(imageDirectory, { recursive: true })
-  await writeFile(path.join(imageDirectory, filename), buffer)
-  const url = `/api/public/uploads/images/${filename}`
+  let url = ''
+  let storage = 'local'
+  if (isOssConfigured()) {
+    const folder = String(extra.folder || 'news').trim() || 'news'
+    const uploaded = await uploadPublicObject({
+      buffer,
+      contentType: type,
+      folder,
+      filename,
+    })
+    url = uploaded.url
+    storage = 'oss'
+    extra = { ...extra, objectKey: uploaded.objectKey }
+  } else {
+    const imageDirectory = path.join(config.uploadDir, 'images')
+    await mkdir(imageDirectory, { recursive: true })
+    await writeFile(path.join(imageDirectory, filename), buffer)
+    url = `/api/public/uploads/images/${filename}`
+  }
   await addAudit(admin, 'home.media.upload', 'home', {
     filename,
     size: buffer.length,
     mimeType: type,
+    storage,
     ...extra,
   })
   return url

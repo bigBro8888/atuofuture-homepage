@@ -1,25 +1,7 @@
 import { createHash } from 'node:crypto'
-import OSS from 'ali-oss'
-import { config } from '../../config.js'
+import { createOssClient } from '../../lib/oss.js'
 import { addAudit, addRecord, db, save } from '../../lib/store.js'
 import { apkUrlFor, clearVersionCache, validateVersion } from './version-service.js'
-
-function ossClient() {
-  const missing = ['region', 'accessKeyId', 'accessKeySecret', 'bucket'].filter((key) => !config.oss[key])
-  if (missing.length) {
-    const error = new Error(`OSS 尚未配置：${missing.join(', ')}`)
-    error.status = 503
-    throw error
-  }
-  return new OSS({
-    region: config.oss.region,
-    accessKeyId: config.oss.accessKeyId,
-    accessKeySecret: config.oss.accessKeySecret,
-    bucket: config.oss.bucket,
-    endpoint: config.oss.endpoint || undefined,
-    secure: true,
-  })
-}
 
 async function verifyPublicFile(url) {
   const response = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(10000) })
@@ -45,7 +27,7 @@ export async function publishRelease({ version: inputVersion, notes, file, user 
     throw error
   }
 
-  const client = ossClient()
+  const client = createOssClient()
   const apkObject = `release/artink-${version}.apk`
   const hash = createHash('sha256').update(file.buffer).digest('hex')
 
@@ -97,7 +79,7 @@ export async function rollbackRelease({ releaseId, user }) {
   }
 
   await verifyPublicFile(target.apkUrl || apkUrlFor(target.version))
-  const client = ossClient()
+  const client = createOssClient()
   await client.put('release/version', Buffer.from(validateVersion(target.version), 'utf8'), {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
