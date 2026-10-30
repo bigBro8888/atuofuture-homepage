@@ -16527,7 +16527,7 @@ a.sol-d-index__item:hover strong { color: #0052d1; }
 /* ===== Ecosystem map (vertical value flow) ===== */
 .ag-eco {
   position: relative;
-  padding: 96px 0 88px;
+  padding: 96px 0 28px;
   overflow: hidden;
   background:
     radial-gradient(ellipse 70% 40% at 50% 18%, rgba(70, 150, 255, .06), transparent 70%),
@@ -17171,7 +17171,7 @@ a.ag-eco__agent:visited {
 
 /* ===== Task story ===== */
 .ag-story {
-  padding: 110px 0;
+  padding: 48px 0 110px;
   background: #F4F7FB;
 }
 .ag-story__nav {
@@ -18058,7 +18058,7 @@ a.ag-eco__agent:visited {
   .ag-shell,
   .ag-shell--1280 { width: min(1440px, calc(100% - 32px)); }
   .ag-eco {
-    padding: 72px 0 64px;
+    padding: 72px 0 20px;
   }
   .ag-eco__shell {
     width: min(1180px, calc(100% - 32px));
