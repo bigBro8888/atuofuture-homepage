@@ -975,6 +975,8 @@ body.aso-standalone .back-to-top { display: none !important; }
 .aso-page button { color: inherit; }
 .aso-container { width: min(1440px, calc(100% - 48px)); margin: 0 auto; }
 .aso-hero[hidden], .aso-help[hidden] { display: none; }
+/* 视图切换依赖 hidden；显式兜底，避免被后续 display 规则顶掉 */
+[data-aso-view][hidden] { display: none !important; }
 .aso-mode-switch {
   position: relative;
   z-index: 8;

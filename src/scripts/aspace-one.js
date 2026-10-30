@@ -1377,7 +1377,15 @@ function focusAppCard(root, appId) {
   window.requestAnimationFrame(() => {
     const card = root.querySelector(`[data-app="${CSS.escape(appId)}"]`)
     if (!card || card.classList.contains('is-hidden')) return
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // 禁止 scrollIntoView：它会连带滚文档，把顶栏 +「Aspace功能全览」顶出视口
+    window.scrollTo({ top: 0, behavior: 'auto' })
+    const scroller = card.closest('.aso-app-grid') || root.querySelector('[data-app-grid]')
+    if (scroller && scroller !== card) {
+      const cardRect = card.getBoundingClientRect()
+      const scrollerRect = scroller.getBoundingClientRect()
+      const offset = cardRect.top - scrollerRect.top - Math.max(12, (scrollerRect.height - cardRect.height) / 2)
+      scroller.scrollTo({ top: Math.max(0, scroller.scrollTop + offset), behavior: 'smooth' })
+    }
     card.classList.add('is-spotlight')
     window.clearTimeout(focusAppCard.timer)
     focusAppCard.timer = window.setTimeout(() => card.classList.remove('is-spotlight'), 2200)
@@ -1531,10 +1539,13 @@ function setShellView(root, view, {
     }
   }
 
+  if (!preserveScroll && nextView !== 'about') window.scrollTo({ top: 0, behavior: 'auto' })
   if (contentView === 'apps' && (nextAppId || nextCategory)) {
     window.requestAnimationFrame(() => {
       if (nextAppId) focusAppCard(root, nextAppId)
       else selectAppCategory(root, nextCategory)
+      // 再次钉回顶部，防止分类切换 / 焦点把门户顶栏滚走
+      if (!preserveScroll) window.scrollTo({ top: 0, behavior: 'auto' })
     })
   }
   if (nextView === 'about') {
@@ -1542,9 +1553,7 @@ function setShellView(root, view, {
       if (preserveScroll) return
       scrollAboutSection(root, aboutSection)
     })
-    return
   }
-  if (!preserveScroll) window.scrollTo({ top: 0, behavior: 'auto' })
 }
 
 function applyAspaceLocation(root, { replace = true, preserveScroll = false } = {}) {
