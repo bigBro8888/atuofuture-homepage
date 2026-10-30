@@ -1362,7 +1362,23 @@ function renderPortal() {
           <iframe class="aso-embed__frame" data-embed-frame title="应用嵌入" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
         </div>
       </div>
+      <button type="button" class="aso-back-top" data-aso-back-top aria-label="快速置顶" title="快速置顶">
+        ${icon('keyboard_arrow_up')}
+      </button>
     </div>`
+}
+
+function initAspaceBackToTop(root) {
+  const btn = root.querySelector('[data-aso-back-top]')
+  if (!btn) return
+  const toggle = () => {
+    btn.classList.toggle('is-visible', window.scrollY > 360)
+  }
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+  window.addEventListener('scroll', toggle, { passive: true })
+  toggle()
 }
 
 function showToast(message) {
@@ -2592,6 +2608,7 @@ export async function initAspaceOne() {
   await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()
   applyAspaceLocation(root, { replace: true })
+  initAspaceBackToTop(root)
   if (portalAuthError) showToast(portalAuthError)
   bindActivityMessages(root)
 
