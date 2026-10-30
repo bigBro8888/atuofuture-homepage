@@ -183,15 +183,40 @@ function scrollHomeSection(id) {
   target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-export function renderHomeVisualEditor(content, { section = 'hero' } = {}) {
+function clampHeroIndex(content, index = 0) {
+  const total = Array.isArray(content?.heroSlides) ? content.heroSlides.length : 0
+  if (total <= 0) return 0
+  return Math.min(Math.max(0, Number(index) || 0), total - 1)
+}
+
+function activateHeroSlide(index) {
+  const section = document.querySelector('#home-visual-hero')
+  if (!section) return
+  const target = Number(index) || 0
+  section.querySelectorAll('[data-home-hero-slide]').forEach((el) => {
+    const on = Number(el.dataset.homeHeroSlide) === target
+    el.classList.toggle('is-editing', on)
+    el.hidden = !on
+  })
+  section.querySelectorAll('[data-home-hero-pick]').forEach((btn) => {
+    const on = Number(btn.dataset.homeHeroPick) === target
+    btn.classList.toggle('is-active', on)
+    btn.setAttribute('aria-selected', on ? 'true' : 'false')
+  })
+  if (ctx.state) ctx.state.homeHeroIndex = target
+}
+
+export function renderHomeVisualEditor(content, { section = 'hero', heroIndex } = {}) {
   const editor = document.querySelector('[data-home-editor]')
   if (!editor) return
   editor.classList.add('admin-news-editor')
   const active = HOME_SECTIONS.some((item) => item.id === section) ? section : 'hero'
+  const resolvedHeroIndex = clampHeroIndex(content, heroIndex ?? ctx.state?.homeHeroIndex ?? 0)
+  if (ctx.state) ctx.state.homeHeroIndex = resolvedHeroIndex
   editor.innerHTML = `
     <div class="admin-vedit admin-vedit--home">
       <div class="admin-vedit-toolbar">
-        <p class="admin-vedit-hint">按官网首页通栏预览编辑：点文字改文案，点图换图；增删在区块顶栏。</p>
+        <p class="admin-vedit-hint">按官网首页通栏预览编辑：点文字改文案，点图换图；增删在区块顶栏。首屏轮播用顶部分页切换，只显示当前一屏。</p>
         <nav class="admin-home-jump" aria-label="跳转区块">
           ${HOME_SECTIONS.map((item) => `
             <button type="button" data-home-goto="${item.id}" class="${item.id === active ? 'is-active' : ''}">${item.label}</button>
@@ -210,7 +235,7 @@ export function renderHomeVisualEditor(content, { section = 'hero' } = {}) {
             退出全屏
           </button>
         </div>
-        ${renderHomePage(content || {}, { editable: true })}
+        ${renderHomePage(content || {}, { editable: true, heroIndex: resolvedHeroIndex })}
       </div>
       ${imageModalHtml()}
     </div>`
@@ -316,7 +341,10 @@ function rerenderFromDom(activeSection) {
   if (!ctx.state?.homePage) return
   const content = collectHomeVisualContent(ctx.state.homePage.draftContent)
   ctx.state.homePage.draftContent = content
-  renderHomeVisualEditor(content, { section: activeSection || ctx.state.homeSection || 'hero' })
+  renderHomeVisualEditor(content, {
+    section: activeSection || ctx.state.homeSection || 'hero',
+    heroIndex: ctx.state.homeHeroIndex,
+  })
   if (typeof ctx.onSectionChange === 'function') ctx.onSectionChange(activeSection || ctx.state.homeSection || 'hero')
 }
 
@@ -362,6 +390,13 @@ export function bindHomeVisualAdmin(helpers) {
       return
     }
 
+    const heroPick = event.target.closest('[data-home-hero-pick]')
+    if (heroPick) {
+      event.preventDefault()
+      activateHeroSlide(Number(heroPick.dataset.homeHeroPick))
+      return
+    }
+
     const imageEl = event.target.closest('[data-edit-image]')
     if (imageEl && editor.contains(imageEl)) {
       event.preventDefault()
@@ -376,7 +411,9 @@ export function bindHomeVisualAdmin(helpers) {
       const content = collectHomeVisualContent(ctx.state.homePage.draftContent)
       listRef(content, kind).push(defaultItem(kind))
       ctx.state.homePage.draftContent = content
-      renderHomeVisualEditor(content, { section: kind })
+      const heroIndex = kind === 'hero' ? listRef(content, kind).length - 1 : ctx.state.homeHeroIndex
+      if (kind === 'hero') ctx.state.homeHeroIndex = heroIndex
+      renderHomeVisualEditor(content, { section: kind, heroIndex })
       if (ctx.state) ctx.state.homeSection = kind
       if (typeof ctx.onSectionChange === 'function') ctx.onSectionChange(kind)
       ctx.toast('已新增，记得保存草稿')
@@ -396,7 +433,9 @@ export function bindHomeVisualAdmin(helpers) {
       const [item] = list.splice(index, 1)
       list.splice(next, 0, item)
       ctx.state.homePage.draftContent = content
-      renderHomeVisualEditor(content, { section: kind })
+      const heroIndex = kind === 'hero' ? next : ctx.state.homeHeroIndex
+      if (kind === 'hero') ctx.state.homeHeroIndex = heroIndex
+      renderHomeVisualEditor(content, { section: kind, heroIndex })
       if (typeof ctx.onSectionChange === 'function') ctx.onSectionChange(kind)
       return
     }
@@ -411,7 +450,9 @@ export function bindHomeVisualAdmin(helpers) {
       if (list.length <= 1) return
       list.splice(index, 1)
       ctx.state.homePage.draftContent = content
-      renderHomeVisualEditor(content, { section: kind })
+      const heroIndex = kind === 'hero' ? Math.min(index, list.length - 1) : ctx.state.homeHeroIndex
+      if (kind === 'hero') ctx.state.homeHeroIndex = heroIndex
+      renderHomeVisualEditor(content, { section: kind, heroIndex })
       if (typeof ctx.onSectionChange === 'function') ctx.onSectionChange(kind)
       ctx.toast('已删除条目，记得保存草稿')
       return

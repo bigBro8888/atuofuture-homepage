@@ -22,14 +22,24 @@ function itemTools(kind, index, total) {
     </div>`
 }
 
-function renderHero(slides, { editable }) {
+function renderHero(slides, { editable, activeIndex = 0 }) {
   const list = Array.isArray(slides) && slides.length ? slides : [{ title: '', description: '', background: '' }]
+  const active = Math.min(Math.max(0, Number(activeIndex) || 0), list.length - 1)
   return `
     <section class="sm-hero ha-hero admin-home-hero" data-home-section="hero" id="home-visual-hero" aria-label="首屏轮播">
       ${sectionChrome('hero', '首屏轮播', { editable, addLabel: '+ 新增一屏' })}
+      ${editable ? `
+        <div class="admin-home-hero-pager" data-home-hero-pager>
+          <span class="admin-home-hero-pager__meta">共 ${list.length} 屏 · 点选切换（仅显示当前一屏）</span>
+          <div class="admin-home-hero-pager__tabs" role="tablist" aria-label="轮播屏切换">
+            ${list.map((slide, index) => `
+              <button type="button" role="tab" data-home-hero-pick="${index}" class="${index === active ? 'is-active' : ''}" aria-selected="${index === active ? 'true' : 'false'}" title="${esc(slide.title || `第 ${index + 1} 屏`)}">第 ${index + 1} 屏</button>
+            `).join('')}
+          </div>
+        </div>` : ''}
       <div class="admin-home-hero__stack">
         ${list.map((slide, index) => `
-          <article class="sm-hero__slide is-active admin-home-hero__slide" data-home-hero-slide="${index}">
+          <article class="sm-hero__slide is-active admin-home-hero__slide${index === active ? ' is-editing' : ''}" data-home-hero-slide="${index}"${index === active ? '' : ' hidden'}>
             <div class="sm-hero__media" style="background-image:url('${esc(slide.background || '/images/home-advantages/advantage-ai-agent.webp')}')">
               ${editable ? `<button type="button" class="hpi-edit-bg" data-edit-image="heroSlides.${index}.background" data-edit-image-url="${esc(slide.background || '')}" title="更换背景">更换背景</button>` : ''}
             </div>
@@ -299,10 +309,10 @@ function renderPitch(pitch = {}, { editable }) {
     </section>`
 }
 
-export function renderHomePage(content = {}, { editable = false } = {}) {
+export function renderHomePage(content = {}, { editable = false, heroIndex = 0 } = {}) {
   return `
     <div class="admin-home-page">
-      ${renderHero(content.heroSlides, { editable })}
+      ${renderHero(content.heroSlides, { editable, activeIndex: heroIndex })}
       ${renderBanner(content.banner, { editable })}
       ${renderAgents(content.agents, { editable })}
       ${renderSolutions(content.solutions, { editable })}
