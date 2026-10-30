@@ -32,7 +32,7 @@ function aspaceCanonicalPath() {
 
 /**
  * 解析当前 URL：兼容
- * - /aspace-one/#apps、#/apps、#/apps?id=xxx
+ * - /aspace-one/#apps、#/apps、#/apps?id=xxx、#/apps?category=twin
  * - /aspace-one/apps/、/aspace-one/apps/?id=xxx（错误子路径，需拉回 SPA）
  */
 function parseAspaceLocation() {
@@ -421,9 +421,33 @@ function appCategoryMeta(categoryId) {
 
 function catalogMeta(categoryId) {
   if (categoryId === 'favorites') return ['star', '我的收藏', '集中查看你收藏的常用业务能力']
+  if (categoryId === 'recent') return ['history', '最近访问', '查看你最近进入过的业务能力']
   if (categoryId === 'all') return ['grid_view', '全部业务能力', '按业务场景浏览 Aspace空间智能 已接入和规划中的能力']
   const [, ico, label, description] = appCategoryMeta(categoryId)
   return [ico, label, description]
+}
+
+/** 校验应用广场分类 id，非法时回退到全部 */
+function resolveAppsCategory(categoryId = '') {
+  const id = String(categoryId || '').trim()
+  if (!id || id === 'all') return 'all'
+  if (id === 'favorites' || id === 'recent') return id
+  if (appCategories.some(([category]) => category === id)) return id
+  return 'all'
+}
+
+/** 点击分类时写入可分享 hash：#/apps?category=twin；全部则用 #/apps */
+function syncAppsCategoryInUrl(categoryId, { replace = false } = {}) {
+  const resolved = resolveAppsCategory(categoryId)
+  const nextHash = buildAspaceHash('apps', {
+    category: resolved === 'all' ? '' : resolved,
+  })
+  const nextUrl = `${aspaceCanonicalPath()}${nextHash}`
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+  if (currentUrl === nextUrl) return
+  const state = { asoView: 'apps', appId: '', category: resolved === 'all' ? '' : resolved }
+  if (replace) window.history.replaceState(state, '', nextUrl)
+  else window.history.pushState(state, '', nextUrl)
 }
 
 let favoriteAppIds = new Set(['resource', 'poster', 'digital-twin'])
@@ -1363,10 +1387,19 @@ function setPortalMode(root, mode) {
   root.dataset.activePortalMode = nextMode
 }
 
+/** 程序化切分类时不改 URL（避免冲掉 ?id= 或重复入栈） */
+let suppressCategoryUrlSync = false
+
 function selectAppCategory(root, categoryId) {
-  if (!categoryId) return
-  const button = root.querySelector(`[data-app-category-filter="${categoryId}"]`)
-  if (button) button.click()
+  const resolved = resolveAppsCategory(categoryId)
+  const button = root.querySelector(`[data-app-category-filter="${resolved}"]`)
+  if (!button) return
+  suppressCategoryUrlSync = true
+  try {
+    button.click()
+  } finally {
+    suppressCategoryUrlSync = false
+  }
 }
 
 function focusAppCard(root, appId) {
@@ -1509,7 +1542,8 @@ function setShellView(root, view, {
     ? (section || aboutSectionIdFromHash() || 'intro')
     : ''
   const nextAppId = nextView === 'apps' ? String(appId || '').trim() : ''
-  const nextCategory = nextView === 'apps' ? String(category || '').trim() : ''
+  const nextCategory = nextView === 'apps' ? resolveAppsCategory(category) : ''
+  const urlCategory = nextView === 'apps' && !nextAppId && nextCategory !== 'all' ? nextCategory : ''
 
   root.querySelectorAll('[data-aso-view]').forEach((sectionEl) => {
     sectionEl.hidden = sectionEl.dataset.asoView !== contentView
@@ -1528,7 +1562,7 @@ function setShellView(root, view, {
     const nextHash = buildAspaceHash(nextView, {
       section: aboutSection,
       appId: nextAppId,
-      category: nextCategory,
+      category: urlCategory,
     })
     const nextUrl = `${aspaceCanonicalPath()}${nextHash}`
     const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
@@ -1540,10 +1574,10 @@ function setShellView(root, view, {
   }
 
   if (!preserveScroll && nextView !== 'about') window.scrollTo({ top: 0, behavior: 'auto' })
-  if (contentView === 'apps' && (nextAppId || nextCategory)) {
+  if (contentView === 'apps' && nextView !== 'help') {
     window.requestAnimationFrame(() => {
       if (nextAppId) focusAppCard(root, nextAppId)
-      else selectAppCategory(root, nextCategory)
+      else selectAppCategory(root, nextCategory || 'all')
       // 再次钉回顶部，防止分类切换 / 焦点把门户顶栏滚走
       if (!preserveScroll) window.scrollTo({ top: 0, behavior: 'auto' })
     })
@@ -2120,6 +2154,7 @@ function initAppFilters(root) {
         })
         if (!showingRecent) applyFilters()
         button.focus({ preventScroll: true })
+        if (!suppressCategoryUrlSync) syncAppsCategoryInUrl(nextCategory)
       })
     })
   })
