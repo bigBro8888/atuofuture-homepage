@@ -128,7 +128,10 @@ export function applyHomeContent(content) {
   text('[data-home-agents-kicker]', content.agents?.kicker)
   text('[data-home-agents-title]', content.agents?.title)
   text('[data-home-agents-subtitle]', content.agents?.subtitle)
-  if (content.agents?.items?.length) applyCmsHomeAgents(content.agents.items)
+  // 首页该区块已改为产品总览静态模块，不再挂载长图智能体轮播
+  if (document.querySelector('[data-home-agent-stories]') && content.agents?.items?.length) {
+    applyCmsHomeAgents(content.agents.items)
+  }
 
   text('[data-home-news-kicker]', content.news?.kicker)
   text('[data-home-news-title]', content.news?.title)
