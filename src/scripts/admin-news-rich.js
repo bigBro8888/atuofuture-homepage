@@ -5,6 +5,23 @@ function isLocalMedia(src) {
   return src.startsWith('/api/public/uploads/') || src.startsWith('/images/') || src.startsWith('/assets/')
 }
 
+/** 已落本站或 OSS 的图，不再二次转存 */
+function isStoredMedia(src) {
+  const value = normalizeImgSrc(src)
+  if (!value) return false
+  if (isLocalMedia(value)) return true
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+    // 当前官网桶：atuofuture.oss-cn-shanghai.aliyuncs.com/website/...
+    if (url.hostname === 'atuofuture.oss-cn-shanghai.aliyuncs.com') return true
+    if (url.hostname.endsWith('.aliyuncs.com') && /\/website\//.test(url.pathname)) return true
+  } catch {
+    return false
+  }
+  return false
+}
+
 function normalizeImgSrc(src) {
   let value = String(src || '').trim().replace(/&amp;/g, '&')
   if (value.startsWith('//')) value = `https:${value}`
@@ -309,20 +326,35 @@ async function uploadFromSrc(src, api) {
   }
 }
 
-async function ingestEditorImages(editor, api, toast) {
+export async function ensureRemoteImageOnOss(src, api) {
+  const normalized = normalizeImgSrc(src)
+  if (!normalized || isStoredMedia(normalized)) return normalized
+  return uploadFromSrc(normalized, api)
+}
+
+export async function ingestEditorImages(editorOrRoot, api, toast) {
+  const editor =
+    editorOrRoot?.matches?.('[data-news-html-editor]')
+      ? editorOrRoot
+      : editorOrRoot?.querySelector?.('[data-news-html-editor]')
+  if (!editor) return { failed: 0, uploaded: 0 }
+  promoteEditorLazyImages(editor)
   const images = [...editor.querySelectorAll('img')]
   let failed = 0
+  let uploaded = 0
   for (const image of images) {
     const src = normalizeImgSrc(image.getAttribute('src') || '')
-    if (!src || isLocalMedia(src)) continue
+    if (!src || isStoredMedia(src)) continue
     try {
       image.src = await uploadFromSrc(src, api)
+      uploaded += 1
     } catch {
       failed += 1
       image.alt = image.alt || '图片转存失败，请点插图重新上传'
     }
   }
   if (failed) toast?.(`有 ${failed} 张外站图片未能转存，请用「插图」从本地上传`, true)
+  return { failed, uploaded }
 }
 
 export async function ingestEditorVideos(modal, { api, toast }) {
@@ -820,10 +852,10 @@ export function bindNewsRichEditor(modal, { api, toast }) {
     }
     const remoteCount = [...editor.querySelectorAll('img')].filter((image) => {
       const src = normalizeImgSrc(image.getAttribute('src') || '')
-      return src && !isLocalMedia(src)
+      return src && !isStoredMedia(src)
     }).length
     if (!remoteCount) return
-    toast('正在转存粘贴内容中的图片…')
+    toast('正在转存粘贴内容中的图片到 OSS…')
     await ingestEditorImages(editor, api, toast)
     toast('正文已粘贴')
   })

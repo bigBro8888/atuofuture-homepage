@@ -1,5 +1,5 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
-import { bindNewsRichEditor, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
+import { bindNewsRichEditor, ensureRemoteImageOnOss, ingestEditorImages, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
 import { bindProductLibraryAdmin, closeProductCompose, loadProductLibrary, productLibraryOptions } from './admin-products.js'
 import { bindAppDownloadVisualAdmin, collectAppDownloadVisualContent, renderAppDownloadVisualEditor } from './admin-app-download.js'
 import { bindHardwareVisualAdmin, collectHardwareVisualContent, renderHardwareVisualEditor } from './admin-hardware.js'
@@ -2182,6 +2182,21 @@ async function publishNewsFromCompose() {
   toast('正在发布…')
   try {
     if (article.type === 'article') {
+      toast('正在确认封面与正文图片已转存到 OSS…')
+      if (article.cover) {
+        try {
+          const coverUrl = await ensureRemoteImageOnOss(article.cover, api)
+          const coverField = compose.querySelector('[data-news-field="cover"]')
+          if (coverField) coverField.value = coverUrl
+          article.cover = coverUrl
+        } catch (error) {
+          throw new Error(`封面图未能转存到 OSS：${error.message || '请改用上传封面'}`)
+        }
+      }
+      const imageResult = await ingestEditorImages(compose, api, toast)
+      if (imageResult?.failed) {
+        throw new Error(`还有 ${imageResult.failed} 张图片未能转存到 OSS，请改用「插图」本地上传后再发布`)
+      }
       await ingestEditorVideos(compose, { api, toast })
       Object.assign(article, collectNewsArticleFromCompose())
     }
