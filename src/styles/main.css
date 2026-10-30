@@ -13868,10 +13868,18 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   max-width: 36em;
 }
 .atf-link {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--atf-accent);
   text-decoration: none;
+  font: inherit;
   font-weight: 700;
   white-space: nowrap;
+  cursor: pointer;
   transition: color .2s ease, transform .2s ease;
 }
 .atf-link:hover { color: #0554c4; }

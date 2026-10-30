@@ -77,7 +77,7 @@ export const defaultHomeContent = {
   agents: {
     title: '您的空间需要什么，这里一目了然',
     subtitle: '软件、硬件与平台，按业务需求灵活组合。',
-    moreLabel: '探索全部产品 ↗',
+    moreLabel: '咨询全部产品',
     moreUrl: '/hardware/products/',
     blockTitle: '空间智能体',
     blockSubtitle: '理解需求，协同完成工作',
@@ -262,7 +262,10 @@ export function validateHomeContent(value = {}) {
     agents: {
       title: cleanText(agents.title, defaultHomeContent.agents.title, 80),
       subtitle: cleanText(agents.subtitle, defaultHomeContent.agents.subtitle, 500),
-      moreLabel: cleanText(agents.moreLabel, defaultHomeContent.agents.moreLabel, 40),
+      moreLabel: (() => {
+        const label = cleanText(agents.moreLabel, defaultHomeContent.agents.moreLabel, 40)
+        return /^探索全部产品/.test(label) ? defaultHomeContent.agents.moreLabel : label
+      })(),
       moreUrl: cleanUrl(agents.moreUrl, defaultHomeContent.agents.moreUrl),
       blockTitle: cleanText(agents.blockTitle, defaultHomeContent.agents.blockTitle, 40),
       blockSubtitle: cleanText(agents.blockSubtitle, defaultHomeContent.agents.blockSubtitle, 80),

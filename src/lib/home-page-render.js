@@ -106,8 +106,7 @@ function renderAtfRailLink(labelPath, urlPath, label, url, { editable }) {
 export function renderHomeAgentsSection(agents = {}, { editable = false, sectionId = 'home-visual-agents' } = {}) {
   const title = agents.title || '您的空间需要什么，这里一目了然'
   const subtitle = agents.subtitle || '软件、硬件与平台，按业务需求灵活组合。'
-  const moreLabel = agents.moreLabel || '探索全部产品 ↗'
-  const moreUrl = agents.moreUrl || '/hardware/products/'
+  const moreLabel = agents.moreLabel || '咨询全部产品'
   const blockTitle = agents.blockTitle || '空间智能体'
   const blockSubtitle = agents.blockSubtitle || '理解需求，协同完成工作'
   const blockMoreLabel = agents.blockMoreLabel || '探索智能体 →'
@@ -137,8 +136,8 @@ export function renderHomeAgentsSection(agents = {}, { editable = false, section
             ${textNode('agents.subtitle', subtitle, { editable, tag: 'p', className: 'atf-subtitle', multiline: true, placeholder: '说明' })}
           </div>
           ${editable
-            ? `<div class="atf-header__more">${textNode('agents.moreLabel', moreLabel, { editable, tag: 'span', className: 'atf-link', placeholder: '右侧链接文案' })}${textNode('agents.moreUrl', moreUrl, { editable, tag: 'small', className: 'admin-home-href', placeholder: '/hardware/products/' })}</div>`
-            : `<a class="atf-link" href="${esc(moreUrl)}">${esc(moreLabel)}</a>`}
+            ? `<div class="atf-header__more">${textNode('agents.moreLabel', moreLabel, { editable, tag: 'span', className: 'atf-link', placeholder: '右侧按钮文案' })}<small class="admin-home-href">点击打开信息收集弹窗</small></div>`
+            : `<button type="button" class="atf-link" data-demo-modal-open>${esc(moreLabel)}</button>`}
         </header>
 
         <div class="atf-stack" data-atf-stack>
