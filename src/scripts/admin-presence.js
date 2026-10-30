@@ -586,11 +586,7 @@ export function createAdminPresence({ api } = {}) {
 
   const hasOtherEditors = () => peers.some((peer) => peer.editing)
 
-  const confirmIfPeersEditing = (actionLabel = '发布') => {
-    if (!hasOtherEditors()) return true
-    const names = peers.filter((peer) => peer.editing).map((peer) => peer.name).join('、')
-    return window.confirm(`${names} 正在编辑此页。确定仍要${actionLabel}吗？可能导致互相覆盖。`)
-  }
+  const confirmIfPeersEditing = () => true
 
   return {
     clientId,

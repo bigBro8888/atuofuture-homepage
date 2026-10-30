@@ -148,10 +148,12 @@ function escapeHtml(value) {
 let toastTimer
 function toast(message, isError = false) {
   const element = document.querySelector('[data-toast]')
+  if (!element) return
   element.textContent = message
   element.className = `admin-toast is-visible${isError ? ' is-error' : ''}`
   clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => { element.className = 'admin-toast' }, isError ? 8000 : 3500)
+  // 成功约 1.5s、失败约 2s 自动消失，无需点击
+  toastTimer = setTimeout(() => { element.className = 'admin-toast' }, isError ? 2000 : 1500)
 }
 
 function dateTime(value) {
@@ -2719,7 +2721,6 @@ document.querySelector('[data-aspace-editor]').addEventListener('change', async 
 
 document.querySelector('[data-aspace-form]').addEventListener('submit', async (event) => {
   event.preventDefault()
-  if (!presence.confirmIfPeersEditing('保存并发布')) return
   presence.markEditing()
   const form = event.currentTarget
   const submit = form.querySelector('button[type="submit"]')
@@ -2889,8 +2890,6 @@ document.querySelector('[data-home-save]').addEventListener('click', async (even
 })
 
 document.querySelector('[data-home-publish]').addEventListener('click', async (event) => {
-  if (!presence.confirmIfPeersEditing('发布')) return
-  if (!window.confirm('确认将当前草稿发布到 PC 首页？发布后访客将看到新内容。')) return
   const button = event.currentTarget
   button.disabled = true
   try {
@@ -2924,8 +2923,6 @@ document.querySelector('[data-about-save]').addEventListener('click', async (eve
 })
 
 document.querySelector('[data-about-publish]').addEventListener('click', async (event) => {
-  if (!presence.confirmIfPeersEditing('发布')) return
-  if (!window.confirm('确认将当前草稿发布到关于我们？发布后访客将看到新内容。')) return
   const button = event.currentTarget
   button.disabled = true
   try {
@@ -3062,8 +3059,6 @@ document.querySelector('[data-site-save]').addEventListener('click', async (even
   try { await saveSiteDraft() } catch (error) { toast(error.message, true) } finally { button.disabled = false }
 })
 document.querySelector('[data-site-publish]').addEventListener('click', async (event) => {
-  if (!presence.confirmIfPeersEditing('发布')) return
-  if (!window.confirm('确认发布全站设置？Logo 与联系方式会立即出现在所有页面。')) return
   const button = event.currentTarget
   button.disabled = true
   try {
@@ -3139,8 +3134,6 @@ document.querySelector('[data-simple-save]').addEventListener('click', async (ev
   try { await saveSimpleDraft() } catch (error) { toast(error.message, true) } finally { button.disabled = false }
 })
 document.querySelector('[data-simple-publish]').addEventListener('click', async (event) => {
-  if (!presence.confirmIfPeersEditing('发布')) return
-  if (!window.confirm('确认发布该页内容到前台？')) return
   const button = event.currentTarget
   button.disabled = true
   try {
@@ -3184,7 +3177,6 @@ document.querySelector('[data-simple-editor]').addEventListener('change', async 
 
 document.querySelector('[data-release-form]').addEventListener('submit', async (event) => {
   event.preventDefault()
-  if (!window.confirm('确认正式发布该版本？APK 校验完成后将自动切换 Android 下载版本。')) return
   const form = event.currentTarget
   const submit = form.querySelector('[data-release-submit]')
   const progress = form.querySelector('[data-upload-progress]')
