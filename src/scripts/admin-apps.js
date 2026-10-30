@@ -27,11 +27,10 @@ const CONFIG_OUTLINE = [
 ]
 const HOME_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏轮播', desc: '多屏大图，可新增和逐屏编辑' },
-  { id: 'banner', no: '02', title: '中部推广条', desc: '智能体咨询横条' },
-  { id: 'agents', no: '03', title: '空间智能体', desc: '八个智能体可逐个改图和文案' },
-  { id: 'solutions', no: '04', title: '产品与方案', desc: '方案卡可新增删除' },
-  { id: 'news', no: '05', title: '新闻动态', desc: '新闻卡可新增删除' },
-  { id: 'pitch', no: '06', title: '探索安托未来', desc: '底部宫格卡片可新增删除' },
+  { id: 'agents', no: '02', title: '产品与方案总览', desc: '六宫格与平台条可改文案和配图' },
+  { id: 'solutions', no: '03', title: '产品与方案', desc: '方案卡可新增删除' },
+  { id: 'news', no: '04', title: '新闻动态', desc: '新闻卡可新增删除' },
+  { id: 'pitch', no: '05', title: '探索安托未来', desc: '底部宫格卡片可新增删除' },
 ]
 const ABOUT_OUTLINE = [
   { id: 'hero', no: '01', title: '首屏', desc: '左文右图，主标题与两个按钮' },

@@ -118,14 +118,6 @@ export function applyHomeContent(content) {
     if (link && item.linkUrl) link.href = item.linkUrl
   })
 
-  text('[data-home-banner-title]', content.banner?.title)
-  text('[data-home-banner-subtitle]', content.banner?.subtitle)
-  const bannerCta = document.querySelector('[data-home-banner-cta]')
-  if (bannerCta && content.banner?.ctaLabel) bannerCta.textContent = content.banner.ctaLabel
-  if (bannerCta && content.banner?.ctaUrl) bannerCta.setAttribute('href', content.banner.ctaUrl)
-  const bannerMedia = document.querySelector('[data-home-banner-media]')
-  if (bannerMedia && content.banner?.imageUrl) bannerMedia.style.backgroundImage = `url("${content.banner.imageUrl}")`
-
   const atfMount = document.querySelector('#upgrade.atf-overview, [data-home-atf-mount]')
   if (atfMount && content.agents?.cards?.length) {
     const html = renderHomeAgentsSection(content.agents, { editable: false, sectionId: 'upgrade' })

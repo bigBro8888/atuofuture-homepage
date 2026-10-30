@@ -2,7 +2,6 @@ import { renderHomePage } from '../lib/home-page-render.js'
 
 const HOME_SECTIONS = [
   { id: 'hero', label: '首屏轮播' },
-  { id: 'banner', label: '中部推广条' },
   { id: 'agents', label: '产品与方案总览' },
   { id: 'solutions', label: '产品与方案' },
   { id: 'news', label: '新闻动态' },
@@ -11,7 +10,6 @@ const HOME_SECTIONS = [
 
 const IMAGE_SIZE_GUIDE = [
   { test: (path) => /heroSlides\.\d+\.background/.test(path), label: '首屏背景', size: '1920×1080', tip: '全幅横图，左侧留暗部给文字' },
-  { test: (path) => path === 'banner.imageUrl', label: '推广条配图', size: '480×360', tip: '左侧配图' },
   { test: (path) => /agents\.cards\.\d+\.imageUrl/.test(path), label: '产品总览卡片图', size: '1050×450', tip: '21:9 横图' },
   { test: (path) => /agents\.platform\.\d+\.imageUrl/.test(path), label: '平台能力配图', size: '640×360', tip: '16:9 小图' },
   { test: (path) => /solutions\.items\.\d+\.imageUrl/.test(path), label: '方案封面', size: '880×420', tip: '卡片封面' },

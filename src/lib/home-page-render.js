@@ -61,25 +61,6 @@ function renderHero(slides, { editable, activeIndex = 0 }) {
     </section>`
 }
 
-function renderBanner(banner = {}, { editable }) {
-  const image = banner.imageUrl || '/images/home-agents/space.jpg'
-  return `
-    <section class="sm-mini-banner" data-home-section="banner" id="home-visual-banner">
-      ${sectionChrome('banner', '中部推广条', { editable })}
-      <div class="max-w-max-width mx-auto px-margin-desktop sm-mini-banner__inner">
-        <div class="sm-mini-banner__media" style="background-image:url('${esc(image)}')">
-          ${editable ? `<button type="button" class="hpi-edit-bg" data-edit-image="banner.imageUrl" data-edit-image-url="${esc(image)}" title="更换配图">更换配图</button>` : ''}
-        </div>
-        <div class="sm-mini-banner__text">
-          ${textNode('banner.title', banner.title || '', { editable, tag: 'h3', placeholder: '推广标题' })}
-          ${textNode('banner.subtitle', banner.subtitle || '', { editable, tag: 'p', multiline: true, placeholder: '推广说明' })}
-        </div>
-        <a class="sm-btn sm-btn--outline sm-btn--dark" href="${esc(banner.ctaUrl || '/agents/')}">${textNode('banner.ctaLabel', banner.ctaLabel || '查看智能体', { editable, tag: 'span', placeholder: '按钮文案' })}</a>
-        ${editable ? textNode('banner.ctaUrl', banner.ctaUrl || '', { editable, tag: 'small', className: 'admin-home-href', placeholder: '跳转链接 /agents/ 或 #demo' }) : ''}
-      </div>
-    </section>`
-}
-
 const DEFAULT_ATF_CARDS = [
   { title: '会议与接待', description: '预约、签到、设备准备，一起就绪', tags: '会议预约 / 访客管理 / 中控屏 / 电子桌牌', imageUrl: '/images/home-atf/atf-01.webp', href: '/solutions/?id=meeting' },
   { title: '空间与设备控制', description: '灯光、空调与环境，按需联动', tags: '场景联动 / 环境监测 / 智能开关 / 空调网关', imageUrl: '/images/home-atf/atf-02.webp', href: '/solutions/?id=building' },
@@ -313,7 +294,6 @@ export function renderHomePage(content = {}, { editable = false, heroIndex = 0 }
   return `
     <div class="admin-home-page">
       ${renderHero(content.heroSlides, { editable, activeIndex: heroIndex })}
-      ${renderBanner(content.banner, { editable })}
       ${renderAgents(content.agents, { editable })}
       ${renderSolutions(content.solutions, { editable })}
       ${renderNews(content.news, { editable })}
