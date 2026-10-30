@@ -71,7 +71,6 @@ function renderBanner(banner = {}, { editable }) {
 }
 
 function renderAgents(agents = {}, { editable }) {
-  const kicker = agents.kicker || '安托未来 · 产品与方案'
   const title = agents.title || '您的空间需要什么，这里一目了然'
   const subtitle = agents.subtitle || '软件、硬件与平台，按业务需求灵活组合。'
   return `
@@ -80,7 +79,6 @@ function renderAgents(agents = {}, { editable }) {
       <div class="atf-wrap">
         <header class="atf-header">
           <div>
-            ${textNode('agents.kicker', kicker, { editable, tag: 'p', className: 'atf-eyebrow', placeholder: '眉题' })}
             ${textNode('agents.title', title, { editable, tag: 'h2', className: '', placeholder: '主标题' }).replace('<h2 ', '<h2 id="home-visual-atf-title" ')}
             ${textNode('agents.subtitle', subtitle, { editable, tag: 'p', className: 'atf-subtitle', multiline: true, placeholder: '说明' })}
           </div>
