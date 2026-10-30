@@ -4149,50 +4149,27 @@ body.admin-home-fullscreen { overflow: hidden; }
 .admin-vedit--home .sm-mini-banner__media {
   position: relative;
 }
-.admin-vedit--home .admin-home-agents-stack {
-  display: grid;
-  gap: 22px;
-  margin-top: 18px;
-}
-.admin-vedit--home .admin-home-agent-card {
+.admin-vedit--home .atf-overview {
   position: relative;
-  overflow: hidden;
-  border-radius: 18px;
-  background: #0f1b2d;
 }
-.admin-vedit--home .admin-home-agent-img,
-.admin-vedit--home .admin-home-agent-img img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 21 / 9;
-  object-fit: cover;
+.admin-vedit--home .atf-card--editable {
+  cursor: default;
 }
-.admin-vedit--home .admin-home-agent-card figcaption {
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  bottom: 58px;
+.admin-vedit--home .atf-card--editable:hover {
+  transform: none;
+  box-shadow: none;
+}
+.admin-vedit--home .atf-header__more {
   display: grid;
-  gap: 4px;
-  color: #fff;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, .35);
-  pointer-events: none;
+  gap: 6px;
+  justify-items: end;
 }
-.admin-vedit--home .admin-home-agent-card figcaption [contenteditable='true'] {
-  pointer-events: auto;
-}
-.admin-vedit--home .admin-home-agent-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  background: #fff;
-}
-.admin-vedit--home .admin-home-agent-meta em {
-  font-style: normal;
-  font-weight: 700;
-  font-size: 14px;
+.admin-vedit--home .atf-card .admin-home-href,
+.admin-vedit--home .atf-bottom .admin-home-href,
+.admin-vedit--home .atf-header__more .admin-home-href {
+  display: block;
+  margin-top: 4px;
+  color: #1769ff;
 }
 .admin-vedit--home .admin-home-sol-track {
   display: grid;

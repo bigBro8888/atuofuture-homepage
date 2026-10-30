@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { db } from '../../lib/store.js'
+import { db, save } from '../../lib/store.js'
 
 export const defaultHomeContent = {
   hero: {
@@ -75,19 +75,27 @@ export const defaultHomeContent = {
     imageUrl: '/images/home-agents/space.jpg',
   },
   agents: {
-    kicker: '安托未来 · 产品与方案',
     title: '您的空间需要什么，这里一目了然',
     subtitle: '软件、硬件与平台，按业务需求灵活组合。',
-    items: [
-      { id: 'space', name: '空间服务智能体', sceneTitle: '人员进入', sceneCaption: '灯光、空调和信息屏自动准备', imageUrl: '/images/home-agents/space.jpg' },
-      { id: 'energy', name: '能源能耗智能体', sceneTitle: '空间空闲', sceneCaption: '照明和空调按占用自动降载', imageUrl: '/images/home-agents/energy.jpg' },
-      { id: 'meeting', name: '会议智能体', sceneTitle: '会前十分钟', sceneCaption: '门禁、投影和空调已经准备好', imageUrl: '/images/home-agents/meeting.jpg' },
-      { id: 'exhibition', name: '展厅智能体', sceneTitle: '参观走到哪', sceneCaption: '讲解、灯光和大屏跟着切换', imageUrl: '/images/home-agents/exhibition.jpg' },
-      { id: 'visitor', name: '访客接待智能体', sceneTitle: '客户到访', sceneCaption: '门禁、派梯和接待人已安排', imageUrl: '/images/home-agents/visitor.jpg' },
-      { id: 'opc', name: '商业空间运营智能体', sceneTitle: '房源上架', sceneCaption: '从带看到签约，招商不断档', imageUrl: '/images/home-agents/opc.jpg' },
-      { id: 'hospitality', name: '酒店公寓智能体', sceneTitle: '办理入住', sceneCaption: '分房完成，门锁和客房已经准备好', imageUrl: '/images/home-agents/hospitality.jpg' },
-      { id: 'asset', name: '资产管理智能体', sceneTitle: '现场盘点', sceneCaption: '设备在哪、谁借走了，当场能查到', imageUrl: '/images/home-agents/asset.jpg' },
+    moreLabel: '探索全部产品 ↗',
+    moreUrl: '/hardware/products/',
+    cards: [
+      { title: '会议与接待', description: '预约、签到、设备准备，一起就绪', tags: '会议预约 / 访客管理 / 中控屏 / 电子桌牌', imageUrl: '/images/home-atf/atf-01.webp', href: '/solutions/?id=meeting' },
+      { title: '空间与设备控制', description: '灯光、空调与环境，按需联动', tags: '场景联动 / 环境监测 / 智能开关 / 空调网关', imageUrl: '/images/home-atf/atf-02.webp', href: '/solutions/?id=building' },
+      { title: 'RFID 资产管理', description: '资产在哪里、有没有，一目了然', tags: '资产台账 / 智能盘点 / RFID读写器 / 电子标签', imageUrl: '/images/home-atf/atf-03.webp', href: '/solutions/?id=security' },
+      { title: '能源与设备运维', description: '看清能耗，及时发现与处理异常', tags: '能耗分析 / 设备监测 / 工单巡检', imageUrl: '/images/home-atf/atf-04.webp', href: '/solutions/?id=energy' },
+      { title: '信息发布与展示', description: '从会议投屏到企业宣传，统一管理', tags: '内容发布 / 无线投屏 / 电子相框 / 发布终端', imageUrl: '/images/home-atf/atf-05.webp', href: '/hardware/products/' },
+      { title: '招商与空间运营', description: '从招商签约到交付入住，流程贯通', tags: '招商管理 / 合同管理 / 租户服务', imageUrl: '/images/home-atf/atf-06.webp', href: '/solutions/?id=commercial' },
     ],
+    platformTitle: '连接这些产品，让空间协同运行',
+    platform: [
+      { title: 'Aspace One 应用平台', description: '一个入口，汇聚业务应用', imageUrl: '/images/home-atf/atf-07.webp' },
+      { title: 'IoT 设备连接与联动', description: '连接设备，执行场景联动', imageUrl: '/images/home-atf/atf-08.webp' },
+      { title: '数字孪生', description: '在空间中查看设备与数据', imageUrl: '/images/home-atf/atf-09.webp' },
+    ],
+    bottomText: '产品连接之后，AI 如何让工作自动完成？',
+    bottomLabel: '探索空间智能体 →',
+    bottomUrl: '/agents/',
   },
   news: {
     kicker: '新闻',
@@ -226,16 +234,26 @@ export function validateHomeContent(value = {}) {
       imageUrl: cleanUrl(banner.imageUrl, defaultHomeContent.banner.imageUrl),
     },
     agents: {
-      kicker: cleanText(agents.kicker, defaultHomeContent.agents.kicker, 80),
       title: cleanText(agents.title, defaultHomeContent.agents.title, 80),
       subtitle: cleanText(agents.subtitle, defaultHomeContent.agents.subtitle, 500),
-      items: listItems(agents.items, defaultHomeContent.agents.items, (item, fallback, index) => ({
-        id: cleanText(item.id, fallback.id, 40) || `agent-${index + 1}`,
-        name: cleanText(item.name, fallback.name, 40),
-        sceneTitle: cleanText(item.sceneTitle, fallback.sceneTitle, 40),
-        sceneCaption: cleanText(item.sceneCaption, fallback.sceneCaption, 80),
+      moreLabel: cleanText(agents.moreLabel, defaultHomeContent.agents.moreLabel, 40),
+      moreUrl: cleanUrl(agents.moreUrl, defaultHomeContent.agents.moreUrl),
+      cards: fixedItems(agents.cards, defaultHomeContent.agents.cards, (item, fallback) => ({
+        title: cleanText(item.title, fallback.title, 40),
+        description: cleanText(item.description, fallback.description, 80),
+        tags: cleanText(Array.isArray(item.tags) ? item.tags.join(' / ') : item.tags, fallback.tags, 80),
+        imageUrl: cleanUrl(item.imageUrl, fallback.imageUrl),
+        href: cleanUrl(item.href, fallback.href),
+      })),
+      platformTitle: cleanText(agents.platformTitle, defaultHomeContent.agents.platformTitle, 60),
+      platform: fixedItems(agents.platform, defaultHomeContent.agents.platform, (item, fallback) => ({
+        title: cleanText(item.title, fallback.title, 40),
+        description: cleanText(item.description, fallback.description, 60),
         imageUrl: cleanUrl(item.imageUrl, fallback.imageUrl),
       })),
+      bottomText: cleanText(agents.bottomText, defaultHomeContent.agents.bottomText, 80),
+      bottomLabel: cleanText(agents.bottomLabel, defaultHomeContent.agents.bottomLabel, 40),
+      bottomUrl: cleanUrl(agents.bottomUrl, defaultHomeContent.agents.bottomUrl),
     },
     news: {
       kicker: cleanText(news.kicker, defaultHomeContent.news.kicker, 40),
@@ -293,12 +311,18 @@ export function getHomePageConfig() {
       pitch: page.draftContent?.pitch || structuredClone(defaultHomeContent.pitch),
     }
   }
-  if (!page.draftContent.agents?.items?.length) {
-    page.draftContent.agents = {
-      ...structuredClone(defaultHomeContent.agents),
-      ...page.draftContent.agents,
-      items: structuredClone(defaultHomeContent.agents.items),
-    }
+  let agentsMigrated = false
+  if (!page.draftContent.agents?.cards?.length) {
+    page.draftContent.agents = structuredClone(defaultHomeContent.agents)
+    agentsMigrated = true
+  }
+  if (page.publishedContent && !page.publishedContent.agents?.cards?.length) {
+    page.publishedContent.agents = structuredClone(defaultHomeContent.agents)
+    agentsMigrated = true
+  }
+  if (agentsMigrated) {
+    page.updatedAt = new Date().toISOString()
+    void save()
   }
   if (!page.draftContent.pitch?.items?.length) {
     page.draftContent.pitch = {

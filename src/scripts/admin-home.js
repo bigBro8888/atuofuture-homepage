@@ -3,7 +3,7 @@ import { renderHomePage } from '../lib/home-page-render.js'
 const HOME_SECTIONS = [
   { id: 'hero', label: '首屏轮播' },
   { id: 'banner', label: '中部推广条' },
-  { id: 'agents', label: '空间智能体' },
+  { id: 'agents', label: '产品与方案总览' },
   { id: 'solutions', label: '产品与方案' },
   { id: 'news', label: '新闻动态' },
   { id: 'pitch', label: '探索安托未来' },
@@ -12,7 +12,8 @@ const HOME_SECTIONS = [
 const IMAGE_SIZE_GUIDE = [
   { test: (path) => /heroSlides\.\d+\.background/.test(path), label: '首屏背景', size: '1920×1080', tip: '全幅横图，左侧留暗部给文字' },
   { test: (path) => path === 'banner.imageUrl', label: '推广条配图', size: '480×360', tip: '左侧配图' },
-  { test: (path) => /agents\.items\.\d+\.imageUrl/.test(path), label: '智能体场景图', size: '2100×900', tip: '21:9 长图' },
+  { test: (path) => /agents\.cards\.\d+\.imageUrl/.test(path), label: '产品总览卡片图', size: '1050×450', tip: '21:9 横图' },
+  { test: (path) => /agents\.platform\.\d+\.imageUrl/.test(path), label: '平台能力配图', size: '640×360', tip: '16:9 小图' },
   { test: (path) => /solutions\.items\.\d+\.imageUrl/.test(path), label: '方案封面', size: '880×420', tip: '卡片封面' },
   { test: (path) => /news\.items\.\d+\.imageUrl/.test(path), label: '新闻封面', size: '1280×720', tip: '16:9 封面' },
   { test: (path) => /pitch\.items\.\d+\.imageUrl/.test(path), label: '宫格图片', size: '800×1000', tip: '竖图更合适' },
@@ -92,15 +93,6 @@ function defaultItem(kind) {
       background: '/images/home-advantages/advantage-ai-agent.webp',
     }
   }
-  if (kind === 'agents') {
-    return {
-      id: `agent-${Date.now().toString(36).slice(-4)}`,
-      name: '新智能体',
-      sceneTitle: '场景标题',
-      sceneCaption: '场景说明',
-      imageUrl: '/images/home-agents/space.jpg',
-    }
-  }
   if (kind === 'solutions') {
     return {
       chip: '方案',
@@ -136,11 +128,6 @@ function listRef(content, kind) {
     content.heroSlides = Array.isArray(content.heroSlides) ? content.heroSlides : []
     return content.heroSlides
   }
-  if (kind === 'agents') {
-    content.agents = content.agents || {}
-    content.agents.items = Array.isArray(content.agents.items) ? content.agents.items : []
-    return content.agents.items
-  }
   if (kind === 'solutions') {
     content.solutions = content.solutions || {}
     content.solutions.items = Array.isArray(content.solutions.items) ? content.solutions.items : []
@@ -165,7 +152,10 @@ export function collectHomeVisualContent(baseContent) {
     const path = el.dataset.editPath
     if (!path) return
     let value = readEditableText(el)
-    if (/\.tags$/.test(path)) value = value.split(/[，,]/).map((tag) => tag.trim()).filter(Boolean)
+    // 方案卡 tags 为数组；产品总览 cards.tags 是「/」分隔的纯文案
+    if (/\.tags$/.test(path) && !path.startsWith('agents.cards.')) {
+      value = value.split(/[，,]/).map((tag) => tag.trim()).filter(Boolean)
+    }
     setNested(content, path, value)
   })
 

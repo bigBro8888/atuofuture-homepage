@@ -1,3 +1,4 @@
+import { renderHomeAgentsSection } from '../lib/home-page-render.js'
 import { getHomeContent } from '../services/home-content-api.js'
 import { applyCmsHeroSlides, applyCmsHomeAgents, applyCmsHomeNews, applyCmsHomePitch, applyCmsHomeSolutions } from './home-siemens.js'
 
@@ -125,11 +126,16 @@ export function applyHomeContent(content) {
   const bannerMedia = document.querySelector('[data-home-banner-media]')
   if (bannerMedia && content.banner?.imageUrl) bannerMedia.style.backgroundImage = `url("${content.banner.imageUrl}")`
 
-  text('[data-home-agents-title]', content.agents?.title)
-  text('[data-home-agents-subtitle]', content.agents?.subtitle)
-  // 首页该区块已改为产品总览静态模块，不再挂载长图智能体轮播
-  if (document.querySelector('[data-home-agent-stories]') && content.agents?.items?.length) {
-    applyCmsHomeAgents(content.agents.items)
+  const atfMount = document.querySelector('#upgrade.atf-overview, [data-home-atf-mount]')
+  if (atfMount && content.agents?.cards?.length) {
+    const html = renderHomeAgentsSection(content.agents, { editable: false, sectionId: 'upgrade' })
+    atfMount.outerHTML = html
+  } else {
+    text('[data-home-agents-title]', content.agents?.title)
+    text('[data-home-agents-subtitle]', content.agents?.subtitle)
+    if (document.querySelector('[data-home-agent-stories]') && content.agents?.items?.length) {
+      applyCmsHomeAgents(content.agents.items)
+    }
   }
 
   text('[data-home-news-kicker]', content.news?.kicker)

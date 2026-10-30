@@ -58,50 +58,127 @@ function renderBanner(banner = {}, { editable }) {
       ${sectionChrome('banner', '中部推广条', { editable })}
       <div class="max-w-max-width mx-auto px-margin-desktop sm-mini-banner__inner">
         <div class="sm-mini-banner__media" style="background-image:url('${esc(image)}')">
-          ${editable ? `<button type="button" class="hpi-edit-bg" data-edit-image="banner.imageUrl" data-edit-image-url="${esc(banner.imageUrl || '')}" title="更换配图">更换配图</button>` : ''}
+          ${editable ? `<button type="button" class="hpi-edit-bg" data-edit-image="banner.imageUrl" data-edit-image-url="${esc(image)}" title="更换配图">更换配图</button>` : ''}
         </div>
         <div class="sm-mini-banner__text">
-          ${textNode('banner.title', banner.title || '', { editable, tag: 'h3', placeholder: '标题' })}
-          ${textNode('banner.subtitle', banner.subtitle || '', { editable, tag: 'p', multiline: true, placeholder: '说明' })}
+          ${textNode('banner.title', banner.title || '', { editable, tag: 'h3', placeholder: '推广标题' })}
+          ${textNode('banner.subtitle', banner.subtitle || '', { editable, tag: 'p', multiline: true, placeholder: '推广说明' })}
         </div>
-        <span class="sm-btn sm-btn--outline sm-btn--dark">${textNode('banner.ctaLabel', banner.ctaLabel || '查看', { editable, tag: 'span', placeholder: '按钮文字' })}</span>
+        <a class="sm-btn sm-btn--outline sm-btn--dark" href="${esc(banner.ctaUrl || '/agents/')}">${textNode('banner.ctaLabel', banner.ctaLabel || '查看智能体', { editable, tag: 'span', placeholder: '按钮文案' })}</a>
         ${editable ? textNode('banner.ctaUrl', banner.ctaUrl || '', { editable, tag: 'small', className: 'admin-home-href', placeholder: '跳转链接 /agents/ 或 #demo' }) : ''}
       </div>
     </section>`
 }
 
-function renderAgents(agents = {}, { editable }) {
+const DEFAULT_ATF_CARDS = [
+  { title: '会议与接待', description: '预约、签到、设备准备，一起就绪', tags: '会议预约 / 访客管理 / 中控屏 / 电子桌牌', imageUrl: '/images/home-atf/atf-01.webp', href: '/solutions/?id=meeting' },
+  { title: '空间与设备控制', description: '灯光、空调与环境，按需联动', tags: '场景联动 / 环境监测 / 智能开关 / 空调网关', imageUrl: '/images/home-atf/atf-02.webp', href: '/solutions/?id=building' },
+  { title: 'RFID 资产管理', description: '资产在哪里、有没有，一目了然', tags: '资产台账 / 智能盘点 / RFID读写器 / 电子标签', imageUrl: '/images/home-atf/atf-03.webp', href: '/solutions/?id=security' },
+  { title: '能源与设备运维', description: '看清能耗，及时发现与处理异常', tags: '能耗分析 / 设备监测 / 工单巡检', imageUrl: '/images/home-atf/atf-04.webp', href: '/solutions/?id=energy' },
+  { title: '信息发布与展示', description: '从会议投屏到企业宣传，统一管理', tags: '内容发布 / 无线投屏 / 电子相框 / 发布终端', imageUrl: '/images/home-atf/atf-05.webp', href: '/hardware/products/' },
+  { title: '招商与空间运营', description: '从招商签约到交付入住，流程贯通', tags: '招商管理 / 合同管理 / 租户服务', imageUrl: '/images/home-atf/atf-06.webp', href: '/solutions/?id=commercial' },
+]
+
+const DEFAULT_ATF_PLATFORM = [
+  { title: 'Aspace One 应用平台', description: '一个入口，汇聚业务应用', imageUrl: '/images/home-atf/atf-07.webp' },
+  { title: 'IoT 设备连接与联动', description: '连接设备，执行场景联动', imageUrl: '/images/home-atf/atf-08.webp' },
+  { title: '数字孪生', description: '在空间中查看设备与数据', imageUrl: '/images/home-atf/atf-09.webp' },
+]
+
+export function renderHomeAgentsSection(agents = {}, { editable = false, sectionId = 'home-visual-agents' } = {}) {
   const title = agents.title || '您的空间需要什么，这里一目了然'
   const subtitle = agents.subtitle || '软件、硬件与平台，按业务需求灵活组合。'
+  const moreLabel = agents.moreLabel || '探索全部产品 ↗'
+  const moreUrl = agents.moreUrl || '/hardware/products/'
+  const cards = Array.isArray(agents.cards) && agents.cards.length ? agents.cards : DEFAULT_ATF_CARDS
+  const platformTitle = agents.platformTitle || '连接这些产品，让空间协同运行'
+  const platform = Array.isArray(agents.platform) && agents.platform.length ? agents.platform : DEFAULT_ATF_PLATFORM
+  const bottomText = agents.bottomText || '产品连接之后，AI 如何让工作自动完成？'
+  const bottomLabel = agents.bottomLabel || '探索空间智能体 →'
+  const bottomUrl = agents.bottomUrl || '/agents/'
+
   return `
-    <section id="home-visual-agents" class="atf-overview" data-home-section="agents" aria-labelledby="home-visual-atf-title">
+    <section id="${esc(sectionId)}" class="atf-overview scroll-mt-24" data-home-section="agents" aria-labelledby="${esc(sectionId)}-title">
       ${sectionChrome('agents', '产品与方案总览', { editable })}
       <div class="atf-wrap">
         <header class="atf-header">
           <div>
-            ${textNode('agents.title', title, { editable, tag: 'h2', className: '', placeholder: '主标题' }).replace('<h2 ', '<h2 id="home-visual-atf-title" ')}
+            ${textNode('agents.title', title, { editable, tag: 'h2', placeholder: '主标题' }).replace('<h2 ', `<h2 id="${esc(sectionId)}-title" `)}
             ${textNode('agents.subtitle', subtitle, { editable, tag: 'p', className: 'atf-subtitle', multiline: true, placeholder: '说明' })}
           </div>
-          <a class="atf-link" href="/hardware/products/">探索全部产品 ↗</a>
+          ${editable
+            ? `<div class="atf-header__more">${textNode('agents.moreLabel', moreLabel, { editable, tag: 'span', className: 'atf-link', placeholder: '右侧链接文案' })}${textNode('agents.moreUrl', moreUrl, { editable, tag: 'small', className: 'admin-home-href', placeholder: '/hardware/products/' })}</div>`
+            : `<a class="atf-link" href="${esc(moreUrl)}">${esc(moreLabel)}</a>`}
         </header>
-        ${editable ? '<p class="admin-home-agents-note">下方六宫格与平台条为设计定稿静态内容；仅眉题/标题/说明可在此编辑。</p>' : ''}
         <div class="atf-grid">
-          <a class="atf-card" href="/solutions/?id=meeting"><div class="atf-card-head"><h3>会议与接待</h3><p>预约、签到、设备准备，一起就绪</p></div><img src="/images/home-atf/atf-01.webp" alt="会议与接待产品和软件示意图" loading="lazy"><div class="atf-card-foot"><span>会议预约 / 访客管理 / 中控屏 / 电子桌牌</span><span aria-hidden="true">→</span></div></a>
-          <a class="atf-card" href="/solutions/?id=building"><div class="atf-card-head"><h3>空间与设备控制</h3><p>灯光、空调与环境，按需联动</p></div><img src="/images/home-atf/atf-02.webp" alt="空间与设备控制产品和软件示意图" loading="lazy"><div class="atf-card-foot"><span>场景联动 / 环境监测 / 智能开关 / 空调网关</span><span aria-hidden="true">→</span></div></a>
-          <a class="atf-card" href="/solutions/?id=security"><div class="atf-card-head"><h3>RFID 资产管理</h3><p>资产在哪里、有没有，一目了然</p></div><img src="/images/home-atf/atf-03.webp" alt="RFID 资产管理产品和软件示意图" loading="lazy"><div class="atf-card-foot"><span>资产台账 / 智能盘点 / RFID读写器 / 电子标签</span><span aria-hidden="true">→</span></div></a>
-          <a class="atf-card" href="/solutions/?id=energy"><div class="atf-card-head"><h3>能源与设备运维</h3><p>看清能耗，及时发现与处理异常</p></div><img src="/images/home-atf/atf-04.webp" alt="能源与设备运维产品和软件示意图" loading="lazy"><div class="atf-card-foot"><span>能耗分析 / 设备监测 / 工单巡检</span><span aria-hidden="true">→</span></div></a>
-          <a class="atf-card" href="/hardware/products/"><div class="atf-card-head"><h3>信息发布与展示</h3><p>从会议投屏到企业宣传，统一管理</p></div><img src="/images/home-atf/atf-05.webp" alt="信息发布与展示产品和软件示意图" loading="lazy"><div class="atf-card-foot"><span>内容发布 / 无线投屏 / 电子相框 / 发布终端</span><span aria-hidden="true">→</span></div></a>
-          <a class="atf-card" href="/solutions/?id=commercial"><div class="atf-card-head"><h3>招商与空间运营</h3><p>从招商签约到交付入住，流程贯通</p></div><img src="/images/home-atf/atf-06.webp" alt="招商与空间运营产品和软件示意图" loading="lazy"><div class="atf-card-foot"><span>招商管理 / 合同管理 / 租户服务</span><span aria-hidden="true">→</span></div></a>
+          ${cards.map((card, index) => {
+            const href = card.href || '#'
+            const image = card.imageUrl || `/images/home-atf/atf-0${index + 1}.webp`
+            const media = imgNode(`agents.cards.${index}.imageUrl`, image, {
+              editable,
+              width: 1050,
+              height: 450,
+              alt: card.title || '产品示意',
+              loading: 'lazy',
+              className: 'atf-card__media',
+            })
+            const head = `
+              <div class="atf-card-head">
+                ${textNode(`agents.cards.${index}.title`, card.title || '', { editable, tag: 'h3', placeholder: '卡片标题' })}
+                ${textNode(`agents.cards.${index}.description`, card.description || '', { editable, tag: 'p', placeholder: '卡片说明' })}
+              </div>`
+            const foot = `
+              <div class="atf-card-foot">
+                ${textNode(`agents.cards.${index}.tags`, card.tags || '', { editable, tag: 'span', placeholder: '标签，用 / 分隔' })}
+                <span aria-hidden="true">→</span>
+              </div>`
+            if (editable) {
+              return `
+              <article class="atf-card atf-card--editable">
+                ${head}
+                ${media}
+                ${foot}
+                ${textNode(`agents.cards.${index}.href`, href, { editable, tag: 'small', className: 'admin-home-href', placeholder: '跳转链接' })}
+              </article>`
+            }
+            return `
+              <a class="atf-card" href="${esc(href)}">
+                ${head}
+                ${media}
+                ${foot}
+              </a>`
+          }).join('')}
         </div>
         <div class="atf-platform">
-          <h3>连接这些产品，让空间协同运行</h3>
-          <div class="atf-platform-item"><img src="/images/home-atf/atf-07.webp" alt="应用平台电脑界面" loading="lazy"><div class="atf-platform-copy"><strong>Aspace One 应用平台</strong><span>一个入口，汇聚业务应用</span></div></div>
-          <div class="atf-platform-item"><img src="/images/home-atf/atf-08.webp" alt="物联网智能设备" loading="lazy"><div class="atf-platform-copy"><strong>IoT 设备连接与联动</strong><span>连接设备，执行场景联动</span></div></div>
-          <div class="atf-platform-item"><img src="/images/home-atf/atf-09.webp" alt="数字孪生楼层模型" loading="lazy"><div class="atf-platform-copy"><strong>数字孪生</strong><span>在空间中查看设备与数据</span></div></div>
+          ${textNode('agents.platformTitle', platformTitle, { editable, tag: 'h3', placeholder: '平台条标题' })}
+          ${platform.map((item, index) => `
+            <div class="atf-platform-item">
+              ${imgNode(`agents.platform.${index}.imageUrl`, item.imageUrl || `/images/home-atf/atf-0${index + 7}.webp`, {
+                editable,
+                width: 320,
+                height: 180,
+                alt: item.title || '平台能力',
+                loading: 'lazy',
+                className: 'atf-platform__media',
+              })}
+              <div class="atf-platform-copy">
+                ${textNode(`agents.platform.${index}.title`, item.title || '', { editable, tag: 'strong', placeholder: '能力名称' })}
+                ${textNode(`agents.platform.${index}.description`, item.description || '', { editable, tag: 'span', placeholder: '能力说明' })}
+              </div>
+            </div>`).join('')}
         </div>
-        <p class="atf-bottom">产品连接之后，AI 如何让工作自动完成？ <a class="atf-link" href="/agents/">探索空间智能体 →</a></p>
+        <p class="atf-bottom">
+          ${textNode('agents.bottomText', bottomText, { editable, tag: 'span', placeholder: '底部说明' })}
+          ${editable
+            ? `${textNode('agents.bottomLabel', bottomLabel, { editable, tag: 'span', className: 'atf-link', placeholder: '底部链接文案' })}${textNode('agents.bottomUrl', bottomUrl, { editable, tag: 'small', className: 'admin-home-href', placeholder: '/agents/' })}`
+            : ` <a class="atf-link" href="${esc(bottomUrl)}">${esc(bottomLabel)}</a>`}
+        </p>
       </div>
     </section>`
+}
+
+function renderAgents(agents = {}, { editable }) {
+  return renderHomeAgentsSection(agents, { editable, sectionId: editable ? 'home-visual-agents' : 'upgrade' })
 }
 
 function renderSolutions(solutions = {}, { editable }) {
@@ -154,19 +231,22 @@ function renderNews(news = {}, { editable }) {
         </div>
         <div class="sm-news-grid">
           ${items.map((item, index) => `
-            <article class="sm-news-card">
+            <a class="sm-news-card" href="${esc(item.linkUrl || '/news/')}">
               <div class="sm-news-card__media" style="background-image:url('${esc(item.imageUrl || '/images/home-advantages/advantage-ai-agent.webp')}')">
                 ${editable ? `<button type="button" class="hpi-edit-bg" data-edit-image="news.items.${index}.imageUrl" data-edit-image-url="${esc(item.imageUrl || '')}" title="更换封面">更换封面</button>` : ''}
               </div>
               ${textNode(`news.items.${index}.category`, item.category || '', { editable, tag: 'strong', className: 'sm-kicker', placeholder: '分类' })}
-              ${textNode(`news.items.${index}.title`, item.title || '', { editable, tag: 'h3', placeholder: '标题' })}
+              ${textNode(`news.items.${index}.title`, item.title || '', { editable, tag: 'h3', placeholder: '新闻标题' })}
               ${textNode(`news.items.${index}.description`, item.description || '', { editable, tag: 'p', multiline: true, placeholder: '摘要' })}
               ${editable ? textNode(`news.items.${index}.linkUrl`, item.linkUrl || '', { editable, tag: 'small', className: 'admin-home-href', placeholder: '详情链接' }) : ''}
               ${editable ? itemTools('news', index, items.length) : ''}
-            </article>`).join('')}
+            </a>`).join('')}
         </div>
         <p class="sm-news-more">
-          <span class="sm-text-link sm-text-link--blue">${textNode('news.moreLabel', news.moreLabel || '进入新闻中心', { editable, tag: 'span', placeholder: '更多按钮' })}</span>
+          <a class="sm-text-link sm-text-link--blue" href="${esc(news.moreUrl || '/news/')}">
+            ${textNode('news.moreLabel', news.moreLabel || '进入新闻中心', { editable, tag: 'span', placeholder: '更多文案' })}
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </a>
           ${editable ? textNode('news.moreUrl', news.moreUrl || '', { editable, tag: 'small', className: 'admin-home-href', placeholder: '/news/' }) : ''}
         </p>
       </div>
