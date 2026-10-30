@@ -170,12 +170,6 @@ export function renderHomeAgentsSection(agents = {}, { editable = false, section
             </div>
           </article>
 
-          <div class="atf-bridge" aria-hidden="true">
-            <span class="atf-bridge__wire"></span>
-            <span class="atf-bridge__packet"></span>
-            <span class="atf-bridge__label">编排调用</span>
-          </div>
-
           <article class="atf-band atf-band--software" data-atf-layer="2">
             <div class="atf-rail">
               <em class="atf-layer"><span>02</span>应用层</em>
@@ -202,12 +196,6 @@ export function renderHomeAgentsSection(agents = {}, { editable = false, section
               }).join('')}
             </div>
           </article>
-
-          <div class="atf-bridge" aria-hidden="true">
-            <span class="atf-bridge__wire"></span>
-            <span class="atf-bridge__packet"></span>
-            <span class="atf-bridge__label">下发执行</span>
-          </div>
 
           <article class="atf-band atf-band--hardware" data-atf-layer="3">
             <div class="atf-rail">
