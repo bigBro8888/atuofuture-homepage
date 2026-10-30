@@ -18,9 +18,130 @@ const ABOUT_SECTION_IDS = new Set([
 ])
 
 function aboutSectionIdFromHash(hash = window.location.hash) {
-  const id = String(hash || '').replace(/^#/, '')
+  const id = String(hash || '').replace(/^#\/?/, '').split('?')[0].split('/')[0]
   if (!ABOUT_SECTION_IDS.has(id)) return ''
   return id === 'about' ? 'intro' : id
+}
+
+/** 规范门户路径，避免 /aspace-one/apps/ 这类子路径脱离 SPA 丢头部 */
+function aspaceCanonicalPath() {
+  const path = String(window.location.pathname || '/').replace(/\/+$/, '') || '/'
+  if (path === '/aspace-one' || path.startsWith('/aspace-one/')) return '/aspace-one/'
+  return `${path.endsWith('/') ? path : `${path}/`}`
+}
+
+/**
+ * 解析当前 URL：兼容
+ * - /aspace-one/#apps、#/apps、#/apps?id=xxx
+ * - /aspace-one/apps/、/aspace-one/apps/?id=xxx（错误子路径，需拉回 SPA）
+ */
+function parseAspaceLocation() {
+  const pathname = String(window.location.pathname || '/')
+  const pathNorm = pathname.replace(/\/+$/, '') || '/'
+  const searchParams = new URLSearchParams(window.location.search || '')
+  const rawHash = String(window.location.hash || '')
+  const hashBody = rawHash.replace(/^#\/?/, '')
+  const [hashPath = '', hashQuery = ''] = hashBody.split('?')
+  const hashParts = hashPath.split('/').filter(Boolean)
+  const hashView = String(hashParts[0] || '').toLowerCase()
+  const hashParams = new URLSearchParams(hashQuery)
+
+  const pathApps = /^\/aspace-one\/apps(?:\/|$)/i.test(pathname)
+  const pathHelp = /^\/aspace-one\/help(?:\/|$)/i.test(pathname)
+  const pathAbout = /^\/aspace-one\/about(?:\/|$)/i.test(pathname)
+  const needsPathNormalize = pathApps || pathHelp || pathAbout || (pathNorm !== '/aspace-one' && /^\/aspace-one\//i.test(pathname))
+
+  let view = 'home'
+  let appId = ''
+  let category = ''
+  let section = ''
+
+  if (pathApps || hashView === 'apps') {
+    view = 'apps'
+    appId = String(hashParams.get('id') || searchParams.get('id') || hashParts[1] || '').trim()
+    category = String(hashParams.get('category') || searchParams.get('category') || '').trim()
+  } else if (pathHelp || hashView === 'help') {
+    view = 'help'
+  } else if (pathAbout || ABOUT_SECTION_IDS.has(hashView)) {
+    view = 'about'
+    section = aboutSectionIdFromHash(hashView ? `#${hashView}` : '#intro') || 'intro'
+  }
+
+  return { view, appId, category, section, needsPathNormalize }
+}
+
+function buildAspaceHash(view, { section = '', appId = '', category = '' } = {}) {
+  if (view === 'home') return ''
+  if (view === 'about') return `#/${section || 'intro'}`
+  if (view === 'help') return '#/help'
+  const params = new URLSearchParams()
+  if (appId) params.set('id', appId)
+  if (category) params.set('category', category)
+  const query = params.toString()
+  return query ? `#/apps?${query}` : '#/apps'
+}
+
+/** 解析配置里的门户链接（hash /aspace-one/apps 等），非门户链接返回 null */
+function parseConfiguredAspaceRoute(raw = '') {
+  const target = String(raw || '').trim()
+  if (!target) return null
+  try {
+    if (target.startsWith('#')) {
+      const hash = target.startsWith('#/') ? target : `#/${target.replace(/^#/, '')}`
+      const body = hash.replace(/^#\/?/, '')
+      const [hashPath = '', hashQuery = ''] = body.split('?')
+      const parts = hashPath.split('/').filter(Boolean)
+      const viewName = String(parts[0] || '').toLowerCase()
+      const params = new URLSearchParams(hashQuery)
+      if (viewName === 'apps') {
+        return {
+          view: 'apps',
+          appId: String(params.get('id') || parts[1] || '').trim(),
+          category: String(params.get('category') || '').trim(),
+          section: '',
+        }
+      }
+      if (viewName === 'help') return { view: 'help', appId: '', category: '', section: '' }
+      if (viewName === 'home' || viewName === '') return { view: 'home', appId: '', category: '', section: '' }
+      if (ABOUT_SECTION_IDS.has(viewName)) {
+        return { view: 'about', appId: '', category: '', section: aboutSectionIdFromHash(`#${viewName}`) || 'intro' }
+      }
+      return null
+    }
+
+    const resolved = new URL(target, window.location.origin)
+    if (resolved.origin !== window.location.origin) return null
+    const path = resolved.pathname.replace(/\/+$/, '') || '/'
+    if (path === '/aspace-one' || path === '/aspace-one/') {
+      if (resolved.hash) return parseConfiguredAspaceRoute(resolved.hash)
+      return { view: 'home', appId: '', category: '', section: '' }
+    }
+    if (/^\/aspace-one\/apps(?:\/|$)/i.test(resolved.pathname)) {
+      const params = new URLSearchParams(resolved.search)
+      if (resolved.hash) {
+        const fromHash = parseConfiguredAspaceRoute(resolved.hash)
+        if (fromHash) return fromHash
+      }
+      return {
+        view: 'apps',
+        appId: String(params.get('id') || '').trim(),
+        category: String(params.get('category') || '').trim(),
+        section: '',
+      }
+    }
+    if (/^\/aspace-one\/help(?:\/|$)/i.test(resolved.pathname)) {
+      return { view: 'help', appId: '', category: '', section: '' }
+    }
+    if (/^\/aspace-one\/about(?:\/|$)/i.test(resolved.pathname)) {
+      return { view: 'about', appId: '', category: '', section: 'intro' }
+    }
+    if (resolved.hash && /^\/aspace-one(?:\/|$)/i.test(resolved.pathname)) {
+      return parseConfiguredAspaceRoute(resolved.hash)
+    }
+  } catch {
+    return null
+  }
+  return null
 }
 
 let apps = [
@@ -1364,17 +1485,29 @@ function initHomeGlobe(root) {
   })
 }
 
-function setShellView(root, view, { portalMode, category, appId, section, preserveScroll } = {}) {
+function setShellView(root, view, {
+  portalMode,
+  category,
+  appId,
+  section,
+  preserveScroll,
+  replace = false,
+  syncUrl = true,
+} = {}) {
   let nextView = ['home', 'apps', 'help', 'about'].includes(view) ? view : 'home'
   if (nextView === 'apps' && portalMode === 'help') nextView = 'help'
   const contentView = nextView === 'help' ? 'apps' : nextView
   const aboutSection = nextView === 'about'
     ? (section || aboutSectionIdFromHash() || 'intro')
     : ''
+  const nextAppId = nextView === 'apps' ? String(appId || '').trim() : ''
+  const nextCategory = nextView === 'apps' ? String(category || '').trim() : ''
+
   root.querySelectorAll('[data-aso-view]').forEach((sectionEl) => {
     sectionEl.hidden = sectionEl.dataset.asoView !== contentView
   })
-  root.querySelectorAll('[data-aso-nav]').forEach((item) => {
+  // 顶栏导航高亮（排除首页业务卡上的 data-aso-nav）
+  root.querySelectorAll('.aso-shell__nav [data-aso-nav]').forEach((item) => {
     const active = item.dataset.asoNav === nextView
     item.classList.toggle('is-active', active)
     if (item.matches('button, a')) item.setAttribute('aria-current', active ? 'page' : 'false')
@@ -1382,19 +1515,26 @@ function setShellView(root, view, { portalMode, category, appId, section, preser
   root.dataset.activeShellView = nextView
   root.classList.remove('is-menu-open')
   if (contentView === 'apps') setPortalMode(root, nextView === 'help' ? 'help' : 'overview')
-  const nextHash = nextView === 'home'
-    ? ''
-    : nextView === 'about'
-      ? `#${aboutSection}`
-      : `#${nextView}`
-  const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`
-  if (`${window.location.pathname}${window.location.search}${window.location.hash}` !== nextUrl) {
-    window.history.replaceState({}, '', nextUrl)
+
+  if (syncUrl) {
+    const nextHash = buildAspaceHash(nextView, {
+      section: aboutSection,
+      appId: nextAppId,
+      category: nextCategory,
+    })
+    const nextUrl = `${aspaceCanonicalPath()}${nextHash}`
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+    if (currentUrl !== nextUrl) {
+      const state = { asoView: nextView, appId: nextAppId, category: nextCategory, section: aboutSection }
+      if (replace) window.history.replaceState(state, '', nextUrl)
+      else window.history.pushState(state, '', nextUrl)
+    }
   }
-  if (contentView === 'apps' && (appId || category)) {
+
+  if (contentView === 'apps' && (nextAppId || nextCategory)) {
     window.requestAnimationFrame(() => {
-      if (appId) focusAppCard(root, appId)
-      else selectAppCategory(root, category)
+      if (nextAppId) focusAppCard(root, nextAppId)
+      else selectAppCategory(root, nextCategory)
     })
   }
   if (nextView === 'about') {
@@ -1405,6 +1545,18 @@ function setShellView(root, view, { portalMode, category, appId, section, preser
     return
   }
   if (!preserveScroll) window.scrollTo({ top: 0, behavior: 'auto' })
+}
+
+function applyAspaceLocation(root, { replace = true, preserveScroll = false } = {}) {
+  const route = parseAspaceLocation()
+  setShellView(root, route.view, {
+    appId: route.appId,
+    category: route.category,
+    section: route.section,
+    replace: replace || route.needsPathNormalize,
+    preserveScroll,
+    syncUrl: true,
+  })
 }
 
 /** 点击左侧分类时锁定当前滚动，避免焦点/锚定把页面拽走。 */
@@ -2362,6 +2514,18 @@ function openConfiguredLink(root, url, { pendingFeature = '' } = {}) {
     else showToast('对应应用不存在或尚未开通')
     return
   }
+
+  // 门户内跳转：保持 SPA + 顶栏，避免 /aspace-one/apps/ 整页跳出丢头部
+  const portalRoute = parseConfiguredAspaceRoute(target)
+  if (portalRoute) {
+    setShellView(root, portalRoute.view, {
+      appId: portalRoute.appId,
+      category: portalRoute.category,
+      section: portalRoute.section,
+    })
+    return
+  }
+
   if (/^https?:\/\//i.test(target)) {
     window.open(target, '_blank', 'noopener,noreferrer')
     return
@@ -2383,31 +2547,15 @@ export async function initAspaceOne() {
   loadAppPreferences()
   await Promise.all([loadQuickActions(), loadRecentActivities()])
   root.innerHTML = renderPortal()
-  const hash = String(window.location.hash || '').replace(/^#\/?/, '#')
-  const initialAboutSection = aboutSectionIdFromHash(hash)
-  const initialView = initialAboutSection
-    ? 'about'
-    : hash === '#help'
-      ? 'help'
-      : hash === '#apps'
-        ? 'apps'
-        : 'home'
-  setShellView(root, initialView, {
-    section: initialAboutSection || undefined,
-  })
+  applyAspaceLocation(root, { replace: true })
   if (portalAuthError) showToast(portalAuthError)
   bindActivityMessages(root)
 
-  window.addEventListener('hashchange', () => {
-    const section = aboutSectionIdFromHash()
-    if (!section) return
-    if (root.dataset.activeShellView !== 'about') {
-      setShellView(root, 'about', { section })
-      return
-    }
-    window.history.replaceState({}, '', `${window.location.pathname}${window.location.search}#${section}`)
-    scrollAboutSection(root, section)
-  })
+  const syncRouteFromHistory = () => {
+    applyAspaceLocation(root, { replace: true, preserveScroll: false })
+  }
+  window.addEventListener('popstate', syncRouteFromHistory)
+  window.addEventListener('hashchange', syncRouteFromHistory)
 
   root.addEventListener('click', (event) => {
     if (event.target.closest('[data-aso-menu]')) {
