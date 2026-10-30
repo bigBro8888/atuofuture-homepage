@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { config } from '../../config.js'
+import { encodeImageAsWebp } from '../../lib/image-webp.js'
 import { addAudit, db, normalizeAppButtons, normalizeAppFeatures, publicUser, save } from '../../lib/store.js'
 import { getLatestAndroidVersion } from '../apps/version-service.js'
 import { publishRelease, rollbackRelease } from '../apps/release-service.js'
@@ -109,17 +110,24 @@ adminRouter.post('/app/hero-image', requireAuth('config:write'), imageUpload.sin
     return response.status(400).json({ error: 'invalid_image', message: '仅支持 JPG、PNG 或 WebP 图片' })
   }
 
-  const imageDirectory = path.join(config.uploadDir, 'images')
-  const filename = `hero-${Date.now()}-${randomUUID()}${extension}`
-  await mkdir(imageDirectory, { recursive: true })
-  await writeFile(path.join(imageDirectory, filename), request.file.buffer)
-  const url = `/api/public/uploads/images/${filename}`
-  await addAudit(request.admin, 'app.hero_image.upload', 'artink', {
-    filename,
-    size: request.file.size,
-    mimeType: request.file.mimetype,
-  })
-  response.status(201).json({ url })
+  try {
+    const encoded = await encodeImageAsWebp(request.file.buffer)
+    const imageDirectory = path.join(config.uploadDir, 'images')
+    const filename = `hero-${Date.now()}-${randomUUID()}${encoded.extension}`
+    await mkdir(imageDirectory, { recursive: true })
+    await writeFile(path.join(imageDirectory, filename), encoded.buffer)
+    const url = `/api/public/uploads/images/${filename}`
+    await addAudit(request.admin, 'app.hero_image.upload', 'artink', {
+      filename,
+      size: encoded.bytesOut,
+      bytesIn: encoded.bytesIn,
+      mimeType: encoded.mimeType,
+      sourceMimeType: request.file.mimetype,
+    })
+    response.status(201).json({ url })
+  } catch (error) {
+    response.status(error.status || 400).json({ error: 'invalid_image', message: error.message || '图片处理失败' })
+  }
 })
 
 adminRouter.get('/releases', requireAuth(), (request, response) => {

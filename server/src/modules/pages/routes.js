@@ -4,6 +4,7 @@ import path from 'node:path'
 import { Router } from 'express'
 import multer from 'multer'
 import { config } from '../../config.js'
+import { encodeImageAsWebp } from '../../lib/image-webp.js'
 import { isOssConfigured, uploadPublicObject } from '../../lib/oss.js'
 import { addAudit, save } from '../../lib/store.js'
 import { requireAuth } from '../admin/auth.js'
@@ -55,14 +56,15 @@ async function saveImageBuffer(buffer, mimeType, admin, extra = {}) {
     error.status = 400
     throw error
   }
-  const filename = `home-${Date.now()}-${randomUUID()}${extension}`
+  const encoded = await encodeImageAsWebp(buffer)
+  const filename = `home-${Date.now()}-${randomUUID()}${encoded.extension}`
   let url = ''
   let storage = 'local'
   if (isOssConfigured()) {
     const folder = String(extra.folder || 'news').trim() || 'news'
     const uploaded = await uploadPublicObject({
-      buffer,
-      contentType: type,
+      buffer: encoded.buffer,
+      contentType: encoded.mimeType,
       folder,
       filename,
     })
@@ -72,13 +74,15 @@ async function saveImageBuffer(buffer, mimeType, admin, extra = {}) {
   } else {
     const imageDirectory = path.join(config.uploadDir, 'images')
     await mkdir(imageDirectory, { recursive: true })
-    await writeFile(path.join(imageDirectory, filename), buffer)
+    await writeFile(path.join(imageDirectory, filename), encoded.buffer)
     url = `/api/public/uploads/images/${filename}`
   }
   await addAudit(admin, 'home.media.upload', 'home', {
     filename,
-    size: buffer.length,
-    mimeType: type,
+    size: encoded.bytesOut,
+    bytesIn: encoded.bytesIn,
+    mimeType: encoded.mimeType,
+    sourceMimeType: type,
     storage,
     ...extra,
   })
