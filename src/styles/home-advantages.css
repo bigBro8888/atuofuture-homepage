@@ -8,8 +8,8 @@
 
 .sm-hero.ha-hero,
 .sm-hero {
-  /* 对齐西门子官网首屏：固定 600px */
-  --sm-hero-height: 600px;
+  /* 对齐行业解决方案页 banner：固定 470px */
+  --sm-hero-height: 470px;
   height: var(--sm-hero-height);
   min-height: var(--sm-hero-height);
   background:
@@ -48,8 +48,8 @@
 .ha-content {
   display: flex;
   align-items: center;
-  padding-top: 72px;
-  padding-bottom: 112px;
+  padding-top: 88px;
+  padding-bottom: 96px;
 }
 
 .ha-copy {
@@ -174,12 +174,12 @@
   .sm-hero.ha-hero,
   .sm-hero {
     height: auto;
-    min-height: var(--sm-hero-height, 600px);
+    min-height: var(--sm-hero-height, 470px);
   }
 
   .ha-content {
     padding-top: 96px;
-    padding-bottom: 120px;
+    padding-bottom: 112px;
   }
 
   .ha-copy {

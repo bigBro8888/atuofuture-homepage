@@ -13536,8 +13536,8 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 
 /* Hero carousel（五大技术优势，细节见 home-advantages.css） */
 .sm-hero {
-  /* 对齐西门子官网 --hero-carousel-height: 600px */
-  --sm-hero-height: 600px;
+  /* 对齐行业解决方案页 .sol-home-hero（470px），避免首屏过高 */
+  --sm-hero-height: 470px;
   position: relative;
   height: var(--sm-hero-height);
   min-height: var(--sm-hero-height);
@@ -13578,8 +13578,8 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   height: 100%;
   display: flex;
   align-items: center;
-  padding-top: 72px;
-  padding-bottom: 140px;
+  padding-top: 88px;
+  padding-bottom: 96px;
 }
 .sm-hero__copy {
   max-width: 560px;
@@ -13596,8 +13596,8 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 .sm-hero__copy h1,
 .sm-hero__copy h2 {
   margin: 0 0 16px;
-  font-size: clamp(30px, 4vw, 54px);
-  line-height: 1.18;
+  font-size: clamp(28px, 3.4vw, 44px);
+  line-height: 1.2;
   font-weight: 700;
 }
 .sm-hero__copy p {
@@ -14870,9 +14870,8 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   .sm-sol-card { flex-basis: calc((100% - 32px) / 2); }
 }
 @media (max-width: 720px) {
-  /* 对齐西门子：小屏 height:auto，min-height 仍为 600px */
-  .sm-hero { height: auto; min-height: var(--sm-hero-height, 600px); }
-  .sm-hero__content { padding-top: 96px; padding-bottom: 132px; align-items: flex-start; }
+  .sm-hero { height: auto; min-height: var(--sm-hero-height, 470px); }
+  .sm-hero__content { padding-top: 96px; padding-bottom: 112px; align-items: flex-start; }
   .sm-mini-banner__inner {
     grid-template-columns: 72px minmax(0, 1fr);
     gap: 14px 16px;
