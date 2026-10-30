@@ -10,7 +10,8 @@ const HOME_SECTIONS = [
 
 const IMAGE_SIZE_GUIDE = [
   { test: (path) => /heroSlides\.\d+\.background/.test(path), label: '首屏背景', size: '1920×1080', tip: '全幅横图，左侧留暗部给文字' },
-  { test: (path) => /agents\.cards\.\d+\.imageUrl/.test(path), label: '产品总览卡片图', size: '1050×450', tip: '21:9 横图' },
+  { test: (path) => /agents\.software\.\d+\.imageUrl/.test(path), label: '系统软件截图', size: '640×480', tip: '4:3 界面预览' },
+  { test: (path) => /agents\.hardware\.\d+\.imageUrl/.test(path), label: '智能硬件产品图', size: '640×480', tip: '4:3 产品图' },
   { test: (path) => /agents\.platform\.\d+\.imageUrl/.test(path), label: '平台能力配图', size: '640×360', tip: '16:9 小图' },
   { test: (path) => /solutions\.items\.\d+\.imageUrl/.test(path), label: '方案封面', size: '880×420', tip: '卡片封面' },
   { test: (path) => /news\.items\.\d+\.imageUrl/.test(path), label: '新闻封面', size: '1280×720', tip: '16:9 封面' },
@@ -150,10 +151,7 @@ export function collectHomeVisualContent(baseContent) {
     const path = el.dataset.editPath
     if (!path) return
     let value = readEditableText(el)
-    // 方案卡 tags 为数组；产品总览 cards.tags 是「/」分隔的纯文案
-    if (/\.tags$/.test(path) && !path.startsWith('agents.cards.')) {
-      value = value.split(/[，,]/).map((tag) => tag.trim()).filter(Boolean)
-    }
+    if (/\.tags$/.test(path)) value = value.split(/[，,]/).map((tag) => tag.trim()).filter(Boolean)
     setNested(content, path, value)
   })
 

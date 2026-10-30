@@ -4189,21 +4189,18 @@ body.admin-home-fullscreen { overflow: hidden; }
 .admin-vedit--home .atf-overview {
   position: relative;
 }
-.admin-vedit--home .atf-card--editable {
-  cursor: default;
-}
-.admin-vedit--home .atf-card--editable:hover {
-  transform: none;
-  box-shadow: none;
-}
-.admin-vedit--home .atf-header__more {
+.admin-vedit--home .atf-header__more,
+.admin-vedit--home .atf-rail__more {
   display: grid;
   gap: 6px;
-  justify-items: end;
+  justify-items: start;
 }
-.admin-vedit--home .atf-card .admin-home-href,
+.admin-vedit--home .atf-header__more { justify-items: end; }
+.admin-vedit--home .atf-agent-item .admin-home-href,
+.admin-vedit--home .atf-thumb .admin-home-href,
 .admin-vedit--home .atf-bottom .admin-home-href,
-.admin-vedit--home .atf-header__more .admin-home-href {
+.admin-vedit--home .atf-header__more .admin-home-href,
+.admin-vedit--home .atf-rail__more .admin-home-href {
   display: block;
   margin-top: 4px;
   color: #1769ff;

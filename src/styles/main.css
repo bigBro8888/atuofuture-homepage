@@ -13851,72 +13851,96 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   font-weight: 700;
   white-space: nowrap;
 }
-.atf-grid {
+.atf-band {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+  gap: 28px 36px;
+  align-items: start;
+  padding: 28px 0;
+  border-top: 1px solid #e8edf3;
+}
+.atf-band:first-of-type { border-top: 0; padding-top: 8px; }
+.atf-rail h3 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  line-height: 1.25;
+  letter-spacing: -.02em;
+  font-weight: 750;
+}
+.atf-rail p {
+  margin: 0 0 16px;
+  color: #65748a;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.atf-rail .atf-link { display: inline-block; }
+.atf-rail__more { display: grid; gap: 6px; justify-items: start; }
+.atf-agent-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 22px 28px;
 }
-.atf-card {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: #f3f5f7;
-  border-radius: 14px;
+.atf-agent-item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
   color: inherit;
   text-decoration: none;
-  transition: transform .2s, box-shadow .2s;
 }
-.atf-card:hover,
-.atf-card:focus-visible {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px #10223e1a;
-}
-.atf-card-head {
-  padding: 20px 22px 0;
-  min-height: 78px;
-}
-.atf-card h3 {
-  font-size: 24px;
-  line-height: 1.25;
-  margin: 0 0 6px;
+.atf-agent-item:hover strong,
+.atf-agent-item:focus-visible strong { color: #086cf0; }
+.atf-spark { color: #086cf0; display: inline-flex; margin-top: 2px; }
+.atf-agent-copy { min-width: 0; display: grid; gap: 4px; }
+.atf-agent-copy strong {
+  font-size: 17px;
+  line-height: 1.35;
   font-weight: 700;
 }
-.atf-card p {
-  font-size: 15px;
-  line-height: 1.5;
-  color: #526077;
-  margin: 0;
-}
-.atf-card img,
-.atf-card .hpi-edit-img img {
-  width: 100%;
-  aspect-ratio: 21 / 9;
-  object-fit: cover;
-  display: block;
-}
-.atf-card .hpi-edit-img {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  position: relative;
-}
-.atf-card-foot {
-  padding: 13px 22px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: #35455f;
+.atf-agent-copy span {
+  color: #65748a;
   font-size: 14px;
   line-height: 1.5;
 }
-.atf-card-foot span:last-child {
-  font-size: 23px;
-  color: #10223e;
+.atf-thumb-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
 }
+.atf-thumb {
+  display: grid;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+.atf-thumb__media,
+.atf-thumb .hpi-edit-img {
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: #f3f5f7;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.atf-thumb__media img,
+.atf-thumb img,
+.atf-thumb .hpi-edit-img img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.atf-thumb__label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #25344c;
+}
+.atf-thumb:hover .atf-thumb__label,
+.atf-thumb:focus-visible .atf-thumb__label { color: #086cf0; }
 .atf-platform {
   background: #14253d;
   color: #fff;
@@ -14001,7 +14025,12 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   font-size: 13px;
 }
 @media (max-width: 1000px) {
-  .atf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .atf-band {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .atf-agent-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .atf-thumb-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .atf-platform {
     grid-template-columns: 1fr 1fr;
     gap: 18px;
@@ -14016,8 +14045,9 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
     flex-direction: column;
     gap: 12px;
   }
-  .atf-grid { grid-template-columns: 1fr; }
-  .atf-card h3 { font-size: 21px; }
+  .atf-rail h3 { font-size: 24px; }
+  .atf-agent-grid { grid-template-columns: 1fr; }
+  .atf-thumb-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .atf-platform {
     grid-template-columns: 1fr;
     gap: 14px;

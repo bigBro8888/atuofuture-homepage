@@ -79,13 +79,39 @@ export const defaultHomeContent = {
     subtitle: '软件、硬件与平台，按业务需求灵活组合。',
     moreLabel: '探索全部产品 ↗',
     moreUrl: '/hardware/products/',
+    blockTitle: '空间智能体',
+    blockSubtitle: '理解需求，协同完成工作',
+    blockMoreLabel: '探索智能体 →',
+    blockMoreUrl: '/agents/',
     cards: [
-      { title: '会议与接待', description: '预约、签到、设备准备，一起就绪', tags: '会议预约 / 访客管理 / 中控屏 / 电子桌牌', imageUrl: '/images/home-atf/atf-01.webp', href: '/solutions/?id=meeting' },
-      { title: '空间与设备控制', description: '灯光、空调与环境，按需联动', tags: '场景联动 / 环境监测 / 智能开关 / 空调网关', imageUrl: '/images/home-atf/atf-02.webp', href: '/solutions/?id=building' },
-      { title: 'RFID 资产管理', description: '资产在哪里、有没有，一目了然', tags: '资产台账 / 智能盘点 / RFID读写器 / 电子标签', imageUrl: '/images/home-atf/atf-03.webp', href: '/solutions/?id=security' },
-      { title: '能源与设备运维', description: '看清能耗，及时发现与处理异常', tags: '能耗分析 / 设备监测 / 工单巡检', imageUrl: '/images/home-atf/atf-04.webp', href: '/solutions/?id=energy' },
-      { title: '信息发布与展示', description: '从会议投屏到企业宣传，统一管理', tags: '内容发布 / 无线投屏 / 电子相框 / 发布终端', imageUrl: '/images/home-atf/atf-05.webp', href: '/hardware/products/' },
-      { title: '招商与空间运营', description: '从招商签约到交付入住，流程贯通', tags: '招商管理 / 合同管理 / 租户服务', imageUrl: '/images/home-atf/atf-06.webp', href: '/solutions/?id=commercial' },
+      { title: '会议智能体', description: '会前准备、会中服务、会后数据', href: '/agent-detail/?id=meeting' },
+      { title: '访客接待智能体', description: '邀约通行、接待联动', href: '/agent-detail/?id=visitor' },
+      { title: '空间服务智能体', description: '感知状态、按需服务', href: '/agent-detail/?id=space' },
+      { title: '能源能耗智能体', description: '能耗分析、策略优化', href: '/agent-detail/?id=energy' },
+      { title: '展厅智能体', description: '接待讲解、展项联动', href: '/agent-detail/?id=exhibition' },
+      { title: '商业运营智能体', description: '招商签约、入住运营', href: '/agent-detail/?id=opc' },
+    ],
+    softwareTitle: '系统软件',
+    softwareMoreLabel: '探索软件 →',
+    softwareMoreUrl: '/aspace-one/',
+    software: [
+      { title: '会议预约', imageUrl: '/images/aspace-one/app-control.jpg', href: '/aspace-one/' },
+      { title: '访客管理', imageUrl: '/images/aspace-one/app-visitor.jpg', href: '/aspace-one/' },
+      { title: '资产管理', imageUrl: '/images/aspace-one/app-resource.jpg', href: '/aspace-one/' },
+      { title: '能源运维', imageUrl: '/images/aspace-one/app-energy.jpg', href: '/aspace-one/' },
+      { title: '信息发布', imageUrl: '/images/aspace-one/app-poster.jpg', href: '/aspace-one/' },
+      { title: '招商运营', imageUrl: '/images/aspace-one/showcase-building.jpg', href: '/aspace-one/' },
+    ],
+    hardwareTitle: '智能硬件',
+    hardwareMoreLabel: '探索硬件 →',
+    hardwareMoreUrl: '/hardware/',
+    hardware: [
+      { title: '中控屏', imageUrl: '/images/hardware/control-screen.jpg', href: '/hardware/product/?id=control-screen' },
+      { title: '电子桌牌', imageUrl: '/images/hardware/e-table-sign.jpg', href: '/hardware/product/?id=e-table-sign' },
+      { title: '环境传感', imageUrl: '/images/hardware/sensor.jpg', href: '/hardware/product/?id=sensor' },
+      { title: '开关与网关', imageUrl: '/images/hardware/switch-control.jpg', href: '/hardware/product/?id=switch-control' },
+      { title: 'RFID 设备', imageUrl: '/images/hardware/aap.jpg', href: '/hardware/products/' },
+      { title: '信息发布终端', imageUrl: '/images/hardware/eink-frame.jpg', href: '/hardware/product/?id=eink-frame' },
     ],
     platformTitle: '连接这些产品，让空间协同运行',
     platform: [
@@ -238,10 +264,28 @@ export function validateHomeContent(value = {}) {
       subtitle: cleanText(agents.subtitle, defaultHomeContent.agents.subtitle, 500),
       moreLabel: cleanText(agents.moreLabel, defaultHomeContent.agents.moreLabel, 40),
       moreUrl: cleanUrl(agents.moreUrl, defaultHomeContent.agents.moreUrl),
+      blockTitle: cleanText(agents.blockTitle, defaultHomeContent.agents.blockTitle, 40),
+      blockSubtitle: cleanText(agents.blockSubtitle, defaultHomeContent.agents.blockSubtitle, 80),
+      blockMoreLabel: cleanText(agents.blockMoreLabel, defaultHomeContent.agents.blockMoreLabel, 40),
+      blockMoreUrl: cleanUrl(agents.blockMoreUrl, defaultHomeContent.agents.blockMoreUrl),
       cards: fixedItems(agents.cards, defaultHomeContent.agents.cards, (item, fallback) => ({
         title: cleanText(item.title, fallback.title, 40),
         description: cleanText(item.description, fallback.description, 80),
-        tags: cleanText(Array.isArray(item.tags) ? item.tags.join(' / ') : item.tags, fallback.tags, 80),
+        href: cleanUrl(item.href, fallback.href),
+      })),
+      softwareTitle: cleanText(agents.softwareTitle, defaultHomeContent.agents.softwareTitle, 40),
+      softwareMoreLabel: cleanText(agents.softwareMoreLabel, defaultHomeContent.agents.softwareMoreLabel, 40),
+      softwareMoreUrl: cleanUrl(agents.softwareMoreUrl, defaultHomeContent.agents.softwareMoreUrl),
+      software: fixedItems(agents.software, defaultHomeContent.agents.software, (item, fallback) => ({
+        title: cleanText(item.title, fallback.title, 40),
+        imageUrl: cleanUrl(item.imageUrl, fallback.imageUrl),
+        href: cleanUrl(item.href, fallback.href),
+      })),
+      hardwareTitle: cleanText(agents.hardwareTitle, defaultHomeContent.agents.hardwareTitle, 40),
+      hardwareMoreLabel: cleanText(agents.hardwareMoreLabel, defaultHomeContent.agents.hardwareMoreLabel, 40),
+      hardwareMoreUrl: cleanUrl(agents.hardwareMoreUrl, defaultHomeContent.agents.hardwareMoreUrl),
+      hardware: fixedItems(agents.hardware, defaultHomeContent.agents.hardware, (item, fallback) => ({
+        title: cleanText(item.title, fallback.title, 40),
         imageUrl: cleanUrl(item.imageUrl, fallback.imageUrl),
         href: cleanUrl(item.href, fallback.href),
       })),
@@ -311,13 +355,31 @@ export function getHomePageConfig() {
       pitch: page.draftContent?.pitch || structuredClone(defaultHomeContent.pitch),
     }
   }
+  const needsAgentsLayout = (agents) => {
+    if (!agents?.cards?.length || !agents?.software?.length || !agents?.hardware?.length) return true
+    return agents.cards.some((item) => item?.imageUrl || item?.tags)
+  }
+  const migrateAgentsLayout = (previous = {}) => ({
+    ...structuredClone(defaultHomeContent.agents),
+    title: previous.title || defaultHomeContent.agents.title,
+    subtitle: previous.subtitle || defaultHomeContent.agents.subtitle,
+    moreLabel: previous.moreLabel || defaultHomeContent.agents.moreLabel,
+    moreUrl: previous.moreUrl || defaultHomeContent.agents.moreUrl,
+    platformTitle: previous.platformTitle || defaultHomeContent.agents.platformTitle,
+    platform: Array.isArray(previous.platform) && previous.platform.length
+      ? previous.platform
+      : structuredClone(defaultHomeContent.agents.platform),
+    bottomText: previous.bottomText || defaultHomeContent.agents.bottomText,
+    bottomLabel: previous.bottomLabel || defaultHomeContent.agents.bottomLabel,
+    bottomUrl: previous.bottomUrl || defaultHomeContent.agents.bottomUrl,
+  })
   let agentsMigrated = false
-  if (!page.draftContent.agents?.cards?.length) {
-    page.draftContent.agents = structuredClone(defaultHomeContent.agents)
+  if (needsAgentsLayout(page.draftContent.agents)) {
+    page.draftContent.agents = migrateAgentsLayout(page.draftContent.agents)
     agentsMigrated = true
   }
-  if (page.publishedContent && !page.publishedContent.agents?.cards?.length) {
-    page.publishedContent.agents = structuredClone(defaultHomeContent.agents)
+  if (page.publishedContent && needsAgentsLayout(page.publishedContent.agents)) {
+    page.publishedContent.agents = migrateAgentsLayout(page.publishedContent.agents)
     agentsMigrated = true
   }
   if (agentsMigrated) {
