@@ -142,87 +142,91 @@ export function renderHomeAgentsSection(agents = {}, { editable = false, section
         </header>
 
         <div class="atf-stack" data-atf-stack>
-          <svg class="atf-stack__spine" viewBox="0 0 40 1000" preserveAspectRatio="none" aria-hidden="true">
-            <path class="atf-stack__spine-track" d="M20 40 V960" />
-            <path class="atf-stack__spine-flow" d="M20 40 V960" pathLength="100" />
-          </svg>
+          <div class="atf-stack__row">
+            <span class="atf-node" aria-hidden="true"></span>
+            <article class="atf-band atf-band--agents" data-atf-layer="1">
+              <div class="atf-rail">
+                <em class="atf-layer"><span>01</span>决策层</em>
+                ${textNode('agents.blockTitle', blockTitle, { editable, tag: 'h3', placeholder: '区块标题' })}
+                ${textNode('agents.blockSubtitle', blockSubtitle, { editable, tag: 'p', multiline: true, placeholder: '区块说明' })}
+                ${renderAtfRailLink('agents.blockMoreLabel', 'agents.blockMoreUrl', blockMoreLabel, blockMoreUrl, { editable })}
+              </div>
+              <div class="atf-agent-grid">
+                ${cards.map((card, index) => {
+                  const href = card.href || '/agents/'
+                  const body = `
+                    ${ATF_SPARK}
+                    <div class="atf-agent-copy">
+                      ${textNode(`agents.cards.${index}.title`, card.title || '', { editable, tag: 'strong', placeholder: '智能体名称' })}
+                      ${textNode(`agents.cards.${index}.description`, card.description || '', { editable, tag: 'span', placeholder: '一句话说明' })}
+                      ${editable ? textNode(`agents.cards.${index}.href`, href, { editable, tag: 'small', className: 'admin-home-href', placeholder: '跳转链接' }) : ''}
+                    </div>`
+                  if (editable) return `<article class="atf-agent-item">${body}</article>`
+                  return `<a class="atf-agent-item" href="${esc(href)}">${body}</a>`
+                }).join('')}
+              </div>
+            </article>
+          </div>
 
-          <article class="atf-band atf-band--agents" data-atf-layer="1">
-            <div class="atf-rail">
-              <em class="atf-layer"><span>01</span>决策层</em>
-              ${textNode('agents.blockTitle', blockTitle, { editable, tag: 'h3', placeholder: '区块标题' })}
-              ${textNode('agents.blockSubtitle', blockSubtitle, { editable, tag: 'p', multiline: true, placeholder: '区块说明' })}
-              ${renderAtfRailLink('agents.blockMoreLabel', 'agents.blockMoreUrl', blockMoreLabel, blockMoreUrl, { editable })}
-            </div>
-            <div class="atf-agent-grid">
-              ${cards.map((card, index) => {
-                const href = card.href || '/agents/'
-                const body = `
-                  ${ATF_SPARK}
-                  <div class="atf-agent-copy">
-                    ${textNode(`agents.cards.${index}.title`, card.title || '', { editable, tag: 'strong', placeholder: '智能体名称' })}
-                    ${textNode(`agents.cards.${index}.description`, card.description || '', { editable, tag: 'span', placeholder: '一句话说明' })}
-                    ${editable ? textNode(`agents.cards.${index}.href`, href, { editable, tag: 'small', className: 'admin-home-href', placeholder: '跳转链接' }) : ''}
-                  </div>`
-                if (editable) return `<article class="atf-agent-item">${body}</article>`
-                return `<a class="atf-agent-item" href="${esc(href)}">${body}</a>`
-              }).join('')}
-            </div>
-          </article>
+          <div class="atf-stack__row">
+            <span class="atf-node" aria-hidden="true"></span>
+            <article class="atf-band atf-band--software" data-atf-layer="2">
+              <div class="atf-rail">
+                <em class="atf-layer"><span>02</span>应用层</em>
+                ${textNode('agents.softwareTitle', softwareTitle, { editable, tag: 'h3', placeholder: '系统软件' })}
+                ${renderAtfRailLink('agents.softwareMoreLabel', 'agents.softwareMoreUrl', softwareMoreLabel, softwareMoreUrl, { editable })}
+              </div>
+              <div class="atf-thumb-row">
+                ${software.map((item, index) => {
+                  const href = item.href || '/aspace-one/'
+                  const media = imgNode(`agents.software.${index}.imageUrl`, item.imageUrl || DEFAULT_ATF_SOFTWARE[index]?.imageUrl || '', {
+                    editable,
+                    width: 320,
+                    height: 200,
+                    alt: item.title || '系统软件',
+                    loading: 'lazy',
+                    className: 'atf-thumb__media',
+                  })
+                  const body = `
+                    ${media}
+                    ${textNode(`agents.software.${index}.title`, item.title || '', { editable, tag: 'span', className: 'atf-thumb__label', placeholder: '软件名称' })}
+                    ${editable ? textNode(`agents.software.${index}.href`, href, { editable, tag: 'small', className: 'admin-home-href', placeholder: '跳转链接' }) : ''}`
+                  if (editable) return `<article class="atf-thumb">${body}</article>`
+                  return `<a class="atf-thumb" href="${esc(href)}">${body}</a>`
+                }).join('')}
+              </div>
+            </article>
+          </div>
 
-          <article class="atf-band atf-band--software" data-atf-layer="2">
-            <div class="atf-rail">
-              <em class="atf-layer"><span>02</span>应用层</em>
-              ${textNode('agents.softwareTitle', softwareTitle, { editable, tag: 'h3', placeholder: '系统软件' })}
-              ${renderAtfRailLink('agents.softwareMoreLabel', 'agents.softwareMoreUrl', softwareMoreLabel, softwareMoreUrl, { editable })}
-            </div>
-            <div class="atf-thumb-row">
-              ${software.map((item, index) => {
-                const href = item.href || '/aspace-one/'
-                const media = imgNode(`agents.software.${index}.imageUrl`, item.imageUrl || DEFAULT_ATF_SOFTWARE[index]?.imageUrl || '', {
-                  editable,
-                  width: 320,
-                  height: 200,
-                  alt: item.title || '系统软件',
-                  loading: 'lazy',
-                  className: 'atf-thumb__media',
-                })
-                const body = `
-                  ${media}
-                  ${textNode(`agents.software.${index}.title`, item.title || '', { editable, tag: 'span', className: 'atf-thumb__label', placeholder: '软件名称' })}
-                  ${editable ? textNode(`agents.software.${index}.href`, href, { editable, tag: 'small', className: 'admin-home-href', placeholder: '跳转链接' }) : ''}`
-                if (editable) return `<article class="atf-thumb">${body}</article>`
-                return `<a class="atf-thumb" href="${esc(href)}">${body}</a>`
-              }).join('')}
-            </div>
-          </article>
-
-          <article class="atf-band atf-band--hardware" data-atf-layer="3">
-            <div class="atf-rail">
-              <em class="atf-layer"><span>03</span>执行层</em>
-              ${textNode('agents.hardwareTitle', hardwareTitle, { editable, tag: 'h3', placeholder: '智能硬件' })}
-              ${renderAtfRailLink('agents.hardwareMoreLabel', 'agents.hardwareMoreUrl', hardwareMoreLabel, hardwareMoreUrl, { editable })}
-            </div>
-            <div class="atf-thumb-row">
-              ${hardware.map((item, index) => {
-                const href = item.href || '/hardware/'
-                const media = imgNode(`agents.hardware.${index}.imageUrl`, item.imageUrl || DEFAULT_ATF_HARDWARE[index]?.imageUrl || '', {
-                  editable,
-                  width: 320,
-                  height: 200,
-                  alt: item.title || '智能硬件',
-                  loading: 'lazy',
-                  className: 'atf-thumb__media',
-                })
-                const body = `
-                  ${media}
-                  ${textNode(`agents.hardware.${index}.title`, item.title || '', { editable, tag: 'span', className: 'atf-thumb__label', placeholder: '硬件名称' })}
-                  ${editable ? textNode(`agents.hardware.${index}.href`, href, { editable, tag: 'small', className: 'admin-home-href', placeholder: '跳转链接' }) : ''}`
-                if (editable) return `<article class="atf-thumb">${body}</article>`
-                return `<a class="atf-thumb" href="${esc(href)}">${body}</a>`
-              }).join('')}
-            </div>
-          </article>
+          <div class="atf-stack__row">
+            <span class="atf-node" aria-hidden="true"></span>
+            <article class="atf-band atf-band--hardware" data-atf-layer="3">
+              <div class="atf-rail">
+                <em class="atf-layer"><span>03</span>执行层</em>
+                ${textNode('agents.hardwareTitle', hardwareTitle, { editable, tag: 'h3', placeholder: '智能硬件' })}
+                ${renderAtfRailLink('agents.hardwareMoreLabel', 'agents.hardwareMoreUrl', hardwareMoreLabel, hardwareMoreUrl, { editable })}
+              </div>
+              <div class="atf-thumb-row">
+                ${hardware.map((item, index) => {
+                  const href = item.href || '/hardware/'
+                  const media = imgNode(`agents.hardware.${index}.imageUrl`, item.imageUrl || DEFAULT_ATF_HARDWARE[index]?.imageUrl || '', {
+                    editable,
+                    width: 320,
+                    height: 200,
+                    alt: item.title || '智能硬件',
+                    loading: 'lazy',
+                    className: 'atf-thumb__media',
+                  })
+                  const body = `
+                    ${media}
+                    ${textNode(`agents.hardware.${index}.title`, item.title || '', { editable, tag: 'span', className: 'atf-thumb__label', placeholder: '硬件名称' })}
+                    ${editable ? textNode(`agents.hardware.${index}.href`, href, { editable, tag: 'small', className: 'admin-home-href', placeholder: '跳转链接' }) : ''}`
+                  if (editable) return `<article class="atf-thumb">${body}</article>`
+                  return `<a class="atf-thumb" href="${esc(href)}">${body}</a>`
+                }).join('')}
+              </div>
+            </article>
+          </div>
         </div>
 
         <div class="atf-platform">

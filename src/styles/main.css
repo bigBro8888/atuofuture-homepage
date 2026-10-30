@@ -13876,37 +13876,61 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 }
 .atf-link:hover { color: #0554c4; }
 .atf-stack {
+  --atf-gap: 10px;
   position: relative;
   display: grid;
-  gap: 10px;
-  padding-left: 28px;
+  gap: var(--atf-gap);
 }
-.atf-stack__spine {
+.atf-stack__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+.atf-node {
+  position: relative;
+  z-index: 2;
+  justify-self: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--atf-accent);
+  box-shadow: 0 0 0 6px rgba(8, 108, 240, .12);
+}
+/* 从上一个圆心接到本圆心：上半段 */
+.atf-stack__row:not(:first-child)::before {
+  content: "";
   position: absolute;
-  left: 0;
-  top: 36px;
-  bottom: 36px;
-  width: 28px;
-  height: auto;
-  pointer-events: none;
-  overflow: visible;
+  left: 14px;
+  top: 0;
+  width: 2px;
+  height: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(8, 108, 240, .35), rgba(8, 108, 240, .7));
+  z-index: 0;
 }
-.atf-stack__spine-track {
-  fill: none;
-  stroke: var(--atf-line);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-.atf-stack__spine-flow {
-  fill: none;
-  stroke: url(#atf-flow-grad);
-  stroke: var(--atf-accent);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-dasharray: 14 86;
-  stroke-dashoffset: 100;
-  animation: atf-spine-flow 3.2s linear infinite;
-  filter: drop-shadow(0 0 6px rgba(8, 108, 240, .35));
+/* 从本圆心接到下一个圆心：下半段 + 间距，最底行不画，避免多出一截 */
+.atf-stack__row:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  width: 2px;
+  height: calc(50% + var(--atf-gap));
+  transform: translateX(-50%);
+  background:
+    linear-gradient(180deg, rgba(8, 108, 240, .75), rgba(8, 108, 240, .28)),
+    repeating-linear-gradient(
+      180deg,
+      var(--atf-accent) 0 10px,
+      transparent 10px 22px
+    );
+  background-blend-mode: soft-light;
+  animation: atf-spine-flow 2.8s linear infinite;
+  background-size: 100% 100%, 100% 44px;
+  z-index: 0;
 }
 .atf-band {
   position: relative;
@@ -13925,19 +13949,6 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
     0 18px 40px rgba(16, 34, 62, .06);
   backdrop-filter: blur(10px);
   transition: transform .35s ease, box-shadow .35s ease, border-color .35s ease;
-}
-.atf-band::before {
-  content: "";
-  position: absolute;
-  left: -23px;
-  top: 42px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #fff;
-  border: 3px solid var(--atf-accent);
-  box-shadow: 0 0 0 6px rgba(8, 108, 240, .12);
-  z-index: 2;
 }
 .atf-band:hover {
   transform: translateY(-2px);
@@ -14083,10 +14094,10 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 .atf-thumb:hover .atf-thumb__label,
 .atf-thumb:focus-visible .atf-thumb__label { color: var(--atf-accent); }
 @keyframes atf-spine-flow {
-  to { stroke-dashoffset: 0; }
+  to { background-position: 0 0, 0 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .atf-stack__spine-flow { animation: none; }
+  .atf-stack__row:not(:last-child)::after { animation: none; }
   .atf-band,
   .atf-agent-item,
   .atf-thumb__media,
@@ -14176,13 +14187,11 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   font-size: 13px;
 }
 @media (max-width: 1000px) {
-  .atf-stack { padding-left: 22px; }
   .atf-band {
     grid-template-columns: 1fr;
     gap: 18px;
     padding: 22px;
   }
-  .atf-band::before { top: 28px; }
   .atf-agent-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .atf-thumb-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .atf-platform {
@@ -14199,9 +14208,8 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
     flex-direction: column;
     gap: 12px;
   }
-  .atf-stack { padding-left: 18px; }
-  .atf-stack__spine { display: none; }
-  .atf-band::before { display: none; }
+  .atf-stack__row { grid-template-columns: 18px minmax(0, 1fr); gap: 10px; }
+  .atf-node { width: 12px; height: 12px; }
   .atf-rail h3 { font-size: 24px; }
   .atf-agent-grid { grid-template-columns: 1fr; }
   .atf-thumb-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
