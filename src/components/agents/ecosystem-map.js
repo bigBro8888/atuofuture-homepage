@@ -46,35 +46,6 @@ const HUB_STEPS = [
   { title: '持续反馈', icon: 'sync' },
 ]
 
-const RESOURCE_COLS = [
-  {
-    key: 'people',
-    title: '人员与流程',
-    icon: 'group',
-    copy: '访客、员工、服务人员、审批与工单',
-  },
-  {
-    key: 'systems',
-    title: '业务系统',
-    icon: 'dns',
-    copy: '预约、访客、会议、能源、资产、运营',
-  },
-  {
-    key: 'devices',
-    title: '空间设备',
-    icon: 'developer_board',
-    copy: '门禁、电梯、大屏、灯光、空调、窗帘、传感器',
-  },
-]
-
-const VALUE_ITEMS = [
-  '任务自动完成',
-  '现场状态可见',
-  '设备协同运行',
-  '异常及时处理',
-  '运营持续优化',
-]
-
 function getAgent(selectedId) {
   return AGENTS_OVERVIEW.find((a) => a.id === selectedId) || AGENTS_OVERVIEW[0]
 }
@@ -259,94 +230,8 @@ function renderHubPill() {
     </div>`
 }
 
-function renderResources() {
-  return `
-    <div class="ag-eco__resources">
-      <div class="ag-eco__res-flow" aria-hidden="true">
-        <svg viewBox="0 0 1200 56" preserveAspectRatio="none">
-          <path class="ag-eco__dash" d="M220 4 v40" />
-          <path class="ag-eco__dash" d="M600 4 v40" />
-          <path class="ag-eco__dash" d="M980 4 v40" />
-        </svg>
-      </div>
-      <div class="ag-eco__res-grid">
-        ${RESOURCE_COLS.map(
-          (col) => `
-          <div class="ag-eco__res" data-layer="${esc(col.key)}">
-            <span class="ag-eco__res-icon" aria-hidden="true">
-              <span class="material-symbols-outlined">${esc(col.icon)}</span>
-            </span>
-            <h3>${esc(col.title)}</h3>
-            <p>${esc(col.copy)}</p>
-          </div>`
-        ).join('')}
-      </div>
-      <div class="ag-eco__feedback" aria-hidden="true">
-        <svg viewBox="0 0 220 120" fill="none">
-          <path d="M40 20 C40 70, 160 70, 160 20" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 5"/>
-          <path d="M152 28 l8-10 4 10" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-        </svg>
-        <span>执行结果持续反馈，智能体自动调整</span>
-      </div>
-    </div>`
-}
-
-function renderValueBar() {
-  return `
-    <div class="ag-eco__value-stage">
-      <div class="ag-eco__value-trap" aria-hidden="true">
-        <svg viewBox="0 0 1200 140" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="agEcoTrapFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#F2F9FF" stop-opacity="0.98"/>
-              <stop offset="45%" stop-color="#D2EBFF" stop-opacity="0.9"/>
-              <stop offset="100%" stop-color="#A9D2F8" stop-opacity="0.85"/>
-            </linearGradient>
-            <linearGradient id="agEcoTrapEdge" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-              <stop offset="100%" stop-color="#7EB4E8" stop-opacity="0.6"/>
-            </linearGradient>
-          </defs>
-          <path
-            d="M70 10 H1130 L1200 130 H0 Z"
-            fill="url(#agEcoTrapFill)"
-            stroke="url(#agEcoTrapEdge)"
-            stroke-width="2"
-          />
-          <path
-            d="M100 20 H1100"
-            stroke="rgba(255,255,255,.8)"
-            stroke-width="3"
-            stroke-linecap="round"
-            opacity=".85"
-          />
-        </svg>
-      </div>
-      <div class="ag-eco__value">
-        <div class="ag-eco__value-cell ag-eco__value-cell--title">客户最终获得</div>
-        <div class="ag-eco__value-cell ag-eco__value-cell--list">
-          <ul class="ag-eco__value-list">
-            ${VALUE_ITEMS.map(
-              (item) => `
-              <li>
-                <span class="ag-eco__check" aria-hidden="true">
-                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                    <circle cx="8" cy="8" r="6.4" stroke="currentColor" stroke-width="1.15"/>
-                    <path d="M5 8.15 7.05 10.1 11 5.8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </span>
-                <span>${esc(item)}</span>
-              </li>`
-            ).join('')}
-          </ul>
-        </div>
-        <div class="ag-eco__value-cell ag-eco__value-cell--tag">少操作，更高效，更可靠</div>
-      </div>
-    </div>`
-}
-
 /**
- * AgentEcosystemMap — 业务目标 → 八大智能体 → 自主执行 → 人/系统/设备 → 客户价值
+ * AgentEcosystemMap — 业务目标 → 八大智能体 → 自主执行
  * @param {{ selectedId: string, editable?: boolean, resolveItemIndex?: (id: string) => number, orderIds?: string[] }} props
  */
 export function renderAgentEcosystemMap({ selectedId, editable = false, resolveItemIndex, orderIds } = {}) {
@@ -358,8 +243,6 @@ export function renderAgentEcosystemMap({ selectedId, editable = false, resolveI
         ${renderHeader()}
         ${renderAgentsOrbit(selected.id, { editable, resolveItemIndex, orderIds })}
         ${renderHubPill()}
-        ${renderResources()}
-        ${renderValueBar()}
       </div>
     </section>`
 }
