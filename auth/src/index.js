@@ -255,8 +255,8 @@ export async function createAuthService() {
       authorizeUrl.searchParams.set('redirect_uri', authUrl('/callback/dingtalk'))
       authorizeUrl.searchParams.set('response_type', 'code')
       authorizeUrl.searchParams.set('client_id', authConfig.dingtalk.clientId)
-      // 钉钉只接受 openid 或 openid corpid；带 corpid 时用户需选择组织，企业内部应用只允许本组织成员
-      authorizeUrl.searchParams.set('scope', 'openid corpid')
+      // 与公司已在用的 sn.atuofuture.com 保持一致；应用还需开通 Contact.User.Read 并把通讯录接口权限范围设为全部员工
+      authorizeUrl.searchParams.set('scope', 'openid Contact.User.Read')
       authorizeUrl.searchParams.set('prompt', 'consent')
       authorizeUrl.searchParams.set('state', state)
       response.redirect(authorizeUrl.toString())
