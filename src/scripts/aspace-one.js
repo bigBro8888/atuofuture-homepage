@@ -2318,6 +2318,7 @@ async function loadCatalog() {
         app.image = meta.image
         if (!app.alt) app.alt = `${meta.name || app.name}封面`
       }
+      if (meta.url) app.href = meta.url
     })
   } catch {
     // 后台栏目配置不可用时继续使用页面内置配置。

@@ -28,7 +28,8 @@ test('admin can publish Aspace categories and app assignments', async (context) 
   const initial = (await initialResponse.json()).catalog
   assert.equal(initial.categories.length, 9)
   assert.equal(initial.apps.length, 22)
-  assert.ok(initial.apps.every((app) => 'image' in app && 'description' in app && 'name' in app))
+  assert.ok(initial.apps.every((app) => 'image' in app && 'description' in app && 'name' in app && 'url' in app))
+  assert.equal(initial.apps.find((item) => item.id === 'visitor-booking').url, 'http://47.103.102.65:18181/')
 
   const unauthorized = await fetch(`${baseUrl}/api/admin/aspace/catalog`, {
     method: 'PUT',
@@ -56,6 +57,15 @@ test('admin can publish Aspace categories and app assignments', async (context) 
   visitor.description = '一键邀约与到访通行'
   visitor.image = '/images/aspace-one/app-visitor.jpg'
 
+  visitor.url = 'javascript:alert(1)'
+  const invalidUrlResponse = await fetch(`${baseUrl}/api/admin/aspace/catalog`, {
+    method: 'PUT',
+    headers: { Cookie: cookie, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ catalog: initial }),
+  })
+  assert.equal(invalidUrlResponse.status, 400)
+  visitor.url = 'https://visitor.example.com/invite'
+
   const updateResponse = await fetch(`${baseUrl}/api/admin/aspace/catalog`, {
     method: 'PUT',
     headers: { Cookie: cookie, 'Content-Type': 'application/json' },
@@ -72,4 +82,5 @@ test('admin can publish Aspace categories and app assignments', async (context) 
   assert.equal(publishedVisitor.name, '访客邀约')
   assert.equal(publishedVisitor.description, '一键邀约与到访通行')
   assert.equal(publishedVisitor.image, '/images/aspace-one/app-visitor.jpg')
+  assert.equal(publishedVisitor.url, 'https://visitor.example.com/invite')
 })

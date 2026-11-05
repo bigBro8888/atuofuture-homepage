@@ -645,6 +645,7 @@ function collectAspaceCatalog() {
       name: row.querySelector('[name="app-name"]').value.trim(),
       description: row.querySelector('[name="app-description"]').value.trim(),
       image: row.querySelector('[name="app-image"]').value.trim(),
+      url: row.querySelector('[name="app-url"]')?.value.trim(),
     },
   ]))
   const apps = state.aspaceCatalog.apps.map((app) => {
@@ -655,6 +656,7 @@ function collectAspaceCatalog() {
       name: profile.name || app.name,
       description: profile.description ?? app.description ?? '',
       image: profile.image ?? app.image ?? '',
+      url: profile.url ?? app.url ?? '',
     }
   })
   return { categories, apps }

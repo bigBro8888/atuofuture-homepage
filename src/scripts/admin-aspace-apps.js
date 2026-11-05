@@ -112,6 +112,11 @@ function appEditorFields(app, categories) {
       <label><span>标题</span><input name="app-name" maxlength="40" value="${esc(app.name || '')}" required /></label>
       <label><span>简介</span><input name="app-description" maxlength="160" value="${esc(app.description || '')}" placeholder="显示在卡片上的一行说明" /></label>
       <label>
+        <span>跳转链接</span>
+        <input name="app-url" type="text" maxlength="500" value="${esc(app.url || '')}" placeholder="https://… 或 /站内路径；留空使用系统默认地址" />
+      </label>
+      <p class="admin-form-section__hint">前台点击这个应用时，在新窗口打开该地址。</p>
+      <label>
         <span>所属分类（应用归属）</span>
         <select name="app-category">${categoryOptions(categories, app.category)}</select>
       </label>

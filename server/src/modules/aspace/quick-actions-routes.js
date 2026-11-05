@@ -131,12 +131,17 @@ function normalizeCatalog(value = {}) {
     if (image && !/^(?:https?:\/\/|\/(?:api\/public\/uploads\/images|images)\/)/i.test(image)) {
       throw new Error(`应用“${name}”封面图地址无效`)
     }
+    const url = String(item.url ?? fallback.url ?? '').trim().slice(0, 500)
+    if (url && !/^(?:https?:\/\/|\/(?!\/))/i.test(url)) {
+      throw new Error(`应用“${name}”跳转链接无效，请填写 http(s) 地址或以 / 开头的站内路径`)
+    }
     return {
       id: fallback.id,
       name,
       category: categoryIds.has(category) ? category : fallback.category,
       image,
       description,
+      url,
     }
   })
   return { categories, apps }
