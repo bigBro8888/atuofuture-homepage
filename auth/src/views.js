@@ -2,10 +2,12 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { authConfig } from './config.js'
 
-const cssVersion = createHash('sha1')
-  .update(readFileSync(new URL('../public/auth.css', import.meta.url)))
+const assetVersion = (file) => createHash('sha1')
+  .update(readFileSync(new URL(`../public/${file}`, import.meta.url)))
   .digest('hex')
   .slice(0, 10)
+const cssVersion = assetVersion('auth.css')
+const globeVersion = assetVersion('login-globe.js')
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -36,47 +38,6 @@ const starsMarkup = (() => {
   }).join('')
 })()
 
-const globeMarkup = `<svg class="auth-globe" viewBox="0 0 420 240" aria-hidden="true">
-  <defs>
-    <radialGradient id="globe-glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0" stop-color="#4f8cff" stop-opacity=".5"/>
-      <stop offset="1" stop-color="#4f8cff" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="globe-fill" cx="34%" cy="30%" r="75%">
-      <stop offset="0" stop-color="#c4e6ff"/>
-      <stop offset=".22" stop-color="#5b97ff"/>
-      <stop offset=".58" stop-color="#2140b0"/>
-      <stop offset="1" stop-color="#080d36"/>
-    </radialGradient>
-    <radialGradient id="globe-moon" cx="38%" cy="35%" r="70%">
-      <stop offset="0" stop-color="#fff6ea"/>
-      <stop offset="1" stop-color="#d7b28e"/>
-    </radialGradient>
-    <clipPath id="globe-clip"><circle cx="210" cy="120" r="72"/></clipPath>
-  </defs>
-  <circle cx="210" cy="120" r="118" fill="url(#globe-glow)"/>
-  <ellipse class="auth-orbit" cx="210" cy="124" rx="178" ry="50" transform="rotate(-9 210 124)"/>
-  <circle cx="210" cy="120" r="72" fill="url(#globe-fill)"/>
-  <g class="auth-globe-grid" clip-path="url(#globe-clip)">
-    <ellipse cx="210" cy="120" rx="22" ry="72"/>
-    <ellipse cx="210" cy="120" rx="48" ry="72"/>
-    <ellipse cx="210" cy="120" rx="68" ry="72"/>
-    <ellipse cx="210" cy="96" rx="68" ry="12"/>
-    <ellipse cx="210" cy="120" rx="72" ry="14"/>
-    <ellipse cx="210" cy="146" rx="66" ry="12"/>
-  </g>
-  <g class="auth-globe-nodes">
-    <circle class="auth-node auth-node--d0" cx="183" cy="98" r="2.6"/>
-    <circle class="auth-node auth-node--d1" cx="236" cy="110" r="2.2"/>
-    <circle class="auth-node auth-node--d2" cx="204" cy="146" r="2.4"/>
-    <circle class="auth-node auth-node--d3" cx="251" cy="142" r="1.8"/>
-    <path class="auth-node-link" d="M183 98 L236 110 L251 142 L204 146 Z"/>
-  </g>
-  <circle cx="210" cy="120" r="72" fill="none" stroke="#9cc8ff" stroke-opacity=".35"/>
-  <circle r="6.5" fill="url(#globe-moon)">
-    <animateMotion dur="16s" repeatCount="indefinite" rotate="0" path="M32,124 a178,50 0 1,0 356,0 a178,50 0 1,0 -356,0"/>
-  </circle>
-</svg>`
 
 function brandPanel() {
   const base = authConfig.basePath
@@ -84,14 +45,9 @@ function brandPanel() {
       <svg class="auth-stars" viewBox="0 0 600 900" preserveAspectRatio="xMidYMid slice">${starsMarkup}</svg>
       <div class="auth-side__brand">
         <img class="auth-side__logo" src="${base}/assets/artink-logo-light.png" alt="" />
-        <span class="auth-side__eyebrow"><i></i>空间智能 · SPACE INTELLIGENCE</span>
-        <p class="auth-side__headline">连接空间业务<br />让智能应用<em>触手可及</em></p>
+        <p class="auth-side__headline">让空间更智能<br />让运营<em>更简单</em></p>
       </div>
-      ${globeMarkup}
-      <div class="auth-side__quote">
-        <small>OUR MISSION</small>
-        <p>把物理空间，做成可感知、可调度、可运营的智能系统。</p>
-      </div>
+      <div class="auth-side__globe"><canvas data-login-globe></canvas></div>
     </aside>`
 }
 
@@ -114,6 +70,7 @@ function pageShell({ title, body }) {
       </section>
     </div>
   </main>
+  <script type="module" src="${base}/assets/login-globe.js?v=${globeVersion}"></script>
 </body>
 </html>`
 }
