@@ -962,6 +962,19 @@
     font-weight: 700;
   }
 
+  .site-header .site-header__actions .site-header__legacy {
+    margin-right: 1.25rem;
+  }
+
+  .site-mobile-drawer__actions .site-header__legacy {
+    justify-content: flex-start;
+    gap: 0.35rem;
+    padding: 10px 4px;
+    border: 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 14px;
+  }
+
   .site-account-menu {
     position: relative;
   }

@@ -254,6 +254,12 @@ function renderAppDownloadHeader(root) {
   `
 }
 
+function renderLegacySiteLink() {
+  return `<a class="site-header__btn site-header__btn--ghost site-header__legacy" href="https://www.atuofuture.com" target="_blank" rel="noopener">
+            <span class="material-symbols-outlined" aria-hidden="true">history</span>访问旧版
+          </a>`
+}
+
 export function renderSiteNav(activeId) {
   const root = getRootPrefix()
   if (activeId === 'app-download') return renderAppDownloadHeader(root)
@@ -267,6 +273,7 @@ export function renderSiteNav(activeId) {
           ${renderDesktopNav(activeId, root)}
         </nav>
         <div class="site-header__actions hidden md:flex items-center">
+          ${renderLegacySiteLink()}
           ${renderSiteAccount(window.ASPACE_CURRENT_USER)}
         </div>
         <button type="button" class="site-header__menu lg:hidden" id="menu-toggle" aria-label="打开菜单">
@@ -291,6 +298,7 @@ export function renderSiteNav(activeId) {
             ${renderMobileNav(activeId, root)}
           </nav>
           <div class="site-mobile-drawer__actions">
+            ${renderLegacySiteLink()}
             ${renderSiteAccount(window.ASPACE_CURRENT_USER)}
           </div>
         </div>
