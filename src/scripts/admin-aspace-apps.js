@@ -26,6 +26,37 @@ function appCountByCategory(apps, categoryId) {
   return (apps || []).filter((app) => app.category === categoryId && !app.hidden).length
 }
 
+function isCustomApp(appId) {
+  return String(appId || '').startsWith('custom-')
+}
+
+function appCardMarkup(app, categories) {
+  const category = (categories || []).find((item) => item.id === app.category)
+  return `
+                  <button type="button" class="admin-aso-plaza__card" data-aso-plaza-edit-app="${esc(app.id)}" title="编辑应用：${esc(app.name)}">
+                    <figure>
+                      ${app.image
+                        ? `<img src="${esc(app.image)}" alt="" loading="lazy" />`
+                        : `<span class="admin-aso-plaza__card-empty material-symbols-outlined">image</span>`}
+                      <em>运行中</em>
+                    </figure>
+                    <div>
+                      <strong data-aso-plaza-card-name>${esc(app.name)}</strong>
+                      <p data-aso-plaza-card-desc>${esc(app.description || app.project || '')}</p>
+                      <small data-aso-plaza-card-cat>${esc(category?.label || app.category || '未分类')}</small>
+                    </div>
+                    <span class="admin-aso-plaza__card-cta">编辑卡片</span>
+                  </button>`
+}
+
+function currentCategoryOptions() {
+  return [...document.querySelectorAll('[data-aso-plaza-cat-sync] [data-aspace-category], [data-aso-plaza-cat-body] [data-aspace-category]')]
+    .map((row) => ({
+      id: row.dataset.aspaceCategory,
+      label: row.querySelector('[name="category-label"]')?.value.trim() || row.dataset.aspaceCategory,
+    }))
+}
+
 function renderCategoryDrawer() {
   return `
     <div class="admin-aso-plaza-drawer" data-aso-plaza-cat-drawer hidden>
@@ -121,6 +152,7 @@ function appEditorFields(app, categories) {
         <select name="app-category">${categoryOptions(categories, app.category)}</select>
       </label>
       <p class="admin-form-section__hint">改归属后，左侧分类数量与前台侧栏会一起更新。</p>
+      ${isCustomApp(app.id) ? `<button type="button" class="admin-aso-plaza-app-fields__delete" data-aso-plaza-delete-app="${esc(app.id)}">删除这个应用</button>` : ''}
     </article>`
 }
 
@@ -192,7 +224,7 @@ export function renderAspaceAppsVisualMarkup(catalog) {
             <aside class="admin-aso-plaza__sidebar">
               <nav class="admin-aso-plaza__fixed-nav" aria-hidden="true">
                 <span><i class="material-symbols-outlined">star</i>我的收藏</span>
-                <span class="is-active"><i class="material-symbols-outlined">grid_view</i>全部能力<em>${apps.length}</em></span>
+                <span class="is-active"><i class="material-symbols-outlined">grid_view</i>全部能力<em data-aso-plaza-all-count>${apps.length}</em></span>
                 <span><i class="material-symbols-outlined">history</i>最近访问</span>
               </nav>
               <div class="admin-aso-plaza__divider"></div>
@@ -212,28 +244,15 @@ export function renderAspaceAppsVisualMarkup(catalog) {
               <header>
                 <div>
                   <h3>全部业务能力</h3>
-                  <p>点卡片编辑封面、标题、简介和所属分类</p>
+                  <p>点卡片编辑封面、标题、简介、跳转链接和所属分类</p>
                 </div>
+                <button type="button" class="admin-aso-plaza__add-app" data-aso-plaza-add-app>
+                  <span class="material-symbols-outlined" aria-hidden="true">add</span>
+                  添加应用
+                </button>
               </header>
               <div class="admin-aso-plaza__grid" data-aso-plaza-grid>
-                ${apps.map((app) => {
-                  const category = categories.find((item) => item.id === app.category)
-                  return `
-                  <button type="button" class="admin-aso-plaza__card" data-aso-plaza-edit-app="${esc(app.id)}" title="编辑应用：${esc(app.name)}">
-                    <figure>
-                      ${app.image
-                        ? `<img src="${esc(app.image)}" alt="" loading="lazy" />`
-                        : `<span class="admin-aso-plaza__card-empty material-symbols-outlined">image</span>`}
-                      <em>运行中</em>
-                    </figure>
-                    <div>
-                      <strong data-aso-plaza-card-name>${esc(app.name)}</strong>
-                      <p data-aso-plaza-card-desc>${esc(app.description || app.project || '')}</p>
-                      <small data-aso-plaza-card-cat>${esc(category?.label || app.category || '未分类')}</small>
-                    </div>
-                    <span class="admin-aso-plaza__card-cta">编辑卡片</span>
-                  </button>`
-                }).join('') || '<p class="admin-form-section__hint">暂无应用</p>'}
+                ${apps.map((app) => appCardMarkup(app, categories)).join('') || '<p class="admin-form-section__hint" data-aso-plaza-empty>暂无应用</p>'}
               </div>
             </div>
           </div>
@@ -350,13 +369,55 @@ function refreshAppPreview(appId) {
 }
 
 function refreshCategoryCounts() {
-  const apps = [...document.querySelectorAll('[data-aso-plaza-app-sync] [data-aspace-app]')]
+  const apps = [...document.querySelectorAll('[data-aso-plaza-app-sync] [data-aspace-app], [data-aso-plaza-app-body] [data-aspace-app]')]
   document.querySelectorAll('[data-aso-plaza-edit-cat]').forEach((button) => {
     const id = button.dataset.asoPlazaEditCat
     const count = apps.filter((row) => row.querySelector('[name="app-category"]')?.value === id).length
     const countEl = button.querySelector('[data-aso-plaza-cat-count]')
     if (countEl) countEl.textContent = String(count)
   })
+  const allCount = document.querySelector('[data-aso-plaza-all-count]')
+  if (allCount) allCount.textContent = String(document.querySelectorAll('[data-aso-plaza-grid] [data-aso-plaza-edit-app]').length)
+}
+
+function addCustomApp() {
+  const catalog = ctx.state?.aspaceCatalog
+  const grid = document.querySelector('[data-aso-plaza-grid]')
+  const sync = document.querySelector('[data-aso-plaza-app-sync]')
+  if (!catalog || !grid || !sync) return
+  const categories = currentCategoryOptions()
+  const app = {
+    id: `custom-${Date.now().toString(36)}`,
+    name: '新应用',
+    category: categories[0]?.id || '',
+    image: '',
+    description: '',
+    url: '',
+  }
+  catalog.apps = [...(catalog.apps || []), app]
+  grid.querySelector('[data-aso-plaza-empty]')?.remove()
+  grid.insertAdjacentHTML('beforeend', appCardMarkup(app, categories))
+  sync.insertAdjacentHTML('beforeend', appEditorFields(app, categories))
+  refreshCategoryCounts()
+  openAppDrawer(app.id)
+  document.querySelector('[data-aso-plaza-app-body] [name="app-name"]')?.select()
+  ctx.toast?.('已添加应用，填好资料后点击保存发布')
+}
+
+function deleteCustomApp(appId) {
+  if (!isCustomApp(appId)) return
+  const fields = document.querySelector(`[data-aspace-profile="${CSS.escape(appId)}"]`)
+  const name = fields?.querySelector('[name="app-name"]')?.value.trim() || '这个应用'
+  if (!window.confirm(`确定删除「${name}」吗？保存后前台将不再显示。`)) return
+  fields?.remove()
+  document.querySelector(`[data-aso-plaza-edit-app="${CSS.escape(appId)}"]`)?.remove()
+  if (ctx.state?.aspaceCatalog) {
+    ctx.state.aspaceCatalog.apps = (ctx.state.aspaceCatalog.apps || []).filter((app) => app.id !== appId)
+  }
+  const drawer = document.querySelector('[data-aso-plaza-app-drawer]')
+  if (drawer) drawer.hidden = true
+  refreshCategoryCounts()
+  ctx.toast?.('已删除，点击保存后同步到前台')
 }
 
 function openCatDrawer(categoryId) {
@@ -535,6 +596,17 @@ export function bindAspaceAppsVisualAdmin(helpers = {}) {
     if (event.target.closest('[data-aso-plaza-app-close]')) {
       event.preventDefault()
       closeAppDrawer()
+      return
+    }
+    if (event.target.closest('[data-aso-plaza-add-app]')) {
+      event.preventDefault()
+      addCustomApp()
+      return
+    }
+    const deleteBtn = event.target.closest('[data-aso-plaza-delete-app]')
+    if (deleteBtn) {
+      event.preventDefault()
+      deleteCustomApp(deleteBtn.dataset.asoPlazaDeleteApp)
       return
     }
     const catBtn = event.target.closest('[data-aso-plaza-edit-cat]')

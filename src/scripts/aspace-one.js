@@ -680,20 +680,20 @@ function appCard(app, index) {
         <figure class="aso-app-card__shot">
           ${locked
             ? `<span class="aso-app-card__developing-art">${icon(app.icon || 'construction')}<b>开发中</b><small>COMING SOON</small></span>`
-            : `<img src="${app.image}" alt="${app.alt}" width="640" height="400" loading="eager" decoding="async" fetchpriority="${index < 6 ? 'high' : 'auto'}" />`}
+            : `<img src="${escapeHtml(app.image)}" alt="${escapeHtml(app.alt || '')}" width="640" height="400" loading="eager" decoding="async" fetchpriority="${index < 6 ? 'high' : 'auto'}" />`}
           <span class="aso-status${locked ? ' aso-status--idle' : ''}"><i></i>${locked ? '开发中' : '运行中'}</span>
           <button class="aso-app-favorite${isFavorite ? ' is-active' : ''}" type="button" data-favorite-app="${app.id}" aria-label="${isFavorite ? '取消收藏' : '收藏'}${escapeHtml(app.name)}" aria-pressed="${isFavorite}">
             ${icon('star')}
           </button>
         </figure>
         <div class="aso-app-card__copy">
-          <h3>${app.name}</h3>
+          <h3>${escapeHtml(app.name)}</h3>
           ${locked
-            ? `<p class="aso-app-card__desc">${app.desc}</p>`
-            : `<p data-app-project>${app.project}</p>
+            ? `<p class="aso-app-card__desc">${escapeHtml(app.desc || '')}</p>`
+            : `<p data-app-project>${escapeHtml(app.project || '')}</p>
           <div class="aso-app-card__meta">
             <span class="aso-app-card__category">${icon(categoryIcon)} ${categoryLabel}</span>
-            <small>最近使用 · ${app.time}</small>
+            ${app.time ? `<small>最近使用 · ${escapeHtml(app.time)}</small>` : ''}
             ${app.warning ? `<span class="aso-status aso-status--warn"><i></i>${app.warning}</span>` : ''}
           </div>`}
         </div>
@@ -2320,6 +2320,22 @@ async function loadCatalog() {
       }
       if (meta.url) app.href = meta.url
     })
+    const builtInIds = new Set(apps.map((app) => app.id))
+    data.catalog.apps
+      .filter((meta) => !builtInIds.has(meta.id) && String(meta.id || '').startsWith('custom-'))
+      .forEach((meta) => {
+        apps.push({
+          id: meta.id,
+          name: meta.name,
+          category: configuredIds.has(meta.category) ? meta.category : (appCategories[0]?.[0] || ''),
+          project: meta.description || '',
+          desc: meta.description || '',
+          time: '',
+          image: meta.image || '/images/aspace-one/showcase-space.jpg',
+          alt: `${meta.name}封面`,
+          href: meta.url || '',
+        })
+      })
   } catch {
     // 后台栏目配置不可用时继续使用页面内置配置。
   }

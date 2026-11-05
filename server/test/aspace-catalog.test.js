@@ -83,4 +83,27 @@ test('admin can publish Aspace categories and app assignments', async (context) 
   assert.equal(publishedVisitor.description, '一键邀约与到访通行')
   assert.equal(publishedVisitor.image, '/images/aspace-one/app-visitor.jpg')
   assert.equal(publishedVisitor.url, 'https://visitor.example.com/invite')
+
+  const putCatalog = (catalog) => fetch(`${baseUrl}/api/admin/aspace/catalog`, {
+    method: 'PUT',
+    headers: { Cookie: cookie, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ catalog }),
+  })
+  const badIdResponse = await putCatalog({ ...published, apps: [...published.apps, { id: 'hack', name: 'x', category: 'meeting' }] })
+  assert.equal(badIdResponse.status, 400)
+
+  const customApp = { id: 'custom-abc123', name: '新应用', category: 'meeting', image: '', description: '自定义', url: '/custom-app/' }
+  assert.equal((await putCatalog({ ...published, apps: [...published.apps, customApp] })).status, 200)
+  const withCustom = (await (await fetch(`${baseUrl}/api/public/aspace/catalog`)).json()).catalog
+  assert.equal(withCustom.apps.length, 23)
+  assert.deepEqual(withCustom.apps.at(-1), customApp)
+
+  assert.equal((await putCatalog({ ...withCustom, apps: withCustom.apps.filter((item) => item.id !== customApp.id) })).status, 200)
+  const afterDelete = (await (await fetch(`${baseUrl}/api/public/aspace/catalog`)).json()).catalog
+  assert.equal(afterDelete.apps.length, 22)
+
+  const builtInRemoved = withCustom.apps.filter((item) => item.id !== 'screen')
+  assert.equal((await putCatalog({ ...withCustom, apps: builtInRemoved })).status, 200)
+  const builtInKept = (await (await fetch(`${baseUrl}/api/public/aspace/catalog`)).json()).catalog
+  assert.ok(builtInKept.apps.some((item) => item.id === 'screen'))
 })

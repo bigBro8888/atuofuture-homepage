@@ -20,6 +20,8 @@ const validAppIds = new Set([
   'digital-twin',
 ])
 const visitorCookie = 'aso_portal_visitor'
+const CUSTOM_APP_ID = /^custom-[a-z0-9-]{1,40}$/
+const MAX_CUSTOM_APPS = 60
 
 function visitorId(request, response) {
   const current = String(request.cookies?.[visitorCookie] || '')
@@ -121,11 +123,12 @@ function normalizeCatalog(value = {}) {
     }
   })
   const categoryIds = new Set(categories.map((item) => item.id))
-  const appSource = new Map((Array.isArray(value.apps) ? value.apps : []).map((item) => [String(item?.id || ''), item]))
-  const apps = defaultAspaceCatalog.apps.map((fallback) => {
-    const item = appSource.get(fallback.id) || {}
+  const appItems = Array.isArray(value.apps) ? value.apps : []
+  const appSource = new Map(appItems.map((item) => [String(item?.id || ''), item]))
+  const normalizeApp = (item, fallback) => {
     const category = String(item.category || fallback.category)
     const name = String(item.name ?? fallback.name).trim().slice(0, 40) || fallback.name
+    if (!name) throw new Error('应用标题不能为空')
     const description = String(item.description ?? fallback.description ?? '').trim().slice(0, 160)
     const image = String(item.image ?? fallback.image ?? '').trim().slice(0, 500)
     if (image && !/^(?:https?:\/\/|\/(?:api\/public\/uploads\/images|images)\/)/i.test(image)) {
@@ -143,6 +146,17 @@ function normalizeCatalog(value = {}) {
       description,
       url,
     }
+  }
+  const apps = defaultAspaceCatalog.apps.map((fallback) => normalizeApp(appSource.get(fallback.id) || {}, fallback))
+  const builtInIds = new Set(apps.map((app) => app.id))
+  const customIds = new Set()
+  appItems.forEach((item) => {
+    const id = String(item?.id || '')
+    if (builtInIds.has(id) || customIds.has(id)) return
+    if (!CUSTOM_APP_ID.test(id)) throw new Error('新增应用编号格式无效')
+    if (customIds.size >= MAX_CUSTOM_APPS) throw new Error(`最多新增 ${MAX_CUSTOM_APPS} 个应用`)
+    customIds.add(id)
+    apps.push(normalizeApp(item, { id, name: '', category: categories[0]?.id || '', image: '', description: '', url: '' }))
   })
   return { categories, apps }
 }

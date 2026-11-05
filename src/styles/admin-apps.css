@@ -5171,6 +5171,35 @@ body.admin-aspace-apps-fullscreen { overflow: hidden; }
   display: grid;
   gap: 12px;
 }
+.admin-aso-plaza__add-app {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #1769ff;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(23, 105, 255, .24);
+}
+.admin-aso-plaza__add-app:hover { background: #0f5ae6; }
+.admin-aso-plaza__add-app .material-symbols-outlined { font-size: 18px; }
+.admin-aso-plaza-app-fields__delete {
+  justify-self: start;
+  padding: 7px 12px;
+  border: 1px solid #f3c4c4;
+  border-radius: 8px;
+  background: #fff;
+  color: #d92d20;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.admin-aso-plaza-app-fields__delete:hover { background: #fff3f2; }
 .admin-aso-plaza-cat-fields__order {
   display: flex;
   align-items: center;
