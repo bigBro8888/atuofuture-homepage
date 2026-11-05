@@ -40,6 +40,7 @@ button { cursor: pointer; }
 }
 
 /* 登录页：与前台统一登录（auth/public/auth.css）保持同一视觉 */
+body.admin-body:has(> .admin-signin:not([hidden])) { padding-top: 0; }
 .admin-signin { min-height: 100svh; display: grid; place-items: center; padding: 40px 24px; background: radial-gradient(900px 520px at 0% 0%, rgba(255,138,76,.1), transparent 60%), radial-gradient(900px 600px at 100% 100%, rgba(26,86,219,.12), transparent 60%), #f4f5f7; }
 .admin-signin__box { display: grid; width: min(1000px, 100%); min-height: 606px; grid-template-columns: 1.04fr 1fr; overflow: hidden; border-radius: 22px; background: #fff; box-shadow: 0 2px 6px rgba(15,23,42,.05), 0 24px 60px -18px rgba(15,23,42,.28), 0 48px 90px -40px rgba(26,86,219,.35); }
 .admin-signin__side { position: relative; display: flex; flex-direction: column; align-items: center; padding: 56px 36px 0; overflow: hidden; color: #fff; background: radial-gradient(460px 320px at 96% -4%, rgba(255,106,43,.18), transparent 64%), radial-gradient(520px 420px at 4% 96%, rgba(47,107,255,.26), transparent 64%), radial-gradient(420px 360px at 78% 62%, rgba(112,82,214,.16), transparent 70%), linear-gradient(162deg, #04061a 0%, #0a0f33 52%, #121a4d 100%); }
