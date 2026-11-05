@@ -1,5 +1,5 @@
 import { renderHomePage } from '../lib/home-page-render.js'
-import { heroBgOpacity } from '../lib/hero-bg-opacity.js'
+import { heroMaskTransparency } from '../lib/hero-mask.js'
 
 const HOME_SECTIONS = [
   { id: 'hero', label: '首屏轮播' },
@@ -281,31 +281,26 @@ function applyVisualImage(path, url) {
       }
       if (img) img.src = safeUrl
       if (target.matches('.hpi-edit-bg')) {
-        const media = bgLayerOf(target)
+        const media = target.parentElement
         if (media) media.style.backgroundImage = `url("${safeUrl}")`
         target.textContent = target.title?.includes('背景') ? '更换背景' : target.title?.includes('封面') ? '更换封面' : '更换配图'
       }
     }
   }
   if (target?.matches('.hpi-edit-bg') && safeUrl) {
-    const mediaHost = bgLayerOf(target)
+    const mediaHost = target.parentElement
     if (mediaHost) mediaHost.style.backgroundImage = `url("${safeUrl}")`
   }
 }
 
-function bgLayerOf(editButton) {
-  const media = editButton?.parentElement
-  return media?.querySelector(':scope > [data-home-hero-bg]') || media
-}
-
-function previewHeroOpacity(input) {
+function previewHeroMask(input) {
   const label = input.closest('[data-home-hero-opacity]')
   if (!label) return
-  const percent = heroBgOpacity(input.value)
+  const percent = heroMaskTransparency(input.value)
   const output = label.querySelector('output')
   if (output) output.textContent = `${percent}%`
-  const layer = document.querySelector(`#home-visual-hero [data-home-hero-bg="${label.dataset.homeHeroOpacity}"]`)
-  if (layer) layer.style.opacity = String(percent / 100)
+  const mask = document.querySelector(`#home-visual-hero [data-home-hero-mask="${label.dataset.homeHeroOpacity}"]`)
+  if (mask) mask.style.opacity = String((100 - percent) / 100)
 }
 
 function openImageModal(imageEl) {
@@ -486,7 +481,7 @@ export function bindHomeVisualAdmin(helpers) {
   })
 
   editor.addEventListener('input', (event) => {
-    if (event.target.matches('[data-home-hero-opacity] input[type="range"]')) previewHeroOpacity(event.target)
+    if (event.target.matches('[data-home-hero-opacity] input[type="range"]')) previewHeroMask(event.target)
   })
 
   editor.addEventListener('change', async (event) => {

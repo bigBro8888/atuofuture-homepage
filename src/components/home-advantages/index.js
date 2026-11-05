@@ -1,5 +1,5 @@
 import { ADVANTAGE_SLIDES } from '../../data/home-advantages.js'
-import { heroBgOpacityStyle } from '../../lib/hero-bg-opacity.js'
+import { heroMaskStyle } from '../../lib/hero-mask.js'
 import '../../styles/home-advantages.css'
 
 function escapeHtml(value) {
@@ -33,7 +33,7 @@ function renderSlide(slide, index) {
   const fetchPriority = isFirst ? 'high' : 'low'
   const dwell = slide.dwellMs || ''
   const ariaLabel = slide.label ? `${slide.label}：${slide.title}` : slide.title
-  const mediaStyle = heroBgOpacityStyle(slide.backgroundOpacity)
+  const maskStyle = heroMaskStyle(slide.maskTransparency)
 
   return `
 <article
@@ -44,7 +44,7 @@ function renderSlide(slide, index) {
   aria-hidden="${isFirst ? 'false' : 'true'}"
   aria-label="${escapeHtml(ariaLabel)}"
 >
-  <div class="sm-hero__media ha-media"${mediaStyle ? ` style="${mediaStyle}"` : ''}>
+  <div class="sm-hero__media ha-media">
     <img
       class="ha-media__img"
       src="${escapeHtml(slide.background)}"
@@ -56,7 +56,7 @@ function renderSlide(slide, index) {
       fetchpriority="${fetchPriority}"
     />
   </div>
-  <div class="sm-hero__gradient ha-mask" aria-hidden="true"></div>
+  <div class="sm-hero__gradient ha-mask" aria-hidden="true"${maskStyle ? ` style="${maskStyle}"` : ''}></div>
   <div class="sm-hero__content ha-content max-w-max-width mx-auto px-margin-desktop">
     <div class="sm-hero__copy ha-copy">
       ${renderKicker(slide)}

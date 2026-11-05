@@ -4260,12 +4260,6 @@ body.admin-home-fullscreen { overflow: hidden; }
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
-.admin-vedit--home .admin-home-hero__bg {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-}
 .admin-vedit--home .admin-home-hero__stack {
   display: grid;
   gap: 0;

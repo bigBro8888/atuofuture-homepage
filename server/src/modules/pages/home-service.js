@@ -161,7 +161,7 @@ function cleanUrl(value, fallback = '') {
   return parsed.toString().slice(0, 1000)
 }
 
-function cleanPercent(value, fallback = 100) {
+function cleanPercent(value, fallback = 0) {
   if (value === '' || value == null) return fallback
   const number = Number(value)
   if (!Number.isFinite(number)) return fallback
@@ -258,7 +258,7 @@ export function validateHomeContent(value = {}) {
       actionLabel: cleanText(item.actionLabel, fallback.actionLabel, 40),
       actionHref: cleanUrl(item.actionHref, fallback.actionHref),
       background: cleanUrl(item.background, fallback.background),
-      backgroundOpacity: cleanPercent(item.backgroundOpacity, 100),
+      maskTransparency: cleanPercent(item.maskTransparency, 0),
     })),
     banner: {
       title: cleanText(banner.title, defaultHomeContent.banner.title, 80),
