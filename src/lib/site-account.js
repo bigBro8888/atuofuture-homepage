@@ -154,7 +154,8 @@ export async function startSiteLogin({ forceLogin = true } = {}) {
   const challenge = base64Url(await sha256(verifier))
   const state = base64Url(crypto.getRandomValues(new Uint8Array(24)))
   const nonce = base64Url(crypto.getRandomValues(new Uint8Array(24)))
-  sessionStorage.setItem(PENDING_KEY, JSON.stringify({ verifier, state, nonce }))
+  const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`
+  sessionStorage.setItem(PENDING_KEY, JSON.stringify({ verifier, state, nonce, returnTo }))
   const params = {
     client_id: 'aspace-one',
     redirect_uri: `${window.location.origin}/aspace-one/auth/callback`,

@@ -1713,6 +1713,13 @@ async function readPortalUser(accessToken) {
   return response.json()
 }
 
+function safeReturnPath(value) {
+  const path = String(value || '')
+  if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\')) return '/aspace-one/'
+  if (path.replace(/[?#].*$/, '').replace(/\/+$/, '') === '/aspace-one/auth/callback') return '/aspace-one/'
+  return path
+}
+
 async function initPortalAuth() {
   const callbackPath = window.location.pathname.replace(/\/+$/, '') === '/aspace-one/auth/callback'
   if (callbackPath) {
@@ -1740,7 +1747,7 @@ async function initPortalAuth() {
       writePortalTokens(tokens)
       sessionStorage.removeItem('aspace-one-oidc-pending')
       window.ASPACE_CURRENT_USER = { id: user.sub, ...user }
-      window.location.replace('/aspace-one/')
+      window.location.replace(safeReturnPath(pending.returnTo))
       return
     } catch (error) {
       sessionStorage.removeItem('aspace-one-oidc-pending')
@@ -1765,7 +1772,8 @@ async function createPortalLoginUrl({ forceLogin = true } = {}) {
   const challenge = base64Url(await sha256(verifier))
   const state = base64Url(crypto.getRandomValues(new Uint8Array(24)))
   const nonce = base64Url(crypto.getRandomValues(new Uint8Array(24)))
-  sessionStorage.setItem('aspace-one-oidc-pending', JSON.stringify({ verifier, state, nonce }))
+  const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`
+  sessionStorage.setItem('aspace-one-oidc-pending', JSON.stringify({ verifier, state, nonce, returnTo }))
   // 主动登录时强制出现登录页，避免沿用统一认证侧已有会话直接静默回跳
   const params = {
     client_id: 'aspace-one',
