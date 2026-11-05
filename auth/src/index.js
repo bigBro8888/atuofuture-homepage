@@ -77,7 +77,10 @@ async function exchangeDingTalkCode(code) {
     headers: { 'x-acs-dingtalk-access-token': token.accessToken },
   })
   const profile = await profileResponse.json().catch(() => ({}))
-  if (!profileResponse.ok) throw new Error(profile.message || '无法读取钉钉用户信息')
+  if (!profileResponse.ok) {
+    console.error('DingTalk users/me failed', profileResponse.status, profile.code, profile.accessdenieddetail || '')
+    throw new Error(profile.message || '无法读取钉钉用户信息')
+  }
   const externalId = String(profile.unionId || profile.unionid || profile.openId || '')
   if (!externalId) throw new Error('钉钉未返回稳定用户标识')
   return {
@@ -251,7 +254,8 @@ export async function createAuthService() {
       authorizeUrl.searchParams.set('redirect_uri', authUrl('/callback/dingtalk'))
       authorizeUrl.searchParams.set('response_type', 'code')
       authorizeUrl.searchParams.set('client_id', authConfig.dingtalk.clientId)
-      authorizeUrl.searchParams.set('scope', 'openid')
+      // 委托权限点需写进 scope，用户令牌才能调用 /v1.0/contact/users/me
+      authorizeUrl.searchParams.set('scope', 'openid Contact.User.Read')
       authorizeUrl.searchParams.set('prompt', 'consent')
       authorizeUrl.searchParams.set('state', state)
       response.redirect(authorizeUrl.toString())
