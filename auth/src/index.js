@@ -260,6 +260,7 @@ export async function createAuthService() {
     }
   })
 
+  // 交互 cookie 只在 /interaction/:uid 路径下发送，回调需先转回该路径再读取授权会话
   app.get(`${authConfig.basePath}/callback/dingtalk`, async (request, response, next) => {
     try {
       pruneDingTalkStates()
@@ -267,11 +268,27 @@ export async function createAuthService() {
       dingTalkStates.delete(String(request.query.state || ''))
       if (!state || state.expiresAt < Date.now()) throw new Error('钉钉登录状态已过期，请重新发起登录')
       if (request.query.error) throw new Error(String(request.query.error_description || request.query.error))
-      const interaction = await provider.interactionDetails(request, response)
-      if (interaction.uid !== state.uid) throw new Error('钉钉登录状态与当前授权请求不匹配')
       const code = String(request.query.authCode || request.query.code || '')
       if (!code) throw new Error('钉钉未返回授权码')
-      const profile = await exchangeDingTalkCode(code)
+      const ticket = randomUUID()
+      dingTalkStates.set(ticket, { uid: state.uid, code, expiresAt: Date.now() + 2 * 60 * 1000 })
+      response.redirect(303, `${authConfig.basePath}/interaction/${encodeURIComponent(state.uid)}/dingtalk/complete?ticket=${ticket}`)
+    } catch (error) {
+      next(error)
+    }
+  })
+
+  app.get(`${authConfig.basePath}/interaction/:uid/dingtalk/complete`, async (request, response, next) => {
+    try {
+      pruneDingTalkStates()
+      const ticket = dingTalkStates.get(String(request.query.ticket || ''))
+      dingTalkStates.delete(String(request.query.ticket || ''))
+      if (!ticket?.code || ticket.expiresAt < Date.now()) throw new Error('钉钉登录状态已过期，请重新发起登录')
+      const interaction = await provider.interactionDetails(request, response)
+      if (interaction.uid !== ticket.uid || request.params.uid !== ticket.uid) {
+        throw new Error('钉钉登录状态与当前授权请求不匹配')
+      }
+      const profile = await exchangeDingTalkCode(ticket.code)
       const user = await upsertFederatedUser('dingtalk', profile.externalId, profile)
       await addAuthAudit('auth.login.dingtalk', { userId: user.id })
       await provider.interactionFinished(
