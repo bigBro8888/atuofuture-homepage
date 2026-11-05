@@ -78,7 +78,8 @@ async function exchangeDingTalkCode(code) {
   })
   const profile = await profileResponse.json().catch(() => ({}))
   if (!profileResponse.ok) {
-    console.error('DingTalk users/me failed', profileResponse.status, profile.code, profile.accessdenieddetail || '')
+    console.error('DingTalk users/me failed', profileResponse.status, profile.code, profile.accessdenieddetail || '',
+      'token fields:', Object.keys(token).join(','), 'corpId:', token.corpId || '-', 'requestid:', profile.requestid || '-')
     throw new Error(profile.message || '无法读取钉钉用户信息')
   }
   const externalId = String(profile.unionId || profile.unionid || profile.openId || '')
@@ -254,8 +255,8 @@ export async function createAuthService() {
       authorizeUrl.searchParams.set('redirect_uri', authUrl('/callback/dingtalk'))
       authorizeUrl.searchParams.set('response_type', 'code')
       authorizeUrl.searchParams.set('client_id', authConfig.dingtalk.clientId)
-      // 委托权限点需写进 scope，用户令牌才能调用 /v1.0/contact/users/me
-      authorizeUrl.searchParams.set('scope', 'openid Contact.User.Read')
+      // 钉钉只接受 openid 或 openid corpid；带 corpid 时用户需选择组织，企业内部应用只允许本组织成员
+      authorizeUrl.searchParams.set('scope', 'openid corpid')
       authorizeUrl.searchParams.set('prompt', 'consent')
       authorizeUrl.searchParams.set('state', state)
       response.redirect(authorizeUrl.toString())
