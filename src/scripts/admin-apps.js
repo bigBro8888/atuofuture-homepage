@@ -1,4 +1,5 @@
 import { ADMIN_SITEMAP } from '../data/admin-sitemap.js'
+import { scheduleBrandFonts } from '../lib/brand-fonts.js'
 import { uploadAdminImage } from '../lib/admin-image-upload.js'
 import { bindNewsRichEditor, ensureRemoteImageOnOss, ingestEditorImages, ingestEditorVideos, newsRichEditorMarkup, readNewsRichContent } from './admin-news-rich.js'
 
@@ -2442,6 +2443,8 @@ document.querySelector('[data-sitemap]')?.addEventListener('click', (event) => {
   const button = event.target.closest('[data-jump]')
   if (button) openTab(button.dataset.jump)
 })
+scheduleBrandFonts()
+
 window.addEventListener('hashchange', () => {
   const name = location.hash.replace('#', '')
   if (name && titles[name]) openTab(name, { skipHash: true })

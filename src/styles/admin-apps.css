@@ -13,7 +13,7 @@ body.admin-body {
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url('/assets/fonts/material-symbols-outlined.woff2') format('woff2');
+  src: url('https://atuofuture.oss-cn-shanghai.aliyuncs.com/website/static/assets/fonts/material-symbols-outlined.woff2') format('woff2');
 }
 body { margin: 0; min-width: 320px; }
 button, input, textarea, select { font: inherit; }

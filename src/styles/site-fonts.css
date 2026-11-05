@@ -2,39 +2,10 @@
  * 全站正文字体：阿里巴巴普惠体 3.0（永久免费商用）
  * 图标字体：Material Symbols Outlined（Google，可自由使用）
  * 不嵌入/不分发 Inter、Geist、PingFang、Segoe、钉钉进步体等受限或未授权字体文件。
+ *
+ * 普惠体单个字重约 5MB，不在 CSS 里声明 @font-face：首屏先用系统字体，
+ * 由 src/lib/brand-fonts.js 在页面加载完后从 OSS 后台加载并切换。
  */
-
-@font-face {
-  font-family: 'Alibaba PuHuiTi 3.0';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/assets/fonts/AlibabaPuHuiTi-3-55-Regular.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Alibaba PuHuiTi 3.0';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/assets/fonts/AlibabaPuHuiTi-3-65-Medium.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Alibaba PuHuiTi 3.0';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('/assets/fonts/AlibabaPuHuiTi-3-85-Bold.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Alibaba PuHuiTi 3.0';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/assets/fonts/AlibabaPuHuiTi-3-85-Bold.woff2') format('woff2');
-}
 
 :root {
   --font-sans: 'Alibaba PuHuiTi 3.0', 'Alibaba PuHuiTi', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;

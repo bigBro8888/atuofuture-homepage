@@ -88,7 +88,8 @@ cd /var/www/mydoc/atuofuture && sudo -u atuoapp npm run build
 
 | 改动范围 | 操作 |
 |---|---|
-| 仅 `src/` 前端页面、样式、脚本；`public/` 静态资源 | `npm run build` 即可，**不必**重启 |
+| 仅 `src/` 前端页面、样式、脚本 | `npm run build` 即可，**不必**重启 |
+| `public/images`、`public/assets/hero`、`public/assets/fonts` 新增或替换文件 | `npm run build` 后再执行 `sudo -u atuoapp node scripts/sync-static-to-oss.mjs --internal`，否则线上会 404（这几个目录由 nginx 302 到 OSS） |
 | `server/`、API、环境相关后端逻辑 | build 后执行 `systemctl restart atuofuture-home` |
 | nginx 配置 | 一般不动；若改了再 `nginx -t && systemctl reload nginx` |
 
@@ -158,7 +159,8 @@ sudo -u atuoapp npm run build
 3. `scp` 改动文件到 `root@47.103.102.65:/tmp/...`
 4. `ssh`：`install -o atuoapp -g atuoapp -m 644` 覆盖到 `/var/www/mydoc/atuofuture/...`
 5. `cd /var/www/mydoc/atuofuture && sudo -u atuoapp npm run build`
-6. 改了 `server/` → `systemctl restart atuofuture-home`
-7. 回复用户：线上地址 + **普通 F5** + commit（如有）
+6. 动了 `public/images`、`public/assets/hero`、`public/assets/fonts` → `sudo -u atuoapp node scripts/sync-static-to-oss.mjs --internal`
+7. 改了 `server/` → `systemctl restart atuofuture-home`
+8. 回复用户：线上地址 + **普通 F5** + commit（如有）
 
 规则补充见：`.cursor/rules/auto-push-github.mdc`。

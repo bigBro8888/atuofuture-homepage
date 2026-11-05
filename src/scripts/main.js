@@ -17,6 +17,7 @@ import { loadAndApplyHomeContent } from './home-content.js'
 import { loadAndApplyAboutContent } from './about-page.js'
 import { loadAndApplySiteSettings } from '../services/site-settings-api.js'
 import { initSiemensHome } from './home-siemens.js'
+import { scheduleBrandFonts } from '../lib/brand-fonts.js'
 
 function initTokenLinks() {
   document.querySelectorAll('[data-token-link]').forEach((el) => {
@@ -854,6 +855,7 @@ function bootstrap() {
   initTokenLinks()
   initScrollReveal()
   initBackToTop()
+  scheduleBrandFonts()
 }
 
 bootstrap()

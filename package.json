@@ -13,6 +13,7 @@
     "start:api": "node server/src/index.js",
     "start:auth": "node auth/src/index.js",
     "build": "vite build",
+    "sync:static-oss": "node scripts/sync-static-to-oss.mjs",
     "preview": "vite preview",
     "test": "node --test server/test/*.test.js"
   },
