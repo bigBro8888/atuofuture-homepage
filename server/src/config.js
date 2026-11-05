@@ -18,6 +18,14 @@ export const config = {
   versionSourceUrl: process.env.VERSION_SOURCE_URL || 'https://file.atuofuture.com/release/version',
   releaseBaseUrl: process.env.RELEASE_BASE_URL || 'https://file.atuofuture.com/release',
   versionCacheMs: Number(process.env.VERSION_CACHE_MS || 120000),
+  /** 后台钉钉登录：作为统一认证的 website-admin 客户端，服务端直连 Auth 换取令牌 */
+  unifiedAuth: {
+    internalUrl: String(process.env.AUTH_INTERNAL_URL
+      || `http://127.0.0.1:${process.env.AUTH_PORT || 8788}/${String(process.env.AUTH_BASE_PATH || 'auth').replace(/^\/+|\/+$/g, '')}`).replace(/\/$/, ''),
+    issuer: String(process.env.AUTH_ISSUER || '').replace(/\/$/, ''),
+    portalOrigins: String(process.env.AUTH_PORTAL_ORIGINS || process.env.AUTH_PORTAL_ORIGIN || 'http://127.0.0.1:5173')
+      .split(',').map((origin) => origin.trim().replace(/\/$/, '')).filter(Boolean),
+  },
   /** Aspace One → AI 画报统一登录：与画报服务 ASO_SSO_SECRET 保持一致 */
   posterSsoSecret: process.env.ASO_POSTER_SSO_SECRET || process.env.ASO_SSO_SECRET || '',
   posterAppOrigin: (process.env.POSTER_APP_ORIGIN || 'http://47.103.102.65:5173').replace(/\/$/, ''),

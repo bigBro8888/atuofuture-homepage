@@ -42,6 +42,14 @@ export const authConfig = {
     response_types: ['code'],
     grant_types: ['authorization_code', 'refresh_token'],
     token_endpoint_auth_method: 'none',
+  }, {
+    client_id: 'website-admin',
+    client_name: '官网后台',
+    redirect_uris: portalOrigins.map((origin) => `${origin}/api/admin/oidc/callback`),
+    post_logout_redirect_uris: portalOrigins.map((origin) => `${origin}/admin/`),
+    response_types: ['code'],
+    grant_types: ['authorization_code'],
+    token_endpoint_auth_method: 'none',
   }]),
   dingtalk: {
     clientId: String(process.env.AUTH_DINGTALK_CLIENT_ID || '').trim(),

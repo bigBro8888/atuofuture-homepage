@@ -26,6 +26,7 @@ import { alignHelpWithCatalog } from '../lib/aspace-help-categories.js'
 import { bindAspaceHelpVisualAdmin, flushAspaceHelpVisualDrawer, renderAspaceHelpPageVisualMarkup } from './admin-aspace-help.js'
 import { bindContentCenter, contentKindFromHash, showContentKind } from './admin-content.js'
 import { createAdminPresence } from './admin-presence.js'
+import { bindAdminSignin, mountAdminSignin, unmountAdminSignin } from './admin-signin.js'
 import { getProductBySlug } from '../data/hardware-catalog.js'
 
 const API = '/api/admin'
@@ -210,11 +211,12 @@ function renderSitemap() {
 
 function showAdmin(user) {
   state.user = user
+  unmountAdminSignin()
   document.querySelector('[data-login-view]').hidden = true
   document.querySelector('[data-admin-view]').hidden = false
   document.querySelector('[data-user-name]').textContent = user.name
   document.querySelector('[data-user-role]').textContent = roleNames[user.role] || user.role
-  document.querySelector('[data-user-avatar]').textContent = (user.name || user.email).slice(0, 1).toUpperCase()
+  document.querySelector('[data-user-avatar]').textContent = (user.name || user.email || '管').slice(0, 1).toUpperCase()
   document.querySelectorAll('[data-super-only]').forEach((element) => { element.hidden = user.role !== 'super_admin' })
   renderSitemap()
   const initial = location.hash.replace('#', '')
@@ -227,6 +229,7 @@ function showAdmin(user) {
 function showLogin() {
   document.querySelector('[data-login-view]').hidden = false
   document.querySelector('[data-admin-view]').hidden = true
+  mountAdminSignin()
 }
 
 async function loadOverview() {
@@ -2382,29 +2385,56 @@ function openUserDrawer(user) {
   const drawer = document.querySelector('[data-user-drawer]')
   const form = document.querySelector('[data-user-edit-form]')
   if (!drawer || !form || !user) return
+  const dingtalk = Boolean(user.authSub)
+  const pending = dingtalk && !user.role
   form.elements.id.value = user.id || ''
-  form.elements.account.value = user.email || ''
-  form.elements.role.value = user.role || 'editor'
+  form.elements.account.value = dingtalk ? `${user.name || '钉钉用户'}（钉钉）` : (user.email || '')
+  form.elements.role.value = user.role || ''
+  form.elements.enabled.value = String(pending ? true : Boolean(user.enabled))
   form.elements.password.value = ''
   form.elements.password.type = 'password'
+  form.querySelector('[data-user-account-label]').textContent = dingtalk ? '钉钉账号' : '用户账号'
+  form.querySelector('[data-user-password-field]').hidden = dingtalk
+  form.querySelector('[data-user-password-hint]').hidden = dingtalk
+  form.querySelector('[data-user-dingtalk-hint]').hidden = !dingtalk
+  form.querySelector('[data-user-remove]').hidden = !dingtalk || user.id === state.user?.id
+  form.querySelector('button[type="submit"]').textContent = pending ? '授权并启用' : '保存修改'
+  document.getElementById('admin-user-drawer-title').textContent = pending ? '授权钉钉账号' : '编辑账号'
   const toggle = form.querySelector('[data-password-toggle] .material-symbols-outlined')
   if (toggle) toggle.textContent = 'visibility'
   drawer.hidden = false
+}
+
+function userStatus(user) {
+  if (user.authSub && !user.role) return { label: '待授权', tone: 'pending' }
+  if (!user.enabled) return { label: '已停用', tone: 'off' }
+  return { label: '正常', tone: 'ok' }
 }
 
 async function loadUsers() {
   try {
     const { users } = await api('/users')
     state.adminUsers = users
-    document.querySelector('[data-user-list]').innerHTML = users.map((user) => `
-      <div class="admin-user-item" data-user-id="${escapeHtml(user.id)}">
+    const ordered = [...users].sort((a, b) => Number(Boolean(b.authSub && !b.role)) - Number(Boolean(a.authSub && !a.role)))
+    document.querySelector('[data-user-list]').innerHTML = ordered.map((user) => {
+      const dingtalk = Boolean(user.authSub)
+      const status = userStatus(user)
+      const title = dingtalk ? (user.name || '钉钉用户') : user.email
+      const meta = [
+        dingtalk ? '钉钉' : '账号密码',
+        user.role ? (roleNames[user.role] || user.role) : '未分配角色',
+        dingtalk && user.lastLoginAt ? `最近登录 ${dateTime(user.lastLoginAt)}` : `创建 ${dateTime(user.createdAt)}`,
+      ]
+      return `
+      <div class="admin-user-item${status.tone === 'pending' ? ' is-pending' : ''}" data-user-id="${escapeHtml(user.id)}">
+        <span class="admin-user-item__avatar${dingtalk ? ' is-dingtalk' : ''}">${user.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" alt="" />` : escapeHtml(String(title || '?').slice(0, 1).toUpperCase())}</span>
         <div>
-          <strong>${escapeHtml(user.email)}</strong>
-          <small>${escapeHtml(roleNames[user.role] || user.role)} · ${dateTime(user.createdAt)}${user.passwordUpdatedAt ? ` · 密码更新 ${dateTime(user.passwordUpdatedAt)}` : ''}</small>
+          <strong>${escapeHtml(title)} <em class="admin-user-status is-${status.tone}">${status.label}</em></strong>
+          <small>${meta.map(escapeHtml).join(' · ')}</small>
         </div>
-        <button type="button" data-user-edit="${escapeHtml(user.id)}">编辑</button>
-      </div>
-    `).join('')
+        <button type="button" data-user-edit="${escapeHtml(user.id)}">${status.tone === 'pending' ? '授权' : '编辑'}</button>
+      </div>`
+    }).join('')
   } catch (error) { toast(error.message, true) }
 }
 
@@ -2417,11 +2447,12 @@ async function loadAudit() {
   } catch (error) { toast(error.message, true) }
 }
 
+bindAdminSignin()
 document.querySelector('[data-login-form]').addEventListener('submit', async (event) => {
   event.preventDefault()
   const form = event.currentTarget
   const message = document.querySelector('[data-login-message]')
-  const button = form.querySelector('button')
+  const button = form.querySelector('button[type="submit"]')
   button.disabled = true
   message.textContent = ''
   try {
@@ -2430,7 +2461,9 @@ document.querySelector('[data-login-form]').addEventListener('submit', async (ev
     form.reset()
     showAdmin(user)
   } catch (error) {
-    message.textContent = error.message === 'invalid_credentials' ? '账号或密码错误' : error.message
+    message.textContent = error.code === 'invalid_credentials' ? '账号或密码错误'
+      : error.code === 'too_many_attempts' ? '尝试次数过多，请 15 分钟后再试'
+        : error.message
   } finally { button.disabled = false }
 })
 
@@ -3251,9 +3284,30 @@ document.querySelector('[data-user-list]')?.addEventListener('click', (event) =>
   openUserDrawer(user)
 })
 
-document.querySelector('[data-user-drawer]')?.addEventListener('click', (event) => {
-  if (event.target.closest('[data-user-drawer-close]')) closeUserDrawer()
+document.querySelector('[data-user-drawer]')?.addEventListener('click', async (event) => {
+  if (event.target.closest('[data-user-drawer-close]')) {
+    closeUserDrawer()
+    return
+  }
+  const remove = event.target.closest('[data-user-remove]')
+  if (!remove) return
+  const id = document.querySelector('[data-user-edit-form]').elements.id.value
+  const target = (state.adminUsers || []).find((item) => item.id === id)
+  if (!target || !window.confirm(`确定移除钉钉账号「${target.name || '钉钉用户'}」？对方再次登录时需要重新授权。`)) return
+  remove.disabled = true
+  try {
+    await api(`/users/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    toast('账号已移除')
+    closeUserDrawer()
+    await loadUsers()
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    remove.disabled = false
+  }
 })
+
+document.querySelector('[data-refresh-users]')?.addEventListener('click', () => loadUsers())
 
 document.querySelector('[data-user-edit-form]')?.addEventListener('submit', async (event) => {
   event.preventDefault()
@@ -3261,13 +3315,20 @@ document.querySelector('[data-user-edit-form]')?.addEventListener('submit', asyn
   const submit = form.querySelector('button[type="submit"]')
   const id = form.elements.id.value
   const role = form.elements.role.value
+  const enabled = form.elements.enabled.value === 'true'
   const password = form.elements.password.value
-  const body = { role }
-  if (password) body.password = password
+  const target = (state.adminUsers || []).find((item) => item.id === id)
+  const authorizing = Boolean(target?.authSub && !target.role)
+  if (!role && enabled) {
+    toast('请先选择角色', true)
+    return
+  }
+  const body = { role, enabled }
+  if (password && !target?.authSub) body.password = password
   submit.disabled = true
   try {
     await api(`/users/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(body) })
-    toast(password ? '账号与密码已更新' : '账号角色已更新')
+    toast(authorizing ? '已授权，对方重新用钉钉登录即可进入后台' : body.password ? '账号与密码已更新' : '账号已更新')
     closeUserDrawer()
     await loadUsers()
   } catch (error) {

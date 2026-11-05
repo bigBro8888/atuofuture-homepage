@@ -397,7 +397,7 @@ export function addRecord(collection, record) {
 export async function addAudit(user, action, target, details = {}) {
   return addRecord('auditLogs', {
     userId: user?.id || null,
-    userEmail: user?.email || 'system',
+    userEmail: user?.email || (user?.authSub ? `钉钉 · ${user.name}` : 'system'),
     action,
     target,
     details,

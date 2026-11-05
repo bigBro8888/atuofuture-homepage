@@ -39,21 +39,84 @@ button { cursor: pointer; }
   font-feature-settings: 'liga';
 }
 
-.admin-login { min-height: 100svh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 70% 10%, rgba(23,105,255,.18), transparent 35%), #f5f8fd; }
-.admin-login__card { width: min(420px, 100%); padding: 38px; border: 1px solid rgba(18,54,107,.1); border-radius: 24px; background: rgba(255,255,255,.94); box-shadow: 0 28px 70px rgba(31,68,124,.14); }
+/* 登录页：与前台统一登录（auth/public/auth.css）保持同一视觉 */
+.admin-signin { min-height: 100svh; display: grid; place-items: center; padding: 40px 24px; background: radial-gradient(900px 520px at 0% 0%, rgba(255,138,76,.1), transparent 60%), radial-gradient(900px 600px at 100% 100%, rgba(26,86,219,.12), transparent 60%), #f4f5f7; }
+.admin-signin__box { display: grid; width: min(1000px, 100%); min-height: 606px; grid-template-columns: 1.04fr 1fr; overflow: hidden; border-radius: 22px; background: #fff; box-shadow: 0 2px 6px rgba(15,23,42,.05), 0 24px 60px -18px rgba(15,23,42,.28), 0 48px 90px -40px rgba(26,86,219,.35); }
+.admin-signin__side { position: relative; display: flex; flex-direction: column; align-items: center; padding: 56px 36px 0; overflow: hidden; color: #fff; background: radial-gradient(460px 320px at 96% -4%, rgba(255,106,43,.18), transparent 64%), radial-gradient(520px 420px at 4% 96%, rgba(47,107,255,.26), transparent 64%), radial-gradient(420px 360px at 78% 62%, rgba(112,82,214,.16), transparent 70%), linear-gradient(162deg, #04061a 0%, #0a0f33 52%, #121a4d 100%); }
+.admin-signin__stars { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.admin-signin__stars .is-twinkle { animation: admin-signin-twinkle 3.2s ease-in-out infinite; }
+.admin-signin__brand { position: relative; z-index: 1; display: grid; justify-items: center; gap: 26px; text-align: center; }
+.admin-signin__brand img { width: 240px; height: auto; }
+.admin-signin__brand p { margin: 0; color: #fff; font-size: 30px; font-weight: 800; line-height: 1.45; letter-spacing: .06em; }
+.admin-signin__brand em { font-style: normal; background: linear-gradient(90deg, #ffb07c, #ff7a3d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.admin-signin__globe { position: absolute; left: 50%; bottom: 0; width: 150%; height: 64%; transform: translateX(-50%); pointer-events: none; -webkit-mask-image: linear-gradient(180deg, #000 0 78%, transparent 100%); mask-image: linear-gradient(180deg, #000 0 78%, transparent 100%); }
+.admin-signin__globe canvas { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity 1.2s ease; }
+.admin-signin__globe canvas.is-ready { opacity: 1; }
+.admin-signin__main { display: flex; flex-direction: column; padding: 44px 44px 32px; background: radial-gradient(500px 320px at 100% 0%, rgba(26,86,219,.045), transparent 60%), #fff; }
+.admin-signin__hd { display: flex; align-items: center; justify-content: space-between; color: #9ca3af; font-size: 13px; }
+.admin-signin__status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid #e5e9f0; border-radius: 999px; background: #fafbfd; color: #6b7280; font-size: 12px; }
+.admin-signin__status i { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.15); }
+.admin-signin__main h1 { margin: 30px 0 0; color: #111827; font-size: 26px; font-weight: 800; letter-spacing: -.01em; }
+.admin-signin__lead { margin: 8px 0 24px; color: #6b7280; font-size: 13px; line-height: 1.6; }
+.admin-signin__notice { margin: -8px 0 18px; padding: 10px 12px; border-radius: 10px; background: #eff6ff; color: #1d4ed8; font-size: 13px; line-height: 1.6; }
+.admin-signin__notice.is-error { background: #fff1f2; color: #be123c; }
+.admin-signin__tab-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.admin-signin__tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 24px; padding: 4px; border: 1px solid #e5e9f0; border-radius: 11px; background: #f1f4f9; }
+.admin-signin__tab { display: grid; min-height: 34px; place-items: center; border-radius: 8px; color: #6b7280; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s ease, color .2s ease, box-shadow .2s ease; }
+.admin-signin__tab:hover { color: #111827; }
+#admin-signin-dingtalk:checked ~ .admin-signin__tabs .admin-signin__tab--dingtalk,
+#admin-signin-password:checked ~ .admin-signin__tabs .admin-signin__tab--password { background: #fff; color: #111827; box-shadow: 0 1px 2px rgba(15,23,42,.1), 0 4px 10px -4px rgba(15,23,42,.16); }
+#admin-signin-dingtalk:focus-visible ~ .admin-signin__tabs .admin-signin__tab--dingtalk,
+#admin-signin-password:focus-visible ~ .admin-signin__tabs .admin-signin__tab--password { outline: 2px solid rgba(26,86,219,.45); outline-offset: 1px; }
+#admin-signin-dingtalk:checked ~ .admin-signin__panel--password,
+#admin-signin-password:checked ~ .admin-signin__panel--dingtalk { display: none; }
+.admin-signin__panel { display: grid; align-content: start; gap: 16px; min-height: 236px; }
+.admin-signin__field { display: grid; gap: 7px; color: #374151; font-size: 13px; font-weight: 600; }
+.admin-signin__field input { height: 44px; padding: 0 14px; border-color: #dfe4ec; border-radius: 10px; background: #fbfcfe; font-size: 14px; font-weight: 400; }
+.admin-signin__field input:focus { border-color: #7aa2f0; background: #fff; box-shadow: 0 0 0 3px rgba(26,86,219,.12); }
+.admin-signin__submit { display: flex; width: 100%; min-height: 44px; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 10px; background: #1a56db; box-shadow: 0 10px 20px -10px rgba(26,86,219,.75); color: #fff; font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer; transition: background .2s ease, transform .16s ease; }
+.admin-signin__submit:hover { background: #1648bd; color: #fff; }
+.admin-signin__submit:active { transform: translateY(1px); }
+.admin-signin__submit:disabled { opacity: .7; cursor: progress; }
+.admin-signin__submit svg { width: 22px; height: 22px; fill: currentColor; }
+.admin-signin__panel .admin-form-message { min-height: 0; margin: -4px 0 0; }
+.admin-signin__hint { margin: -2px 0 0; color: #9ca3af; font-size: 12px; line-height: 1.6; text-align: center; }
+.admin-signin__perks { display: grid; gap: 10px; margin: 10px 0 0; padding: 0; list-style: none; }
+.admin-signin__perks li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid #edf0f5; border-radius: 12px; background: #fafbfd; }
+.admin-signin__perks i { display: grid; width: 30px; height: 30px; flex: none; place-items: center; border-radius: 9px; background: rgba(26,86,219,.08); color: #1a56db; font-size: 12px; font-style: normal; font-weight: 800; }
+.admin-signin__perks div { display: grid; gap: 2px; }
+.admin-signin__perks strong { color: #1f2937; font-size: 13px; }
+.admin-signin__perks span { color: #6b7280; font-size: 12px; }
+.admin-signin__foot { margin-top: auto; padding-top: 28px; color: #9ca3af; font-size: 12px; text-align: center; }
+.admin-signin__foot strong { color: #6b7280; font-weight: 600; }
+@keyframes admin-signin-twinkle { 0%, 100% { opacity: .2; } 50% { opacity: .9; } }
+@media (max-width: 860px) {
+  .admin-signin { padding: 20px 14px; }
+  .admin-signin__box { grid-template-columns: 1fr; min-height: 0; }
+  .admin-signin__side { padding: 22px 20px; }
+  .admin-signin__brand { gap: 10px; }
+  .admin-signin__brand img { width: 168px; }
+  .admin-signin__brand p { font-size: 18px; }
+  .admin-signin__globe { display: none; }
+  .admin-signin__main { padding: 28px 22px 24px; }
+  .admin-signin__main h1 { margin-top: 20px; font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-signin__stars .is-twinkle { animation: none; }
+  .admin-signin__globe canvas, .admin-signin__tab, .admin-signin__submit { transition: none; }
+}
+
 .admin-brand { display: flex; align-items: center; gap: 11px; }
 .admin-brand > span { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 12px; color: #fff; background: linear-gradient(145deg,#2c7cff,#0848c8); font-size: 21px; font-weight: 700; }
 .admin-brand strong, .admin-brand small { display: block; }
 .admin-brand strong { font-size: 14px; }
 .admin-brand small { margin-top: 3px; color: #8a98ae; font-size: 8px; letter-spacing: .12em; }
-.admin-login h1 { margin: 36px 0 8px; font-size: 28px; }
-.admin-login p { margin: 0 0 28px; color: #758198; font-size: 13px; }
-.admin-login label, .admin-release-form label, .admin-user-form label { display: block; margin-top: 17px; }
-.admin-login label > span, .admin-release-form label > span, .admin-user-form label > span, .admin-config-form label > span { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; }
+.admin-release-form label, .admin-user-form label { display: block; margin-top: 17px; }
+.admin-release-form label > span, .admin-user-form label > span, .admin-config-form label > span { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; }
 input, textarea, select { width: 100%; border: 1px solid #dbe2ec; border-radius: 11px; padding: 12px 13px; color: #172033; background: #fff; outline: none; transition: border-color .2s, box-shadow .2s; }
 input:focus, textarea:focus, select:focus { border-color: #4b86f8; box-shadow: 0 0 0 3px rgba(23,105,255,.1); }
 textarea { resize: vertical; }
-.admin-login button[type=submit], .admin-config-form button[type=submit], .admin-release-form > button[type=submit], .admin-user-form > button[type=submit] { width: 100%; margin-top: 24px; padding: 13px 20px; border: 0; border-radius: 11px; color: #fff; background: #1769ff; font-weight: 600; }
+.admin-config-form button[type=submit], .admin-release-form > button[type=submit], .admin-user-form > button[type=submit] { width: 100%; margin-top: 24px; padding: 13px 20px; border: 0; border-radius: 11px; color: #fff; background: #1769ff; font-weight: 600; }
 .admin-form-message { min-height: 18px; margin-top: 12px; color: #d92d20; font-size: 11px; }
 
 .admin-layout { min-height: 100svh; display: grid; grid-template-columns: 238px 1fr; }
@@ -1725,7 +1788,17 @@ body.admin-modal-open { overflow: hidden; }
 .admin-browser-row i { height: 7px; border-radius: 7px; background: #edf1f6; overflow: hidden; }
 .admin-browser-row i::after { display: block; width: var(--width); height: 100%; border-radius: inherit; content: ""; background: #1769ff; }
 .admin-user-form label { margin-top: 12px; }
-.admin-user-item { grid-template-columns: 1fr auto; }
+.admin-user-item { grid-template-columns: auto 1fr auto; }
+.admin-user-item.is-pending { border-color: #fcd9a8; background: #fffaf2; }
+.admin-user-item__avatar { display: grid; width: 30px; height: 30px; place-items: center; overflow: hidden; border-radius: 50%; color: #fff; background: #94a3b8; font-size: 12px; font-weight: 700; }
+.admin-user-item__avatar.is-dingtalk { background: #1a7cff; }
+.admin-user-item__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.admin-user-item .admin-user-status { margin-left: 6px; vertical-align: 1px; }
+.admin-user-item .admin-user-status.is-ok { color: #139b66; background: #e8f8f0; }
+.admin-user-item .admin-user-status.is-pending { color: #b45309; background: #fff1dc; }
+.admin-user-item .admin-user-status.is-off { color: #8b97a8; background: #f1f4f8; }
+.admin-user-drawer__form footer button[type="button"].admin-user-drawer__remove { margin-right: auto; border-color: #fecdd3; color: #be123c; }
+.admin-user-drawer__form footer button[type="button"].admin-user-drawer__remove:hover { background: #fff1f2; }
 .admin-user-item em { padding: 4px 7px; border-radius: 7px; color: #1769ff; background: #edf4ff; font-size: 8px; font-style: normal; }
 .admin-user-item button {
   padding: 7px 10px;
@@ -3981,7 +4054,6 @@ button.hpi-edit-link.hpi-hero__link {
   }
 }
 @media (max-width: 480px) {
-  .admin-login__card { padding: 28px 22px; }
   .admin-metrics, .admin-metrics--three { grid-template-columns: 1fr; }
   .admin-topbar h1 { font-size: 17px; }
 }

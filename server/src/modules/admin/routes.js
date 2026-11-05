@@ -11,9 +11,11 @@ import { addAudit, db, normalizeAppButtons, normalizeAppFeatures, publicUser, sa
 import { getLatestAndroidVersion } from '../apps/version-service.js'
 import { publishRelease, rollbackRelease } from '../apps/release-service.js'
 import { createSession, requireAuth, sessionCookieOptions } from './auth.js'
+import { adminOidcRouter } from './oidc.js'
 import { heartbeatPresence, leavePresence, listOnlineUsers, listPresence } from './presence-service.js'
 
 export const adminRouter = Router()
+adminRouter.use('/oidc', adminOidcRouter)
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 300 * 1024 * 1024, files: 1 } })
 const imageUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 1 } })
 const loginAttempts = new Map()
@@ -43,7 +45,9 @@ adminRouter.post('/login', async (request, response) => {
   if (attempts.count >= 8) return response.status(429).json({ error: 'too_many_attempts' })
 
   const account = String(request.body?.account || request.body?.email || '').trim().toLowerCase()
-  const user = db().adminUsers.find((item) => item.email === account && item.enabled)
+  const user = account
+    ? db().adminUsers.find((item) => item.email === account && item.enabled && item.passwordHash)
+    : null
   if (!user || !(await bcrypt.compare(String(request.body?.password || ''), user.passwordHash))) {
     attempts.count += 1
     loginAttempts.set(key, attempts)
@@ -235,8 +239,11 @@ adminRouter.patch('/users/:id', requireAuth('users:write'), async (request, resp
   const password = request.body.password === undefined ? '' : String(request.body.password || '')
   const enabled = request.body.enabled === undefined ? user.enabled : Boolean(request.body.enabled)
 
-  if (!validRoles.has(nextRole)) {
+  if (!validRoles.has(nextRole) && !(nextRole === '' && !enabled)) {
     return response.status(400).json({ error: 'invalid_user', message: '请选择角色' })
+  }
+  if (password && user.authSub) {
+    return response.status(400).json({ error: 'invalid_user', message: '钉钉账号通过钉钉登录，不能设置密码' })
   }
   if (password && (password.length < 6 || password.length > 128)) {
     return response.status(400).json({ error: 'invalid_user', message: '密码至少 6 位即可，格式不限' })
@@ -250,21 +257,43 @@ adminRouter.patch('/users/:id', requireAuth('users:write'), async (request, resp
     return response.status(400).json({ error: 'invalid_user', message: '至少保留一位可用的超级管理员' })
   }
 
+  const authorizing = Boolean(user.authSub) && !user.role && validRoles.has(nextRole)
   user.role = nextRole
   user.enabled = enabled
   user.name = String(request.body.name || user.name || user.email).trim().slice(0, 80) || user.email
+  if (authorizing) {
+    user.authorizedAt = new Date().toISOString()
+    user.authorizedBy = request.admin.id
+  }
   if (password) {
     user.passwordHash = await bcrypt.hash(password, 12)
     user.passwordUpdatedAt = new Date().toISOString()
   }
   await save()
-  await addAudit(request.admin, 'admin_user.update', user.id, {
-    account: user.email,
+  await addAudit(request.admin, authorizing ? 'admin_user.authorize' : 'admin_user.update', user.id, {
+    account: user.email || user.name,
+    provider: user.provider || 'password',
     role: user.role,
     enabled: user.enabled,
     passwordChanged: Boolean(password),
   })
   response.json({ user: publicUser(user) })
+})
+
+adminRouter.delete('/users/:id', requireAuth('users:write'), async (request, response) => {
+  const index = db().adminUsers.findIndex((item) => item.id === request.params.id)
+  const user = db().adminUsers[index]
+  if (!user) return response.status(404).json({ error: 'user_not_found', message: '账号不存在' })
+  if (!user.authSub) return response.status(400).json({ error: 'invalid_user', message: '账号密码登录的账号请改为停用' })
+  if (user.id === request.admin.id) return response.status(400).json({ error: 'invalid_user', message: '不能移除当前登录的账号' })
+  const superAdmins = db().adminUsers.filter((item) => item.role === 'super_admin' && item.enabled)
+  if (user.role === 'super_admin' && user.enabled && superAdmins.length <= 1) {
+    return response.status(400).json({ error: 'invalid_user', message: '至少保留一位可用的超级管理员' })
+  }
+  db().adminUsers.splice(index, 1)
+  await save()
+  await addAudit(request.admin, 'admin_user.remove', user.id, { name: user.name, provider: user.provider })
+  response.status(204).end()
 })
 
 adminRouter.get('/audit-logs', requireAuth('audit:read'), (request, response) => {

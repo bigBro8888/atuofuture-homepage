@@ -101,7 +101,7 @@ export async function createAuthService() {
     cookies: { keys: authConfig.cookieKeys },
     claims: {
       email: ['email', 'email_verified'],
-      profile: ['name', 'picture'],
+      profile: ['name', 'picture', 'idp'],
     },
     features: {
       devInteractions: { enabled: false },

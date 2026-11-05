@@ -133,5 +133,6 @@ export function accountClaims(user) {
     email: user.email || undefined,
     email_verified: Boolean(user.email),
     picture: user.avatarUrl || undefined,
+    idp: user.identities?.find((identity) => identity.provider !== 'password')?.provider || 'password',
   }
 }
