@@ -10,20 +10,12 @@ function escapeHtml(value) {
   })[char])
 }
 
-/** 第三方登录尚未对接完成前不展示；接入后改为 true，并保持横向图标入口。 */
-const SHOW_SOCIAL_LOGIN = false
-
+/** 只展示已接通的第三方登录；微信、企业 OA、短信接入后再加入。 */
 function socialLoginMarkup({ uid, dingTalkEnabled }) {
-  if (!SHOW_SOCIAL_LOGIN) return ''
+  if (!dingTalkEnabled) return ''
   const base = authConfig.basePath
-  const dingTalk = dingTalkEnabled
-    ? `<a class="auth-method" href="${base}/interaction/${encodeURIComponent(uid)}/dingtalk" title="钉钉登录"><i>钉</i><span>钉钉</span></a>`
-    : '<button class="auth-method" type="button" disabled title="钉钉登录待配置"><i>钉</i><span>钉钉</span></button>'
   return `<div class="auth-methods" aria-label="其他登录方式">
-      ${dingTalk}
-      <button class="auth-method" type="button" disabled title="微信登录待接入"><i>微</i><span>微信</span></button>
-      <button class="auth-method" type="button" disabled title="企业 OA 登录待接入"><i>OA</i><span>企业 OA</span></button>
-      <button class="auth-method" type="button" disabled title="短信登录待接入"><i>码</i><span>短信</span></button>
+      <a class="auth-method" href="${base}/interaction/${encodeURIComponent(uid)}/dingtalk" title="钉钉登录"><i>钉</i><span>钉钉</span></a>
     </div>
     <div class="auth-divider"><span>账号登录</span></div>`
 }

@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import express from 'express'
 import helmet from 'helmet'
 import { Provider } from 'oidc-provider'
-import { authConfig, authUrl } from './config.js'
+import { authConfig, authUrl, dingTalkAvailable } from './config.js'
 import { loadJwks } from './keys.js'
 import { initOidcAdapter, JsonOidcAdapter } from './oidc-adapter.js'
 import {
@@ -184,7 +184,7 @@ export async function createAuthService() {
       response.type('html').send(loginPage({
         uid: details.uid,
         clientName: client?.clientName || client?.clientId || '内部系统',
-        dingTalkEnabled: Boolean(authConfig.dingtalk.clientId && authConfig.dingtalk.clientSecret),
+        dingTalkEnabled: dingTalkAvailable(request.get('host')),
         passwordEnabled: authConfig.passwordLoginEnabled,
         mode: request.query.mode === 'register' ? 'register' : 'login',
         error: String(request.query.error || ''),
@@ -239,8 +239,8 @@ export async function createAuthService() {
 
   app.get(`${authConfig.basePath}/interaction/:uid/dingtalk`, async (request, response, next) => {
     try {
-      if (!authConfig.dingtalk.clientId || !authConfig.dingtalk.clientSecret) {
-        return response.status(503).type('html').send(errorPage('钉钉企业应用参数尚未配置。'))
+      if (!dingTalkAvailable(request.get('host'))) {
+        return response.status(503).type('html').send(errorPage('当前地址暂不支持钉钉登录，请使用账号密码登录。'))
       }
       const details = await provider.interactionDetails(request, response)
       if (details.prompt.name !== 'login') throw new Error('当前授权流程不需要重新登录')

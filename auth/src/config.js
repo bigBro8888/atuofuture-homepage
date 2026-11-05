@@ -19,6 +19,7 @@ function json(value, fallback) {
 
 const publicOrigin = String(process.env.AUTH_PUBLIC_ORIGIN || 'http://127.0.0.1:8788').replace(/\/$/, '')
 const portalOrigin = String(process.env.AUTH_PORTAL_ORIGIN || 'http://127.0.0.1:5173').replace(/\/$/, '')
+const portalOrigins = list(process.env.AUTH_PORTAL_ORIGINS, [portalOrigin]).map((origin) => origin.replace(/\/$/, ''))
 const basePath = `/${String(process.env.AUTH_BASE_PATH || 'auth').replace(/^\/+|\/+$/g, '')}`
 
 export const authConfig = {
@@ -36,8 +37,8 @@ export const authConfig = {
   clients: json(process.env.AUTH_CLIENTS_JSON, [{
     client_id: 'aspace-one',
     client_name: 'Aspace空间智能',
-    redirect_uris: [`${portalOrigin}/aspace-one/auth/callback`],
-    post_logout_redirect_uris: [`${portalOrigin}/aspace-one/`],
+    redirect_uris: portalOrigins.map((origin) => `${origin}/aspace-one/auth/callback`),
+    post_logout_redirect_uris: portalOrigins.map((origin) => `${origin}/aspace-one/`),
     response_types: ['code'],
     grant_types: ['authorization_code', 'refresh_token'],
     token_endpoint_auth_method: 'none',
@@ -58,6 +59,15 @@ if (
   && !authConfig.issuer.startsWith('https://')
 ) {
   throw new Error('启用钉钉登录前必须为 AUTH_ISSUER 配置 HTTPS')
+}
+
+/** 钉钉回调固定指向 AUTH_PUBLIC_ORIGIN，其它域名下发起的登录无法接回会话。 */
+export function isPublicHost(host) {
+  return String(host || '').toLowerCase() === new URL(authConfig.publicOrigin).host.toLowerCase()
+}
+
+export function dingTalkAvailable(host) {
+  return Boolean(authConfig.dingtalk.clientId && authConfig.dingtalk.clientSecret) && isPublicHost(host)
 }
 
 export function authUrl(pathname = '') {
