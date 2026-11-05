@@ -42,7 +42,8 @@ async function topapi(path, body) {
 }
 
 async function listDepartments() {
-  const departments = new Map([[ROOT_DEPT_ID, { id: ROOT_DEPT_ID, name: '', parentId: 0 }]])
+  const root = await topapi('/topapi/v2/department/get', { dept_id: ROOT_DEPT_ID, language: 'zh_CN' }).catch(() => null)
+  const departments = new Map([[ROOT_DEPT_ID, { id: ROOT_DEPT_ID, name: root?.name || '', parentId: 0 }]])
   const queue = [ROOT_DEPT_ID]
   while (queue.length) {
     const parentId = queue.shift()
