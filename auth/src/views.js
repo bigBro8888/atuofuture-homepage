@@ -142,9 +142,8 @@ function methodsMarkup({ uid, dingTalkEnabled, passwordEnabled, preferPassword }
 
 export function loginPage({ uid, clientName, dingTalkEnabled, passwordEnabled, mode = 'login', error = '' }) {
   const registering = mode === 'register' && passwordEnabled
-  const name = escapeHtml(clientName)
   const body = `${mainHeader(registering ? '创建账号' : '欢迎回来')}
-        <h1 id="auth-title">${registering ? '注册普通账号' : `登录 ${name}`}</h1>
+        <h1 id="auth-title">${registering ? '注册普通账号' : '登录 安墨客'}</h1>
         <p class="auth-lead">${registering
           ? '创建一个用于收藏、排序与最近访问的个人账号。'
           : '通过企业钉钉一键进入，或使用分配给你的账号。'}</p>
