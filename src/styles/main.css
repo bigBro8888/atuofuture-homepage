@@ -963,7 +963,19 @@
   }
 
   .site-header .site-header__actions .site-header__legacy {
+    gap: 0.3rem;
     margin-right: 1.25rem;
+    padding: 0.45rem 0.35rem;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 14px;
+  }
+
+  .site-header .site-header__actions .site-header__legacy .material-symbols-outlined {
+    font-size: 17px;
+  }
+
+  .site-header .site-header__actions .site-header__legacy:hover {
+    color: #fff;
   }
 
   .site-mobile-drawer__actions .site-header__legacy {
