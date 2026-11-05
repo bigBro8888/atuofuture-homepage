@@ -92,6 +92,18 @@ async function exchangeDingTalkCode(code) {
   }
 }
 
+// 登录 / 退出表单提交后会 303 回到各子系统，CSP form-action 必须放行这些 origin，
+// 否则浏览器拦截跳转，页面停在「正在退出…」
+function clientOrigins(clients) {
+  const origins = new Set()
+  for (const client of clients || []) {
+    for (const uri of [...(client.redirect_uris || []), ...(client.post_logout_redirect_uris || [])]) {
+      try { origins.add(new URL(uri).origin) } catch { /* 忽略非法地址 */ }
+    }
+  }
+  return [...origins]
+}
+
 export async function createAuthService() {
   await Promise.all([initAuthStore(), initOidcAdapter()])
   const jwks = await loadJwks()
@@ -141,7 +153,7 @@ export async function createAuthService() {
         defaultSrc: ["'none'"],
         styleSrc: ["'self'"],
         imgSrc: ["'self'", 'data:'],
-        formAction: ["'self'", 'https://login.dingtalk.com'],
+        formAction: ["'self'", 'https://login.dingtalk.com', ...clientOrigins(authConfig.clients)],
         baseUri: ["'none'"],
         frameAncestors: ["'none'"],
         upgradeInsecureRequests: null,
