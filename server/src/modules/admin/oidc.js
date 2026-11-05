@@ -111,7 +111,9 @@ adminOidcRouter.get('/callback', async (request, response) => {
     if (!userinfoResponse.ok || !claims.sub || claims.sub !== idToken.sub) throw new Error('userinfo 获取失败')
 
     const now = new Date().toISOString()
+    const unionId = String(claims.dingtalk_unionid || '')
     let user = db().adminUsers.find((item) => item.authSub === claims.sub)
+      || (unionId ? db().adminUsers.find((item) => !item.authSub && item.dingtalkUnionId === unionId) : undefined)
     if (!user) {
       user = {
         id: randomUUID(),
@@ -119,6 +121,7 @@ adminOidcRouter.get('/callback', async (request, response) => {
         name: String(claims.name || '钉钉用户').slice(0, 80),
         provider: claims.idp === 'password' ? 'unified' : (claims.idp || 'dingtalk'),
         authSub: claims.sub,
+        dingtalkUnionId: unionId || undefined,
         avatarUrl: String(claims.picture || ''),
         role: '',
         enabled: false,
@@ -131,11 +134,13 @@ adminOidcRouter.get('/callback', async (request, response) => {
       return backToLogin(response, origin, 'pending')
     }
 
+    user.authSub = claims.sub
+    if (unionId) user.dingtalkUnionId = unionId
     user.name = String(claims.name || user.name).slice(0, 80)
     user.avatarUrl = String(claims.picture || user.avatarUrl || '')
     user.lastLoginAt = now
     await save()
-    if (!user.enabled) return backToLogin(response, origin, user.role ? 'disabled' : 'pending')
+    if (!user.enabled) return backToLogin(response, origin, user.disabledReason === 'left' ? 'left' : user.role ? 'disabled' : 'pending')
 
     response.cookie('atuo_admin_session', createSession(user), sessionCookieOptions())
     await addAudit(publicUser(user), 'auth.login', 'admin', { method: user.provider })

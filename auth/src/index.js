@@ -101,7 +101,7 @@ export async function createAuthService() {
     cookies: { keys: authConfig.cookieKeys },
     claims: {
       email: ['email', 'email_verified'],
-      profile: ['name', 'picture', 'idp'],
+      profile: ['name', 'picture', 'idp', 'dingtalk_unionid'],
     },
     features: {
       devInteractions: { enabled: false },

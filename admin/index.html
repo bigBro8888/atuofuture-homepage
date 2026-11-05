@@ -408,7 +408,18 @@
             <button type="submit">创建账号</button>
           </form>
           <article class="admin-card">
-            <div class="admin-card__head"><div><h2>管理员账号</h2><p>钉钉账号首次登录后会出现在这里，授权角色后即可进入后台</p></div><button type="button" class="admin-icon-button" data-refresh-users aria-label="刷新"><span class="material-symbols-outlined">refresh</span></button></div>
+            <div class="admin-card__head"><div><h2>管理员账号</h2><p>同步钉钉组织架构后，员工默认为运营编辑，可用钉钉直接登录</p></div><button type="button" class="admin-icon-button" data-refresh-users aria-label="刷新"><span class="material-symbols-outlined">refresh</span></button></div>
+            <div class="admin-user-sync">
+              <div>
+                <strong>钉钉组织架构</strong>
+                <small data-user-sync-status>尚未同步</small>
+              </div>
+              <button type="button" data-user-sync><span class="material-symbols-outlined">sync</span>同步组织架构</button>
+            </div>
+            <div class="admin-user-filter">
+              <input type="search" data-user-search placeholder="搜索姓名、账号或部门" />
+              <select data-user-dept><option value="">全部部门</option></select>
+            </div>
             <div class="admin-user-list" data-user-list></div>
           </article>
         </div>

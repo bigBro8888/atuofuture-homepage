@@ -11,6 +11,7 @@ import { addAudit, db, normalizeAppButtons, normalizeAppFeatures, publicUser, sa
 import { getLatestAndroidVersion } from '../apps/version-service.js'
 import { publishRelease, rollbackRelease } from '../apps/release-service.js'
 import { createSession, requireAuth, sessionCookieOptions } from './auth.js'
+import { isDingtalkUser, syncDingtalkDirectory } from './dingtalk-directory.js'
 import { adminOidcRouter } from './oidc.js'
 import { heartbeatPresence, leavePresence, listOnlineUsers, listPresence } from './presence-service.js'
 
@@ -194,7 +195,27 @@ adminRouter.get('/stats', requireAuth('stats:read'), (request, response) => {
 })
 
 adminRouter.get('/users', requireAuth('users:write'), (request, response) => {
-  response.json({ users: db().adminUsers.map(publicUser) })
+  response.json({ users: db().adminUsers.map(publicUser), dingtalkSync: db().dingtalkSync || null })
+})
+
+let directorySyncRunning = false
+adminRouter.post('/users/sync-dingtalk', requireAuth('users:write'), async (request, response) => {
+  if (directorySyncRunning) return response.status(409).json({ error: 'sync_running', message: '正在同步，请稍候' })
+  directorySyncRunning = true
+  try {
+    const summary = await syncDingtalkDirectory(request.admin)
+    await addAudit(request.admin, 'admin_user.sync_dingtalk', 'dingtalk', summary)
+    response.json({ summary, users: db().adminUsers.map(publicUser), dingtalkSync: db().dingtalkSync })
+  } catch (error) {
+    console.error('dingtalk directory sync failed:', error)
+    const permission = /权限|permission|forbidden|60011|88/i.test(`${error.message} ${error.code}`)
+    response.status(502).json({
+      error: 'sync_failed',
+      message: permission ? `钉钉通讯录权限不足：${error.message}` : `同步失败：${error.message}`,
+    })
+  } finally {
+    directorySyncRunning = false
+  }
 })
 
 adminRouter.post('/users', requireAuth('users:write'), async (request, response) => {
@@ -242,7 +263,7 @@ adminRouter.patch('/users/:id', requireAuth('users:write'), async (request, resp
   if (!validRoles.has(nextRole) && !(nextRole === '' && !enabled)) {
     return response.status(400).json({ error: 'invalid_user', message: '请选择角色' })
   }
-  if (password && user.authSub) {
+  if (password && isDingtalkUser(user)) {
     return response.status(400).json({ error: 'invalid_user', message: '钉钉账号通过钉钉登录，不能设置密码' })
   }
   if (password && (password.length < 6 || password.length > 128)) {
@@ -257,9 +278,10 @@ adminRouter.patch('/users/:id', requireAuth('users:write'), async (request, resp
     return response.status(400).json({ error: 'invalid_user', message: '至少保留一位可用的超级管理员' })
   }
 
-  const authorizing = Boolean(user.authSub) && !user.role && validRoles.has(nextRole)
+  const authorizing = isDingtalkUser(user) && !user.role && validRoles.has(nextRole)
   user.role = nextRole
   user.enabled = enabled
+  if (enabled) delete user.disabledReason
   user.name = String(request.body.name || user.name || user.email).trim().slice(0, 80) || user.email
   if (authorizing) {
     user.authorizedAt = new Date().toISOString()
@@ -284,7 +306,7 @@ adminRouter.delete('/users/:id', requireAuth('users:write'), async (request, res
   const index = db().adminUsers.findIndex((item) => item.id === request.params.id)
   const user = db().adminUsers[index]
   if (!user) return response.status(404).json({ error: 'user_not_found', message: '账号不存在' })
-  if (!user.authSub) return response.status(400).json({ error: 'invalid_user', message: '账号密码登录的账号请改为停用' })
+  if (!isDingtalkUser(user)) return response.status(400).json({ error: 'invalid_user', message: '账号密码登录的账号请改为停用' })
   if (user.id === request.admin.id) return response.status(400).json({ error: 'invalid_user', message: '不能移除当前登录的账号' })
   const superAdmins = db().adminUsers.filter((item) => item.role === 'super_admin' && item.enabled)
   if (user.role === 'super_admin' && user.enabled && superAdmins.length <= 1) {

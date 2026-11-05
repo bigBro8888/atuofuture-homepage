@@ -134,5 +134,6 @@ export function accountClaims(user) {
     email_verified: Boolean(user.email),
     picture: user.avatarUrl || undefined,
     idp: user.identities?.find((identity) => identity.provider !== 'password')?.provider || 'password',
+    dingtalk_unionid: user.identities?.find((identity) => identity.provider === 'dingtalk')?.externalId || undefined,
   }
 }

@@ -1790,6 +1790,17 @@ body.admin-modal-open { overflow: hidden; }
 .admin-browser-row i { height: 7px; border-radius: 7px; background: #edf1f6; overflow: hidden; }
 .admin-browser-row i::after { display: block; width: var(--width); height: 100%; border-radius: inherit; content: ""; background: #1769ff; }
 .admin-user-form label { margin-top: 12px; }
+.admin-user-sync { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; padding: 12px 14px; border: 1px solid #dbe8ff; border-radius: 10px; background: #f5f9ff; }
+.admin-user-sync strong { display: block; font-size: 12px; }
+.admin-user-sync small { display: block; margin-top: 4px; color: #6b7a90; font-size: 10px; }
+.admin-user-sync button { display: inline-flex; flex: none; align-items: center; gap: 4px; padding: 8px 12px; border: 0; border-radius: 8px; color: #fff; background: #1769ff; font-size: 11px; font-weight: 600; cursor: pointer; }
+.admin-user-sync button .material-symbols-outlined { font-size: 16px; }
+.admin-user-sync button.is-loading .material-symbols-outlined { animation: admin-user-sync-spin 1s linear infinite; }
+.admin-user-sync button:disabled { opacity: .7; cursor: progress; }
+@keyframes admin-user-sync-spin { to { transform: rotate(360deg); } }
+.admin-user-filter { display: grid; grid-template-columns: 1fr 160px; gap: 8px; margin-bottom: 12px; }
+.admin-user-filter input, .admin-user-filter select { padding: 9px 11px; font-size: 12px; }
+.admin-user-list { max-height: 640px; overflow: auto; }
 .admin-user-item { grid-template-columns: auto 1fr auto; }
 .admin-user-item.is-pending { border-color: #fcd9a8; background: #fffaf2; }
 .admin-user-item__avatar { display: grid; width: 30px; height: 30px; place-items: center; overflow: hidden; border-radius: 50%; color: #fff; background: #94a3b8; font-size: 12px; font-weight: 700; }

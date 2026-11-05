@@ -2385,7 +2385,7 @@ function openUserDrawer(user) {
   const drawer = document.querySelector('[data-user-drawer]')
   const form = document.querySelector('[data-user-edit-form]')
   if (!drawer || !form || !user) return
-  const dingtalk = Boolean(user.authSub)
+  const dingtalk = isDingtalkAccount(user)
   const pending = dingtalk && !user.role
   form.elements.id.value = user.id || ''
   form.elements.account.value = dingtalk ? `${user.name || '钉钉用户'}（钉钉）` : (user.email || '')
@@ -2405,25 +2405,56 @@ function openUserDrawer(user) {
   drawer.hidden = false
 }
 
+function isDingtalkAccount(user) {
+  return Boolean(user?.provider === 'dingtalk' || user?.authSub || user?.dingtalkUnionId)
+}
+
 function userStatus(user) {
-  if (user.authSub && !user.role) return { label: '待授权', tone: 'pending' }
+  if (isDingtalkAccount(user) && !user.role) return { label: '待授权', tone: 'pending' }
+  if (user.disabledReason === 'left') return { label: '已离职', tone: 'off' }
   if (!user.enabled) return { label: '已停用', tone: 'off' }
   return { label: '正常', tone: 'ok' }
 }
 
-async function loadUsers() {
-  try {
-    const { users } = await api('/users')
-    state.adminUsers = users
-    const ordered = [...users].sort((a, b) => Number(Boolean(b.authSub && !b.role)) - Number(Boolean(a.authSub && !a.role)))
-    document.querySelector('[data-user-list]').innerHTML = ordered.map((user) => {
-      const dingtalk = Boolean(user.authSub)
+function renderUserSyncStatus(sync) {
+  const node = document.querySelector('[data-user-sync-status]')
+  if (!node) return
+  node.textContent = sync?.syncedAt
+    ? `上次同步 ${dateTime(sync.syncedAt)} · 共 ${sync.total} 人，新增 ${sync.created}，停用离职 ${sync.disabled}`
+    : '尚未同步，点右侧按钮从钉钉导入全部员工'
+}
+
+function renderUserDeptOptions(users) {
+  const select = document.querySelector('[data-user-dept]')
+  if (!select) return
+  const current = select.value
+  const depts = [...new Set(users.flatMap((user) => user.departments || []))].sort((a, b) => a.localeCompare(b, 'zh-CN'))
+  select.innerHTML = `<option value="">全部部门</option>${depts.map((dept) => `<option value="${escapeHtml(dept)}">${escapeHtml(dept)}</option>`).join('')}`
+  if (depts.includes(current)) select.value = current
+}
+
+function renderUsers() {
+  const users = state.adminUsers || []
+  const keyword = String(document.querySelector('[data-user-search]')?.value || '').trim().toLowerCase()
+  const dept = document.querySelector('[data-user-dept]')?.value || ''
+  const rank = (user) => (isDingtalkAccount(user) && !user.role ? 0 : user.role === 'super_admin' ? 1 : isDingtalkAccount(user) ? 3 : 2)
+  const ordered = [...users]
+    .filter((user) => !dept || (user.departments || []).includes(dept))
+    .filter((user) => !keyword || [user.name, user.email, user.title, ...(user.departments || [])].some((value) => String(value || '').toLowerCase().includes(keyword)))
+    .sort((a, b) => rank(a) - rank(b) || String(a.name || a.email).localeCompare(String(b.name || b.email), 'zh-CN'))
+  const list = document.querySelector('[data-user-list]')
+  if (!ordered.length) {
+    list.innerHTML = '<div class="admin-empty">没有匹配的账号</div>'
+    return
+  }
+  list.innerHTML = ordered.map((user) => {
+      const dingtalk = isDingtalkAccount(user)
       const status = userStatus(user)
       const title = dingtalk ? (user.name || '钉钉用户') : user.email
       const meta = [
-        dingtalk ? '钉钉' : '账号密码',
+        dingtalk ? (user.departments?.length ? user.departments.join(' / ') : '钉钉') : '账号密码',
         user.role ? (roleNames[user.role] || user.role) : '未分配角色',
-        dingtalk && user.lastLoginAt ? `最近登录 ${dateTime(user.lastLoginAt)}` : `创建 ${dateTime(user.createdAt)}`,
+        dingtalk && user.lastLoginAt ? `最近登录 ${dateTime(user.lastLoginAt)}` : dingtalk && user.syncedAt ? '未登录过' : `创建 ${dateTime(user.createdAt)}`,
       ]
       return `
       <div class="admin-user-item${status.tone === 'pending' ? ' is-pending' : ''}" data-user-id="${escapeHtml(user.id)}">
@@ -2435,6 +2466,18 @@ async function loadUsers() {
         <button type="button" data-user-edit="${escapeHtml(user.id)}">${status.tone === 'pending' ? '授权' : '编辑'}</button>
       </div>`
     }).join('')
+}
+
+function applyUsersPayload({ users, dingtalkSync }) {
+  state.adminUsers = users
+  renderUserSyncStatus(dingtalkSync)
+  renderUserDeptOptions(users)
+  renderUsers()
+}
+
+async function loadUsers() {
+  try {
+    applyUsersPayload(await api('/users'))
   } catch (error) { toast(error.message, true) }
 }
 
@@ -3308,6 +3351,24 @@ document.querySelector('[data-user-drawer]')?.addEventListener('click', async (e
 })
 
 document.querySelector('[data-refresh-users]')?.addEventListener('click', () => loadUsers())
+document.querySelector('[data-user-search]')?.addEventListener('input', () => renderUsers())
+document.querySelector('[data-user-dept]')?.addEventListener('change', () => renderUsers())
+document.querySelector('[data-user-sync]')?.addEventListener('click', async (event) => {
+  const button = event.currentTarget
+  button.disabled = true
+  button.classList.add('is-loading')
+  try {
+    const payload = await api('/users/sync-dingtalk', { method: 'POST', timeoutMs: 120000 })
+    applyUsersPayload(payload)
+    const { total, created, disabled, reactivated } = payload.summary
+    toast(`已同步 ${total} 名员工：新增 ${created}${disabled ? `，停用离职 ${disabled}` : ''}${reactivated ? `，恢复 ${reactivated}` : ''}`)
+  } catch (error) {
+    toast(error.message, true)
+  } finally {
+    button.disabled = false
+    button.classList.remove('is-loading')
+  }
+})
 
 document.querySelector('[data-user-edit-form]')?.addEventListener('submit', async (event) => {
   event.preventDefault()
@@ -3318,13 +3379,13 @@ document.querySelector('[data-user-edit-form]')?.addEventListener('submit', asyn
   const enabled = form.elements.enabled.value === 'true'
   const password = form.elements.password.value
   const target = (state.adminUsers || []).find((item) => item.id === id)
-  const authorizing = Boolean(target?.authSub && !target.role)
+  const authorizing = isDingtalkAccount(target) && !target.role
   if (!role && enabled) {
     toast('请先选择角色', true)
     return
   }
   const body = { role, enabled }
-  if (password && !target?.authSub) body.password = password
+  if (password && !isDingtalkAccount(target)) body.password = password
   submit.disabled = true
   try {
     await api(`/users/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(body) })

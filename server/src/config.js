@@ -18,6 +18,11 @@ export const config = {
   versionSourceUrl: process.env.VERSION_SOURCE_URL || 'https://file.atuofuture.com/release/version',
   releaseBaseUrl: process.env.RELEASE_BASE_URL || 'https://file.atuofuture.com/release',
   versionCacheMs: Number(process.env.VERSION_CACHE_MS || 120000),
+  /** 钉钉企业内部应用凭证，与统一认证共用；后台用它同步通讯录 */
+  dingtalk: {
+    clientId: String(process.env.AUTH_DINGTALK_CLIENT_ID || '').trim(),
+    clientSecret: String(process.env.AUTH_DINGTALK_CLIENT_SECRET || ''),
+  },
   /** 后台钉钉登录：作为统一认证的 website-admin 客户端，服务端直连 Auth 换取令牌 */
   unifiedAuth: {
     internalUrl: String(process.env.AUTH_INTERNAL_URL

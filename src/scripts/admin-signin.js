@@ -4,6 +4,7 @@ const METHOD_KEY = 'atuo:admin-signin-method'
 const NOTICES = {
   pending: { text: '已收到你的钉钉账号，请联系超级管理员在「账号权限」中授权后再登录。' },
   disabled: { text: '该钉钉账号已被停用，请联系超级管理员。', error: true },
+  left: { text: '该账号已不在公司组织架构中，后台权限已停用。', error: true },
   expired: { text: '登录已过期，请重新登录。', error: true },
   denied: { text: '已取消钉钉授权。', error: true },
   failed: { text: '钉钉登录失败，请稍后重试。', error: true },
