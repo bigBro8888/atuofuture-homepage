@@ -1,6 +1,7 @@
 /** 官网首页可视化预览：按前台通栏结构渲染（后台编辑用） */
 
 import { esc, textNode, imgNode } from './vedit-nodes.js'
+import { heroBgOpacity, heroBgOpacityStyle } from './hero-bg-opacity.js'
 
 function sectionChrome(kind, title, { editable, addLabel } = {}) {
   if (!editable) return ''
@@ -36,11 +37,21 @@ function renderHero(slides, { editable, activeIndex = 0 }) {
               <button type="button" role="tab" data-home-hero-pick="${index}" class="${index === active ? 'is-active' : ''}" aria-selected="${index === active ? 'true' : 'false'}" title="${esc(slide.title || `第 ${index + 1} 屏`)}">第 ${index + 1} 屏</button>
             `).join('')}
           </div>
+          ${list.map((slide, index) => {
+            const opacity = heroBgOpacity(slide.backgroundOpacity)
+            return `
+            <label class="admin-home-hero-opacity" data-home-hero-opacity="${index}"${index === active ? '' : ' hidden'}>
+              <span>背景透明度</span>
+              <input type="range" min="0" max="100" step="5" value="${opacity}" data-home-field="heroSlides.${index}.backgroundOpacity" data-home-type="number" aria-label="第 ${index + 1} 屏背景透明度" />
+              <output>${opacity}%</output>
+            </label>`
+          }).join('')}
         </div>` : ''}
       <div class="admin-home-hero__stack">
         ${list.map((slide, index) => `
           <article class="sm-hero__slide is-active admin-home-hero__slide${index === active ? ' is-editing' : ''}" data-home-hero-slide="${index}"${index === active ? '' : ' hidden'}>
-            <div class="sm-hero__media" style="background-image:url('${esc(slide.background || '/images/home-advantages/advantage-ai-agent.webp')}')">
+            <div class="sm-hero__media">
+              <div class="admin-home-hero__bg" data-home-hero-bg="${index}" style="background-image:url('${esc(slide.background || '/images/home-advantages/advantage-ai-agent.webp')}');${heroBgOpacityStyle(slide.backgroundOpacity)}"></div>
               ${editable ? `<button type="button" class="hpi-edit-bg" data-edit-image="heroSlides.${index}.background" data-edit-image-url="${esc(slide.background || '')}" title="更换背景">更换背景</button>` : ''}
             </div>
             <div class="sm-hero__gradient" aria-hidden="true"></div>

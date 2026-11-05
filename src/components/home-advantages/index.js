@@ -1,4 +1,5 @@
 import { ADVANTAGE_SLIDES } from '../../data/home-advantages.js'
+import { heroBgOpacityStyle } from '../../lib/hero-bg-opacity.js'
 import '../../styles/home-advantages.css'
 
 function escapeHtml(value) {
@@ -32,6 +33,7 @@ function renderSlide(slide, index) {
   const fetchPriority = isFirst ? 'high' : 'low'
   const dwell = slide.dwellMs || ''
   const ariaLabel = slide.label ? `${slide.label}：${slide.title}` : slide.title
+  const mediaStyle = heroBgOpacityStyle(slide.backgroundOpacity)
 
   return `
 <article
@@ -42,7 +44,7 @@ function renderSlide(slide, index) {
   aria-hidden="${isFirst ? 'false' : 'true'}"
   aria-label="${escapeHtml(ariaLabel)}"
 >
-  <div class="sm-hero__media ha-media">
+  <div class="sm-hero__media ha-media"${mediaStyle ? ` style="${mediaStyle}"` : ''}>
     <img
       class="ha-media__img"
       src="${escapeHtml(slide.background)}"

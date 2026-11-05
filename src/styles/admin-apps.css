@@ -4233,6 +4233,39 @@ body.admin-home-fullscreen { overflow: hidden; }
   background: #edf4ff;
   color: #1769ff;
 }
+.admin-home-hero-opacity {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  /* 让出右上角浮动的「首屏轮播 + 新增一屏」 */
+  margin-right: 170px;
+  padding: 5px 12px;
+  border: 1px solid #d5deea;
+  border-radius: 999px;
+  background: #fff;
+  color: #526077;
+  font-size: 11px;
+  font-weight: 700;
+}
+.admin-home-hero-opacity[hidden] { display: none; }
+.admin-home-hero-opacity input[type="range"] {
+  width: 120px;
+  accent-color: #1769ff;
+  cursor: pointer;
+}
+.admin-home-hero-opacity output {
+  min-width: 34px;
+  color: #1769ff;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.admin-vedit--home .admin-home-hero__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
 .admin-vedit--home .admin-home-hero__stack {
   display: grid;
   gap: 0;

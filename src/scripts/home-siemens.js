@@ -474,6 +474,7 @@ export function applyCmsHeroSlides(slides) {
     description: item.description || '',
     primaryAction: { label: item.actionLabel || '了解更多', href: item.actionHref || '#upgrade' },
     background: item.background || '/images/home-advantages/advantage-ai-agent.webp',
+    backgroundOpacity: item.backgroundOpacity,
     themeClass: HERO_THEMES[index % HERO_THEMES.length],
   })))
 }

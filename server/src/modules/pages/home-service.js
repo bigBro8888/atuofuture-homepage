@@ -161,6 +161,13 @@ function cleanUrl(value, fallback = '') {
   return parsed.toString().slice(0, 1000)
 }
 
+function cleanPercent(value, fallback = 100) {
+  if (value === '' || value == null) return fallback
+  const number = Number(value)
+  if (!Number.isFinite(number)) return fallback
+  return Math.min(100, Math.max(0, Math.round(number)))
+}
+
 function fixedItems(value, defaults, mapper) {
   const source = Array.isArray(value) ? value : []
   return defaults.map((fallback, index) => mapper(source[index] || {}, fallback))
@@ -251,6 +258,7 @@ export function validateHomeContent(value = {}) {
       actionLabel: cleanText(item.actionLabel, fallback.actionLabel, 40),
       actionHref: cleanUrl(item.actionHref, fallback.actionHref),
       background: cleanUrl(item.background, fallback.background),
+      backgroundOpacity: cleanPercent(item.backgroundOpacity, 100),
     })),
     banner: {
       title: cleanText(banner.title, defaultHomeContent.banner.title, 80),

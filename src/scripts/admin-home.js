@@ -1,4 +1,5 @@
 import { renderHomePage } from '../lib/home-page-render.js'
+import { heroBgOpacity } from '../lib/hero-bg-opacity.js'
 
 const HOME_SECTIONS = [
   { id: 'hero', label: '首屏轮播' },
@@ -167,6 +168,7 @@ export function collectHomeVisualContent(baseContent) {
     if (!path) return
     let value
     if (field.dataset.homeType === 'checkbox') value = field.checked
+    else if (field.dataset.homeType === 'number') value = Number(field.value)
     else value = field.value
     setNested(content, path, value)
   })
@@ -198,6 +200,9 @@ function activateHeroSlide(index) {
     const on = Number(btn.dataset.homeHeroPick) === target
     btn.classList.toggle('is-active', on)
     btn.setAttribute('aria-selected', on ? 'true' : 'false')
+  })
+  section.querySelectorAll('[data-home-hero-opacity]').forEach((el) => {
+    el.hidden = Number(el.dataset.homeHeroOpacity) !== target
   })
   if (ctx.state) ctx.state.homeHeroIndex = target
 }
@@ -276,16 +281,31 @@ function applyVisualImage(path, url) {
       }
       if (img) img.src = safeUrl
       if (target.matches('.hpi-edit-bg')) {
-        const media = target.parentElement
+        const media = bgLayerOf(target)
         if (media) media.style.backgroundImage = `url("${safeUrl}")`
         target.textContent = target.title?.includes('背景') ? '更换背景' : target.title?.includes('封面') ? '更换封面' : '更换配图'
       }
     }
   }
   if (target?.matches('.hpi-edit-bg') && safeUrl) {
-    const mediaHost = target.parentElement
+    const mediaHost = bgLayerOf(target)
     if (mediaHost) mediaHost.style.backgroundImage = `url("${safeUrl}")`
   }
+}
+
+function bgLayerOf(editButton) {
+  const media = editButton?.parentElement
+  return media?.querySelector(':scope > [data-home-hero-bg]') || media
+}
+
+function previewHeroOpacity(input) {
+  const label = input.closest('[data-home-hero-opacity]')
+  if (!label) return
+  const percent = heroBgOpacity(input.value)
+  const output = label.querySelector('output')
+  if (output) output.textContent = `${percent}%`
+  const layer = document.querySelector(`#home-visual-hero [data-home-hero-bg="${label.dataset.homeHeroOpacity}"]`)
+  if (layer) layer.style.opacity = String(percent / 100)
 }
 
 function openImageModal(imageEl) {
@@ -463,6 +483,10 @@ export function bindHomeVisualAdmin(helpers) {
     if (event.key !== 'Escape') return
     if (!document.body.classList.contains('admin-home-fullscreen')) return
     setFullscreen(false)
+  })
+
+  editor.addEventListener('input', (event) => {
+    if (event.target.matches('[data-home-hero-opacity] input[type="range"]')) previewHeroOpacity(event.target)
   })
 
   editor.addEventListener('change', async (event) => {
