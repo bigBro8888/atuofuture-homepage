@@ -38,7 +38,7 @@ export const authConfig = {
     client_id: 'aspace-one',
     client_name: 'Aspace空间智能',
     redirect_uris: portalOrigins.map((origin) => `${origin}/aspace-one/auth/callback`),
-    post_logout_redirect_uris: portalOrigins.map((origin) => `${origin}/aspace-one/`),
+    post_logout_redirect_uris: portalOrigins.flatMap((origin) => [`${origin}/aspace-one/`, `${origin}/`]),
     response_types: ['code'],
     grant_types: ['authorization_code', 'refresh_token'],
     token_endpoint_auth_method: 'none',

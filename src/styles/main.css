@@ -962,11 +962,117 @@
     font-weight: 700;
   }
 
+  .site-account-menu {
+    position: relative;
+  }
+
+  .site-account-menu__chevron {
+    transition: transform 0.25s cubic-bezier(0.475, 0.425, 0, 0.995);
+  }
+
+  .site-account-menu__panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 168px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: rgba(8, 14, 48, 0.96);
+    box-shadow: 0 16px 40px rgba(0, 0, 20, 0.45);
+    backdrop-filter: blur(12px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+  }
+
+  .site-account-menu__panel::before {
+    content: '';
+    position: absolute;
+    inset: -10px 0 auto;
+    height: 10px;
+  }
+
+  .site-account-menu.is-open .site-account-menu__panel {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  .site-account-menu.is-open .site-account-menu__chevron {
+    transform: rotate(180deg);
+  }
+
+  @media (hover: hover) {
+    .site-account-menu:hover .site-account-menu__panel {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+
+    .site-account-menu:hover .site-account-menu__chevron {
+      transform: rotate(180deg);
+    }
+  }
+
+  .site-account-menu__item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.7rem;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.86);
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .site-account-menu__item .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  .site-account-menu__item:hover,
+  .site-account-menu__item:focus-visible {
+    background: rgba(255, 255, 255, 0.08);
+    color: #00e5c0;
+  }
+
   .site-mobile-drawer__actions .site-header__account {
     width: 100%;
     justify-content: flex-start;
     padding: 10px 4px;
     color: rgba(255, 255, 255, 0.86);
+  }
+
+  .site-mobile-drawer__actions .site-account-menu__chevron {
+    display: none;
+  }
+
+  .site-mobile-drawer__actions .site-account-menu__panel {
+    position: static;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-account-menu__panel,
+    .site-account-menu__chevron {
+      transition: none;
+    }
   }
 
   .site-header .site-header__btn--ghost.is-current {

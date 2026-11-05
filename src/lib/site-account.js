@@ -173,14 +173,45 @@ export async function startSiteLogin({ forceLogin = true } = {}) {
   window.location.href = authorizeUrl.toString()
 }
 
+export function logoutSiteAccount(redirectPath = '/') {
+  const idToken = String(readPortalTokens()?.id_token || '')
+  clearPortalTokens()
+  try {
+    sessionStorage.removeItem(PENDING_KEY)
+  } catch {
+    /* ignore */
+  }
+  window.ASPACE_CURRENT_USER = null
+  if (!idToken) {
+    window.location.replace(redirectPath)
+    return
+  }
+  const endUrl = new URL('/auth/session/end', window.location.origin)
+  endUrl.searchParams.set('id_token_hint', idToken)
+  endUrl.searchParams.set('client_id', 'aspace-one')
+  endUrl.searchParams.set('post_logout_redirect_uri', `${window.location.origin}${redirectPath}`)
+  window.location.replace(endUrl.toString())
+}
+
 export function renderSiteAccount(user) {
   if (user?.id) {
     const name = siteAccountName(user)
     return `
-      <a class="site-header__account is-logged-in" href="/aspace-one/" data-site-account>
-        <span class="site-header__account-avatar">${escapeHtml(name.slice(0, 1))}</span>
-        <span data-site-account-label>${escapeHtml(name)}</span>
-      </a>`
+      <div class="site-account-menu" data-site-account>
+        <button type="button" class="site-header__account is-logged-in" aria-haspopup="true" aria-expanded="false" data-site-account-toggle>
+          <span class="site-header__account-avatar">${escapeHtml(name.slice(0, 1))}</span>
+          <span data-site-account-label>${escapeHtml(name)}</span>
+          <span class="material-symbols-outlined site-account-menu__chevron" aria-hidden="true">expand_more</span>
+        </button>
+        <div class="site-account-menu__panel" role="menu">
+          <a class="site-account-menu__item" href="/aspace-one/" role="menuitem">
+            <span class="material-symbols-outlined" aria-hidden="true">apps</span>进入 Aspace 平台
+          </a>
+          <button type="button" class="site-account-menu__item" role="menuitem" data-site-logout>
+            <span class="material-symbols-outlined" aria-hidden="true">logout</span>退出登录
+          </button>
+        </div>
+      </div>`
   }
   return `
     <button type="button" class="site-header__account" data-site-account>
@@ -192,11 +223,39 @@ export function renderSiteAccount(user) {
 export function bindSiteAccount(header) {
   if (!header || header.dataset.accountBound === '1') return
   header.dataset.accountBound = '1'
+  const closeMenus = (except) => {
+    header.querySelectorAll('.site-account-menu.is-open').forEach((menu) => {
+      if (menu === except) return
+      menu.classList.remove('is-open')
+      menu.querySelector('[data-site-account-toggle]')?.setAttribute('aria-expanded', 'false')
+    })
+  }
   header.addEventListener('click', (event) => {
-    const trigger = event.target.closest('[data-site-account]')
-    if (!trigger || trigger.matches('a')) return
+    if (event.target.closest('[data-site-logout]')) {
+      event.preventDefault()
+      logoutSiteAccount('/')
+      return
+    }
+    const toggle = event.target.closest('[data-site-account-toggle]')
+    if (toggle) {
+      event.preventDefault()
+      const menu = toggle.closest('.site-account-menu')
+      const open = !menu.classList.contains('is-open')
+      closeMenus(menu)
+      menu.classList.toggle('is-open', open)
+      toggle.setAttribute('aria-expanded', String(open))
+      return
+    }
+    const trigger = event.target.closest('button[data-site-account]')
+    if (!trigger) return
     event.preventDefault()
     void startSiteLogin()
+  })
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.site-account-menu')) closeMenus()
+  })
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeMenus()
   })
   void loadSiteAccount().then((user) => {
     header.querySelectorAll('[data-site-account]').forEach((node) => {
