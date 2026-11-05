@@ -92,6 +92,7 @@ cd /var/www/mydoc/atuofuture && sudo -u atuoapp npm run build
 | `public/images`、`public/assets/hero`、`public/assets/fonts` 新增或替换文件 | `npm run build` 后再执行 `sudo -u atuoapp node scripts/sync-static-to-oss.mjs --internal`，否则线上会 404（这几个目录由 nginx 302 到 OSS） |
 | `server/`、API、环境相关后端逻辑 | build 后执行 `systemctl restart atuofuture-home` |
 | nginx 配置 | 一般不动；若改了再 `nginx -t && systemctl reload nginx` |
+| 官网 nginx `/etc/nginx/atuofuture-only.conf`（服务 `atuofuture-nginx`） | `nginx -t -c /etc/nginx/atuofuture-only.conf && systemctl reload atuofuture-nginx`。server 块必须保留 `absolute_redirect off;`：ai.atuofuture.com 经系统 nginx 反代到 18443，否则补斜杠的 301 会带上 `:18443`，登录回调换了 origin 后统一登录会静默失败 |
 
 常用检查：
 
