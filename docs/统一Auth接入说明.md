@@ -95,6 +95,7 @@ AUTH_PASSWORD_LOGIN_ENABLED=true
 AUTH_COOKIE_KEYS=随机长字符串（生产必填）
 AUTH_DINGTALK_CLIENT_ID=...
 AUTH_DINGTALK_CLIENT_SECRET=...
+AUTH_EXTRA_CLIENTS_JSON=[...]   # 新系统登记，见 3.1
 ```
 
 - `AUTH_PORTAL_ORIGINS` 决定各客户端允许的 `redirect_uri` 和退出回跳地址，新增访问域名时要加进来并重启 `atuofuture-auth`。
@@ -111,26 +112,270 @@ AUTH_DINGTALK_CLIENT_SECRET=...
 - 官网首页、Aspace 平台：从 IP 或其它端口点「登录」时，先跳到 `https://ai.atuofuture.com` 的同一页面（带 `?site_login=1`），再自动发起登录。逻辑在 `src/lib/site-account.js` 的 `loginOrigin()` / `canonicalLoginUrl()` / `consumeLoginHandoff()`。
 - 官网后台：登录页「钉钉登录」按钮直接指向主域名的 `/api/admin/oidc/start`。
 
-新接入的子系统也要从主域名发起登录。
+新系统用第三节的接入代码时，登录地址固定是 `https://ai.atuofuture.com/auth`，不受这个问题影响；自己写登录逻辑时，也要用这个完整地址，不要用相对路径 `/auth/...`。
 
-## 三、子系统登记
+## 三、新系统接入指南（含代码）
 
-每个子系统必须独立登记（默认在 `auth/src/config.js` 的 `clients`，也可用 `AUTH_CLIENTS_JSON` 覆盖）：
+### 3.0 先了解这几点
 
-- 唯一 `client_id`
-- 精确的 HTTPS `redirect_uri`
-- 精确的退出回跳地址
-- 允许申请的 Scope
-- 是否允许刷新令牌
+- **统一登录窗口是整页跳转**，不是嵌在 iframe 里的弹窗（Auth 禁止被嵌入，防点击劫持）。任何系统点「登录」都会跳到同一个 `https://ai.atuofuture.com/auth/...` 登录页（钉钉 / 账号密码），登录后跳回原系统。
+- **一次登录，多处通用**：用户在任一系统登录后，统一 Auth 在 `ai.atuofuture.com` 保留会话；同一浏览器进入别的系统时直接跳回、不用再输密码。只有带 `prompt=login` 时才强制重新登录。
+- **退出是全局的**：任一系统调用统一退出，会结束统一 Auth 会话。
+- **统一 Auth 只负责「你是谁」**，各系统自己决定「你能做什么」（角色、权限、是否允许进入）。
 
-浏览器和移动端使用公共客户端，不保存 `client_secret`，必须启用 PKCE。能安全保存密钥的服务端客户端使用 `private_key_jwt` 或受控的客户端认证方式。
+选哪种接入方式：
 
-当前客户端：
+| 系统形态 | 推荐方式 | 接入代码 |
+|---|---|---|
+| 有 Node.js / Express 后端 | **方式 B：后端接入**（最推荐，token 不落浏览器） | `auth/sdk/atuo-auth-express.js` |
+| 纯前端单页应用（Vue / React / 原生） | 方式 A：浏览器接入 | `auth/sdk/atuo-auth-browser.js` |
+| Java / Python / Go 等其它后端 | 方式 C：标准 OIDC 库 | 按 3.4 的接口表配置 |
+
+两份接入代码都无第三方依赖，**直接复制到新项目里使用**。它们由 `server/test/auth-sdk.test.js` 做端到端测试（真实启动 Auth，走完登录 → 跨系统免登录 → 取用户 → 退出），改动后运行 `node --test server/test/auth-sdk.test.js` 验证；这个测试文件本身也是最完整的用法示例。
+
+### 3.1 第一步：登记客户端（只改服务器 `.env`）
+
+每个系统一个独立的 `client_id`。在服务器 `/var/www/mydoc/atuofuture/.env` 里追加 `AUTH_EXTRA_CLIENTS_JSON`（**必须写成一行 JSON 数组**），多个系统放在同一个数组里：
+
+```text
+AUTH_EXTRA_CLIENTS_JSON=[{"client_id":"asset-system","client_name":"资产管理系统","redirect_uris":["https://asset.atuofuture.com/auth/callback","http://localhost:5173/auth/callback"],"post_logout_redirect_uris":["https://asset.atuofuture.com/","http://localhost:5173/"]}]
+```
+
+| 字段 | 必填 | 说明 |
+|---|---|---|
+| `client_id` | 是 | 英文小写加短横线，全局唯一；与内置客户端同名时会覆盖内置配置 |
+| `client_name` | 否 | 中文名，用于日志和审计 |
+| `redirect_uris` | 是 | 登录回调地址，**必须与代码里的回调完全一致**（协议、域名、端口、路径都要一样）；线上用 HTTPS，可以同时登记本地开发地址 |
+| `post_logout_redirect_uris` | 建议 | 退出后允许跳回的地址；没登记的地址会被拒绝，退出时报错 |
+| `token_endpoint_auth_method` | 否 | 默认 `none`（公共客户端 + PKCE，不需要密钥），A、B 两种方式都用默认值 |
+
+改完重启 Auth：
+
+```bash
+systemctl restart atuofuture-auth && systemctl is-active atuofuture-auth
+```
+
+验证是否登记成功：浏览器打开下面的地址（只换 `client_id` 和 `redirect_uri`，`code_challenge` 原样保留，它至少要 43 位）：
+
+```text
+https://ai.atuofuture.com/auth/auth?client_id=asset-system&response_type=code&scope=openid&redirect_uri=https%3A%2F%2Fasset.atuofuture.com%2Fauth%2Fcallback&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256
+```
+
+- 出现统一登录页，或者（已登录时）直接跳到你的回调地址并带 `code=` → 登记成功。
+- 页面显示 `invalid_client` → client_id 没登记上（检查 JSON 是否写成一行、Auth 是否重启）。
+- 页面显示 `invalid_redirect_uri` → 回调地址和登记的不完全一致。
+
+> 本地开发也可以直接接线上 Auth：把 `http://localhost:端口/auth/callback` 一起登记即可。登录页在线上主域名打开，钉钉和账号密码都能用；线上 Auth 允许已登记回调地址的来源跨域调用 token 和 userinfo 接口。
+
+### 3.2 方式 B：Node.js / Express 后端接入（推荐）
+
+把 `auth/sdk/atuo-auth-express.js` 复制到新项目（例如 `src/lib/atuo-auth.js`）。它会自动提供 4 个路由：
+
+| 路由 | 作用 |
+|---|---|
+| `GET /auth/login?returnTo=/xxx` | 跳到统一登录页；登录完回到 `returnTo` |
+| `GET /auth/callback` | 统一登录回调（就是登记的 `redirect_uris`） |
+| `GET /auth/logout` | 清本系统会话并统一退出，回到系统首页 |
+| `GET /auth/me` | 返回当前登录用户 JSON，未登录返回 401 |
+
+后端代码：
+
+```js
+import express from 'express'
+import { createAtuoAuth } from './lib/atuo-auth.js'
+
+const auth = createAtuoAuth({
+  clientId: 'asset-system',
+  appOrigin: process.env.APP_ORIGIN,              // 如 https://asset.atuofuture.com
+  sessionSecret: process.env.SESSION_SECRET,      // 至少 32 位随机字符串，只放 .env
+  // issuer 默认 https://ai.atuofuture.com/auth
+  // 和 Auth 部署在同一台服务器时加上，服务端直连更快：
+  // internalUrl: 'http://127.0.0.1:18089/auth',
+
+  // 登录成功后把统一身份映射成本系统用户；返回 null 表示不允许进入
+  async onLogin(claims) {
+    // claims: { sub, name, picture, idp, dingtalk_unionid, email }
+    const user = await db.users.findOrCreateByAuthSub(claims.sub, {
+      name: claims.name,
+      avatar: claims.picture,
+      dingtalkUnionId: claims.dingtalk_unionid,
+    })
+    if (!user.enabled) return null                // 未授权 / 已停用，跳到 deniedPath
+    return { id: user.id, name: user.name, role: user.role }  // 会写进会话 Cookie，保持精简
+  },
+  deniedPath: '/no-access',
+})
+
+const app = express()
+app.use(auth.router)
+
+// 页面：未登录自动跳统一登录，登录后回到当前页
+app.get('/dashboard', auth.requireLogin, (req, res) => res.send(`你好，${req.atuoUser.name}`))
+
+// 接口：未登录返回 401 { error, loginUrl }
+app.get('/api/assets', auth.requireUser, (req, res) => {
+  if (req.atuoUser.role !== 'admin') return res.status(403).json({ error: 'forbidden' })
+  res.json([])
+})
+```
+
+前端只需要三个链接 / 请求，不碰任何 token：
+
+```html
+<a href="/auth/login">登录</a>
+<a href="/auth/logout">退出登录</a>
+<script type="module">
+  const res = await fetch('/auth/me', { credentials: 'same-origin' })
+  const user = res.ok ? await res.json() : null
+  // user 为 null 时显示「登录」按钮；也可以直接 location.href = '/auth/login?returnTo=' + encodeURIComponent(location.pathname)
+</script>
+```
+
+说明：
+
+- 会话保存在本系统签名的 HttpOnly Cookie（默认 8 小时，`sessionTtlSeconds` 可调）。过期后再访问会跳统一登录；如果统一 Auth 会话还在，会直接跳回来，用户无感。
+- 前后端分离、前端在不同端口开发时，用前端开发服务器代理 `/auth` 和 `/api` 到后端，保证 Cookie 同源。
+- 登录失败或用户取消，会跳回 `returnTo` 并带 `?login_error=xxx`，前端可据此提示。
+
+### 3.3 方式 A：纯前端单页应用接入
+
+把 `auth/sdk/atuo-auth-browser.js` 复制到新项目（例如 `src/lib/atuo-auth.js`）。
+
+初始化（全局一份）：
+
+```js
+// src/auth.js
+import { createAtuoAuth } from './lib/atuo-auth.js'
+
+export const auth = createAtuoAuth({
+  clientId: 'asset-system',
+  // 以下都有默认值，与 3.1 登记的地址一致即可：
+  // issuer: 'https://ai.atuofuture.com/auth',
+  // redirectUri: `${location.origin}/auth/callback`,
+  // postLogoutRedirectUri: `${location.origin}/`,
+})
+```
+
+应用启动时处理回调、拿当前用户：
+
+```js
+// src/main.js
+import { auth } from './auth.js'
+
+async function boot() {
+  if (auth.isRedirectCallback()) {
+    try {
+      const result = await auth.handleRedirectCallback()
+      if (result.error) console.warn('登录未完成：', result.error)   // 用户取消等
+      history.replaceState(null, '', result.returnTo)               // 回到登录前的页面
+    } catch (error) {
+      alert(error.message)
+      history.replaceState(null, '', '/')
+    }
+  }
+
+  const user = await auth.getUser()   // 未登录或 token 过期返回 null
+  if (!user) {
+    // 需要登录的系统：直接跳统一登录。已在别的系统登录过时会自动跳回，不用再输密码
+    await auth.login()
+    return
+  }
+  renderApp(user)                     // user: { sub, name, picture, idp, dingtalk_unionid, email }
+}
+
+boot()
+```
+
+登录 / 退出按钮：
+
+```js
+loginButton.onclick = () => auth.login()                       // 有统一会话时直接回来
+switchAccountButton.onclick = () => auth.login({ prompt: 'login' }) // 强制出现登录页（切换账号）
+logoutButton.onclick = () => auth.logout()                     // 统一退出
+```
+
+调用自己的后端接口时带上 access token：
+
+```js
+const res = await fetch('/api/assets', {
+  headers: { Authorization: `Bearer ${auth.getAccessToken()}` },
+})
+```
+
+后端校验这个 token：把它转发给统一 Auth 的 userinfo 接口，返回 200 就是有效用户（建议按 token 缓存 1～5 分钟）：
+
+```js
+async function requireAtuoToken(req, res, next) {
+  const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '')
+  if (!token) return res.status(401).json({ error: 'unauthorized' })
+  const response = await fetch('https://ai.atuofuture.com/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+  if (!response.ok) return res.status(401).json({ error: 'unauthorized' })
+  req.atuoUser = await response.json()   // 再按 req.atuoUser.sub 查本系统的角色权限
+  next()
+}
+```
+
+说明：
+
+- 回调页 `/auth/callback` 要能返回前端页面：SPA 的 history 路由兜底到 `index.html` 即可（nginx `try_files $uri /index.html;`）。
+- token 存在 `localStorage`，有效期 1 小时；过期后 `getUser()` 返回 null，再调一次 `auth.login()` 通常会无感跳回。
+- PKCE 依赖 `crypto.subtle`，只能在 HTTPS 或 `localhost` 下运行。
+
+### 3.4 方式 C：其它语言后端
+
+用各语言成熟的 OIDC 客户端库，配置 issuer 自动发现即可（如 Java Spring Security `oauth2-client`、Python `Authlib`、Go `coreos/go-oidc` + `golang.org/x/oauth2`）。要点：
+
+- Issuer：`https://ai.atuofuture.com/auth`
+- 客户端类型：公共客户端（`token_endpoint_auth_method=none`），**必须开启 PKCE（S256）**，不配置 client_secret
+- Scope：`openid profile email`
+- 回调地址与 3.1 登记的完全一致
+
+接口一览：
+
+| 用途 | 地址 |
+|---|---|
+| 自动发现 | `https://ai.atuofuture.com/auth/.well-known/openid-configuration` |
+| 授权（登录页） | `https://ai.atuofuture.com/auth/auth` |
+| 换取 token | `POST https://ai.atuofuture.com/auth/token` |
+| 用户信息 | `GET https://ai.atuofuture.com/auth/me`（`Authorization: Bearer <access_token>`） |
+| 退出 | `https://ai.atuofuture.com/auth/session/end?client_id=...&post_logout_redirect_uri=...&id_token_hint=...` |
+| 公钥（验签） | `https://ai.atuofuture.com/auth/jwks` |
+
+换 token 的请求格式：
+
+```http
+POST /auth/token HTTP/1.1
+Host: ai.atuofuture.com
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&client_id=asset-system&code=<回调拿到的code>&redirect_uri=https%3A%2F%2Fasset.atuofuture.com%2Fauth%2Fcallback&code_verifier=<登录前生成的verifier>
+```
+
+### 3.5 用户身份与权限的约定
+
+- **`sub` 是统一用户的唯一主键**，本系统用户表存 `auth_sub` 字段关联，不要用姓名或手机号关联。
+- `idp` 表示登录方式（`dingtalk` / `password`）；`dingtalk_unionid` 可与钉钉通讯录对应（例如和官网后台一样做组织架构同步）。
+- 首次登录的用户怎么处理由各系统决定。常见做法：自动建成「待授权」账号，管理员授权后才能使用（官网后台就是这样，参考第四节）。
+- 不要相信前端传来的用户名、角色等信息；身份只以 token 或本系统会话为准。
+
+### 3.6 上线检查清单
+
+- [ ] `.env` 的 `AUTH_EXTRA_CLIENTS_JSON` 已登记线上 HTTPS 回调和退出地址，Auth 已重启
+- [ ] 用 3.1 的验证地址能打开登录页
+- [ ] 钉钉扫码登录、账号密码登录都能回到系统
+- [ ] 先在官网登录，再打开新系统，确认不用再输密码
+- [ ] 退出后刷新页面是未登录状态
+- [ ] 未授权用户被拒绝时有明确提示
+- [ ] 方式 B 的 `SESSION_SECRET` 只在服务器 `.env`，没有提交到仓库
+
+### 3.7 当前已登记的客户端
 
 | client_id | 回调 | 说明 |
 |---|---|---|
 | `aspace-one` | `{origin}/aspace-one/auth/callback` | 官网首页右上角登录、Aspace 平台；纯前端 PKCE，token 存浏览器 |
 | `website-admin` | `{origin}/api/admin/oidc/callback` | 官网后台；服务端完成换码，建立后台自己的会话 Cookie |
+
+这两个是内置客户端（`auth/src/config.js`），`{origin}` 取自 `AUTH_PORTAL_ORIGINS`。新系统一律用 `AUTH_EXTRA_CLIENTS_JSON` 登记，不需要改 Auth 代码。
 
 ## 四、官网后台的钉钉登录
 

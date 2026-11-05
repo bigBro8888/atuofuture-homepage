@@ -22,6 +22,25 @@ const portalOrigin = String(process.env.AUTH_PORTAL_ORIGIN || 'http://127.0.0.1:
 const portalOrigins = list(process.env.AUTH_PORTAL_ORIGINS, [portalOrigin]).map((origin) => origin.replace(/\/$/, ''))
 const basePath = `/${String(process.env.AUTH_BASE_PATH || 'auth').replace(/^\/+|\/+$/g, '')}`
 
+/** 新系统通过 AUTH_EXTRA_CLIENTS_JSON 追加登记；client_id 与内置客户端相同时覆盖内置配置 */
+function withExtraClients(clients) {
+  const extra = json(process.env.AUTH_EXTRA_CLIENTS_JSON, [])
+  if (!Array.isArray(extra)) throw new Error('AUTH_EXTRA_CLIENTS_JSON 必须是 JSON 数组')
+  const merged = new Map(clients.map((client) => [client.client_id, client]))
+  for (const client of extra) {
+    if (!client?.client_id || !Array.isArray(client.redirect_uris) || !client.redirect_uris.length) {
+      throw new Error('AUTH_EXTRA_CLIENTS_JSON 中每个客户端都需要 client_id 和 redirect_uris')
+    }
+    merged.set(client.client_id, {
+      response_types: ['code'],
+      grant_types: ['authorization_code'],
+      token_endpoint_auth_method: 'none',
+      ...client,
+    })
+  }
+  return [...merged.values()]
+}
+
 export const authConfig = {
   port: Number(process.env.AUTH_PORT || 8788),
   host: process.env.AUTH_HOST || '127.0.0.1',
@@ -34,7 +53,7 @@ export const authConfig = {
   jwksFile: process.env.AUTH_JWKS_FILE || path.resolve(here, '../data/jwks.json'),
   cookieKeys: list(process.env.AUTH_COOKIE_KEYS, ['development-cookie-key-change-before-production']),
   trustProxy: String(process.env.AUTH_TRUST_PROXY || 'true').toLowerCase() === 'true',
-  clients: json(process.env.AUTH_CLIENTS_JSON, [{
+  clients: withExtraClients(json(process.env.AUTH_CLIENTS_JSON, [{
     client_id: 'aspace-one',
     client_name: 'Aspace空间智能',
     redirect_uris: portalOrigins.map((origin) => `${origin}/aspace-one/auth/callback`),
@@ -50,7 +69,7 @@ export const authConfig = {
     response_types: ['code'],
     grant_types: ['authorization_code'],
     token_endpoint_auth_method: 'none',
-  }]),
+  }])),
   dingtalk: {
     clientId: String(process.env.AUTH_DINGTALK_CLIENT_ID || '').trim(),
     clientSecret: String(process.env.AUTH_DINGTALK_CLIENT_SECRET || ''),
