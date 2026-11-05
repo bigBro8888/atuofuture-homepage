@@ -1,4 +1,11 @@
+import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { authConfig } from './config.js'
+
+const cssVersion = createHash('sha1')
+  .update(readFileSync(new URL('../public/auth.css', import.meta.url)))
+  .digest('hex')
+  .slice(0, 10)
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -96,7 +103,7 @@ function pageShell({ title, body }) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>${escapeHtml(title)} | 安托未来</title>
-  <link rel="stylesheet" href="${base}/assets/auth.css" />
+  <link rel="stylesheet" href="${base}/assets/auth.css?v=${cssVersion}" />
 </head>
 <body>
   <main class="auth-shell">
@@ -190,6 +197,10 @@ export function loginPage({ uid, clientName, dingTalkEnabled, passwordEnabled, m
           : methodsMarkup({ uid, dingTalkEnabled, passwordEnabled, preferPassword: Boolean(error) })}
         ${footer}`
   return pageShell({ title: registering ? '注册账号' : '统一登录', body })
+}
+
+export function authStylesheetHref() {
+  return `${authConfig.basePath}/assets/auth.css?v=${cssVersion}`
 }
 
 export function errorPage(message) {

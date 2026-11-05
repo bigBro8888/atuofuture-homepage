@@ -15,7 +15,7 @@ import {
   upsertFederatedUser,
   verifyLocalUser,
 } from './store.js'
-import { errorPage, loginPage } from './views.js'
+import { authStylesheetHref, errorPage, loginPage } from './views.js'
 
 const dingTalkStates = new Map()
 const passwordAttempts = new Map()
@@ -110,7 +110,7 @@ export async function createAuthService() {
         enabled: true,
         // 跳过“是否确认退出”页，直接完成退出并回跳
         logoutSource: async (ctx, form) => {
-          ctx.body = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>正在退出…</title><link rel="stylesheet" href="${authConfig.basePath}/assets/auth.css"></head><body><main class="auth-shell"><section class="auth-card"><h1>正在退出…</h1>${form}<button class="auth-back" type="submit" form="op.logoutForm">没有自动跳转？点此继续</button></section></main><script src="${authConfig.basePath}/assets/logout.js"></script></body></html>`
+          ctx.body = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>正在退出…</title><link rel="stylesheet" href="${authStylesheetHref()}"></head><body><main class="auth-shell"><section class="auth-card"><h1>正在退出…</h1>${form}<button class="auth-back" type="submit" form="op.logoutForm">没有自动跳转？点此继续</button></section></main><script src="${authConfig.basePath}/assets/logout.js"></script></body></html>`
         },
       },
     },
