@@ -1,4 +1,5 @@
 import createGlobe from 'cobe'
+import { loginOrigin } from '../lib/site-account.js'
 
 const METHOD_KEY = 'atuo:admin-signin-method'
 const NOTICES = {
@@ -97,7 +98,10 @@ export function mountAdminSignin() {
   if (radio) radio.checked = true
 
   const link = view.querySelector('[data-dingtalk-login]')
-  if (link) link.href = `/api/admin/oidc/start?origin=${encodeURIComponent(window.location.origin)}`
+  if (link) {
+    const origin = loginOrigin()
+    link.href = `${origin}/api/admin/oidc/start?origin=${encodeURIComponent(origin)}`
+  }
 
   requestAnimationFrame(() => startGlobe(view.querySelector('[data-login-globe]')))
 }

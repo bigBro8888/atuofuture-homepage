@@ -2,7 +2,14 @@ import createGlobe from 'cobe'
 import { renderSiteFooter } from '../components/site-footer.js'
 import { alignHelpWithCatalog } from '../lib/aspace-help-categories.js'
 import { defaultDocsListRules, resolveHelpDocList } from '../lib/aspace-help-list.js'
-import { clearPortalTokens, logoutSiteAccount, readPortalTokens, writePortalTokens } from '../lib/site-account.js'
+import {
+  canonicalLoginUrl,
+  clearPortalTokens,
+  consumeLoginHandoff,
+  logoutSiteAccount,
+  readPortalTokens,
+  writePortalTokens,
+} from '../lib/site-account.js'
 import { fetchAboutPageContent, mountAboutContent } from './about-page.js'
 
 const ABOUT_SECTION_IDS = new Set([
@@ -1748,6 +1755,8 @@ async function initPortalAuth() {
 }
 
 async function createPortalLoginUrl({ forceLogin = true } = {}) {
+  const handoffUrl = canonicalLoginUrl()
+  if (handoffUrl) return handoffUrl
   const verifier = base64Url(crypto.getRandomValues(new Uint8Array(32)))
   const challenge = base64Url(await sha256(verifier))
   const state = base64Url(crypto.getRandomValues(new Uint8Array(24)))
@@ -2590,7 +2599,12 @@ function openQuickAction(root, action) {
 export async function initAspaceOne() {
   const root = document.getElementById('aspace-one-root')
   if (!root) return
+  const loginHandoff = consumeLoginHandoff()
   await initPortalAuth()
+  if (loginHandoff && !isPortalAuthenticated()) {
+    window.location.href = await createPortalLoginUrl({ forceLogin: true })
+    return
+  }
   await Promise.all([loadCatalog(), loadHomeContent(), loadHelpContent()])
   loadAppPreferences()
   await Promise.all([loadQuickActions(), loadRecentActivities()])

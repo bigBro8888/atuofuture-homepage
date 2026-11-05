@@ -1,5 +1,33 @@
 const TOKEN_KEY = 'aspace-one-oidc-tokens'
 const PENDING_KEY = 'aspace-one-oidc-pending'
+/** 钉钉回调只认这个域名；从 IP 或其它端口发起的登录先切过来，否则统一登录页不会出现钉钉入口 */
+const CANONICAL_ORIGIN = 'https://ai.atuofuture.com'
+const LOGIN_HANDOFF_PARAM = 'site_login'
+
+/** 发起统一登录应使用的站点地址：线上的 IP 或其它端口统一换成主域名 */
+export function loginOrigin() {
+  const { origin, hostname } = window.location
+  if (hostname === 'ai.atuofuture.com' || hostname === '47.103.102.65') return CANONICAL_ORIGIN
+  return origin
+}
+
+/** 需要切到主域名登录时返回同一页面的主域名地址，否则返回空字符串 */
+export function canonicalLoginUrl() {
+  const { origin, pathname, search, hash } = window.location
+  if (loginOrigin() === origin) return ''
+  const target = new URL(`${pathname}${search}${hash}`, CANONICAL_ORIGIN)
+  target.searchParams.set(LOGIN_HANDOFF_PARAM, '1')
+  return target.toString()
+}
+
+/** 读取并清掉地址栏里的登录交接标记，返回是否需要自动发起登录 */
+export function consumeLoginHandoff() {
+  const url = new URL(window.location.href)
+  if (!url.searchParams.has(LOGIN_HANDOFF_PARAM)) return false
+  url.searchParams.delete(LOGIN_HANDOFF_PARAM)
+  window.history.replaceState(window.history.state, '', url.toString())
+  return true
+}
 
 /** 读写登录 token：优先 session，并同步 local，避免新标签/部分跳转丢登录态 */
 export function readPortalTokens() {
@@ -150,6 +178,11 @@ export async function loadSiteAccount() {
 }
 
 export async function startSiteLogin({ forceLogin = true } = {}) {
+  const handoffUrl = canonicalLoginUrl()
+  if (handoffUrl) {
+    window.location.href = handoffUrl
+    return
+  }
   const verifier = base64Url(crypto.getRandomValues(new Uint8Array(32)))
   const challenge = base64Url(await sha256(verifier))
   const state = base64Url(crypto.getRandomValues(new Uint8Array(24)))
@@ -257,7 +290,12 @@ export function bindSiteAccount(header) {
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeMenus()
   })
+  const loginHandoff = consumeLoginHandoff()
   void loadSiteAccount().then((user) => {
+    if (loginHandoff && !user) {
+      void startSiteLogin()
+      return
+    }
     header.querySelectorAll('[data-site-account]').forEach((node) => {
       const wrap = document.createElement('div')
       wrap.innerHTML = renderSiteAccount(user).trim()
