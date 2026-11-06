@@ -150,39 +150,24 @@ export function renderAgentTaskStory({ selectedId }) {
                     <circle class="ag-minimap__dot" data-minimap-dot cx="-20" cy="-20" r="4.5" hidden/>
                   </svg>
                 </div>
-                <p class="ag-minimap__foot">红点同步人员轨迹 · 雷达实时回读</p>
               </div>
-              <div class="ag-twin__card">
-                <span class="ag-twin__label">在场人数</span>
-                <strong class="ag-twin__value"><span data-twin-people>0</span><small>人</small></strong>
-              </div>
-              <div class="ag-twin__card">
-                <span class="ag-twin__label">照明开启</span>
-                <strong class="ag-twin__value"><span data-twin-lights>0</span><small>/<span data-twin-lights-total>10</span></small></strong>
-              </div>
-              <div class="ag-twin__card">
-                <span class="ag-twin__label">室内温度</span>
-                <strong class="ag-twin__value"><span data-twin-temp>24.6</span><small>°C</small></strong>
-              </div>
-              <div class="ag-twin__card">
-                <span class="ag-twin__label">室外天气</span>
-                <strong class="ag-twin__value ag-twin__value--text" data-twin-weather>晴朗</strong>
-              </div>
-              <div class="ag-twin__row">
-                <span>人体感应雷达</span>
-                <em data-twin-radar>空闲</em>
-              </div>
-              <div class="ag-twin__row">
-                <span>空调状态</span>
-                <em data-twin-ac>待机</em>
-              </div>
-              <div class="ag-twin__row">
-                <span>信息屏</span>
-                <em data-twin-screen>关闭</em>
-              </div>
-              <div class="ag-twin__row">
-                <span>窗帘开合</span>
-                <em data-twin-curtain>全开</em>
+              <div class="ag-twin__devices">
+                <div class="ag-twin__row">
+                  <span>空调状态</span>
+                  <em data-twin-ac>待机</em>
+                </div>
+                <div class="ag-twin__row">
+                  <span>窗帘</span>
+                  <em data-twin-curtain>全开</em>
+                </div>
+                <div class="ag-twin__row">
+                  <span>灯光</span>
+                  <em data-twin-lights-status>全关</em>
+                </div>
+                <div class="ag-twin__row">
+                  <span>信息屏</span>
+                  <em data-twin-screen>关闭</em>
+                </div>
               </div>
             </div>
             <a class="ag-btn ag-btn--solid" data-ag-detail href="${esc(selected.detailUrl)}">查看${esc(selected.shortName)}智能体详情</a>
@@ -300,21 +285,20 @@ export function syncTwinStats(root, stats) {
     const el = root.querySelector(sel)
     if (el) el.textContent = String(value)
   }
-  set('[data-twin-people]', stats.people ?? 0)
-  set('[data-twin-lights]', stats.lightsOn ?? 0)
-  set('[data-twin-lights-total]', stats.lightsTotal ?? 0)
-  set('[data-twin-temp]', stats.temperature ?? '--')
-  set('[data-twin-weather]', stats.weather ?? '--')
-  set('[data-twin-radar]', stats.radar ?? '--')
   set('[data-twin-ac]', stats.ac ?? '--')
   set('[data-twin-screen]', stats.screen ?? '--')
   set('[data-twin-curtain]', stats.curtain ?? '--')
+  const lightsOn = Number(stats.lightLevel) >= 0.99 || Number(stats.lightsOn) >= Number(stats.lightsTotal || 10)
+  set('[data-twin-lights-status]', lightsOn ? '全亮' : '全关')
   const active = Number(stats.people) > 0
-  root.querySelector('[data-twin-radar]')?.classList.toggle('is-active', active)
   root.querySelector('[data-minimap-radar]')?.classList.toggle('is-active', active)
   const mapStatus = root.querySelector('[data-minimap-radar]')
   if (mapStatus && stats.radar) mapStatus.textContent = String(stats.radar)
   root.querySelector('[data-ag-minimap]')?.classList.toggle('is-sensing', active)
+  root.querySelector('[data-twin-lights-status]')?.classList.toggle('is-active', lightsOn)
+  root.querySelector('[data-twin-ac]')?.classList.toggle('is-active', String(stats.ac || '').includes('送风'))
+  root.querySelector('[data-twin-screen]')?.classList.toggle('is-active', String(stats.screen || '').includes('会议'))
+  root.querySelector('[data-twin-curtain]')?.classList.toggle('is-active', String(stats.curtain || '').includes('关闭'))
 }
 
 export function syncStoryFlowStep(root, stepIndex) {
