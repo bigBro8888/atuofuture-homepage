@@ -656,7 +656,7 @@ function buildRoom(scene, tex) {
   if (tex.floorRefMap) {
     floorMat.map = tex.floorRefMap
     floorMat.bumpMap = tex.floorRefMap
-    floorMat.bumpScale = 0.012
+    floorMat.bumpScale = 0.008
     floorMat.roughnessMap = null
     floorMat.color.set(0xffffff)
     floorMat.needsUpdate = true
@@ -1397,7 +1397,8 @@ export function mountMeetingRoom3D(host) {
     try {
       ;[wallRefMap, floorRefMap, curtainRefMap] = await Promise.all([
         loadRefMap('/meeting-wall-mat.png', 3.4, 1.7),
-        loadRefMap('/meeting-floor-mat.jpg', 1, 1, { stretch: true }),
+        // 按屏幕观感控制颗粒密度（约 3×4 平铺），贴近实景照片里的细地毯，避免整面拉伸发糙
+        loadRefMap('/meeting-floor-mat.jpg', 3.2, 4.1),
         loadRefMap('/meeting-curtain-mat.png', 2.8, 3.6),
       ])
     } catch {
