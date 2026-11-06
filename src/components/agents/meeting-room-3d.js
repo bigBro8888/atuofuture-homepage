@@ -925,62 +925,81 @@ function buildRoom(scene, tex) {
   screen.userData.onMat = screenOnMat
   meeting.texture.needsUpdate = true
 
-  ;[-1.1, 1.1].forEach((z) => {
-    const cord = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.85, 8), mat(0x111111)), false, false)
-    cord.position.set(0, ROOM.h - 0.55, z - 0.35)
-    scene.add(cord)
-    const shade = addShadow(
-      new THREE.Mesh(
-        new THREE.ConeGeometry(0.28, 0.34, 32, 1, true),
-        mat(0x151515, { side: THREE.DoubleSide, roughness: 0.45, metalness: 0.35, envMapIntensity: 0.9 })
-      ),
-      true,
-      false
-    )
-    shade.position.set(0, ROOM.h - 1.05, z - 0.35)
-    shade.rotation.x = Math.PI
-    scene.add(shade)
-    // 暖白吊灯，强度压低，避免开灯发白
-    const bulb = new THREE.PointLight(0xffd7a8, 0, 7.2, 2.2)
-    bulb.position.set(0, ROOM.h - 1.15, z - 0.35)
-    scene.add(bulb)
-    const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(0.07, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0xffd9b0, transparent: true, opacity: 0 })
-    )
-    glow.position.copy(bulb.position)
-    scene.add(glow)
-    pendants.push({ light: bulb, glow, on: 1.45 })
+  // 办公线性面板灯：黑框 + 磨砂白扩散板（约 1.5×0.3×0.055m），贴顶平行排布
+  const panelFrameMat = mat(0x1a1c1f, { roughness: 0.72, metalness: 0.35, envMapIntensity: 0.45 })
+  const panelDiffuserMat = new THREE.MeshStandardMaterial({
+    color: 0xf4f6f8,
+    emissive: 0xdce4ee,
+    emissiveIntensity: 0,
+    roughness: 0.92,
+    metalness: 0,
+    envMapIntensity: 0.08,
   })
-
-  for (let i = 0; i < 8; i += 1) {
-    const x = -2.8 + (i % 4) * 1.8
-    const z = -3.5 + Math.floor(i / 4) * 4.2
-    const can = addShadow(
-      new THREE.Mesh(
-        new THREE.CylinderGeometry(0.07, 0.09, 0.14, 16),
-        mat(0x1a1a1a, { metalness: 0.55, roughness: 0.35, envMapIntensity: 1.1 })
-      ),
+  const panelLen = 1.5
+  const panelWid = 0.3
+  const panelThk = 0.055
+  // 三盏平行于长边，覆盖会议区（参考图布局）
+  const panelSlots = [
+    { x: -1.05, z: -0.35 },
+    { x: 0, z: -0.35 },
+    { x: 1.05, z: -0.35 },
+  ]
+  panelSlots.forEach(({ x, z }) => {
+    const group = new THREE.Group()
+    group.position.set(x, ROOM.h - panelThk / 2, z)
+    const frame = addShadow(
+      new THREE.Mesh(new RoundedBoxGeometry(panelWid + 0.02, panelThk, panelLen + 0.02, 1, 0.006), panelFrameMat),
       true,
       false
     )
-    can.position.set(x, ROOM.h - 0.08, z)
-    scene.add(can)
-    // 更大 penumbra，光斑更柔
-    const spot = new THREE.SpotLight(0xffe2c0, 0, 11, Math.PI / 4.2, 0.78, 1.55)
-    spot.position.set(x, ROOM.h - 0.12, z)
+    group.add(frame)
+    const diffuser = new THREE.Mesh(
+      new THREE.PlaneGeometry(panelWid * 0.88, panelLen * 0.92),
+      panelDiffuserMat.clone()
+    )
+    diffuser.rotation.x = Math.PI / 2
+    diffuser.position.y = -panelThk / 2 - 0.001
+    group.add(diffuser)
+    scene.add(group)
+
+    // 冷白柔光，宽光斑，不像酒店吊灯
+    const spot = new THREE.SpotLight(0xe8eef6, 0, 10.5, Math.PI / 3.1, 0.88, 1.35)
+    spot.position.set(x, ROOM.h - panelThk - 0.02, z)
     spot.target.position.set(x, 0, z)
     scene.add(spot)
     scene.add(spot.target)
-    const glow = new THREE.Mesh(
-      new THREE.CircleGeometry(0.05, 16),
-      new THREE.MeshBasicMaterial({ color: 0xffe0b8, transparent: true, opacity: 0 })
+    cans.push({ light: spot, glow: diffuser, on: 1.15, diffuser })
+  })
+  // 两侧再各一盏，补均匀度
+  ;[
+    { x: -1.05, z: 2.15 },
+    { x: 1.05, z: 2.15 },
+    { x: -1.05, z: -2.85 },
+    { x: 1.05, z: -2.85 },
+  ].forEach(({ x, z }) => {
+    const group = new THREE.Group()
+    group.position.set(x, ROOM.h - panelThk / 2, z)
+    const frame = addShadow(
+      new THREE.Mesh(new RoundedBoxGeometry(panelWid + 0.02, panelThk, panelLen + 0.02, 1, 0.006), panelFrameMat),
+      true,
+      false
     )
-    glow.rotation.x = Math.PI / 2
-    glow.position.set(x, ROOM.h - 0.16, z)
-    scene.add(glow)
-    cans.push({ light: spot, glow, on: 1.05 })
-  }
+    group.add(frame)
+    const diffuser = new THREE.Mesh(
+      new THREE.PlaneGeometry(panelWid * 0.88, panelLen * 0.92),
+      panelDiffuserMat.clone()
+    )
+    diffuser.rotation.x = Math.PI / 2
+    diffuser.position.y = -panelThk / 2 - 0.001
+    group.add(diffuser)
+    scene.add(group)
+    const spot = new THREE.SpotLight(0xe8eef6, 0, 10.5, Math.PI / 3.1, 0.88, 1.35)
+    spot.position.set(x, ROOM.h - panelThk - 0.02, z)
+    spot.target.position.set(x, 0, z)
+    scene.add(spot)
+    scene.add(spot.target)
+    cans.push({ light: spot, glow: diffuser, on: 0.95, diffuser })
+  })
 
   return { pendants, cans, airflow, curtains, screen }
 }
@@ -1104,11 +1123,17 @@ export function mountMeetingRoom3D(host) {
     const lamp = next
     pendants.forEach((item) => {
       item.light.intensity = item.on * lamp
-      item.glow.material.opacity = lamp > 0.05 ? 0.55 * lamp : 0
+      if (item.glow?.material) {
+        if ('emissiveIntensity' in item.glow.material) item.glow.material.emissiveIntensity = 0.15 + 1.35 * lamp
+        else item.glow.material.opacity = lamp > 0.05 ? 0.55 * lamp : 0
+      }
     })
     cans.forEach((item) => {
       item.light.intensity = item.on * lamp
-      item.glow.material.opacity = lamp > 0.05 ? 0.55 * lamp : 0
+      if (item.glow?.material) {
+        if ('emissiveIntensity' in item.glow.material) item.glow.material.emissiveIntensity = 0.12 + 1.45 * lamp
+        else item.glow.material.opacity = lamp > 0.05 ? 0.55 * lamp : 0
+      }
     })
     // 开灯偏暖、整体压曝，避免发白发灰
     ambient.intensity = 0.14 + 0.12 * lamp
