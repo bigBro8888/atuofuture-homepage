@@ -42,7 +42,8 @@ function wirePersonDialog(sceneRoot, roomApi) {
 }
 
 /**
- * Mount the packaged meeting-room scene (正对门禁版) into the story host.
+ * Mount the packaged meeting-room scene into the story host.
+ * Waits for character GLB (and a few rendered frames) before revealing.
  * @param {HTMLElement} host
  */
 export function mountMeetingRoom3D(host) {
@@ -74,6 +75,9 @@ export function mountMeetingRoom3D(host) {
   const sceneRoot = host.closest('[data-ag-scene]') || host.parentElement
   wirePersonDialog(sceneRoot, api)
 
+  // 人物未就绪前不要自动开进场/扫描
+  api.setActive?.(false)
+
   let settled = false
   const finish = () => {
     if (settled) return
@@ -92,16 +96,33 @@ export function mountMeetingRoom3D(host) {
     resolveReady = resolve
   })
 
-  let frames = 0
-  const prevFrame = api._onFrame
-  api._onFrame = (roomApi) => {
-    prevFrame?.(roomApi)
-    if (!settled) {
-      frames += 1
-      if (frames >= 3) finish()
+  const waitFramesAfterAssets = (needed = 3) =>
+    new Promise((resolve) => {
+      let frames = 0
+      let done = false
+      const prevFrame = api._onFrame
+      api._onFrame = (roomApi) => {
+        prevFrame?.(roomApi)
+        if (done) return
+        frames += 1
+        if (frames >= needed) {
+          done = true
+          resolve()
+        }
+      }
+    })
+
+  void (async () => {
+    try {
+      await Promise.race([
+        api.whenCharacterReady?.() ?? Promise.resolve(),
+        new Promise((resolve) => window.setTimeout(resolve, 20000)),
+      ])
+      await waitFramesAfterAssets(3)
+    } finally {
+      finish()
     }
-  }
-  window.setTimeout(finish, 10000)
+  })()
 
   api.ready = ready
   return api
@@ -109,7 +130,6 @@ export function mountMeetingRoom3D(host) {
 
 export function syncStoryPinsTo3D(root, roomApi) {
   if (!roomApi || !root) return
-  // 3D 模式下标签固定在画面底部一排，不再投影到场景坐标
   root.querySelectorAll('[data-ag-pin-step]').forEach((pin) => {
     pin.style.left = ''
     pin.style.top = ''
