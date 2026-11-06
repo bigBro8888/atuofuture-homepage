@@ -22,6 +22,7 @@ import {
   resetStoryEnterCue,
   applyStorySceneMode,
   syncTwinStats,
+  syncTwinMinimap,
 } from '../components/agents/task-story.js'
 function esc(str = '') {
   return String(str)
@@ -147,6 +148,7 @@ async function ensureMeetingRoom3D(root, state) {
         prevFrame?.(api)
         syncStoryPinsTo3D(root, api)
         syncDevicePins(api)
+        syncTwinMinimap(root, api, api.getTwinStats?.())
       }
       await state.room3d.ready
     }

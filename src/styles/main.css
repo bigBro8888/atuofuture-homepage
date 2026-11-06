@@ -17810,6 +17810,141 @@ a.ag-eco__agent:visited {
   gap: 10px;
   margin: 4px 0 14px;
 }
+.ag-minimap {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(0, 216, 192, 0.22);
+  border-radius: 12px;
+  background:
+    radial-gradient(120% 90% at 78% 28%, rgba(0, 213, 199, 0.12), transparent 55%),
+    rgba(0, 0, 0, 0.22);
+}
+.ag-minimap__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ag-minimap__title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.72);
+}
+.ag-minimap__status {
+  margin: 0;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(159, 238, 229, 0.85);
+}
+.ag-minimap__status.is-active {
+  color: #00d5c7;
+}
+.ag-minimap__stage {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(18, 42, 68, 0.9), rgba(10, 24, 42, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ag-minimap__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 140 / 172;
+}
+.ag-minimap__floor {
+  fill: rgba(120, 148, 168, 0.22);
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 1.2;
+}
+.ag-minimap__window {
+  fill: rgba(170, 220, 255, 0.55);
+}
+.ag-minimap__screen {
+  fill: rgba(70, 140, 255, 0.75);
+}
+.ag-minimap__table {
+  fill: rgba(92, 108, 122, 0.72);
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1;
+}
+.ag-minimap__door {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.ag-minimap__label {
+  fill: rgba(255, 255, 255, 0.4);
+  font-size: 8px;
+  font-weight: 600;
+}
+.ag-minimap__radar-ring {
+  stroke: rgba(0, 213, 199, 0.35);
+  stroke-width: 1;
+  opacity: 0.35;
+}
+.ag-minimap.is-sensing .ag-minimap__radar-ring {
+  opacity: 1;
+  animation: ag-radar-pulse 2.2s ease-out infinite;
+}
+.ag-minimap.is-sensing .ag-minimap__radar-ring--2 {
+  animation-delay: 0.7s;
+}
+.ag-minimap__radar-core {
+  fill: #00d5c7;
+  opacity: 0.45;
+}
+.ag-minimap.is-sensing .ag-minimap__radar-core {
+  opacity: 1;
+  filter: drop-shadow(0 0 4px rgba(0, 213, 199, 0.8));
+}
+.ag-minimap__radar-glow {
+  opacity: 0.2;
+}
+.ag-minimap.is-sensing .ag-minimap__radar-glow {
+  opacity: 1;
+}
+.ag-minimap__radar-sweep {
+  fill: rgba(0, 213, 199, 0.22);
+  transform-origin: 0 0;
+  opacity: 0;
+}
+.ag-minimap.is-sensing .ag-minimap__radar-sweep {
+  opacity: 1;
+  animation: ag-radar-sweep 2.8s linear infinite;
+}
+.ag-minimap__dot {
+  fill: #ff4b4b;
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 5px rgba(255, 70, 70, 0.75));
+}
+.ag-minimap__dot:not([hidden]) {
+  animation: ag-dot-breathe 1.4s ease-in-out infinite;
+}
+.ag-minimap__foot {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.02em;
+}
+@keyframes ag-radar-sweep {
+  to { transform: rotate(360deg); }
+}
+@keyframes ag-radar-pulse {
+  0% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+@keyframes ag-dot-breathe {
+  0%, 100% { r: 4.2; }
+  50% { r: 5.1; }
+}
 .ag-twin__card {
   display: flex;
   flex-direction: column;

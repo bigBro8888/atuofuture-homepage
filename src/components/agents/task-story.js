@@ -102,6 +102,56 @@ export function renderAgentTaskStory({ selectedId }) {
             <h3>会议室孪生看板</h3>
             <p class="ag-story__value">人体感应、环境设备与现场状态同步回读</p>
             <div class="ag-twin" data-ag-twin>
+              <div class="ag-minimap" data-ag-minimap aria-label="会议室雷达俯视小地图">
+                <div class="ag-minimap__head">
+                  <span class="ag-minimap__title">雷达俯视</span>
+                  <em class="ag-minimap__status" data-minimap-radar>空闲</em>
+                </div>
+                <div class="ag-minimap__stage">
+                  <svg class="ag-minimap__svg" viewBox="0 0 140 172" role="img" aria-hidden="true">
+                    <defs>
+                      <radialGradient id="ag-radar-glow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#00d5c7" stop-opacity=".55"/>
+                        <stop offset="70%" stop-color="#00d5c7" stop-opacity=".12"/>
+                        <stop offset="100%" stop-color="#00d5c7" stop-opacity="0"/>
+                      </radialGradient>
+                    </defs>
+                    <rect class="ag-minimap__floor" x="8" y="8" width="124" height="156" rx="6"/>
+                    <!-- 窗侧 -->
+                    <rect class="ag-minimap__window" x="8" y="28" width="4" height="52" rx="1"/>
+                    <rect class="ag-minimap__window" x="8" y="92" width="4" height="42" rx="1"/>
+                    <!-- 信息屏墙 -->
+                    <rect class="ag-minimap__screen" x="48" y="10" width="44" height="5" rx="1.5"/>
+                    <!-- 会议桌 -->
+                    <rect class="ag-minimap__table" x="42" y="38" width="56" height="88" rx="8"/>
+                    <!-- 椅位示意 -->
+                    <g class="ag-minimap__chairs" fill="rgba(255,255,255,.22)">
+                      <rect x="34" y="48" width="7" height="9" rx="1.5"/>
+                      <rect x="34" y="68" width="7" height="9" rx="1.5"/>
+                      <rect x="34" y="88" width="7" height="9" rx="1.5"/>
+                      <rect x="34" y="108" width="7" height="9" rx="1.5"/>
+                      <rect x="99" y="48" width="7" height="9" rx="1.5"/>
+                      <rect x="99" y="68" width="7" height="9" rx="1.5"/>
+                      <rect x="99" y="88" width="7" height="9" rx="1.5"/>
+                      <rect x="99" y="108" width="7" height="9" rx="1.5"/>
+                    </g>
+                    <!-- 门洞 -->
+                    <path class="ag-minimap__door" d="M58 164 H82"/>
+                    <text class="ag-minimap__label" x="70" y="158" text-anchor="middle">门</text>
+                    <!-- 雷达覆盖 -->
+                    <g class="ag-minimap__radar" data-minimap-radar-g transform="translate(108 61.5)">
+                      <circle class="ag-minimap__radar-glow" r="28" fill="url(#ag-radar-glow)"/>
+                      <circle class="ag-minimap__radar-ring" r="18" fill="none"/>
+                      <circle class="ag-minimap__radar-ring ag-minimap__radar-ring--2" r="26" fill="none"/>
+                      <circle class="ag-minimap__radar-core" r="3.2"/>
+                      <path class="ag-minimap__radar-sweep" d="M0 0 L0 -26 A26 26 0 0 1 18.4 -18.4 Z"/>
+                    </g>
+                    <g class="ag-minimap__trail" data-minimap-trail></g>
+                    <circle class="ag-minimap__dot" data-minimap-dot cx="-20" cy="-20" r="4.5" hidden/>
+                  </svg>
+                </div>
+                <p class="ag-minimap__foot">红点同步人员轨迹 · 雷达实时回读</p>
+              </div>
               <div class="ag-twin__card">
                 <span class="ag-twin__label">在场人数</span>
                 <strong class="ag-twin__value"><span data-twin-people>0</span><small>人</small></strong>
@@ -180,6 +230,70 @@ export function syncAgentTaskStory(root, selectedId) {
   }
 }
 
+/** 与 3D 场景 ot={w:7,d:8.6} 对齐的俯视投影 */
+const MINIMAP_ROOM = { w: 7, d: 8.6, padX: 8, padY: 8, mapW: 124, mapH: 156 }
+const minimapTrail = new WeakMap()
+
+function worldToMinimap(x, z) {
+  const { w, d, padX, padY, mapW, mapH } = MINIMAP_ROOM
+  const u = padX + ((x + w / 2) / w) * mapW
+  const v = padY + ((z + d / 2) / d) * mapH
+  return {
+    x: Math.max(padX + 2, Math.min(padX + mapW - 2, u)),
+    y: Math.max(padY + 2, Math.min(padY + mapH - 2, v)),
+  }
+}
+
+export function syncTwinMinimap(root, roomApi, stats) {
+  const map = root?.querySelector('[data-ag-minimap]')
+  if (!map) return
+
+  const sensing = Number(stats?.people) > 0 || Boolean(roomApi?.getPersonFloor?.()?.visible)
+  const radarText = stats?.radar ?? (sensing ? '感应中' : '空闲')
+  const statusEl = map.querySelector('[data-minimap-radar]')
+  if (statusEl) {
+    statusEl.textContent = radarText
+    statusEl.classList.toggle('is-active', sensing)
+  }
+  map.classList.toggle('is-sensing', sensing)
+
+  const dot = map.querySelector('[data-minimap-dot]')
+  const trailEl = map.querySelector('[data-minimap-trail]')
+  const floor = roomApi?.getPersonFloor?.()
+  if (!dot) return
+
+  if (!floor?.visible) {
+    dot.setAttribute('hidden', '')
+    if (trailEl) trailEl.innerHTML = ''
+    minimapTrail.delete(map)
+    return
+  }
+
+  const pos = worldToMinimap(floor.x, floor.z)
+  dot.removeAttribute('hidden')
+  dot.setAttribute('cx', String(pos.x.toFixed(1)))
+  dot.setAttribute('cy', String(pos.y.toFixed(1)))
+
+  let trail = minimapTrail.get(map)
+  if (!trail) {
+    trail = []
+    minimapTrail.set(map, trail)
+  }
+  const last = trail[trail.length - 1]
+  if (!last || Math.hypot(last.x - pos.x, last.y - pos.y) > 1.6) {
+    trail.push({ x: pos.x, y: pos.y })
+    if (trail.length > 18) trail.shift()
+  }
+  if (trailEl) {
+    trailEl.innerHTML = trail
+      .map((p, i) => {
+        const t = (i + 1) / trail.length
+        return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(1.2 + t * 1.6).toFixed(1)}" fill="rgba(255,72,72,${(0.12 + t * 0.35).toFixed(2)})"/>`
+      })
+      .join('')
+  }
+}
+
 export function syncTwinStats(root, stats) {
   if (!root || !stats) return
   const set = (sel, value) => {
@@ -195,8 +309,12 @@ export function syncTwinStats(root, stats) {
   set('[data-twin-ac]', stats.ac ?? '--')
   set('[data-twin-screen]', stats.screen ?? '--')
   set('[data-twin-curtain]', stats.curtain ?? '--')
-  const radarEl = root.querySelector('[data-twin-radar]')
-  radarEl?.classList.toggle('is-active', Number(stats.people) > 0)
+  const active = Number(stats.people) > 0
+  root.querySelector('[data-twin-radar]')?.classList.toggle('is-active', active)
+  root.querySelector('[data-minimap-radar]')?.classList.toggle('is-active', active)
+  const mapStatus = root.querySelector('[data-minimap-radar]')
+  if (mapStatus && stats.radar) mapStatus.textContent = String(stats.radar)
+  root.querySelector('[data-ag-minimap]')?.classList.toggle('is-sensing', active)
 }
 
 export function syncStoryFlowStep(root, stepIndex) {
