@@ -10,7 +10,7 @@ const PIN_WORLD = {
   0: new THREE.Vector3(-3.2, 1.35, 2.4),
   1: new THREE.Vector3(-1.6, 2.55, -0.4),
   3: new THREE.Vector3(2.4, 2.4, -1.2),
-  '3b': new THREE.Vector3(0.05, 3.15, 0.95),
+  '3b': new THREE.Vector3(0.05, 3.15, -1.85),
   '3c': new THREE.Vector3(0.2, 0.95, -0.6),
   4: new THREE.Vector3(-2.6, 0.55, 3.2),
 }
@@ -755,7 +755,7 @@ function buildRoom(scene, tex) {
     const acSize = 0.92
     const acDepth = 0.08
     const acGroup = new THREE.Group()
-    acGroup.position.set(0, ROOM.h - acDepth / 2 - 0.01, 0.95)
+    acGroup.position.set(0, ROOM.h - acDepth / 2 - 0.01, -1.85)
     const shellMat = mat(0xf2f4f6, { roughness: 0.78, metalness: 0.08, envMapIntensity: 0.28 })
     const shell = addShadow(
       new THREE.Mesh(new RoundedBoxGeometry(acSize, acDepth, acSize, 2, 0.02), shellMat),
