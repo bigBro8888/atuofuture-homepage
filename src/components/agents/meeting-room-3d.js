@@ -226,16 +226,16 @@ function createTextures() {
   }
 }
 
-/** 加载参考材质图并配置平铺 */
-function loadRefMap(url, repeatX, repeatY) {
+/** 加载参考材质图；stretch=true 时整面拉伸，不重复平铺 */
+function loadRefMap(url, repeatX = 1, repeatY = 1, { stretch = false } = {}) {
   return new Promise((resolve, reject) => {
     new THREE.TextureLoader().load(
       url,
       (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace
-        tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+        tex.wrapS = tex.wrapT = stretch ? THREE.ClampToEdgeWrapping : THREE.RepeatWrapping
         tex.anisotropy = 8
-        tex.repeat.set(repeatX, repeatY)
+        tex.repeat.set(stretch ? 1 : repeatX, stretch ? 1 : repeatY)
         tex.needsUpdate = true
         resolve(tex)
       },
@@ -656,7 +656,7 @@ function buildRoom(scene, tex) {
   if (tex.floorRefMap) {
     floorMat.map = tex.floorRefMap
     floorMat.bumpMap = tex.floorRefMap
-    floorMat.bumpScale = 0.032
+    floorMat.bumpScale = 0.018
     floorMat.roughnessMap = null
     floorMat.needsUpdate = true
   }
@@ -1396,7 +1396,7 @@ export function mountMeetingRoom3D(host) {
     try {
       ;[wallRefMap, floorRefMap, curtainRefMap] = await Promise.all([
         loadRefMap('/meeting-wall-mat.png', 3.4, 1.7),
-        loadRefMap('/meeting-floor-mat.png', 5.2, 6.8),
+        loadRefMap('/meeting-floor-mat.png', 1, 1, { stretch: true }),
         loadRefMap('/meeting-curtain-mat.png', 2.8, 3.6),
       ])
     } catch {
