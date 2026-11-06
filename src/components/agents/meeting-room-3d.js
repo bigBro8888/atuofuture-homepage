@@ -999,7 +999,7 @@ export function mountMeetingRoom3D(host) {
     <div class="ag-story__loader-mark" aria-hidden="true">
       <div class="ag-story__loader-glyph"><span></span></div>
     </div>
-    <p class="ag-story__loader-text">会议室孪生加载中<span class="ag-story__loader-dots"></span></p>`
+    <p class="ag-story__loader-text">虚拟会议室加载中<span class="ag-story__loader-dots"></span></p>`
   host.appendChild(loader)
   host.appendChild(canvas)
 
