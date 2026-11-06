@@ -56,54 +56,63 @@ function noise(ctx, size, alpha = 0.08) {
 }
 
 function createTextures() {
-  // 深胡桃木桌面：更高端会议桌纹理
+  // 商务灰哑光桌面：复合板 / 柔光漆面，参考高端会议室台面
   const woodMap = makeCanvasTexture((ctx, size) => {
-    ctx.fillStyle = '#5c3a24'
+    const base = ctx.createLinearGradient(0, 0, size, size)
+    base.addColorStop(0, '#d7dce4')
+    base.addColorStop(0.35, '#c9ced5')
+    base.addColorStop(0.7, '#bec4cc')
+    base.addColorStop(1, '#b5bbc4')
+    ctx.fillStyle = base
     ctx.fillRect(0, 0, size, size)
-    for (let i = 0; i < 48; i += 1) {
-      const x = (i / 48) * size + Math.sin(i * 1.7) * 5
-      const grad = ctx.createLinearGradient(x - 10, 0, x + 10, 0)
-      grad.addColorStop(0, 'rgba(28, 16, 8, 0)')
-      grad.addColorStop(0.5, `rgba(20, 11, 5, ${0.12 + (i % 5) * 0.04})`)
-      grad.addColorStop(1, 'rgba(28, 16, 8, 0)')
-      ctx.fillStyle = grad
-      ctx.fillRect(x - 12, 0, 24, size)
-    }
-    for (let y = 0; y < size; y += 2) {
-      ctx.strokeStyle = `rgba(180, 140, 95, ${0.02 + (y % 9) * 0.008})`
+    // 极弱横纹，模拟哑光复合板方向感
+    for (let y = 0; y < size; y += 3) {
+      ctx.strokeStyle = `rgba(255,255,255,${0.012 + (y % 11) * 0.004})`
       ctx.beginPath()
-      ctx.moveTo(0, y + Math.sin(y * 0.035) * 2)
-      ctx.bezierCurveTo(size * 0.3, y + 3, size * 0.7, y - 2, size, y + Math.cos(y * 0.028) * 2)
+      ctx.moveTo(0, y + Math.sin(y * 0.02) * 0.8)
+      ctx.lineTo(size, y + Math.cos(y * 0.018) * 0.8)
       ctx.stroke()
     }
-    // 轻抛光高光带
-    const sheen = ctx.createLinearGradient(0, 0, size, 0)
-    sheen.addColorStop(0, 'rgba(255,220,180,0)')
-    sheen.addColorStop(0.45, 'rgba(255,220,180,0.06)')
-    sheen.addColorStop(1, 'rgba(255,220,180,0)')
+    for (let i = 0; i < 26; i += 1) {
+      const x = (i / 26) * size
+      const band = ctx.createLinearGradient(x - 8, 0, x + 8, 0)
+      band.addColorStop(0, 'rgba(90, 98, 110, 0)')
+      band.addColorStop(0.5, `rgba(70, 78, 90, ${0.015 + (i % 4) * 0.008})`)
+      band.addColorStop(1, 'rgba(90, 98, 110, 0)')
+      ctx.fillStyle = band
+      ctx.fillRect(x - 8, 0, 16, size)
+    }
+    // 中央柔光，避免卡通高饱和反射
+    const sheen = ctx.createRadialGradient(size * 0.5, size * 0.4, 20, size * 0.5, size * 0.45, size * 0.55)
+    sheen.addColorStop(0, 'rgba(255,255,255,0.07)')
+    sheen.addColorStop(1, 'rgba(255,255,255,0)')
     ctx.fillStyle = sheen
     ctx.fillRect(0, 0, size, size)
-    noise(ctx, size, 0.05)
+    noise(ctx, size, 0.035)
   })
-  woodMap.repeat.set(1.6, 2.8)
+  woodMap.repeat.set(1.2, 2.2)
 
   const woodRough = makeCanvasTexture((ctx, size) => {
-    ctx.fillStyle = '#9a9a9a'
+    ctx.fillStyle = '#c2c2c2'
     ctx.fillRect(0, 0, size, size)
-    for (let i = 0; i < 80; i += 1) {
-      ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.15})`
-      ctx.fillRect(Math.random() * size, 0, 2 + Math.random() * 4, size)
+    for (let i = 0; i < 120; i += 1) {
+      ctx.fillStyle = `rgba(255,255,255,${0.04 + Math.random() * 0.1})`
+      ctx.fillRect(Math.random() * size, 0, 1 + Math.random() * 3, size)
     }
-    noise(ctx, size, 0.12)
+    for (let i = 0; i < 60; i += 1) {
+      ctx.fillStyle = `rgba(0,0,0,${0.03 + Math.random() * 0.06})`
+      ctx.fillRect(Math.random() * size, Math.random() * size, 8 + Math.random() * 20, 2)
+    }
+    noise(ctx, size, 0.1)
   }, 256)
   woodRough.repeat.copy(woodMap.repeat)
 
-  // 灰色商务地毯：细密绒面 + 轻微颗粒，替代木地板
+  // 浅商务灰地毯：更贴近图1的浅色办公毯
   const floorWood = makeCanvasTexture((ctx, size) => {
     const base = ctx.createLinearGradient(0, 0, size, size)
-    base.addColorStop(0, '#8d939c')
-    base.addColorStop(0.45, '#7a808a')
-    base.addColorStop(1, '#6e7480')
+    base.addColorStop(0, '#c5cad1')
+    base.addColorStop(0.45, '#b4bac3')
+    base.addColorStop(1, '#a7adb7')
     ctx.fillStyle = base
     ctx.fillRect(0, 0, size, size)
     for (let y = 0; y < size; y += 3) {
@@ -155,28 +164,29 @@ function createTextures() {
   }, 256)
   plaster.repeat.set(2, 1.2)
 
-  // 深炭皮面：商务行政椅质感
+  // 深色竖纹皮面：参考商务会议椅肋纹皮料
   const fabric = makeCanvasTexture((ctx, size) => {
     const g = ctx.createLinearGradient(0, 0, size, size)
-    g.addColorStop(0, '#2a3038')
-    g.addColorStop(0.5, '#1c2128')
-    g.addColorStop(1, '#252b33')
+    g.addColorStop(0, '#2c3138')
+    g.addColorStop(0.45, '#1a1e24')
+    g.addColorStop(1, '#262b33')
     ctx.fillStyle = g
     ctx.fillRect(0, 0, size, size)
-    for (let y = 0; y < size; y += 2) {
-      for (let x = 0; x < size; x += 2) {
-        if ((x + y) % 4 === 0) {
-          ctx.fillStyle = 'rgba(255,255,255,0.035)'
-          ctx.fillRect(x, y, 1, 1)
-        } else if ((x * y) % 11 === 0) {
-          ctx.fillStyle = 'rgba(0,0,0,0.12)'
-          ctx.fillRect(x, y, 1, 1)
-        }
-      }
+    for (let x = 0; x < size; x += 5) {
+      const rib = ctx.createLinearGradient(x, 0, x + 5, 0)
+      rib.addColorStop(0, 'rgba(255,255,255,0.03)')
+      rib.addColorStop(0.45, 'rgba(0,0,0,0.18)')
+      rib.addColorStop(1, 'rgba(255,255,255,0.02)')
+      ctx.fillStyle = rib
+      ctx.fillRect(x, 0, 5, size)
     }
-    noise(ctx, size, 0.07)
+    for (let y = 0; y < size; y += 7) {
+      ctx.fillStyle = 'rgba(255,255,255,0.015)'
+      ctx.fillRect(0, y, size, 1)
+    }
+    noise(ctx, size, 0.05)
   }, 256)
-  fabric.repeat.set(2, 2)
+  fabric.repeat.set(2.4, 2.4)
 
   const metal = makeCanvasTexture((ctx, size) => {
     const g = ctx.createLinearGradient(0, 0, 0, size)
@@ -249,122 +259,145 @@ function addShadow(mesh, cast = true, receive = true) {
 }
 
 function makeChair(fabricMat, metalMat) {
-  // 行政会议椅：高靠背 + 扶手 + 五星抛光底座
+  // 行政会议椅：高靠背肋纹皮面 + 金属扶手 + 五星底座
   const g = new THREE.Group()
-  const seat = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.54, 0.09, 0.54, 4, 0.045), fabricMat))
+  const seat = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.54, 0.08, 0.54, 5, 0.05), fabricMat))
   seat.position.y = 0.48
   g.add(seat)
-  const cushion = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.46, 0.05, 0.46, 3, 0.03), fabricMat), true, false)
-  cushion.position.y = 0.54
+  const cushion = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.46, 0.045, 0.46, 4, 0.03), fabricMat), true, false)
+  cushion.position.y = 0.535
   g.add(cushion)
-  const back = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.5, 0.72, 0.09, 4, 0.04), fabricMat))
-  back.position.set(0, 0.92, -0.23)
+  const back = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.5, 0.74, 0.08, 5, 0.04), fabricMat))
+  back.position.set(0, 0.93, -0.23)
   g.add(back)
-  const lumbar = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.42, 0.16, 0.06, 3, 0.03), fabricMat), true, false)
+  const lumbar = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.42, 0.15, 0.055, 3, 0.025), fabricMat), true, false)
   lumbar.position.set(0, 0.7, -0.17)
   g.add(lumbar)
   ;[-1, 1].forEach((side) => {
-    const arm = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.08, 0.05, 0.38, 2, 0.02), metalMat), true, false)
+    const arm = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.07, 0.04, 0.38, 3, 0.015), metalMat), true, false)
     arm.position.set(side * 0.3, 0.68, -0.02)
     g.add(arm)
-    const post = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.22, 10), metalMat), true, false)
+    const post = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.22, 12), metalMat), true, false)
     post.position.set(side * 0.3, 0.57, 0.12)
     g.add(post)
   })
-  const column = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, 0.38, 16), metalMat), true, false)
+  const column = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.055, 0.38, 18), metalMat), true, false)
   column.position.y = 0.24
   g.add(column)
-  const hub = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.04, 20), metalMat), true, false)
-  hub.position.y = 0.06
+  const hub = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.035, 24), metalMat), true, false)
+  hub.position.y = 0.055
   g.add(hub)
   for (let i = 0; i < 5; i += 1) {
     const a = (i / 5) * Math.PI * 2
-    const spoke = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.016, 0.32, 4, 8), metalMat), true, false)
+    const spoke = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.014, 0.32, 5, 10), metalMat), true, false)
     spoke.position.set(Math.cos(a) * 0.18, 0.05, Math.sin(a) * 0.18)
     spoke.rotation.z = Math.PI / 2
     spoke.rotation.y = -a
     g.add(spoke)
-    const caster = addShadow(new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 10), metalMat), true, false)
-    caster.position.set(Math.cos(a) * 0.34, 0.035, Math.sin(a) * 0.34)
+    const caster = addShadow(new THREE.Mesh(new THREE.SphereGeometry(0.032, 14, 12), metalMat), true, false)
+    caster.position.set(Math.cos(a) * 0.34, 0.032, Math.sin(a) * 0.34)
     g.add(caster)
   }
   return g
 }
 
-/** 低面数商务人模：鞋底贴地，腿/脚层级联动，避免胶囊人悬空 */
-function makePerson({ coatColor = 0x1d4f9c, visible = false } = {}) {
+/** 商务人模：更写实的比例与服装层次，鞋底贴地，保留行走骨骼接口 */
+function makePerson({ coatColor = 0x1a3f78, visible = false } = {}) {
   const root = new THREE.Group()
   root.visible = visible
 
-  const skin = mat(0xe9c4a6, { roughness: 0.58, envMapIntensity: 0.4 })
-  const coat = mat(coatColor, { roughness: 0.46, envMapIntensity: 0.75 })
-  const pants = mat(0x2a3347, { roughness: 0.68, envMapIntensity: 0.35 })
-  const hair = mat(0x1a2030, { roughness: 0.82 })
-  const shoeMat = mat(0x12161f, { roughness: 0.38, metalness: 0.12 })
-  const shirt = mat(0xf4f6f8, { roughness: 0.72, envMapIntensity: 0.3 })
+  const skin = mat(0xd8b094, { roughness: 0.72, envMapIntensity: 0.22 })
+  const coat = mat(coatColor, { roughness: 0.58, envMapIntensity: 0.45 })
+  const pants = mat(0x232933, { roughness: 0.78, envMapIntensity: 0.22 })
+  const hair = mat(0x171b22, { roughness: 0.88, envMapIntensity: 0.15 })
+  const shoeMat = mat(0x141820, { roughness: 0.42, metalness: 0.08, envMapIntensity: 0.35 })
+  const shirt = mat(0xeef1f4, { roughness: 0.78, envMapIntensity: 0.18 })
+  const eyeMat = mat(0x1c2430, { roughness: 0.35, envMapIntensity: 0.2 })
 
   const hips = new THREE.Group()
   // 髋高对齐：大腿+小腿+鞋底后，鞋底落在 y≈0
-  hips.position.y = 0.85
+  hips.position.y = 0.88
   root.add(hips)
 
-  const pelvis = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.34, 0.18, 0.22, 2, 0.04), pants), true, false)
+  const pelvis = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.32, 0.2, 0.2, 3, 0.045), pants), true, false)
   hips.add(pelvis)
 
   const spine = new THREE.Group()
   spine.position.y = 0.1
   hips.add(spine)
 
-  const torso = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.44, 0.5, 0.26, 2, 0.05), coat))
-  torso.position.y = 0.28
+  const torso = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.4, 0.52, 0.24, 3, 0.055), coat))
+  torso.position.y = 0.3
   spine.add(torso)
 
-  const collar = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.2, 0.08, 0.16, 1, 0.02), shirt), true, false)
-  collar.position.set(0, 0.52, 0.04)
+  // 西装翻领暗示，减少“方块躯干”感
+  ;[-1, 1].forEach((side) => {
+    const lapel = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.08, 0.28, 0.03, 1, 0.01), coat), true, false)
+    lapel.position.set(side * 0.1, 0.38, 0.12)
+    lapel.rotation.z = side * -0.18
+    lapel.rotation.x = -0.08
+    spine.add(lapel)
+  })
+
+  const collar = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.18, 0.07, 0.14, 2, 0.02), shirt), true, false)
+  collar.position.set(0, 0.54, 0.05)
   spine.add(collar)
 
-  const shoulder = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.52, 0.12, 0.24, 2, 0.04), coat), true, false)
-  shoulder.position.y = 0.5
+  const shoulder = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.5, 0.11, 0.22, 3, 0.04), coat), true, false)
+  shoulder.position.y = 0.52
   spine.add(shoulder)
 
-  const neck = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.1, 10), skin), true, false)
-  neck.position.y = 0.6
+  const neck = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.055, 0.11, 12), skin), true, false)
+  neck.position.y = 0.62
   spine.add(neck)
 
-  const head = addShadow(new THREE.Mesh(new THREE.SphereGeometry(0.125, 18, 14), skin), true, false)
-  head.position.y = 0.74
+  // 略扁的头型 + 简单五官，降低胶囊人观感
+  const head = addShadow(new THREE.Mesh(new THREE.SphereGeometry(0.118, 22, 18), skin), true, false)
+  head.scale.set(0.92, 1.05, 0.95)
+  head.position.y = 0.76
   spine.add(head)
 
+  ;[-1, 1].forEach((side) => {
+    const eye = addShadow(new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), eyeMat), true, false)
+    eye.position.set(side * 0.038, 0.77, 0.1)
+    spine.add(eye)
+  })
+  const nose = addShadow(new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), skin), true, false)
+  nose.scale.set(0.7, 0.9, 1.2)
+  nose.position.set(0, 0.745, 0.112)
+  spine.add(nose)
+
   const hairMesh = addShadow(
-    new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), hair),
+    new THREE.Mesh(new THREE.SphereGeometry(0.125, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.58), hair),
     true,
     false
   )
-  hairMesh.position.set(0, 0.78, -0.01)
+  hairMesh.scale.set(0.95, 1.02, 1)
+  hairMesh.position.set(0, 0.8, -0.012)
   spine.add(hairMesh)
 
   const makeArm = (side) => {
     const pivot = new THREE.Group()
-    pivot.position.set(side * 0.28, 0.48, 0)
+    pivot.position.set(side * 0.26, 0.5, 0)
     spine.add(pivot)
 
-    const upper = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.045, 0.26, 4, 8), coat), true, false)
-    upper.position.y = -0.16
+    const upper = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.042, 0.28, 5, 10), coat), true, false)
+    upper.position.y = -0.17
     pivot.add(upper)
 
     const elbow = new THREE.Group()
-    elbow.position.y = -0.32
+    elbow.position.y = -0.34
     pivot.add(elbow)
 
-    const lower = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.038, 0.22, 4, 8), coat), true, false)
-    lower.position.y = -0.14
+    const lower = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.036, 0.24, 5, 10), coat), true, false)
+    lower.position.y = -0.15
     elbow.add(lower)
 
-    const hand = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.06, 0.08, 0.05, 1, 0.01), skin), true, false)
-    hand.position.y = -0.3
+    const hand = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.055, 0.085, 0.045, 2, 0.012), skin), true, false)
+    hand.position.y = -0.31
     elbow.add(hand)
 
-    pivot.rotation.z = side * 0.08
+    pivot.rotation.z = side * 0.1
     return { pivot, elbow }
   }
 
@@ -373,27 +406,27 @@ function makePerson({ coatColor = 0x1d4f9c, visible = false } = {}) {
 
   const makeLeg = (side) => {
     const hip = new THREE.Group()
-    hip.position.set(side * 0.1, -0.02, 0)
+    hip.position.set(side * 0.09, -0.02, 0)
     hips.add(hip)
 
-    const thigh = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.065, 0.34, 4, 8), pants), true, false)
-    thigh.position.y = -0.2
+    const thigh = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.058, 0.36, 5, 10), pants), true, false)
+    thigh.position.y = -0.21
     hip.add(thigh)
 
     const knee = new THREE.Group()
-    knee.position.y = -0.42
+    knee.position.y = -0.44
     hip.add(knee)
 
-    const shin = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.32, 4, 8), pants), true, false)
-    shin.position.y = -0.19
+    const shin = addShadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.34, 5, 10), pants), true, false)
+    shin.position.y = -0.2
     knee.add(shin)
 
     const ankle = new THREE.Group()
-    ankle.position.y = -0.4
+    ankle.position.y = -0.42
     knee.add(ankle)
 
-    const shoe = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.11, 0.07, 0.26, 1, 0.02), shoeMat), true, false)
-    shoe.position.set(0, 0.035, 0.05)
+    const shoe = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.1, 0.065, 0.25, 2, 0.018), shoeMat), true, false)
+    shoe.position.set(0, 0.032, 0.048)
     ankle.add(shoe)
 
     return { hip, knee, ankle, shoe }
@@ -403,11 +436,11 @@ function makePerson({ coatColor = 0x1d4f9c, visible = false } = {}) {
   const legR = makeLeg(1)
 
   const shadow = new THREE.Mesh(
-    new THREE.CircleGeometry(0.32, 24),
-    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.2, depthWrite: false })
+    new THREE.CircleGeometry(0.3, 28),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18, depthWrite: false })
   )
   shadow.rotation.x = -Math.PI / 2
-  shadow.position.y = 0.008
+  shadow.position.y = 0.006
   root.add(shadow)
 
   root.userData.parts = { hips, spine, armL, armR, legL, legR, head, shadow }
@@ -614,20 +647,20 @@ function buildRoom(scene, tex) {
   scene.add(back)
 
   const glassMat = new THREE.MeshPhysicalMaterial({
-    color: 0xeaf4ff,
-    transmission: 0.92,
+    color: 0xe8eef4,
+    transmission: 0.88,
     transparent: true,
     opacity: 1,
-    roughness: 0.04,
+    roughness: 0.08,
     metalness: 0,
-    thickness: 0.35,
+    thickness: 0.28,
     ior: 1.45,
-    envMapIntensity: 1.4,
-    clearcoat: 1,
-    clearcoatRoughness: 0.05,
+    envMapIntensity: 1.05,
+    clearcoat: 0.65,
+    clearcoatRoughness: 0.12,
     side: THREE.DoubleSide,
   })
-  const frameMat = mat(0x1a1a1a, { metalness: 0.85, roughness: 0.28, envMapIntensity: 1.2 })
+  const frameMat = mat(0x2a3038, { metalness: 0.78, roughness: 0.34, envMapIntensity: 1.05 })
 
   const makeGlassWall = (xSign) => {
     const wall = new THREE.Group()
@@ -759,41 +792,56 @@ function buildRoom(scene, tex) {
     airflow.push(points)
   }
 
-  const woodMat = mat(0xffffff, {
+  // 商务灰哑光台面：低金属度 + 中高粗糙度，去掉木纹暖色卡通感
+  const woodMat = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
     map: tex.woodMap,
     roughnessMap: tex.woodRough,
-    roughness: 0.28,
-    metalness: 0.08,
-    envMapIntensity: 0.85,
+    roughness: 0.62,
+    metalness: 0.04,
+    clearcoat: 0.18,
+    clearcoatRoughness: 0.55,
+    envMapIntensity: 0.55,
   })
-  // 厚实圆角会议桌 + 抛光金属双柱底座
-  const tableTop = addShadow(new THREE.Mesh(new RoundedBoxGeometry(1.55, 0.12, 3.75, 4, 0.05), woodMat))
-  tableTop.position.set(0, 0.78, -0.35)
+  const tableEdgeMat = mat(0x8e96a1, { roughness: 0.48, metalness: 0.22, envMapIntensity: 0.7 })
+  // 厚实圆角会议桌 + 拉丝金属双柱底座
+  const tableTop = addShadow(new THREE.Mesh(new RoundedBoxGeometry(1.58, 0.1, 3.85, 5, 0.045), woodMat))
+  tableTop.position.set(0, 0.79, -0.35)
   scene.add(tableTop)
   const tableEdge = addShadow(
-    new THREE.Mesh(new RoundedBoxGeometry(1.58, 0.03, 3.78, 3, 0.02), mat(0x2a1a10, { roughness: 0.35, metalness: 0.15 })),
+    new THREE.Mesh(new RoundedBoxGeometry(1.62, 0.035, 3.9, 4, 0.02), tableEdgeMat),
     true,
     false
   )
-  tableEdge.position.set(0, 0.71, -0.35)
+  tableEdge.position.set(0, 0.73, -0.35)
   scene.add(tableEdge)
-  const chrome = mat(0xc5ced8, { metalness: 0.92, roughness: 0.18, envMapIntensity: 1.35 })
+  const chrome = mat(0xb8c2cc, { metalness: 0.9, roughness: 0.26, envMapIntensity: 1.15, map: tex.metal })
   ;[-1.15, 1.15].forEach((z) => {
-    const pedestal = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 0.62, 24), chrome), true, false)
-    pedestal.position.set(0, 0.34, z - 0.35)
+    const pedestal = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.17, 0.64, 28), chrome), true, false)
+    pedestal.position.set(0, 0.35, z - 0.35)
     scene.add(pedestal)
-    const foot = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.46, 0.05, 28), chrome), true, false)
-    foot.position.set(0, 0.04, z - 0.35)
+    const foot = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.44, 0.045, 32), chrome), true, false)
+    foot.position.set(0, 0.035, z - 0.35)
     scene.add(foot)
+  })
+  // 桌面线盒 / 麦克风基座，贴近真实会议室细节
+  const hubMat = mat(0xa8b0ba, { metalness: 0.72, roughness: 0.32, envMapIntensity: 1.05 })
+  ;[-1.2, -0.2, 0.8].forEach((z) => {
+    const hub = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.22, 0.035, 0.14, 2, 0.012), hubMat), true, false)
+    hub.position.set(0, 0.86, z - 0.35)
+    scene.add(hub)
+    const mic = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.02, 16), hubMat), true, false)
+    mic.position.set(0, 0.885, z - 0.35)
+    scene.add(mic)
   })
 
   const fabricMat = mat(0xffffff, {
     map: tex.fabric,
-    roughness: 0.62,
-    metalness: 0.04,
-    envMapIntensity: 0.4,
+    roughness: 0.72,
+    metalness: 0.02,
+    envMapIntensity: 0.28,
   })
-  const chairMetal = mat(0xb8c2cc, { metalness: 0.88, roughness: 0.22, envMapIntensity: 1.25 })
+  const chairMetal = mat(0xc2cad2, { metalness: 0.86, roughness: 0.28, envMapIntensity: 1.15, map: tex.metal })
   ;[-1, 1].forEach((side) => {
     ;[-1.3, -0.15, 1.0].forEach((z) => {
       const chair = makeChair(fabricMat, chairMetal)
@@ -806,7 +854,14 @@ function buildRoom(scene, tex) {
   headChair.position.set(0, 0, -2.62)
   scene.add(headChair)
 
-  const sideboard = addShadow(new THREE.Mesh(new RoundedBoxGeometry(2.8, 0.55, 0.42, 2, 0.03), woodMat))
+  const sideboardMat = mat(0xffffff, {
+    map: tex.woodMap,
+    roughnessMap: tex.woodRough,
+    roughness: 0.58,
+    metalness: 0.05,
+    envMapIntensity: 0.5,
+  })
+  const sideboard = addShadow(new THREE.Mesh(new RoundedBoxGeometry(2.8, 0.55, 0.42, 3, 0.03), sideboardMat))
   sideboard.position.set(0, 0.55, -ROOM.d / 2 + 0.45)
   scene.add(sideboard)
 
@@ -921,20 +976,20 @@ export function mountMeetingRoom3D(host) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 1.12
+  renderer.toneMappingExposure = 0.98
 
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color(0xd5e3f0)
-  scene.fog = new THREE.Fog(0xd5e3f0, 16, 32)
+  scene.background = new THREE.Color(0xcfd8e2)
+  scene.fog = new THREE.Fog(0xcfd8e2, 18, 34)
 
   const pmrem = new THREE.PMREMGenerator(renderer)
-  const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+  const env = pmrem.fromScene(new RoomEnvironment(), 0.06).texture
   scene.environment = env
   pmrem.dispose()
 
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 60)
-  camera.position.set(0.35, 1.55, 6.35)
-  camera.lookAt(0, 1.15, -1.2)
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 60)
+  camera.position.set(0.4, 1.62, 6.45)
+  camera.lookAt(0, 1.1, -1.15)
 
   const controls = new OrbitControls(camera, canvas)
   controls.enableDamping = true
@@ -948,12 +1003,12 @@ export function mountMeetingRoom3D(host) {
   controls.maxAzimuthAngle = 0.45
   controls.target.set(0, 1.1, -0.8)
 
-  const ambient = new THREE.AmbientLight(0xf4f7fb, 0.28)
+  const ambient = new THREE.AmbientLight(0xeef2f6, 0.34)
   scene.add(ambient)
-  const hemi = new THREE.HemisphereLight(0xeaf3ff, 0xb8b0a2, 0.7)
+  const hemi = new THREE.HemisphereLight(0xe8eef6, 0xa8aeb8, 0.55)
   scene.add(hemi)
-  const sun = new THREE.DirectionalLight(0xfff1dc, 2.45)
-  sun.position.set(-6.5, 7.5, 2.5)
+  const sun = new THREE.DirectionalLight(0xf3f6fa, 1.85)
+  sun.position.set(-5.8, 7.2, 2.2)
   sun.castShadow = true
   sun.shadow.mapSize.set(2048, 2048)
   sun.shadow.camera.near = 1
@@ -962,13 +1017,14 @@ export function mountMeetingRoom3D(host) {
   sun.shadow.camera.right = 8
   sun.shadow.camera.top = 8
   sun.shadow.camera.bottom = -8
-  sun.shadow.bias = -0.00012
-  sun.shadow.normalBias = 0.02
+  sun.shadow.bias = -0.00015
+  sun.shadow.normalBias = 0.025
+  sun.shadow.radius = 2.5
   scene.add(sun)
-  const fill = new THREE.DirectionalLight(0xd7e8ff, 0.55)
-  fill.position.set(4, 3, 3)
+  const fill = new THREE.DirectionalLight(0xd9e4f0, 0.48)
+  fill.position.set(4, 3.2, 3)
   scene.add(fill)
-  const bounce = new THREE.DirectionalLight(0xffe8d2, 0.25)
+  const bounce = new THREE.DirectionalLight(0xe6ebf0, 0.22)
   bounce.position.set(0.5, 1.2, 4)
   scene.add(bounce)
 
