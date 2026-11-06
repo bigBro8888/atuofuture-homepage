@@ -176,6 +176,146 @@ function createTextures() {
   }, 256)
   plaster.repeat.set(2, 1.2)
 
+  // 参考声学板墙：分色色块 + 同款树枝/电路浮雕纹
+  const panelColors = {
+    navy: '#1f3a5f',
+    teal: '#2f4a45',
+    terra: '#b57a52',
+    sky: '#9eb8d4',
+    ivory: '#e8ebe8',
+  }
+  const panelBlocks = [
+    { x: 0, y: 0, w: 0.38, h: 0.55, c: 'navy' },
+    { x: 0.38, y: 0, w: 0.24, h: 0.32, c: 'teal' },
+    { x: 0.62, y: 0, w: 0.38, h: 0.28, c: 'terra' },
+    { x: 0.38, y: 0.32, w: 0.24, h: 0.23, c: 'sky' },
+    { x: 0.62, y: 0.28, w: 0.2, h: 0.27, c: 'ivory' },
+    { x: 0.82, y: 0.28, w: 0.18, h: 0.27, c: 'navy' },
+    { x: 0, y: 0.55, w: 0.22, h: 0.45, c: 'terra' },
+    { x: 0.22, y: 0.55, w: 0.28, h: 0.45, c: 'navy' },
+    { x: 0.5, y: 0.55, w: 0.26, h: 0.22, c: 'teal' },
+    { x: 0.76, y: 0.55, w: 0.24, h: 0.45, c: 'sky' },
+    { x: 0.5, y: 0.77, w: 0.26, h: 0.23, c: 'ivory' },
+  ]
+
+  const drawBranchTile = (ctx, x0, y0, tile, raised = true) => {
+    const cx = x0 + tile * 0.5
+    const stemW = Math.max(1.6, tile * 0.055)
+    const armW = Math.max(1.4, tile * 0.045)
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    const stroke = (w, color) => {
+      ctx.strokeStyle = color
+      ctx.lineWidth = w
+    }
+    // 主杆
+    stroke(stemW + (raised ? 0 : 0.4), raised ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.35)')
+    ctx.beginPath()
+    ctx.moveTo(cx, y0 + tile * 0.12)
+    ctx.lineTo(cx, y0 + tile * 0.88)
+    ctx.stroke()
+    // 斜向分枝（左右交错）
+    const arms = [
+      [0.28, -0.18, -0.22],
+      [0.42, 0.2, -0.2],
+      [0.56, -0.22, -0.18],
+      [0.7, 0.18, -0.2],
+    ]
+    arms.forEach(([ty, dx, dy]) => {
+      const y = y0 + tile * ty
+      stroke(armW, raised ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.32)')
+      ctx.beginPath()
+      ctx.moveTo(cx, y)
+      ctx.lineTo(cx + tile * dx, y + tile * dy)
+      ctx.stroke()
+      // 分枝末端短竖
+      ctx.beginPath()
+      ctx.moveTo(cx + tile * dx, y + tile * dy)
+      ctx.lineTo(cx + tile * dx, y + tile * dy - tile * 0.1)
+      ctx.stroke()
+    })
+    // 阴影侧加深，增强浮雕感
+    if (raised) {
+      stroke(stemW * 0.55, 'rgba(0,0,0,0.22)')
+      ctx.beginPath()
+      ctx.moveTo(cx + stemW * 0.35, y0 + tile * 0.14)
+      ctx.lineTo(cx + stemW * 0.35, y0 + tile * 0.86)
+      ctx.stroke()
+    }
+  }
+
+  const panelAlbedo = makeCanvasTexture((ctx, size) => {
+    ctx.fillStyle = panelColors.ivory
+    ctx.fillRect(0, 0, size, size)
+    panelBlocks.forEach((b) => {
+      ctx.fillStyle = panelColors[b.c]
+      ctx.fillRect(b.x * size, b.y * size, b.w * size, b.h * size)
+    })
+    // 色块内细绒噪声
+    noise(ctx, size, 0.04)
+    const tile = size / 10
+    for (let gy = 0; gy < 10; gy += 1) {
+      for (let gx = 0; gx < 10; gx += 1) {
+        const x0 = gx * tile
+        const y0 = gy * tile
+        // 接缝
+        ctx.strokeStyle = 'rgba(0,0,0,0.18)'
+        ctx.lineWidth = Math.max(1, tile * 0.035)
+        ctx.strokeRect(x0 + 0.8, y0 + 0.8, tile - 1.6, tile - 1.6)
+        // 浮雕高光（albedo 上做轻微亮纹，配合 bump）
+        drawBranchTile(ctx, x0, y0, tile, true)
+      }
+    }
+  }, 1024)
+  panelAlbedo.repeat.set(1, 1)
+  panelAlbedo.wrapS = panelAlbedo.wrapT = THREE.ClampToEdgeWrapping
+
+  const panelBump = makeCanvasTexture((ctx, size) => {
+    ctx.fillStyle = '#808080'
+    ctx.fillRect(0, 0, size, size)
+    const tile = size / 10
+    for (let gy = 0; gy < 10; gy += 1) {
+      for (let gx = 0; gx < 10; gx += 1) {
+        const x0 = gx * tile
+        const y0 = gy * tile
+        // 板面接缝略凹
+        ctx.strokeStyle = '#5a5a5a'
+        ctx.lineWidth = Math.max(1.2, tile * 0.04)
+        ctx.strokeRect(x0 + 1, y0 + 1, tile - 2, tile - 2)
+        // 浮雕纹抬高
+        drawBranchTile(ctx, x0, y0, tile, true)
+        // 再叠一层更亮的主干，强化 bump
+        ctx.strokeStyle = '#f2f2f2'
+        ctx.lineWidth = Math.max(1.8, tile * 0.06)
+        ctx.lineCap = 'round'
+        const cx = x0 + tile * 0.5
+        ctx.beginPath()
+        ctx.moveTo(cx, y0 + tile * 0.14)
+        ctx.lineTo(cx, y0 + tile * 0.86)
+        ctx.stroke()
+      }
+    }
+  }, 1024)
+  panelBump.colorSpace = THREE.NoColorSpace
+  panelBump.repeat.copy(panelAlbedo.repeat)
+  panelBump.wrapS = panelBump.wrapT = THREE.ClampToEdgeWrapping
+
+  const panelRough = makeCanvasTexture((ctx, size) => {
+    ctx.fillStyle = '#b8b8b8'
+    ctx.fillRect(0, 0, size, size)
+    noise(ctx, size, 0.14)
+    const tile = size / 10
+    for (let gy = 0; gy < 10; gy += 1) {
+      for (let gx = 0; gx < 10; gx += 1) {
+        ctx.fillStyle = 'rgba(255,255,255,0.12)'
+        ctx.fillRect(gx * tile + 2, gy * tile + 2, tile - 4, tile - 4)
+      }
+    }
+  }, 512)
+  panelRough.colorSpace = THREE.NoColorSpace
+  panelRough.repeat.copy(panelAlbedo.repeat)
+  panelRough.wrapS = panelRough.wrapT = THREE.ClampToEdgeWrapping
+
   // 深色竖纹皮面：参考商务会议椅肋纹皮料
   const fabric = makeCanvasTexture((ctx, size) => {
     const g = ctx.createLinearGradient(0, 0, size, size)
@@ -251,7 +391,20 @@ function createTextures() {
     ctx.fill()
   }, 256)
 
-  return { woodMap, woodRough, floorWood, floorWoodRough, plaster, fabric, metal, foliage, sky }
+  return {
+    woodMap,
+    woodRough,
+    floorWood,
+    floorWoodRough,
+    plaster,
+    panelAlbedo,
+    panelBump,
+    panelRough,
+    fabric,
+    metal,
+    foliage,
+    sky,
+  }
 }
 
 function mat(color, opts = {}) {
@@ -648,16 +801,66 @@ function buildRoom(scene, tex) {
   ceiling.position.y = ROOM.h
   scene.add(ceiling)
 
+  // 后墙底漆（踢脚上方露出极窄白边，贴近参考墙裙）
   const back = addShadow(
     new THREE.Mesh(
       new THREE.PlaneGeometry(ROOM.w, ROOM.h),
-      mat(0xffffff, { map: tex.plaster, roughness: 0.88, envMapIntensity: 0.3 })
+      mat(0xf2f4f6, { map: tex.plaster, roughness: 0.9, envMapIntensity: 0.22 })
     ),
     false,
     true
   )
   back.position.set(0, ROOM.h / 2, -ROOM.d / 2)
   scene.add(back)
+
+  // 分色浮雕声学板（参考图：海军蓝/墨绿/陶土/浅蓝色块 + 树枝纹）
+  const panelH = ROOM.h - 0.42
+  const panelMat = mat(0xffffff, {
+    map: tex.panelAlbedo,
+    bumpMap: tex.panelBump,
+    bumpScale: 0.045,
+    roughnessMap: tex.panelRough,
+    roughness: 0.92,
+    metalness: 0,
+    envMapIntensity: 0.18,
+  })
+  const featureWall = addShadow(
+    new THREE.Mesh(new THREE.PlaneGeometry(ROOM.w * 0.98, panelH), panelMat),
+    false,
+    true
+  )
+  featureWall.position.set(0, 0.28 + panelH / 2, -ROOM.d / 2 + 0.03)
+  scene.add(featureWall)
+
+  // 板材厚度：四周窄边框，侧面能看到一点体量
+  const panelEdgeMat = mat(0xdde1de, { roughness: 0.86, metalness: 0.02, envMapIntensity: 0.2 })
+  ;[
+    [ROOM.w * 0.99, 0.03, 0.04, 0, 0.28 + panelH - 0.015],
+    [ROOM.w * 0.99, 0.03, 0.04, 0, 0.295],
+    [0.03, panelH, 0.04, -ROOM.w * 0.49 + 0.015, 0.28 + panelH / 2],
+    [0.03, panelH, 0.04, ROOM.w * 0.49 - 0.015, 0.28 + panelH / 2],
+  ].forEach(([w, h, d, x, y]) => {
+    const edge = addShadow(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), panelEdgeMat), true, false)
+    edge.position.set(x, y, -ROOM.d / 2 + 0.018)
+    scene.add(edge)
+  })
+
+  // 白色墙裙 / 踢脚线（参考图下部造型）
+  const baseMat = mat(0xf4f6f4, { roughness: 0.78, metalness: 0.02, envMapIntensity: 0.25 })
+  const baseboard = addShadow(
+    new THREE.Mesh(new RoundedBoxGeometry(ROOM.w * 0.995, 0.28, 0.08, 2, 0.012), baseMat),
+    true,
+    true
+  )
+  baseboard.position.set(0, 0.14, -ROOM.d / 2 + 0.04)
+  scene.add(baseboard)
+  const baseRail = addShadow(
+    new THREE.Mesh(new RoundedBoxGeometry(ROOM.w * 0.995, 0.045, 0.095, 2, 0.01), baseMat),
+    true,
+    false
+  )
+  baseRail.position.set(0, 0.3, -ROOM.d / 2 + 0.05)
+  scene.add(baseRail)
 
   const glassMat = new THREE.MeshPhysicalMaterial({
     color: 0xe8eef4,
