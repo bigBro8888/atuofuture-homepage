@@ -56,81 +56,93 @@ function noise(ctx, size, alpha = 0.08) {
 }
 
 function createTextures() {
-  // 商务灰哑光桌面：复合板 / 柔光漆面，参考高端会议室台面
+  // 中灰商务桌面：明确灰色，带细复合板肌理，避免发白
   const woodMap = makeCanvasTexture((ctx, size) => {
     const base = ctx.createLinearGradient(0, 0, size, size)
-    base.addColorStop(0, '#d7dce4')
-    base.addColorStop(0.35, '#c9ced5')
-    base.addColorStop(0.7, '#bec4cc')
-    base.addColorStop(1, '#b5bbc4')
+    base.addColorStop(0, '#7a828c')
+    base.addColorStop(0.28, '#6e7682')
+    base.addColorStop(0.62, '#636b76')
+    base.addColorStop(1, '#58616c')
     ctx.fillStyle = base
     ctx.fillRect(0, 0, size, size)
-    // 极弱横纹，模拟哑光复合板方向感
-    for (let y = 0; y < size; y += 3) {
-      ctx.strokeStyle = `rgba(255,255,255,${0.012 + (y % 11) * 0.004})`
+    // 细横纹 + 纵向明暗，模拟哑光灰复合板
+    for (let y = 0; y < size; y += 2) {
+      ctx.strokeStyle = `rgba(255,255,255,${0.02 + (y % 13) * 0.004})`
       ctx.beginPath()
-      ctx.moveTo(0, y + Math.sin(y * 0.02) * 0.8)
-      ctx.lineTo(size, y + Math.cos(y * 0.018) * 0.8)
+      ctx.moveTo(0, y + Math.sin(y * 0.03) * 1.2)
+      ctx.bezierCurveTo(size * 0.35, y + 2, size * 0.65, y - 1.5, size, y + Math.cos(y * 0.025) * 1.2)
       ctx.stroke()
     }
-    for (let i = 0; i < 26; i += 1) {
-      const x = (i / 26) * size
-      const band = ctx.createLinearGradient(x - 8, 0, x + 8, 0)
-      band.addColorStop(0, 'rgba(90, 98, 110, 0)')
-      band.addColorStop(0.5, `rgba(70, 78, 90, ${0.015 + (i % 4) * 0.008})`)
-      band.addColorStop(1, 'rgba(90, 98, 110, 0)')
+    for (let i = 0; i < 36; i += 1) {
+      const x = (i / 36) * size
+      const band = ctx.createLinearGradient(x - 10, 0, x + 10, 0)
+      band.addColorStop(0, 'rgba(20, 24, 30, 0)')
+      band.addColorStop(0.5, `rgba(12, 16, 22, ${0.05 + (i % 5) * 0.02})`)
+      band.addColorStop(1, 'rgba(20, 24, 30, 0)')
       ctx.fillStyle = band
-      ctx.fillRect(x - 8, 0, 16, size)
+      ctx.fillRect(x - 10, 0, 20, size)
     }
-    // 中央柔光，避免卡通高饱和反射
-    const sheen = ctx.createRadialGradient(size * 0.5, size * 0.4, 20, size * 0.5, size * 0.45, size * 0.55)
-    sheen.addColorStop(0, 'rgba(255,255,255,0.07)')
-    sheen.addColorStop(1, 'rgba(255,255,255,0)')
+    // 轻微点状颗粒，提升近景质感
+    for (let i = 0; i < 2800; i += 1) {
+      const x = Math.random() * size
+      const y = Math.random() * size
+      ctx.fillStyle = Math.random() > 0.5
+        ? `rgba(255,255,255,${0.02 + Math.random() * 0.04})`
+        : `rgba(0,0,0,${0.03 + Math.random() * 0.05})`
+      ctx.fillRect(x, y, 1, 1)
+    }
+    const sheen = ctx.createRadialGradient(size * 0.48, size * 0.38, 10, size * 0.5, size * 0.42, size * 0.5)
+    sheen.addColorStop(0, 'rgba(210,220,230,0.08)')
+    sheen.addColorStop(1, 'rgba(210,220,230,0)')
     ctx.fillStyle = sheen
     ctx.fillRect(0, 0, size, size)
-    noise(ctx, size, 0.035)
+    noise(ctx, size, 0.045)
   })
-  woodMap.repeat.set(1.2, 2.2)
+  woodMap.repeat.set(1.15, 2.1)
 
   const woodRough = makeCanvasTexture((ctx, size) => {
-    ctx.fillStyle = '#c2c2c2'
+    ctx.fillStyle = '#8a8a8a'
     ctx.fillRect(0, 0, size, size)
-    for (let i = 0; i < 120; i += 1) {
-      ctx.fillStyle = `rgba(255,255,255,${0.04 + Math.random() * 0.1})`
+    for (let i = 0; i < 160; i += 1) {
+      ctx.fillStyle = `rgba(255,255,255,${0.05 + Math.random() * 0.12})`
       ctx.fillRect(Math.random() * size, 0, 1 + Math.random() * 3, size)
     }
-    for (let i = 0; i < 60; i += 1) {
-      ctx.fillStyle = `rgba(0,0,0,${0.03 + Math.random() * 0.06})`
-      ctx.fillRect(Math.random() * size, Math.random() * size, 8 + Math.random() * 20, 2)
+    for (let i = 0; i < 90; i += 1) {
+      ctx.fillStyle = `rgba(0,0,0,${0.04 + Math.random() * 0.08})`
+      ctx.fillRect(Math.random() * size, Math.random() * size, 10 + Math.random() * 28, 2)
     }
-    noise(ctx, size, 0.1)
-  }, 256)
+    noise(ctx, size, 0.12)
+  }, 512)
   woodRough.repeat.copy(woodMap.repeat)
 
-  // 浅商务灰地毯：更贴近图1的浅色办公毯
+  // 深绿灰地毯：更深、带低碳感，绒面颗粒更密
   const floorWood = makeCanvasTexture((ctx, size) => {
     const base = ctx.createLinearGradient(0, 0, size, size)
-    base.addColorStop(0, '#c5cad1')
-    base.addColorStop(0.45, '#b4bac3')
-    base.addColorStop(1, '#a7adb7')
+    base.addColorStop(0, '#5a655e')
+    base.addColorStop(0.4, '#4d5852')
+    base.addColorStop(0.75, '#44504a')
+    base.addColorStop(1, '#3c473f')
     ctx.fillStyle = base
     ctx.fillRect(0, 0, size, size)
-    for (let y = 0; y < size; y += 3) {
-      for (let x = 0; x < size; x += 3) {
-        const shade = ((x * 17 + y * 31) % 9) / 9
-        ctx.fillStyle = `rgba(${shade > 0.55 ? 255 : 20},${shade > 0.55 ? 255 : 22},${shade > 0.55 ? 255 : 28},${0.035 + shade * 0.07})`
+    for (let y = 0; y < size; y += 2) {
+      for (let x = 0; x < size; x += 2) {
+        const shade = ((x * 19 + y * 29) % 11) / 11
+        const light = shade > 0.55
+        ctx.fillStyle = light
+          ? `rgba(190,210,195,${0.03 + shade * 0.06})`
+          : `rgba(10,18,12,${0.05 + (1 - shade) * 0.08})`
         ctx.fillRect(x, y, 2, 2)
       }
     }
-    for (let i = 0; i < 1800; i += 1) {
+    for (let i = 0; i < 3200; i += 1) {
       const x = Math.random() * size
       const y = Math.random() * size
-      ctx.fillStyle = `rgba(255,255,255,${0.015 + Math.random() * 0.04})`
-      ctx.fillRect(x, y, 1 + Math.random() * 1.5, 1)
+      ctx.fillStyle = `rgba(220,235,220,${0.012 + Math.random() * 0.035})`
+      ctx.fillRect(x, y, 1 + Math.random(), 1)
     }
-    // 地毯拼缝弱网格
-    ctx.strokeStyle = 'rgba(40, 44, 52, 0.12)'
-    ctx.lineWidth = 1
+    // 地毯拼缝
+    ctx.strokeStyle = 'rgba(18, 28, 22, 0.18)'
+    ctx.lineWidth = 1.2
     for (let i = 1; i < 4; i += 1) {
       const p = (i / 4) * size
       ctx.beginPath()
@@ -142,18 +154,18 @@ function createTextures() {
       ctx.lineTo(size, p)
       ctx.stroke()
     }
-    noise(ctx, size, 0.05)
+    noise(ctx, size, 0.055)
   }, 1024)
-  floorWood.repeat.set(4.5, 5.5)
+  floorWood.repeat.set(4.2, 5.2)
 
   const floorWoodRough = makeCanvasTexture((ctx, size) => {
-    ctx.fillStyle = '#b4b4b4'
+    ctx.fillStyle = '#9a9a9a'
     ctx.fillRect(0, 0, size, size)
-    for (let i = 0; i < 2200; i += 1) {
-      ctx.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${0.04 + Math.random() * 0.1})`
+    for (let i = 0; i < 3200; i += 1) {
+      ctx.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${0.05 + Math.random() * 0.12})`
       ctx.fillRect(Math.random() * size, Math.random() * size, 1 + Math.random() * 2, 1 + Math.random() * 2)
     }
-    noise(ctx, size, 0.14)
+    noise(ctx, size, 0.16)
   }, 512)
   floorWoodRough.repeat.copy(floorWood.repeat)
 
@@ -611,10 +623,11 @@ function buildRoom(scene, tex) {
       new THREE.PlaneGeometry(ROOM.w, ROOM.d),
       mat(0xffffff, {
         map: tex.floorWood,
+        color: 0x6a756c,
         roughnessMap: tex.floorWoodRough,
-        roughness: 0.92,
+        roughness: 0.94,
         metalness: 0,
-        envMapIntensity: 0.22,
+        envMapIntensity: 0.16,
       })
     ),
     false,
@@ -792,18 +805,19 @@ function buildRoom(scene, tex) {
     airflow.push(points)
   }
 
-  // 商务灰哑光台面：低金属度 + 中高粗糙度，去掉木纹暖色卡通感
+  // 中灰哑光台面：明确灰色，带柔清漆层，近看有细颗粒
   const woodMat = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
+    color: 0x8a929c,
     map: tex.woodMap,
     roughnessMap: tex.woodRough,
-    roughness: 0.62,
-    metalness: 0.04,
-    clearcoat: 0.18,
-    clearcoatRoughness: 0.55,
-    envMapIntensity: 0.55,
+    roughness: 0.48,
+    metalness: 0.08,
+    clearcoat: 0.35,
+    clearcoatRoughness: 0.42,
+    reflectivity: 0.35,
+    envMapIntensity: 0.7,
   })
-  const tableEdgeMat = mat(0x8e96a1, { roughness: 0.48, metalness: 0.22, envMapIntensity: 0.7 })
+  const tableEdgeMat = mat(0x4a525c, { roughness: 0.4, metalness: 0.28, envMapIntensity: 0.85 })
   // 厚实圆角会议桌 + 拉丝金属双柱底座
   const tableTop = addShadow(new THREE.Mesh(new RoundedBoxGeometry(1.58, 0.1, 3.85, 5, 0.045), woodMat))
   tableTop.position.set(0, 0.79, -0.35)
@@ -815,7 +829,7 @@ function buildRoom(scene, tex) {
   )
   tableEdge.position.set(0, 0.73, -0.35)
   scene.add(tableEdge)
-  const chrome = mat(0xb8c2cc, { metalness: 0.9, roughness: 0.26, envMapIntensity: 1.15, map: tex.metal })
+  const chrome = mat(0xaeb8c2, { metalness: 0.92, roughness: 0.22, envMapIntensity: 1.25, map: tex.metal })
   ;[-1.15, 1.15].forEach((z) => {
     const pedestal = addShadow(new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.17, 0.64, 28), chrome), true, false)
     pedestal.position.set(0, 0.35, z - 0.35)
@@ -825,7 +839,7 @@ function buildRoom(scene, tex) {
     scene.add(foot)
   })
   // 桌面线盒 / 麦克风基座，贴近真实会议室细节
-  const hubMat = mat(0xa8b0ba, { metalness: 0.72, roughness: 0.32, envMapIntensity: 1.05 })
+  const hubMat = mat(0x6a7380, { metalness: 0.78, roughness: 0.28, envMapIntensity: 1.1 })
   ;[-1.2, -0.2, 0.8].forEach((z) => {
     const hub = addShadow(new THREE.Mesh(new RoundedBoxGeometry(0.22, 0.035, 0.14, 2, 0.012), hubMat), true, false)
     hub.position.set(0, 0.86, z - 0.35)
@@ -837,11 +851,11 @@ function buildRoom(scene, tex) {
 
   const fabricMat = mat(0xffffff, {
     map: tex.fabric,
-    roughness: 0.72,
-    metalness: 0.02,
-    envMapIntensity: 0.28,
+    roughness: 0.78,
+    metalness: 0.015,
+    envMapIntensity: 0.22,
   })
-  const chairMetal = mat(0xc2cad2, { metalness: 0.86, roughness: 0.28, envMapIntensity: 1.15, map: tex.metal })
+  const chairMetal = mat(0xb6bfc8, { metalness: 0.88, roughness: 0.24, envMapIntensity: 1.2, map: tex.metal })
   ;[-1, 1].forEach((side) => {
     ;[-1.3, -0.15, 1.0].forEach((z) => {
       const chair = makeChair(fabricMat, chairMetal)
@@ -854,12 +868,15 @@ function buildRoom(scene, tex) {
   headChair.position.set(0, 0, -2.62)
   scene.add(headChair)
 
-  const sideboardMat = mat(0xffffff, {
+  const sideboardMat = new THREE.MeshPhysicalMaterial({
+    color: 0x7a848e,
     map: tex.woodMap,
     roughnessMap: tex.woodRough,
-    roughness: 0.58,
-    metalness: 0.05,
-    envMapIntensity: 0.5,
+    roughness: 0.52,
+    metalness: 0.06,
+    clearcoat: 0.22,
+    clearcoatRoughness: 0.5,
+    envMapIntensity: 0.55,
   })
   const sideboard = addShadow(new THREE.Mesh(new RoundedBoxGeometry(2.8, 0.55, 0.42, 3, 0.03), sideboardMat))
   sideboard.position.set(0, 0.55, -ROOM.d / 2 + 0.45)
