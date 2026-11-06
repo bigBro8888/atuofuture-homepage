@@ -74,24 +74,9 @@ export function mountMeetingRoom3D(host) {
 
 export function syncStoryPinsTo3D(root, roomApi) {
   if (!roomApi || !root) return
-  const byLabel = {
-    人员进入: 0,
-    环境已更新: 1,
-    恢复环境: 1,
-    照明开启: 3,
-    灯全亮: 3,
-    灯全关: 3,
-    空调舒适模式: '3b',
-    停止送风: '3b',
-    信息屏更新: '3c',
-    信息屏关闭: '3c',
-    执行成功: 4,
-  }
+  // 3D 模式下标签固定在画面下方一排，不再投影到场景坐标
   root.querySelectorAll('[data-ag-pin-step]').forEach((pin) => {
-    const label = pin.textContent.trim()
-    const pos = roomApi.projectPin?.(byLabel[label] ?? Number(pin.dataset.agPinStep))
-    if (!pos) return
-    pin.style.left = `${pos.x}%`
-    pin.style.top = `${pos.y}%`
+    pin.style.left = ''
+    pin.style.top = ''
   })
 }

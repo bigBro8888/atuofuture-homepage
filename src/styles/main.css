@@ -17385,6 +17385,11 @@ a.ag-eco__agent:visited {
 .ag-story__scene.is-3d img {
   display: none;
 }
+.ag-story__scene.is-3d {
+  display: grid;
+  grid-template-rows: minmax(420px, 1fr) auto;
+  min-height: 560px;
+}
 .ag-story__scene-3d {
   position: absolute;
   inset: 0;
@@ -17392,6 +17397,13 @@ a.ag-eco__agent:visited {
   overflow: hidden;
   background:
     radial-gradient(120% 80% at 20% 10%, #edf4fb 0%, #d5e3f0 55%, #c5d4e4 100%);
+}
+.ag-story__scene.is-3d .ag-story__scene-3d {
+  position: relative;
+  inset: auto;
+  grid-row: 1;
+  min-height: 420px;
+  height: 100%;
 }
 .ag-story__scene-3d[hidden] {
   display: none !important;
@@ -17527,6 +17539,9 @@ a.ag-eco__agent:visited {
   opacity: 0;
   transition: opacity 0.4s ease;
 }
+.ag-story__scene.is-3d .ag-story__canvas {
+  min-height: 420px;
+}
 .ag-story__canvas.is-ready {
   opacity: 1;
 }
@@ -17544,6 +17559,21 @@ a.ag-eco__agent:visited {
   inset: 0;
   pointer-events: none;
   z-index: 3;
+}
+/* 3D：标签改画面下方一排，不叠在场景上 */
+.ag-story__scene.is-3d .ag-story__pins {
+  position: relative;
+  inset: auto;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  background: rgba(7, 18, 38, 0.96);
+  border-top: 1px solid rgba(0, 216, 192, 0.16);
+  z-index: 2;
 }
 .ag-story__pin {
   position: absolute;
@@ -17564,12 +17594,25 @@ a.ag-eco__agent:visited {
   opacity: .62;
   transition: opacity .25s ease, background .25s ease, box-shadow .25s ease, border-color .25s ease, transform .2s ease;
 }
+.ag-story__scene.is-3d .ag-story__pin {
+  position: static;
+  transform: none;
+  left: auto !important;
+  top: auto !important;
+  max-width: none;
+  white-space: nowrap;
+  opacity: 0.88;
+}
 .ag-story__pin:hover,
 .ag-story__pin:focus-visible {
   opacity: 1;
   outline: none;
   border-color: rgba(0, 216, 192, .4);
   transform: translate(-50%, -50%) scale(1.04);
+}
+.ag-story__scene.is-3d .ag-story__pin:hover,
+.ag-story__scene.is-3d .ag-story__pin:focus-visible {
+  transform: translateY(-1px);
 }
 .ag-story__pin.is-active {
   opacity: 1;
