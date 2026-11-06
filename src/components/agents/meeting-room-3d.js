@@ -925,13 +925,25 @@ function buildRoom(scene, tex) {
   screen.userData.onMat = screenOnMat
   meeting.texture.needsUpdate = true
 
-  // 办公线性面板灯：黑框 + 扩散板；灯面用 Basic 材质，开灯时自身极亮、不冲爆环境
+  // 办公线性面板灯：关灯=白色磨砂罩；开灯=罩面高亮 + 一圈柔白光晕
   const panelFrameMat = mat(0x1a1c1f, { roughness: 0.72, metalness: 0.35, envMapIntensity: 0.45 })
   const makeDiffuserMat = () =>
+    new THREE.MeshStandardMaterial({
+      color: 0xf3f5f7,
+      emissive: 0xffffff,
+      emissiveIntensity: 0,
+      roughness: 0.86,
+      metalness: 0,
+      envMapIntensity: 0.12,
+    })
+  const makeHaloMat = () =>
     new THREE.MeshBasicMaterial({
-      color: 0x5a626c,
+      color: 0xffffff,
       transparent: true,
-      opacity: 1,
+      opacity: 0,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
     })
   const panelLen = 1.5
   const panelWid = 0.3
@@ -949,22 +961,18 @@ function buildRoom(scene, tex) {
     diffuser.rotation.x = Math.PI / 2
     diffuser.position.y = -panelThk / 2 - 0.001
     group.add(diffuser)
-    // 开灯时额外一层更亮的灯芯，开关对比更明显
-    const core = new THREE.Mesh(
-      new THREE.PlaneGeometry(panelWid * 0.72, panelLen * 0.78),
-      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 })
-    )
-    core.rotation.x = Math.PI / 2
-    core.position.y = -panelThk / 2 - 0.002
-    group.add(core)
+    const halo = new THREE.Mesh(new THREE.PlaneGeometry(panelWid * 1.7, panelLen * 1.45), makeHaloMat())
+    halo.rotation.x = Math.PI / 2
+    halo.position.y = -panelThk / 2 - 0.004
+    group.add(halo)
     scene.add(group)
 
-    const spot = new THREE.SpotLight(0xe4ebf4, 0, 9.5, Math.PI / 3.2, 0.9, 1.45)
+    const spot = new THREE.SpotLight(0xe8eef6, 0, 9.5, Math.PI / 3.2, 0.9, 1.45)
     spot.position.set(x, ROOM.h - panelThk - 0.02, z)
     spot.target.position.set(x, 0, z)
     scene.add(spot)
     scene.add(spot.target)
-    cans.push({ light: spot, glow: diffuser, core, on: spotOn })
+    cans.push({ light: spot, glow: diffuser, halo, on: spotOn })
   }
   // 会议区三盏平行 + 前后补光
   ;[
@@ -1102,23 +1110,25 @@ export function mountMeetingRoom3D(host) {
       item.light.intensity = item.on * lamp
     })
     cans.forEach((item) => {
-      // 场景补光保持克制；灯面本身拉很亮，开关一目了然
+      // 环境补光克制；对比主要靠「白罩 vs 高亮罩+光晕」
       item.light.intensity = item.on * lamp
-      if (item.glow?.material?.color) {
-        item.glow.material.color.setHex(lit ? 0xf4f7fb : 0x5a626c)
+      if (item.glow?.material) {
+        item.glow.material.color?.setHex(0xf3f5f7)
+        if ('emissiveIntensity' in item.glow.material) {
+          item.glow.material.emissiveIntensity = lit ? 4.2 * lamp : 0
+        }
       }
-      if (item.core?.material) {
-        item.core.material.opacity = lit ? 0.92 * lamp : 0
-        item.core.material.color.setHex(0xffffff)
+      if (item.halo?.material) {
+        item.halo.material.opacity = lit ? 0.42 * lamp : 0
       }
     })
-    // 环境只轻微抬一点，避免整屋发白
-    ambient.intensity = 0.16 + 0.05 * lamp
-    hemi.intensity = 0.28 + 0.05 * lamp
-    sun.intensity = 0.64 + 0.08 * lamp
-    fill.intensity = 0.15 + 0.05 * lamp
-    bounce.intensity = 0.09 + 0.05 * lamp
-    renderer.toneMappingExposure = 0.8 + 0.05 * lamp
+    // 整体环境几乎不变，只保证关灯时房间仍看得清
+    ambient.intensity = 0.18 + 0.02 * lamp
+    hemi.intensity = 0.3 + 0.02 * lamp
+    sun.intensity = 0.66 + 0.04 * lamp
+    fill.intensity = 0.16 + 0.02 * lamp
+    bounce.intensity = 0.1 + 0.02 * lamp
+    renderer.toneMappingExposure = 0.82 + 0.03 * lamp
   }
 
   const applyScreen = (on) => {
