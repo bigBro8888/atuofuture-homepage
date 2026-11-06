@@ -105,16 +105,15 @@ const STORY_AGENT_ID = 'space'
 
 const SCENE_LOADER_HTML = `
   <div class="ag-story__loader" data-ag-scene-loader role="status" aria-live="polite">
-    <div class="ag-story__loader-orb" aria-hidden="true">
-      <span class="ag-story__loader-orb-core"></span>
-      <span class="ag-story__loader-orb-ring"></span>
+    <div class="ag-story__loader-mark" aria-hidden="true">
+      <div class="ag-story__loader-glyph"><span></span></div>
     </div>
-    <p class="ag-story__loader-text">会议室孪生加载中</p>
+    <p class="ag-story__loader-text">会议室孪生加载中<span class="ag-story__loader-dots"></span></p>
   </div>`
 
 function setStoryLoading(root, loading) {
   const pins = root.querySelector('[data-ag-pins]')
-  pins?.classList.toggle('is-waiting', !!loading)
+  pins?.classList.toggle('is-ready', !loading)
 }
 
 async function ensureMeetingRoom3D(root, state) {

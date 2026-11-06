@@ -1008,11 +1008,10 @@ export function mountMeetingRoom3D(host) {
   loader.setAttribute('role', 'status')
   loader.setAttribute('aria-live', 'polite')
   loader.innerHTML = `
-    <div class="ag-story__loader-orb" aria-hidden="true">
-      <span class="ag-story__loader-orb-core"></span>
-      <span class="ag-story__loader-orb-ring"></span>
+    <div class="ag-story__loader-mark" aria-hidden="true">
+      <div class="ag-story__loader-glyph"><span></span></div>
     </div>
-    <p class="ag-story__loader-text">会议室孪生加载中</p>`
+    <p class="ag-story__loader-text">会议室孪生加载中<span class="ag-story__loader-dots"></span></p>`
   host.appendChild(loader)
   host.appendChild(canvas)
 
