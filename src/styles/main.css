@@ -17405,7 +17405,7 @@ a.ag-eco__agent:visited {
   place-items: center;
   gap: 22px;
   background:
-    linear-gradient(165deg, #eef4fa 0%, #dce7f2 48%, #cfdce9 100%);
+    radial-gradient(90% 70% at 50% 40%, #12305a 0%, #0a1a38 55%, #071226 100%);
   transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 .ag-story__loader.is-done {
@@ -17442,9 +17442,9 @@ a.ag-eco__agent:visited {
   inset: 16px;
   border-radius: 10px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(232, 240, 247, 0.92));
-  border: 1px solid rgba(7, 26, 51, 0.08);
-  box-shadow: 0 8px 20px rgba(15, 40, 70, 0.08);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(220, 236, 245, 0.94));
+  border: 1px solid rgba(0, 213, 199, 0.22);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
   display: grid;
   place-items: center;
 }
@@ -17484,7 +17484,7 @@ a.ag-eco__agent:visited {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.12em;
-  color: #3d5166;
+  color: rgba(230, 240, 250, 0.88);
 }
 .ag-story__loader-dots::after {
   content: '';
