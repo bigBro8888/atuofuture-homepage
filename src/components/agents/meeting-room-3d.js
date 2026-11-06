@@ -726,14 +726,18 @@ function buildRoom(scene, tex) {
   skyR.rotation.y = -Math.PI / 2
   scene.add(skyR)
 
-  // 左右窗纱帘：默认收起，关闭 50% 时展开覆盖半窗
+  // 左右窗帘：参考灰织布材质，默认收起
   const curtainMat = new THREE.MeshStandardMaterial({
-    color: 0xe8eef6,
-    roughness: 0.88,
+    color: 0xffffff,
+    map: tex.curtainRefMap || null,
+    bumpMap: tex.curtainRefMap || null,
+    bumpScale: tex.curtainRefMap ? 0.022 : 0,
+    roughness: 0.95,
     metalness: 0,
     transparent: true,
-    opacity: 0.82,
+    opacity: 0.94,
     side: THREE.DoubleSide,
+    envMapIntensity: 0.12,
   })
   ;[-1, 1].forEach((side) => {
     const panel = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.d * 0.92, ROOM.h * 0.9, 1, 1), curtainMat.clone())
@@ -935,16 +939,17 @@ function buildRoom(scene, tex) {
     shade.position.set(0, ROOM.h - 1.05, z - 0.35)
     shade.rotation.x = Math.PI
     scene.add(shade)
-    const bulb = new THREE.PointLight(0xffe2bd, 0, 8.5, 2)
+    // 暖白吊灯，强度压低，避免开灯发白
+    const bulb = new THREE.PointLight(0xffd7a8, 0, 7.2, 2.2)
     bulb.position.set(0, ROOM.h - 1.15, z - 0.35)
     scene.add(bulb)
     const glow = new THREE.Mesh(
       new THREE.SphereGeometry(0.07, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0xffe6c8, transparent: true, opacity: 0 })
+      new THREE.MeshBasicMaterial({ color: 0xffd9b0, transparent: true, opacity: 0 })
     )
     glow.position.copy(bulb.position)
     scene.add(glow)
-    pendants.push({ light: bulb, glow, on: 2.4 })
+    pendants.push({ light: bulb, glow, on: 1.45 })
   })
 
   for (let i = 0; i < 8; i += 1) {
@@ -960,19 +965,20 @@ function buildRoom(scene, tex) {
     )
     can.position.set(x, ROOM.h - 0.08, z)
     scene.add(can)
-    const spot = new THREE.SpotLight(0xfff0dd, 0, 12, Math.PI / 5, 0.45, 1.4)
+    // 更大 penumbra，光斑更柔
+    const spot = new THREE.SpotLight(0xffe2c0, 0, 11, Math.PI / 4.2, 0.78, 1.55)
     spot.position.set(x, ROOM.h - 0.12, z)
     spot.target.position.set(x, 0, z)
     scene.add(spot)
     scene.add(spot.target)
     const glow = new THREE.Mesh(
       new THREE.CircleGeometry(0.05, 16),
-      new THREE.MeshBasicMaterial({ color: 0xffe8c4, transparent: true, opacity: 0 })
+      new THREE.MeshBasicMaterial({ color: 0xffe0b8, transparent: true, opacity: 0 })
     )
     glow.rotation.x = Math.PI / 2
     glow.position.set(x, ROOM.h - 0.16, z)
     scene.add(glow)
-    cans.push({ light: spot, glow, on: 1.8 })
+    cans.push({ light: spot, glow, on: 1.05 })
   }
 
   return { pendants, cans, airflow, curtains, screen }
@@ -995,14 +1001,14 @@ export function mountMeetingRoom3D(host) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 0.98
+  renderer.toneMappingExposure = 0.82
 
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color(0xcfd8e2)
-  scene.fog = new THREE.Fog(0xcfd8e2, 18, 34)
+  scene.background = new THREE.Color(0xc4ccd6)
+  scene.fog = new THREE.Fog(0xc4ccd6, 18, 34)
 
   const pmrem = new THREE.PMREMGenerator(renderer)
-  const env = pmrem.fromScene(new RoomEnvironment(), 0.06).texture
+  const env = pmrem.fromScene(new RoomEnvironment(), 0.035).texture
   scene.environment = env
   pmrem.dispose()
 
@@ -1022,11 +1028,11 @@ export function mountMeetingRoom3D(host) {
   controls.maxAzimuthAngle = 0.45
   controls.target.set(0, 1.1, -0.8)
 
-  const ambient = new THREE.AmbientLight(0xeef2f6, 0.34)
+  const ambient = new THREE.AmbientLight(0xe4e8ee, 0.28)
   scene.add(ambient)
-  const hemi = new THREE.HemisphereLight(0xe8eef6, 0xa8aeb8, 0.55)
+  const hemi = new THREE.HemisphereLight(0xe2e8f0, 0x9aa3ae, 0.42)
   scene.add(hemi)
-  const sun = new THREE.DirectionalLight(0xf3f6fa, 1.85)
+  const sun = new THREE.DirectionalLight(0xf0ebe4, 1.35)
   sun.position.set(-5.8, 7.2, 2.2)
   sun.castShadow = true
   sun.shadow.mapSize.set(2048, 2048)
@@ -1038,12 +1044,12 @@ export function mountMeetingRoom3D(host) {
   sun.shadow.camera.bottom = -8
   sun.shadow.bias = -0.00015
   sun.shadow.normalBias = 0.025
-  sun.shadow.radius = 2.5
+  sun.shadow.radius = 3.2
   scene.add(sun)
-  const fill = new THREE.DirectionalLight(0xd9e4f0, 0.48)
+  const fill = new THREE.DirectionalLight(0xd8e0ea, 0.32)
   fill.position.set(4, 3.2, 3)
   scene.add(fill)
-  const bounce = new THREE.DirectionalLight(0xe6ebf0, 0.22)
+  const bounce = new THREE.DirectionalLight(0xe8e4de, 0.16)
   bounce.position.set(0.5, 1.2, 4)
   scene.add(bounce)
 
@@ -1097,18 +1103,19 @@ export function mountMeetingRoom3D(host) {
     const lamp = next
     pendants.forEach((item) => {
       item.light.intensity = item.on * lamp
-      item.glow.material.opacity = lamp > 0.05 ? Math.min(1, lamp) : 0
+      item.glow.material.opacity = lamp > 0.05 ? 0.55 * lamp : 0
     })
     cans.forEach((item) => {
       item.light.intensity = item.on * lamp
-      item.glow.material.opacity = lamp > 0.05 ? 0.95 * lamp : 0
+      item.glow.material.opacity = lamp > 0.05 ? 0.55 * lamp : 0
     })
-    ambient.intensity = 0.12 + 0.3 * lamp
-    hemi.intensity = 0.28 + 0.2 * lamp
-    sun.intensity = 0.55 + 0.5 * lamp
-    fill.intensity = 0.12 + 0.28 * lamp
-    bounce.intensity = 0.06 + 0.49 * lamp
-    renderer.toneMappingExposure = 0.78 + 0.54 * lamp
+    // 开灯偏暖、整体压曝，避免发白发灰
+    ambient.intensity = 0.14 + 0.12 * lamp
+    hemi.intensity = 0.26 + 0.1 * lamp
+    sun.intensity = 0.62 + 0.18 * lamp
+    fill.intensity = 0.14 + 0.1 * lamp
+    bounce.intensity = 0.08 + 0.12 * lamp
+    renderer.toneMappingExposure = 0.8 + 0.14 * lamp
   }
 
   const applyScreen = (on) => {
@@ -1385,10 +1392,12 @@ export function mountMeetingRoom3D(host) {
     const procedural = createTextures()
     let wallRefMap = null
     let floorRefMap = null
+    let curtainRefMap = null
     try {
-      ;[wallRefMap, floorRefMap] = await Promise.all([
+      ;[wallRefMap, floorRefMap, curtainRefMap] = await Promise.all([
         loadRefMap('/meeting-wall-mat.png', 3.4, 1.7),
         loadRefMap('/meeting-floor-mat.png', 5.2, 6.8),
+        loadRefMap('/meeting-curtain-mat.png', 2.8, 3.6),
       ])
     } catch {
       // 参考图加载失败时保留占位材质
@@ -1396,10 +1405,11 @@ export function mountMeetingRoom3D(host) {
     if (disposed) {
       wallRefMap?.dispose()
       floorRefMap?.dispose()
+      curtainRefMap?.dispose()
       Object.values(procedural).forEach((t) => t.dispose?.())
       return
     }
-    textures = { ...procedural, wallRefMap, floorRefMap }
+    textures = { ...procedural, wallRefMap, floorRefMap, curtainRefMap }
     const built = buildRoom(scene, textures)
     pendants = built.pendants
     cans = built.cans
