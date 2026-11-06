@@ -115,59 +115,21 @@ function createTextures() {
   }, 512)
   woodRough.repeat.copy(woodMap.repeat)
 
-  // 深绿灰地毯：更深、带低碳感，绒面颗粒更密
+  // 占位：墙/地真实贴图由 TextureLoader 异步替换为参考图材质
   const floorWood = makeCanvasTexture((ctx, size) => {
-    const base = ctx.createLinearGradient(0, 0, size, size)
-    base.addColorStop(0, '#5a655e')
-    base.addColorStop(0.4, '#4d5852')
-    base.addColorStop(0.75, '#44504a')
-    base.addColorStop(1, '#3c473f')
-    ctx.fillStyle = base
+    ctx.fillStyle = '#7a7e82'
     ctx.fillRect(0, 0, size, size)
-    for (let y = 0; y < size; y += 2) {
-      for (let x = 0; x < size; x += 2) {
-        const shade = ((x * 19 + y * 29) % 11) / 11
-        const light = shade > 0.55
-        ctx.fillStyle = light
-          ? `rgba(190,210,195,${0.03 + shade * 0.06})`
-          : `rgba(10,18,12,${0.05 + (1 - shade) * 0.08})`
-        ctx.fillRect(x, y, 2, 2)
-      }
-    }
-    for (let i = 0; i < 3200; i += 1) {
-      const x = Math.random() * size
-      const y = Math.random() * size
-      ctx.fillStyle = `rgba(220,235,220,${0.012 + Math.random() * 0.035})`
-      ctx.fillRect(x, y, 1 + Math.random(), 1)
-    }
-    // 地毯拼缝
-    ctx.strokeStyle = 'rgba(18, 28, 22, 0.18)'
-    ctx.lineWidth = 1.2
-    for (let i = 1; i < 4; i += 1) {
-      const p = (i / 4) * size
-      ctx.beginPath()
-      ctx.moveTo(p, 0)
-      ctx.lineTo(p, size)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(0, p)
-      ctx.lineTo(size, p)
-      ctx.stroke()
-    }
-    noise(ctx, size, 0.055)
-  }, 1024)
-  floorWood.repeat.set(4.2, 5.2)
+    noise(ctx, size, 0.08)
+  }, 64)
+  floorWood.repeat.set(4.8, 6.2)
 
   const floorWoodRough = makeCanvasTexture((ctx, size) => {
-    ctx.fillStyle = '#9a9a9a'
+    ctx.fillStyle = '#a8a8a8'
     ctx.fillRect(0, 0, size, size)
-    for (let i = 0; i < 3200; i += 1) {
-      ctx.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${Math.random() > 0.5 ? 255 : 0},${0.05 + Math.random() * 0.12})`
-      ctx.fillRect(Math.random() * size, Math.random() * size, 1 + Math.random() * 2, 1 + Math.random() * 2)
-    }
     noise(ctx, size, 0.16)
-  }, 512)
+  }, 64)
   floorWoodRough.repeat.copy(floorWood.repeat)
+  floorWoodRough.colorSpace = THREE.NoColorSpace
 
   const plaster = makeCanvasTexture((ctx, size) => {
     ctx.fillStyle = '#f3f5f8'
@@ -175,146 +137,6 @@ function createTextures() {
     noise(ctx, size, 0.05)
   }, 256)
   plaster.repeat.set(2, 1.2)
-
-  // 参考声学板墙：分色色块 + 同款树枝/电路浮雕纹
-  const panelColors = {
-    navy: '#1f3a5f',
-    teal: '#2f4a45',
-    terra: '#b57a52',
-    sky: '#9eb8d4',
-    ivory: '#e8ebe8',
-  }
-  const panelBlocks = [
-    { x: 0, y: 0, w: 0.38, h: 0.55, c: 'navy' },
-    { x: 0.38, y: 0, w: 0.24, h: 0.32, c: 'teal' },
-    { x: 0.62, y: 0, w: 0.38, h: 0.28, c: 'terra' },
-    { x: 0.38, y: 0.32, w: 0.24, h: 0.23, c: 'sky' },
-    { x: 0.62, y: 0.28, w: 0.2, h: 0.27, c: 'ivory' },
-    { x: 0.82, y: 0.28, w: 0.18, h: 0.27, c: 'navy' },
-    { x: 0, y: 0.55, w: 0.22, h: 0.45, c: 'terra' },
-    { x: 0.22, y: 0.55, w: 0.28, h: 0.45, c: 'navy' },
-    { x: 0.5, y: 0.55, w: 0.26, h: 0.22, c: 'teal' },
-    { x: 0.76, y: 0.55, w: 0.24, h: 0.45, c: 'sky' },
-    { x: 0.5, y: 0.77, w: 0.26, h: 0.23, c: 'ivory' },
-  ]
-
-  const drawBranchTile = (ctx, x0, y0, tile, raised = true) => {
-    const cx = x0 + tile * 0.5
-    const stemW = Math.max(1.6, tile * 0.055)
-    const armW = Math.max(1.4, tile * 0.045)
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    const stroke = (w, color) => {
-      ctx.strokeStyle = color
-      ctx.lineWidth = w
-    }
-    // 主杆
-    stroke(stemW + (raised ? 0 : 0.4), raised ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.35)')
-    ctx.beginPath()
-    ctx.moveTo(cx, y0 + tile * 0.12)
-    ctx.lineTo(cx, y0 + tile * 0.88)
-    ctx.stroke()
-    // 斜向分枝（左右交错）
-    const arms = [
-      [0.28, -0.18, -0.22],
-      [0.42, 0.2, -0.2],
-      [0.56, -0.22, -0.18],
-      [0.7, 0.18, -0.2],
-    ]
-    arms.forEach(([ty, dx, dy]) => {
-      const y = y0 + tile * ty
-      stroke(armW, raised ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.32)')
-      ctx.beginPath()
-      ctx.moveTo(cx, y)
-      ctx.lineTo(cx + tile * dx, y + tile * dy)
-      ctx.stroke()
-      // 分枝末端短竖
-      ctx.beginPath()
-      ctx.moveTo(cx + tile * dx, y + tile * dy)
-      ctx.lineTo(cx + tile * dx, y + tile * dy - tile * 0.1)
-      ctx.stroke()
-    })
-    // 阴影侧加深，增强浮雕感
-    if (raised) {
-      stroke(stemW * 0.55, 'rgba(0,0,0,0.22)')
-      ctx.beginPath()
-      ctx.moveTo(cx + stemW * 0.35, y0 + tile * 0.14)
-      ctx.lineTo(cx + stemW * 0.35, y0 + tile * 0.86)
-      ctx.stroke()
-    }
-  }
-
-  const panelAlbedo = makeCanvasTexture((ctx, size) => {
-    ctx.fillStyle = panelColors.ivory
-    ctx.fillRect(0, 0, size, size)
-    panelBlocks.forEach((b) => {
-      ctx.fillStyle = panelColors[b.c]
-      ctx.fillRect(b.x * size, b.y * size, b.w * size, b.h * size)
-    })
-    // 色块内细绒噪声
-    noise(ctx, size, 0.04)
-    const tile = size / 10
-    for (let gy = 0; gy < 10; gy += 1) {
-      for (let gx = 0; gx < 10; gx += 1) {
-        const x0 = gx * tile
-        const y0 = gy * tile
-        // 接缝
-        ctx.strokeStyle = 'rgba(0,0,0,0.18)'
-        ctx.lineWidth = Math.max(1, tile * 0.035)
-        ctx.strokeRect(x0 + 0.8, y0 + 0.8, tile - 1.6, tile - 1.6)
-        // 浮雕高光（albedo 上做轻微亮纹，配合 bump）
-        drawBranchTile(ctx, x0, y0, tile, true)
-      }
-    }
-  }, 1024)
-  panelAlbedo.repeat.set(1, 1)
-  panelAlbedo.wrapS = panelAlbedo.wrapT = THREE.ClampToEdgeWrapping
-
-  const panelBump = makeCanvasTexture((ctx, size) => {
-    ctx.fillStyle = '#808080'
-    ctx.fillRect(0, 0, size, size)
-    const tile = size / 10
-    for (let gy = 0; gy < 10; gy += 1) {
-      for (let gx = 0; gx < 10; gx += 1) {
-        const x0 = gx * tile
-        const y0 = gy * tile
-        // 板面接缝略凹
-        ctx.strokeStyle = '#5a5a5a'
-        ctx.lineWidth = Math.max(1.2, tile * 0.04)
-        ctx.strokeRect(x0 + 1, y0 + 1, tile - 2, tile - 2)
-        // 浮雕纹抬高
-        drawBranchTile(ctx, x0, y0, tile, true)
-        // 再叠一层更亮的主干，强化 bump
-        ctx.strokeStyle = '#f2f2f2'
-        ctx.lineWidth = Math.max(1.8, tile * 0.06)
-        ctx.lineCap = 'round'
-        const cx = x0 + tile * 0.5
-        ctx.beginPath()
-        ctx.moveTo(cx, y0 + tile * 0.14)
-        ctx.lineTo(cx, y0 + tile * 0.86)
-        ctx.stroke()
-      }
-    }
-  }, 1024)
-  panelBump.colorSpace = THREE.NoColorSpace
-  panelBump.repeat.copy(panelAlbedo.repeat)
-  panelBump.wrapS = panelBump.wrapT = THREE.ClampToEdgeWrapping
-
-  const panelRough = makeCanvasTexture((ctx, size) => {
-    ctx.fillStyle = '#b8b8b8'
-    ctx.fillRect(0, 0, size, size)
-    noise(ctx, size, 0.14)
-    const tile = size / 10
-    for (let gy = 0; gy < 10; gy += 1) {
-      for (let gx = 0; gx < 10; gx += 1) {
-        ctx.fillStyle = 'rgba(255,255,255,0.12)'
-        ctx.fillRect(gx * tile + 2, gy * tile + 2, tile - 4, tile - 4)
-      }
-    }
-  }, 512)
-  panelRough.colorSpace = THREE.NoColorSpace
-  panelRough.repeat.copy(panelAlbedo.repeat)
-  panelRough.wrapS = panelRough.wrapT = THREE.ClampToEdgeWrapping
 
   // 深色竖纹皮面：参考商务会议椅肋纹皮料
   const fabric = makeCanvasTexture((ctx, size) => {
@@ -397,14 +219,30 @@ function createTextures() {
     floorWood,
     floorWoodRough,
     plaster,
-    panelAlbedo,
-    panelBump,
-    panelRough,
     fabric,
     metal,
     foliage,
     sky,
   }
+}
+
+/** 加载参考材质图并配置平铺 */
+function loadRefMap(url, repeatX, repeatY) {
+  return new Promise((resolve, reject) => {
+    new THREE.TextureLoader().load(
+      url,
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+        tex.anisotropy = 8
+        tex.repeat.set(repeatX, repeatY)
+        tex.needsUpdate = true
+        resolve(tex)
+      },
+      undefined,
+      reject
+    )
+  })
 }
 
 function mat(color, opts = {}) {
@@ -771,21 +609,17 @@ function buildRoom(scene, tex) {
   /** @type {THREE.Mesh[]} */
   const curtains = []
 
-  const floor = addShadow(
-    new THREE.Mesh(
-      new THREE.PlaneGeometry(ROOM.w, ROOM.d),
-      mat(0xffffff, {
-        map: tex.floorWood,
-        color: 0x6a756c,
-        roughnessMap: tex.floorWoodRough,
-        roughness: 0.94,
-        metalness: 0,
-        envMapIntensity: 0.16,
-      })
-    ),
-    false,
-    true
-  )
+  // 地面：图2 粗织灰织物材质（异步换上参考图）
+  const floorMat = mat(0xffffff, {
+    map: tex.floorWood,
+    bumpMap: tex.floorWood,
+    bumpScale: 0.028,
+    roughnessMap: tex.floorWoodRough,
+    roughness: 0.96,
+    metalness: 0,
+    envMapIntensity: 0.12,
+  })
+  const floor = addShadow(new THREE.Mesh(new THREE.PlaneGeometry(ROOM.w, ROOM.d), floorMat), false, true)
   floor.rotation.x = -Math.PI / 2
   scene.add(floor)
 
@@ -801,66 +635,31 @@ function buildRoom(scene, tex) {
   ceiling.position.y = ROOM.h
   scene.add(ceiling)
 
-  // 后墙底漆（踢脚上方露出极窄白边，贴近参考墙裙）
-  const back = addShadow(
-    new THREE.Mesh(
-      new THREE.PlaneGeometry(ROOM.w, ROOM.h),
-      mat(0xf2f4f6, { map: tex.plaster, roughness: 0.9, envMapIntensity: 0.22 })
-    ),
-    false,
-    true
-  )
+  // 后墙：图1 灰白交错长方砖材质（异步换上参考图）
+  const wallMat = mat(0xffffff, {
+    map: tex.plaster,
+    roughness: 0.9,
+    metalness: 0,
+    envMapIntensity: 0.2,
+  })
+  const back = addShadow(new THREE.Mesh(new THREE.PlaneGeometry(ROOM.w, ROOM.h), wallMat), false, true)
   back.position.set(0, ROOM.h / 2, -ROOM.d / 2)
   scene.add(back)
 
-  // 分色浮雕声学板（参考图：海军蓝/墨绿/陶土/浅蓝色块 + 树枝纹）
-  const panelH = ROOM.h - 0.42
-  const panelMat = mat(0xffffff, {
-    map: tex.panelAlbedo,
-    bumpMap: tex.panelBump,
-    bumpScale: 0.045,
-    roughnessMap: tex.panelRough,
-    roughness: 0.92,
-    metalness: 0,
-    envMapIntensity: 0.18,
-  })
-  const featureWall = addShadow(
-    new THREE.Mesh(new THREE.PlaneGeometry(ROOM.w * 0.98, panelH), panelMat),
-    false,
-    true
-  )
-  featureWall.position.set(0, 0.28 + panelH / 2, -ROOM.d / 2 + 0.03)
-  scene.add(featureWall)
-
-  // 板材厚度：四周窄边框，侧面能看到一点体量
-  const panelEdgeMat = mat(0xdde1de, { roughness: 0.86, metalness: 0.02, envMapIntensity: 0.2 })
-  ;[
-    [ROOM.w * 0.99, 0.03, 0.04, 0, 0.28 + panelH - 0.015],
-    [ROOM.w * 0.99, 0.03, 0.04, 0, 0.295],
-    [0.03, panelH, 0.04, -ROOM.w * 0.49 + 0.015, 0.28 + panelH / 2],
-    [0.03, panelH, 0.04, ROOM.w * 0.49 - 0.015, 0.28 + panelH / 2],
-  ].forEach(([w, h, d, x, y]) => {
-    const edge = addShadow(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), panelEdgeMat), true, false)
-    edge.position.set(x, y, -ROOM.d / 2 + 0.018)
-    scene.add(edge)
-  })
-
-  // 白色墙裙 / 踢脚线（参考图下部造型）
-  const baseMat = mat(0xf4f6f4, { roughness: 0.78, metalness: 0.02, envMapIntensity: 0.25 })
-  const baseboard = addShadow(
-    new THREE.Mesh(new RoundedBoxGeometry(ROOM.w * 0.995, 0.28, 0.08, 2, 0.012), baseMat),
-    true,
-    true
-  )
-  baseboard.position.set(0, 0.14, -ROOM.d / 2 + 0.04)
-  scene.add(baseboard)
-  const baseRail = addShadow(
-    new THREE.Mesh(new RoundedBoxGeometry(ROOM.w * 0.995, 0.045, 0.095, 2, 0.01), baseMat),
-    true,
-    false
-  )
-  baseRail.position.set(0, 0.3, -ROOM.d / 2 + 0.05)
-  scene.add(baseRail)
+  // 异步挂载参考材质图
+  if (tex.wallRefMap) {
+    wallMat.map = tex.wallRefMap
+    wallMat.bumpMap = tex.wallRefMap
+    wallMat.bumpScale = 0.012
+    wallMat.needsUpdate = true
+  }
+  if (tex.floorRefMap) {
+    floorMat.map = tex.floorRefMap
+    floorMat.bumpMap = tex.floorRefMap
+    floorMat.bumpScale = 0.032
+    floorMat.roughnessMap = null
+    floorMat.needsUpdate = true
+  }
 
   const glassMat = new THREE.MeshPhysicalMaterial({
     color: 0xe8eef4,
@@ -1248,17 +1047,25 @@ export function mountMeetingRoom3D(host) {
   bounce.position.set(0.5, 1.2, 4)
   scene.add(bounce)
 
-  const textures = createTextures()
-  const { pendants, cans, airflow, curtains, screen } = buildRoom(scene, textures)
-  const person = makePerson({ coatColor: 0x1d4f9c, visible: false })
-  scene.add(person)
-
-  const radar = makeCeilingRadar()
-  scene.add(radar)
+  /** @type {{ light: THREE.PointLight, glow: THREE.Mesh, on: number }[]} */
+  let pendants = []
+  /** @type {{ light: THREE.SpotLight, glow: THREE.Mesh, on: number }[]} */
+  let cans = []
+  /** @type {THREE.Points[]} */
+  let airflow = []
+  /** @type {THREE.Mesh[]} */
+  let curtains = []
+  /** @type {THREE.Mesh | null} */
+  let screen = null
+  /** @type {THREE.Group | null} */
+  let person = null
+  /** @type {THREE.Group | null} */
+  let radar = null
 
   const clock = new THREE.Clock()
   let raf = 0
   let disposed = false
+  let roomReady = false
   /** @type {0 | 0.5 | 1} */
   let lightLevel = 0
   let screenOn = true
@@ -1303,14 +1110,13 @@ export function mountMeetingRoom3D(host) {
     bounce.intensity = 0.06 + 0.49 * lamp
     renderer.toneMappingExposure = 0.78 + 0.54 * lamp
   }
-  applyLights(0)
 
   const applyScreen = (on) => {
+    if (!screen) return
     screenOn = on
     screen.material = on ? screen.userData.onMat : screen.userData.offMat
     screen.userData.meeting.texture.needsUpdate = true
   }
-  applyScreen(true)
 
   const applyAc = (on) => {
     acOn = on
@@ -1344,6 +1150,7 @@ export function mountMeetingRoom3D(host) {
   }
 
   const startEnterCycle = () => {
+    if (!person) return
     person.visible = true
     person.position.copy(DOOR)
     person.rotation.y = Math.PI
@@ -1395,6 +1202,7 @@ export function mountMeetingRoom3D(host) {
   }
 
   const tickDemo = (now) => {
+    if (!roomReady || !person) return
     if (!demoActive) {
       peopleCount = 0
       return
@@ -1473,6 +1281,7 @@ export function mountMeetingRoom3D(host) {
   }
 
   const tickRadar = (now) => {
+    if (!radar) return
     const sensing = peopleCount > 0
     radar.userData.sensing = sensing
     radar.userData.lens.material.emissiveIntensity = sensing ? 0.9 + Math.sin(now * 0.01) * 0.25 : 0.2
@@ -1539,6 +1348,10 @@ export function mountMeetingRoom3D(host) {
   const loop = () => {
     if (disposed) return
     raf = requestAnimationFrame(loop)
+    if (!roomReady) {
+      renderer.render(scene, camera)
+      return
+    }
     const now = performance.now()
     const dt = Math.min(0.05, clock.getDelta())
     tickDemo(now)
@@ -1564,6 +1377,46 @@ export function mountMeetingRoom3D(host) {
     }
     api._onFrame?.(api)
   }
+
+  /** @type {Record<string, THREE.Texture>} */
+  let textures = {}
+
+  const bootstrapRoom = async () => {
+    const procedural = createTextures()
+    let wallRefMap = null
+    let floorRefMap = null
+    try {
+      ;[wallRefMap, floorRefMap] = await Promise.all([
+        loadRefMap('/meeting-wall-mat.png', 3.4, 1.7),
+        loadRefMap('/meeting-floor-mat.png', 5.2, 6.8),
+      ])
+    } catch {
+      // 参考图加载失败时保留占位材质
+    }
+    if (disposed) {
+      wallRefMap?.dispose()
+      floorRefMap?.dispose()
+      Object.values(procedural).forEach((t) => t.dispose?.())
+      return
+    }
+    textures = { ...procedural, wallRefMap, floorRefMap }
+    const built = buildRoom(scene, textures)
+    pendants = built.pendants
+    cans = built.cans
+    airflow = built.airflow
+    curtains = built.curtains
+    screen = built.screen
+    person = makePerson({ coatColor: 0x1d4f9c, visible: false })
+    scene.add(person)
+    radar = makeCeilingRadar()
+    scene.add(radar)
+    roomReady = true
+    applyLights(0)
+    applyScreen(true)
+    setDemoPhase('wait')
+    demoPhaseAt = performance.now()
+  }
+  bootstrapRoom()
 
   const onResize = () => resize()
   resize()
@@ -1615,7 +1468,7 @@ export function mountMeetingRoom3D(host) {
     },
     resetPerson() {
       demoActive = false
-      person.visible = false
+      if (person) person.visible = false
       peopleCount = 0
       applyPresence(false)
       setDemoPhase('wait')
@@ -1624,11 +1477,11 @@ export function mountMeetingRoom3D(host) {
       canvas.style.pointerEvents = active ? 'auto' : 'none'
       demoActive = !!active
       if (!active) {
-        person.visible = false
+        if (person) person.visible = false
         peopleCount = 0
         applyPresence(false)
         setDemoPhase('wait')
-      } else if (demoPhase === 'wait' && !person.visible) {
+      } else if (roomReady && demoPhase === 'wait' && person && !person.visible) {
         startEnterCycle()
       }
     },
@@ -1638,8 +1491,8 @@ export function mountMeetingRoom3D(host) {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', onResize)
       controls.dispose()
-      Object.values(textures).forEach((t) => t.dispose())
-      screen.userData.meeting?.texture.dispose()
+      Object.values(textures).forEach((t) => t?.dispose?.())
+      screen?.userData?.meeting?.texture?.dispose()
       env.dispose()
       renderer.dispose()
       scene.traverse((obj) => {
