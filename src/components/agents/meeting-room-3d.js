@@ -55,7 +55,7 @@ export function mountMeetingRoom3D(host) {
   host.appendChild(loaderEl)
 
   const mountRoot = document.createElement('div')
-  mountRoot.style.cssText = 'position:absolute;inset:0;z-index:1'
+  mountRoot.style.cssText = 'position:absolute;inset:0;z-index:1;width:100%;height:100%'
   host.appendChild(mountRoot)
 
   const api = mountMeetingRoomRuntime(mountRoot, { cameraDistanceScale: 0.85 })
@@ -67,8 +67,8 @@ export function mountMeetingRoom3D(host) {
   const canvas = mountRoot.querySelector('canvas')
   if (canvas) {
     canvas.classList.add('ag-story__canvas')
-    canvas.style.opacity = '0'
-    canvas.style.transition = 'opacity .4s ease'
+    canvas.style.cssText =
+      'display:block;width:100%;height:100%;min-height:0;opacity:0;transition:opacity .4s ease;touch-action:none;cursor:grab'
   }
 
   const sceneRoot = host.closest('[data-ag-scene]') || host.parentElement
