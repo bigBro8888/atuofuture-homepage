@@ -283,6 +283,7 @@ export function validateHomeContent(value = {}) {
         title: cleanText(item.title, fallback.title, 40),
         description: cleanText(item.description, fallback.description, 80),
         href: cleanUrl(item.href, fallback.href),
+        iconUrl: cleanUrl(item.iconUrl, fallback.iconUrl || ''),
       })),
       softwareTitle: cleanText(agents.softwareTitle, defaultHomeContent.agents.softwareTitle, 40),
       softwareMoreLabel: cleanText(agents.softwareMoreLabel, defaultHomeContent.agents.softwareMoreLabel, 40),

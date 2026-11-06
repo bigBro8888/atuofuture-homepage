@@ -14158,8 +14158,22 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 .atf-spark {
   color: var(--atf-accent);
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   filter: drop-shadow(0 4px 8px rgba(8, 108, 240, .2));
+}
+.atf-spark img,
+.atf-spark svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 .atf-agent-copy { min-width: 0; display: grid; gap: 5px; }
 .atf-agent-copy strong {

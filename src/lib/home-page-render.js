@@ -104,7 +104,16 @@ const DEFAULT_ATF_PLATFORM = [
   { title: '数字孪生', description: '在空间中查看设备与数据', imageUrl: '/images/home-atf/atf-09.webp' },
 ]
 
-const ATF_SPARK = '<span class="atf-spark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2.2 13.7 8.8 20.4 10.4 13.7 12.1 12 18.8 10.3 12.1 3.6 10.4 10.3 8.8 12 2.2Zm7.2 11.1 1 3.7 3.7 1-3.7 1-1 3.7-1-3.7-3.7-1 3.7-1 1-3.7Z"/></svg></span>'
+const ATF_SPARK_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2.2 13.7 8.8 20.4 10.4 13.7 12.1 12 18.8 10.3 12.1 3.6 10.4 10.3 8.8 12 2.2Zm7.2 11.1 1 3.7 3.7 1-3.7 1-1 3.7-1-3.7-3.7-1 3.7-1 1-3.7Z"/></svg>'
+
+function agentIconNode(path, iconUrl, { editable = false } = {}) {
+  const url = String(iconUrl || '').trim()
+  const media = url
+    ? `<img src="${esc(url)}" alt="" width="22" height="22" />`
+    : ATF_SPARK_SVG
+  if (!editable) return `<span class="atf-spark" aria-hidden="true">${media}</span>`
+  return `<button type="button" class="atf-spark atf-spark--edit" data-edit-image="${esc(path)}" data-edit-image-url="${esc(url)}" title="更换图标">${media}<span class="hpi-edit-img__tip">换图标</span></button>`
+}
 
 function renderAtfRailLink(labelPath, urlPath, label, url, { editable }) {
   if (editable) {
@@ -164,7 +173,7 @@ export function renderHomeAgentsSection(agents = {}, { editable = false, section
                 ${cards.map((card, index) => {
                   const href = card.href || '/agents/'
                   const body = `
-                    ${ATF_SPARK}
+                    ${agentIconNode(`agents.cards.${index}.iconUrl`, card.iconUrl, { editable })}
                     <div class="atf-agent-copy">
                       ${textNode(`agents.cards.${index}.title`, card.title || '', { editable, tag: 'strong', placeholder: '智能体名称' })}
                       ${textNode(`agents.cards.${index}.description`, card.description || '', { editable, tag: 'span', placeholder: '一句话说明' })}

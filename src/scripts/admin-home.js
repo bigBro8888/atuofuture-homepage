@@ -11,6 +11,7 @@ const HOME_SECTIONS = [
 
 const IMAGE_SIZE_GUIDE = [
   { test: (path) => /heroSlides\.\d+\.background/.test(path), label: '首屏背景', size: '1920×1080', tip: '全幅横图，左侧留暗部给文字' },
+  { test: (path) => /agents\.cards\.\d+\.iconUrl/.test(path), label: '智能体图标', size: '64×64', tip: '方形透明底 PNG / WebP，建议单色或蓝系小图标' },
   { test: (path) => /agents\.software\.\d+\.imageUrl/.test(path), label: '系统软件截图', size: '640×480', tip: '4:3 界面预览' },
   { test: (path) => /agents\.hardware\.\d+\.imageUrl/.test(path), label: '智能硬件产品图', size: '640×480', tip: '4:3 产品图' },
   { test: (path) => /agents\.platform\.\d+\.imageUrl/.test(path), label: '平台能力配图', size: '640×360', tip: '16:9 小图' },
@@ -19,6 +20,8 @@ const IMAGE_SIZE_GUIDE = [
   { test: (path) => /pitch\.items\.\d+\.imageUrl/.test(path), label: '宫格图片', size: '800×1000', tip: '竖图更合适' },
   { test: () => true, label: '图片', size: '1200×800', tip: '按前台比例裁切即可' },
 ]
+
+const DEFAULT_ATF_SPARK_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2.2 13.7 8.8 20.4 10.4 13.7 12.1 12 18.8 10.3 12.1 3.6 10.4 10.3 8.8 12 2.2Zm7.2 11.1 1 3.7 3.7 1-3.7 1-1 3.7-1-3.7-3.7-1 3.7-1 1-3.7Z"/></svg>'
 
 let ctx = { escapeHtml: (v) => String(v ?? ''), toast: () => {}, api: null, state: null, onSectionChange: null }
 
@@ -271,6 +274,13 @@ function applyVisualImage(path, url) {
   const safeUrl = String(url || '').trim()
   if (target) {
     target.dataset.editImageUrl = safeUrl
+    if (target.matches('.atf-spark')) {
+      const tip = '<span class="hpi-edit-img__tip">换图标</span>'
+      target.innerHTML = safeUrl
+        ? `<img src="${safeUrl.replace(/"/g, '&quot;')}" alt="" width="22" height="22" />${tip}`
+        : `${DEFAULT_ATF_SPARK_SVG}${tip}`
+      return
+    }
     let img = target.querySelector('img')
     if (safeUrl) {
       target.classList.remove('hpi-edit-img--empty')

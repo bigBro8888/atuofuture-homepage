@@ -4308,6 +4308,29 @@ body.admin-home-fullscreen { overflow: hidden; }
   justify-items: start;
 }
 .admin-vedit--home .atf-header__more { justify-items: end; }
+.admin-vedit--home .atf-spark--edit {
+  position: relative;
+  cursor: pointer;
+  border-radius: 8px;
+  outline: 1px dashed transparent;
+  transition: outline-color .15s ease, background .15s ease;
+}
+.admin-vedit--home .atf-spark--edit:hover,
+.admin-vedit--home .atf-spark--edit:focus-visible {
+  outline-color: rgba(23, 105, 255, .55);
+  background: rgba(23, 105, 255, .08);
+}
+.admin-vedit--home .atf-spark--edit .hpi-edit-img__tip {
+  left: 50%;
+  bottom: auto;
+  top: calc(100% + 6px);
+  white-space: nowrap;
+  z-index: 2;
+}
+.admin-vedit--home .atf-spark--edit:hover .hpi-edit-img__tip,
+.admin-vedit--home .atf-spark--edit:focus-visible .hpi-edit-img__tip {
+  opacity: 1;
+}
 .admin-vedit--home .atf-agent-item .admin-home-href,
 .admin-vedit--home .atf-thumb .admin-home-href,
 .admin-vedit--home .atf-bottom .admin-home-href,
