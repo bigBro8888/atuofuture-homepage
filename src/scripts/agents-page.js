@@ -103,6 +103,20 @@ function renderNotFound(rawId) {
 /** 任务演示区固定为空间服务 3D 会议室，不随生态图切换换成静态图 */
 const STORY_AGENT_ID = 'space'
 
+const SCENE_LOADER_HTML = `
+  <div class="ag-story__loader" data-ag-scene-loader role="status" aria-live="polite">
+    <div class="ag-story__loader-orb" aria-hidden="true">
+      <span class="ag-story__loader-orb-core"></span>
+      <span class="ag-story__loader-orb-ring"></span>
+    </div>
+    <p class="ag-story__loader-text">会议室孪生加载中</p>
+  </div>`
+
+function setStoryLoading(root, loading) {
+  const pins = root.querySelector('[data-ag-pins]')
+  pins?.classList.toggle('is-waiting', !!loading)
+}
+
 async function ensureMeetingRoom3D(root, state) {
   const host = root.querySelector('[data-ag-scene-3d]')
   if (!host) return null
@@ -120,6 +134,11 @@ async function ensureMeetingRoom3D(root, state) {
     syncPinLabel('env', '窗帘关闭', '窗帘打开', api.isEnvOn?.())
   }
   if (!state.room3d) {
+    applyStorySceneMode(root, STORY_AGENT_ID)
+    setStoryLoading(root, true)
+    if (!host.querySelector('[data-ag-scene-loader]')) {
+      host.insertAdjacentHTML('beforeend', SCENE_LOADER_HTML)
+    }
     const { mountMeetingRoom3D, syncStoryPinsTo3D } = await import('../components/agents/meeting-room-3d.js')
     state.room3d = mountMeetingRoom3D(host)
     if (state.room3d) {
@@ -128,7 +147,9 @@ async function ensureMeetingRoom3D(root, state) {
         syncStoryPinsTo3D(root, api)
         syncDevicePins(api)
       }
+      await state.room3d.ready
     }
+    setStoryLoading(root, false)
   }
   state.room3d?.setActive(true)
   applyStorySceneMode(root, STORY_AGENT_ID)

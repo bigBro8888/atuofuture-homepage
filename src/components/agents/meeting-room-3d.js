@@ -1003,7 +1003,30 @@ export function mountMeetingRoom3D(host) {
   canvas.className = 'ag-story__canvas'
   canvas.setAttribute('aria-label', '会议室三维场景')
   host.innerHTML = ''
+  const loader = document.createElement('div')
+  loader.className = 'ag-story__loader'
+  loader.dataset.agSceneLoader = ''
+  loader.setAttribute('role', 'status')
+  loader.setAttribute('aria-live', 'polite')
+  loader.innerHTML = `
+    <div class="ag-story__loader-orb" aria-hidden="true">
+      <span class="ag-story__loader-orb-core"></span>
+      <span class="ag-story__loader-orb-ring"></span>
+    </div>
+    <p class="ag-story__loader-text">会议室孪生加载中</p>`
+  host.appendChild(loader)
   host.appendChild(canvas)
+
+  let resolveReady = () => {}
+  const ready = new Promise((resolve) => {
+    resolveReady = resolve
+  })
+  const finishLoading = () => {
+    canvas.classList.add('is-ready')
+    loader.classList.add('is-done')
+    window.setTimeout(() => loader.remove(), 480)
+    resolveReady()
+  }
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
@@ -1413,6 +1436,7 @@ export function mountMeetingRoom3D(host) {
       floorRefMap?.dispose()
       curtainRefMap?.dispose()
       Object.values(procedural).forEach((t) => t.dispose?.())
+      resolveReady()
       return
     }
     textures = { ...procedural, wallRefMap, floorRefMap, curtainRefMap }
@@ -1432,8 +1456,11 @@ export function mountMeetingRoom3D(host) {
     applyAc(false)
     setDemoPhase('wait')
     demoPhaseAt = performance.now()
+    finishLoading()
   }
-  bootstrapRoom()
+  bootstrapRoom().catch(() => {
+    if (!disposed) finishLoading()
+  })
 
   const onResize = () => resize()
   resize()
@@ -1443,6 +1470,7 @@ export function mountMeetingRoom3D(host) {
   const api = {
     host,
     canvas,
+    ready,
     projectPin,
     getTwinStats,
     onStats(fn) {
