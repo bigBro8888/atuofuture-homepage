@@ -10,7 +10,7 @@ const PIN_WORLD = {
   0: new THREE.Vector3(-3.2, 1.35, 2.4),
   1: new THREE.Vector3(-1.6, 2.55, -0.4),
   3: new THREE.Vector3(2.4, 2.4, -1.2),
-  '3b': new THREE.Vector3(3.1, 1.55, 0.2),
+  '3b': new THREE.Vector3(0.05, 3.15, 0.95),
   '3c': new THREE.Vector3(0.2, 0.95, -0.6),
   4: new THREE.Vector3(-2.6, 0.55, 3.2),
 }
@@ -604,8 +604,8 @@ function buildRoom(scene, tex) {
   const pendants = []
   /** @type {{ light: THREE.SpotLight, glow: THREE.Mesh, on: number }[]} */
   const cans = []
-  /** @type {THREE.Points[]} */
-  const airflow = []
+  /** @type {{ louvers: THREE.Mesh[], led: THREE.Mesh, openAngle: number } | null} */
+  let cassetteAc = null
   /** @type {THREE.Mesh[]} */
   const curtains = []
 
@@ -750,66 +750,72 @@ function buildRoom(scene, tex) {
     curtains.push(panel)
   })
 
-  const duct = addShadow(
-    new THREE.Mesh(
-      new RoundedBoxGeometry(1.15, 0.45, ROOM.d * 0.78, 2, 0.04),
-      mat(0xffffff, { map: tex.metal, metalness: 0.72, roughness: 0.32, envMapIntensity: 1.35 })
-    ),
-    true,
-    false
-  )
-  duct.position.set(0.15, ROOM.h - 0.35, -0.4)
-  scene.add(duct)
-  for (let i = -3; i <= 3; i += 1) {
-    const pipe = addShadow(
-      new THREE.Mesh(
-        new THREE.CylinderGeometry(0.05, 0.05, ROOM.d * 0.7, 16),
-        mat(0xffffff, { map: tex.metal, metalness: 0.78, roughness: 0.28, envMapIntensity: 1.4 })
-      ),
+  // 房顶四方出风中央空调（卡式机）：开=指示灯亮 + 叶片打开，无出风粒子
+  {
+    const acSize = 0.92
+    const acDepth = 0.08
+    const acGroup = new THREE.Group()
+    acGroup.position.set(0, ROOM.h - acDepth / 2 - 0.01, 0.95)
+    const shellMat = mat(0xf2f4f6, { roughness: 0.78, metalness: 0.08, envMapIntensity: 0.28 })
+    const shell = addShadow(
+      new THREE.Mesh(new RoundedBoxGeometry(acSize, acDepth, acSize, 2, 0.02), shellMat),
       true,
-      false
+      true
     )
-    pipe.rotation.x = Math.PI / 2
-    pipe.position.set(-1.4 + i * 0.08, ROOM.h - 0.18, -0.2)
-    scene.add(pipe)
-  }
-  const diffuserZs = [-3.2, -0.6, 2.2]
-  for (const z of diffuserZs) {
-    const diffuser = addShadow(
+    acGroup.add(shell)
+    const grille = addShadow(
       new THREE.Mesh(
-        new THREE.CylinderGeometry(0.28, 0.28, 0.06, 32),
-        mat(0xeef1f4, { roughness: 0.45, metalness: 0.25, envMapIntensity: 0.9 })
+        new RoundedBoxGeometry(acSize * 0.42, 0.02, acSize * 0.42, 2, 0.01),
+        mat(0xe6e9ed, { roughness: 0.7, metalness: 0.12, envMapIntensity: 0.25 })
       ),
       false,
       true
     )
-    diffuser.position.set(-2.2, ROOM.h - 0.05, z)
-    scene.add(diffuser)
-
-    const count = 90
-    const positions = new Float32Array(count * 3)
-    for (let i = 0; i < count; i += 1) {
-      positions[i * 3] = (Math.random() - 0.5) * 0.45
-      positions[i * 3 + 1] = -Math.random() * 1.8
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 0.45
+    grille.position.y = -acDepth / 2 + 0.005
+    acGroup.add(grille)
+    // 中央进风格栅细条
+    for (let i = -2; i <= 2; i += 1) {
+      const bar = new THREE.Mesh(
+        new THREE.BoxGeometry(acSize * 0.34, 0.006, 0.012),
+        mat(0xcfd4da, { roughness: 0.65, metalness: 0.15 })
+      )
+      bar.position.set(0, -acDepth / 2 - 0.002, i * 0.055)
+      acGroup.add(bar)
     }
-    const geo = new THREE.BufferGeometry()
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    const points = new THREE.Points(
-      geo,
-      new THREE.PointsMaterial({
-        color: 0xd9eefc,
-        size: 0.045,
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        sizeAttenuation: true,
+    const louverMat = mat(0xe8ebef, { roughness: 0.62, metalness: 0.1, envMapIntensity: 0.22 })
+    const louvers = []
+    const louverSpecs = [
+      { x: 0, z: acSize * 0.32, rotY: 0 },
+      { x: 0, z: -acSize * 0.32, rotY: Math.PI },
+      { x: acSize * 0.32, z: 0, rotY: Math.PI / 2 },
+      { x: -acSize * 0.32, z: 0, rotY: -Math.PI / 2 },
+    ]
+    louverSpecs.forEach(({ x, z, rotY }) => {
+      const pivot = new THREE.Group()
+      pivot.position.set(x, -acDepth / 2 + 0.01, z)
+      pivot.rotation.y = rotY
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(acSize * 0.62, 0.012, 0.055), louverMat)
+      blade.position.set(0, 0, 0.01)
+      pivot.add(blade)
+      acGroup.add(pivot)
+      louvers.push(pivot)
+    })
+    // 状态指示灯（关灯暗灰，开灯青绿）
+    const led = new THREE.Mesh(
+      new THREE.CircleGeometry(0.018, 16),
+      new THREE.MeshStandardMaterial({
+        color: 0x8a9098,
+        emissive: 0x00d4c4,
+        emissiveIntensity: 0,
+        roughness: 0.35,
+        metalness: 0.2,
       })
     )
-    points.position.set(-2.2, ROOM.h - 0.12, z)
-    points.visible = false
-    scene.add(points)
-    airflow.push(points)
+    led.rotation.x = -Math.PI / 2
+    led.position.set(acSize * 0.28, -acDepth / 2 - 0.001, acSize * 0.28)
+    acGroup.add(led)
+    scene.add(acGroup)
+    cassetteAc = { louvers, led, openAngle: 0.55 }
   }
 
   // 中灰哑光台面：明确灰色，带柔清漆层，近看有细颗粒
@@ -985,7 +991,7 @@ function buildRoom(scene, tex) {
     [1.05, -2.85, 0.48],
   ].forEach(([x, z, on]) => addPanelLight(x, z, on))
 
-  return { pendants, cans, airflow, curtains, screen }
+  return { pendants, cans, cassetteAc, curtains, screen }
 }
 
 /**
@@ -1061,8 +1067,8 @@ export function mountMeetingRoom3D(host) {
   let pendants = []
   /** @type {{ light: THREE.SpotLight, glow: THREE.Mesh, on: number }[]} */
   let cans = []
-  /** @type {THREE.Points[]} */
-  let airflow = []
+  /** @type {{ louvers: THREE.Group[], led: THREE.Mesh, openAngle: number } | null} */
+  let cassetteAc = null
   /** @type {THREE.Mesh[]} */
   let curtains = []
   /** @type {THREE.Mesh | null} */
@@ -1140,10 +1146,16 @@ export function mountMeetingRoom3D(host) {
 
   const applyAc = (on) => {
     acOn = on
-    airflow.forEach((points) => {
-      points.visible = on
-      points.material.opacity = on ? 0.55 : 0
+    if (!cassetteAc) return
+    const angle = on ? cassetteAc.openAngle : 0
+    cassetteAc.louvers.forEach((pivot) => {
+      // 绕叶片长轴打开（本地 X），关时贴平
+      pivot.children[0].rotation.x = on ? angle : 0
     })
+    if (cassetteAc.led?.material) {
+      cassetteAc.led.material.emissiveIntensity = on ? 2.4 : 0
+      cassetteAc.led.material.color.setHex(on ? 0xb8fff8 : 0x8a9098)
+    }
   }
 
   const applyPresence = (occupied) => {
@@ -1337,25 +1349,6 @@ export function mountMeetingRoom3D(host) {
     lightLevel,
   })
 
-  const tickAirflow = (dt) => {
-    if (!acOn) return
-    airflow.forEach((points) => {
-      const pos = points.geometry.attributes.position
-      for (let i = 0; i < pos.count; i += 1) {
-        let y = pos.getY(i) - dt * (1.2 + (i % 5) * 0.15)
-        let x = pos.getX(i) + Math.sin(clock.elapsedTime * 4 + i) * dt * 0.08
-        if (y < -2.1) {
-          y = -0.02 - Math.random() * 0.1
-          x = (Math.random() - 0.5) * 0.45
-          pos.setZ(i, (Math.random() - 0.5) * 0.45)
-        }
-        pos.setY(i, y)
-        pos.setX(i, x)
-      }
-      pos.needsUpdate = true
-    })
-  }
-
   const tickCurtains = (dt) => {
     curtainCurrent += (curtainTarget - curtainCurrent) * Math.min(1, dt * 3.2)
     const H = ROOM.h * 0.9
@@ -1376,7 +1369,6 @@ export function mountMeetingRoom3D(host) {
     const dt = Math.min(0.05, clock.getDelta())
     tickDemo(now)
     tickRadar(now)
-    tickAirflow(dt)
     tickCurtains(dt)
     weatherTick += dt
     if (weatherTick > 18) {
@@ -1427,7 +1419,7 @@ export function mountMeetingRoom3D(host) {
     const built = buildRoom(scene, textures)
     pendants = built.pendants
     cans = built.cans
-    airflow = built.airflow
+    cassetteAc = built.cassetteAc
     curtains = built.curtains
     screen = built.screen
     person = makePerson({ coatColor: 0x1d4f9c, visible: false })
@@ -1437,6 +1429,7 @@ export function mountMeetingRoom3D(host) {
     roomReady = true
     applyLights(0)
     applyScreen(true)
+    applyAc(false)
     setDemoPhase('wait')
     demoPhaseAt = performance.now()
   }
