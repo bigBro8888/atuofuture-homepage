@@ -980,10 +980,9 @@ function buildRoom(scene, tex) {
     scene.add(spot.target)
     cans.push({ light: spot, glow: diffuser, halo, on: spotOn })
   }
-  // 会议区三盏平行 + 前后补光
+  // 会议区左右两盏 + 前后补光（去掉正中一盏，避免压住中央空调）
   ;[
     [-1.05, -0.35, 0.62],
-    [0, -0.35, 0.68],
     [1.05, -0.35, 0.62],
     [-1.05, 2.15, 0.48],
     [1.05, 2.15, 0.48],
