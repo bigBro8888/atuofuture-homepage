@@ -17852,7 +17852,8 @@ a.ag-eco__agent:visited {
 }
 .ag-minimap__stage {
   position: relative;
-  width: min(100%, 168px);
+  width: 100%;
+  max-width: 280px;
   margin: 0 auto;
   border-radius: 8px;
   overflow: hidden;
@@ -17863,9 +17864,9 @@ a.ag-eco__agent:visited {
 .ag-minimap__svg {
   display: block;
   width: 100%;
-  max-height: 148px;
+  max-height: 118px;
   height: auto;
-  aspect-ratio: 140 / 172;
+  aspect-ratio: 200 / 118;
 }
 .ag-twin__devices {
   grid-column: 1 / -1;

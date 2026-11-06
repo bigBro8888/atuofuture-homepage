@@ -108,7 +108,7 @@ export function renderAgentTaskStory({ selectedId }) {
                   <em class="ag-minimap__status" data-minimap-radar>空闲</em>
                 </div>
                 <div class="ag-minimap__stage">
-                  <svg class="ag-minimap__svg" viewBox="0 0 140 172" role="img" aria-hidden="true">
+                  <svg class="ag-minimap__svg" viewBox="0 0 200 118" role="img" aria-hidden="true">
                     <defs>
                       <radialGradient id="ag-radar-glow" cx="50%" cy="50%" r="50%">
                         <stop offset="0%" stop-color="#00d5c7" stop-opacity=".55"/>
@@ -116,38 +116,38 @@ export function renderAgentTaskStory({ selectedId }) {
                         <stop offset="100%" stop-color="#00d5c7" stop-opacity="0"/>
                       </radialGradient>
                     </defs>
-                    <rect class="ag-minimap__floor" x="8" y="8" width="124" height="156" rx="6"/>
-                    <!-- 窗侧 -->
-                    <rect class="ag-minimap__window" x="8" y="28" width="4" height="52" rx="1"/>
-                    <rect class="ag-minimap__window" x="8" y="92" width="4" height="42" rx="1"/>
-                    <!-- 信息屏墙 -->
-                    <rect class="ag-minimap__screen" x="48" y="10" width="44" height="5" rx="1.5"/>
-                    <!-- 会议桌 -->
-                    <rect class="ag-minimap__table" x="42" y="38" width="56" height="88" rx="8"/>
+                    <rect class="ag-minimap__floor" x="8" y="8" width="184" height="102" rx="6"/>
+                    <!-- 窗侧（上） -->
+                    <rect class="ag-minimap__window" x="36" y="8" width="48" height="4" rx="1"/>
+                    <rect class="ag-minimap__window" x="100" y="8" width="40" height="4" rx="1"/>
+                    <!-- 信息屏墙（右） -->
+                    <rect class="ag-minimap__screen" x="186" y="38" width="5" height="42" rx="1.5"/>
+                    <!-- 会议桌（横向） -->
+                    <rect class="ag-minimap__table" x="54" y="36" width="116" height="46" rx="8"/>
                     <!-- 椅位示意 -->
                     <g class="ag-minimap__chairs" fill="rgba(255,255,255,.22)">
-                      <rect x="34" y="48" width="7" height="9" rx="1.5"/>
-                      <rect x="34" y="68" width="7" height="9" rx="1.5"/>
-                      <rect x="34" y="88" width="7" height="9" rx="1.5"/>
-                      <rect x="34" y="108" width="7" height="9" rx="1.5"/>
-                      <rect x="99" y="48" width="7" height="9" rx="1.5"/>
-                      <rect x="99" y="68" width="7" height="9" rx="1.5"/>
-                      <rect x="99" y="88" width="7" height="9" rx="1.5"/>
-                      <rect x="99" y="108" width="7" height="9" rx="1.5"/>
+                      <rect x="66" y="27" width="12" height="7" rx="1.5"/>
+                      <rect x="90" y="27" width="12" height="7" rx="1.5"/>
+                      <rect x="114" y="27" width="12" height="7" rx="1.5"/>
+                      <rect x="138" y="27" width="12" height="7" rx="1.5"/>
+                      <rect x="66" y="84" width="12" height="7" rx="1.5"/>
+                      <rect x="90" y="84" width="12" height="7" rx="1.5"/>
+                      <rect x="114" y="84" width="12" height="7" rx="1.5"/>
+                      <rect x="138" y="84" width="12" height="7" rx="1.5"/>
                     </g>
-                    <!-- 门洞 -->
-                    <path class="ag-minimap__door" d="M58 164 H82"/>
-                    <text class="ag-minimap__label" x="70" y="158" text-anchor="middle">门</text>
+                    <!-- 门洞（左） -->
+                    <path class="ag-minimap__door" d="M8 46 V72"/>
+                    <text class="ag-minimap__label" x="18" y="62" text-anchor="middle">门</text>
                     <!-- 雷达覆盖 -->
-                    <g class="ag-minimap__radar" data-minimap-radar-g transform="translate(108 61.5)">
-                      <circle class="ag-minimap__radar-glow" r="28" fill="url(#ag-radar-glow)"/>
-                      <circle class="ag-minimap__radar-ring" r="18" fill="none"/>
-                      <circle class="ag-minimap__radar-ring ag-minimap__radar-ring--2" r="26" fill="none"/>
-                      <circle class="ag-minimap__radar-core" r="3.2"/>
-                      <path class="ag-minimap__radar-sweep" d="M0 0 L0 -26 A26 26 0 0 1 18.4 -18.4 Z"/>
+                    <g class="ag-minimap__radar" data-minimap-radar-g transform="translate(129 90)">
+                      <circle class="ag-minimap__radar-glow" r="22" fill="url(#ag-radar-glow)"/>
+                      <circle class="ag-minimap__radar-ring" r="14" fill="none"/>
+                      <circle class="ag-minimap__radar-ring ag-minimap__radar-ring--2" r="20" fill="none"/>
+                      <circle class="ag-minimap__radar-core" r="2.8"/>
+                      <path class="ag-minimap__radar-sweep" d="M0 0 L0 -20 A20 20 0 0 1 14.1 -14.1 Z"/>
                     </g>
                     <g class="ag-minimap__trail" data-minimap-trail></g>
-                    <circle class="ag-minimap__dot" data-minimap-dot cx="-20" cy="-20" r="4.5" hidden/>
+                    <circle class="ag-minimap__dot" data-minimap-dot cx="-20" cy="-20" r="4" hidden/>
                   </svg>
                 </div>
               </div>
@@ -215,14 +215,14 @@ export function syncAgentTaskStory(root, selectedId) {
   }
 }
 
-/** 与 3D 场景 ot={w:7,d:8.6} 对齐的俯视投影 */
-const MINIMAP_ROOM = { w: 7, d: 8.6, padX: 8, padY: 8, mapW: 124, mapH: 156 }
+/** 横向俯视：Z→横轴（门在左），X→纵轴（窗在上），对齐 ot={w:7,d:8.6} */
+const MINIMAP_ROOM = { w: 7, d: 8.6, padX: 8, padY: 8, mapW: 184, mapH: 102 }
 const minimapTrail = new WeakMap()
 
 function worldToMinimap(x, z) {
   const { w, d, padX, padY, mapW, mapH } = MINIMAP_ROOM
-  const u = padX + ((x + w / 2) / w) * mapW
-  const v = padY + ((z + d / 2) / d) * mapH
+  const u = padX + ((-z + d / 2) / d) * mapW
+  const v = padY + ((x + w / 2) / w) * mapH
   return {
     x: Math.max(padX + 2, Math.min(padX + mapW - 2, u)),
     y: Math.max(padY + 2, Math.min(padY + mapH - 2, v)),
