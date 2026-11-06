@@ -142,7 +142,9 @@ async function ensureMeetingRoom3D(root, state) {
     state.room3d = mountMeetingRoom3D(host)
     if (state.room3d) {
       state.room3d.onStats?.((stats) => syncTwinStats(root, stats))
+      const prevFrame = state.room3d._onFrame
       state.room3d._onFrame = (api) => {
+        prevFrame?.(api)
         syncStoryPinsTo3D(root, api)
         syncDevicePins(api)
       }

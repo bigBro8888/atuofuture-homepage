@@ -8,6 +8,39 @@ const LOADER_HTML = `
     <p class="ag-story__loader-text">虚拟会议室加载中<span class="ag-story__loader-dots"></span></p>
   </div>`
 
+function wirePersonDialog(sceneRoot, roomApi) {
+  const dialog = sceneRoot?.querySelector('[data-ag-person-dialog]')
+  if (!dialog || !roomApi?.onPersonDialog) return
+
+  roomApi.onPersonDialog((open, seated) => {
+    dialog.hidden = !open
+    const sitBtn = dialog.querySelector('[data-person-action="sit"]')
+    if (sitBtn) sitBtn.hidden = !!seated
+  })
+
+  if (dialog.dataset.bound !== '1') {
+    dialog.dataset.bound = '1'
+    dialog.addEventListener('click', (event) => {
+      const btn = event.target.closest('[data-person-action]')
+      if (!btn || !dialog.contains(btn)) return
+      roomApi.personAction?.(btn.dataset.personAction)
+    })
+  }
+
+  const prevFrame = roomApi._onFrame
+  roomApi._onFrame = (api) => {
+    prevFrame?.(api)
+    if (dialog.hidden) return
+    const pos = api.projectPerson?.()
+    if (!pos) {
+      dialog.hidden = true
+      return
+    }
+    dialog.style.left = `${Math.max(13, Math.min(87, pos.x))}%`
+    dialog.style.top = `${Math.max(27, Math.min(76, pos.y))}%`
+  }
+}
+
 /**
  * Mount the packaged meeting-room scene (正对门禁版) into the story host.
  * @param {HTMLElement} host
@@ -38,6 +71,9 @@ export function mountMeetingRoom3D(host) {
     canvas.style.transition = 'opacity .4s ease'
   }
 
+  const sceneRoot = host.closest('[data-ag-scene]') || host.parentElement
+  wirePersonDialog(sceneRoot, api)
+
   let settled = false
   const finish = () => {
     if (settled) return
@@ -59,11 +95,10 @@ export function mountMeetingRoom3D(host) {
   let frames = 0
   const prevFrame = api._onFrame
   api._onFrame = (roomApi) => {
-    frames += 1
     prevFrame?.(roomApi)
-    if (frames >= 3) {
-      api._onFrame = prevFrame
-      finish()
+    if (!settled) {
+      frames += 1
+      if (frames >= 3) finish()
     }
   }
   window.setTimeout(finish, 10000)
@@ -74,7 +109,7 @@ export function mountMeetingRoom3D(host) {
 
 export function syncStoryPinsTo3D(root, roomApi) {
   if (!roomApi || !root) return
-  // 3D 模式下标签固定在画面下方一排，不再投影到场景坐标
+  // 3D 模式下标签固定在画面底部一排，不再投影到场景坐标
   root.querySelectorAll('[data-ag-pin-step]').forEach((pin) => {
     pin.style.left = ''
     pin.style.top = ''

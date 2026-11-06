@@ -85,6 +85,14 @@ export function renderAgentTaskStory({ selectedId }) {
             />
             <div class="ag-story__scene-3d" data-ag-scene-3d hidden></div>
             ${actorMarkup()}
+            <div class="ag-story__person-dialog" data-ag-person-dialog hidden role="dialog" aria-label="人物对话">
+              <p>你好呀，有什么事情？</p>
+              <div class="ag-story__person-dialog__actions">
+                <button type="button" data-person-action="sit">请坐下</button>
+                <button type="button" data-person-action="leave">请离开</button>
+                <button type="button" data-person-action="bye">再见</button>
+              </div>
+            </div>
             <div class="ag-story__pins" data-ag-pins>
               ${sceneNodesMarkup(selected.sceneNodes, 0)}
             </div>
