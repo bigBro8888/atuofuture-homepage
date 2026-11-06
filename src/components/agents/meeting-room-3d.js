@@ -942,15 +942,6 @@ function buildRoom(scene, tex) {
       metalness: 0,
       envMapIntensity: 0.12,
     })
-  const makeHaloMat = () =>
-    new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-    })
   const panelLen = 1.5
   const panelWid = 0.3
   const panelThk = 0.055
@@ -963,14 +954,11 @@ function buildRoom(scene, tex) {
       false
     )
     group.add(frame)
-    const diffuser = new THREE.Mesh(new THREE.PlaneGeometry(panelWid * 0.88, panelLen * 0.92), makeDiffuserMat())
+    // 灯面严格落在黑框内，不开外扩光晕
+    const diffuser = new THREE.Mesh(new THREE.PlaneGeometry(panelWid * 0.86, panelLen * 0.9), makeDiffuserMat())
     diffuser.rotation.x = Math.PI / 2
     diffuser.position.y = -panelThk / 2 - 0.001
     group.add(diffuser)
-    const halo = new THREE.Mesh(new THREE.PlaneGeometry(panelWid * 1.7, panelLen * 1.45), makeHaloMat())
-    halo.rotation.x = Math.PI / 2
-    halo.position.y = -panelThk / 2 - 0.004
-    group.add(halo)
     scene.add(group)
 
     const spot = new THREE.SpotLight(0xe8eef6, 0, 9.5, Math.PI / 3.2, 0.9, 1.45)
@@ -978,7 +966,7 @@ function buildRoom(scene, tex) {
     spot.target.position.set(x, 0, z)
     scene.add(spot)
     scene.add(spot.target)
-    cans.push({ light: spot, glow: diffuser, halo, on: spotOn })
+    cans.push({ light: spot, glow: diffuser, on: spotOn })
   }
   // 会议区左右两盏 + 前后补光（去掉正中一盏，避免压住中央空调）
   ;[
@@ -1144,9 +1132,6 @@ export function mountMeetingRoom3D(host) {
         if ('emissiveIntensity' in item.glow.material) {
           item.glow.material.emissiveIntensity = lit ? 4.2 * lamp : 0
         }
-      }
-      if (item.halo?.material) {
-        item.halo.material.opacity = lit ? 0.42 * lamp : 0
       }
     })
     // 整体环境几乎不变，只保证关灯时房间仍看得清
