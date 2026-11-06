@@ -656,8 +656,9 @@ function buildRoom(scene, tex) {
   if (tex.floorRefMap) {
     floorMat.map = tex.floorRefMap
     floorMat.bumpMap = tex.floorRefMap
-    floorMat.bumpScale = 0.018
+    floorMat.bumpScale = 0.012
     floorMat.roughnessMap = null
+    floorMat.color.set(0xffffff)
     floorMat.needsUpdate = true
   }
 
@@ -1396,7 +1397,7 @@ export function mountMeetingRoom3D(host) {
     try {
       ;[wallRefMap, floorRefMap, curtainRefMap] = await Promise.all([
         loadRefMap('/meeting-wall-mat.png', 3.4, 1.7),
-        loadRefMap('/meeting-floor-mat.png', 1, 1, { stretch: true }),
+        loadRefMap('/meeting-floor-mat.jpg', 1, 1, { stretch: true }),
         loadRefMap('/meeting-curtain-mat.png', 2.8, 3.6),
       ])
     } catch {
