@@ -202,6 +202,31 @@ button, a, input { font: inherit; }
 .auth-dingtalk:active { transform: translateY(1px); }
 .auth-dingtalk { margin-top: 4px; }
 .auth-dingtalk svg { width: 22px; height: 22px; fill: currentColor; }
+.auth-dingtalk--org {
+  margin-top: 0;
+  background: #fff;
+  color: var(--brand);
+  border: 1px solid #d7e2f8;
+  box-shadow: none;
+  font-weight: 600;
+}
+.auth-dingtalk--org:hover {
+  background: #f5f8ff;
+  box-shadow: none;
+  border-color: #b7c9f0;
+}
+.auth-orgs {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.auth-orgs__label {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
 .auth-submit--link { margin-top: 4px; }
 
 .auth-methods .auth-panel { min-height: 236px; }

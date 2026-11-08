@@ -84,16 +84,31 @@ function mainHeader(greeting) {
 
 const footer = '<footer class="auth-foot"><strong>杭州安托未来科技有限公司</strong> · 登录即表示同意企业安全与隐私规范</footer>'
 
-function dingTalkPanel(uid) {
+const dingTalkIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.92 10.44c-.071.287-.233.723-.46 1.209l-.005.013c-.538 1.152-1.913 3.411-1.913 3.411l-.006-.013-.403.7h1.946l-3.715 4.948.845-3.358h-1.534l.534-2.219c-.433.104-.943.247-1.548.437 0 0-.817.479-2.357-.917 0 0-1.039-.914-.436-1.143.256-.097 1.243-.22 2.019-.325 1.05-.141 1.693-.216 1.693-.216s-3.235.048-4.003-.072c-.767-.12-1.74-1.401-1.948-2.527 0 0-.32-.619.691-.326 1.012.293 5.199 1.143 5.199 1.143S8.62 9.476 7.993 8.774c-.627-.703-1.843-3.832-1.685-5.755 0 0 .069-.48.562-.35 0 0 6.932 3.164 7.698 3.434.766.27 1.468.698 1.352 1.337z"/></svg>`
+
+function dingTalkPanel(uid, loginOrgs = []) {
   const base = authConfig.basePath
+  const start = `${base}/interaction/${encodeURIComponent(uid)}/dingtalk`
+  const orgs = Array.isArray(loginOrgs) ? loginOrgs.filter((o) => o?.corp_id) : []
+  const orgBlock = orgs.length
+    ? `<div class="auth-orgs">
+            <p class="auth-orgs__label">按组织登录</p>
+            ${orgs.map((org) => {
+              const href = `${start}?corpId=${encodeURIComponent(org.corp_id)}`
+              return `<a class="auth-dingtalk auth-dingtalk--org" href="${href}">${escapeHtml(org.name || org.corp_id)}</a>`
+            }).join('')}
+          </div>`
+    : ''
+  const personalLabel = orgs.length ? '个人钉钉登录' : '使用钉钉登录'
   return `<div class="auth-panel auth-panel--dingtalk">
-          <a class="auth-dingtalk" href="${base}/interaction/${encodeURIComponent(uid)}/dingtalk">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.92 10.44c-.071.287-.233.723-.46 1.209l-.005.013c-.538 1.152-1.913 3.411-1.913 3.411l-.006-.013-.403.7h1.946l-3.715 4.948.845-3.358h-1.534l.534-2.219c-.433.104-.943.247-1.548.437 0 0-.817.479-2.357-.917 0 0-1.039-.914-.436-1.143.256-.097 1.243-.22 2.019-.325 1.05-.141 1.693-.216 1.693-.216s-3.235.048-4.003-.072c-.767-.12-1.74-1.401-1.948-2.527 0 0-.32-.619.691-.326 1.012.293 5.199 1.143 5.199 1.143S8.62 9.476 7.993 8.774c-.627-.703-1.843-3.832-1.685-5.755 0 0 .069-.48.562-.35 0 0 6.932 3.164 7.698 3.434.766.27 1.468.698 1.352 1.337z"/></svg>
-            使用钉钉登录
+          <a class="auth-dingtalk" href="${start}">
+            ${dingTalkIcon}
+            ${personalLabel}
           </a>
-          <p class="auth-hint">将跳转到钉钉授权页面，企业成员确认后即可进入。</p>
+          ${orgBlock}
+          <p class="auth-hint">先选个人或已接入组织，再跳转钉钉授权；未在后台登记的公司不会出现在列表中。</p>
           <ul class="auth-perks">
-            <li><i>01</i><div><strong>企业身份直接登录</strong><span>使用钉钉组织身份，无需另记密码</span></div></li>
+            <li><i>01</i><div><strong>个人或企业身份</strong><span>个人可直接进；组织须后台登记且已授权应用</span></div></li>
             <li><i>02</i><div><strong>一次登录，多处通用</strong><span>Aspace 各应用共享同一登录状态</span></div></li>
           </ul>
         </div>`
@@ -122,7 +137,7 @@ function registerPanel(uid) {
         <a class="auth-switch" href="${base}/interaction/${encodeURIComponent(uid)}">已有账号？返回登录</a>`
 }
 
-function methodsMarkup({ uid, dingTalkEnabled, passwordEnabled, preferPassword }) {
+function methodsMarkup({ uid, dingTalkEnabled, passwordEnabled, preferPassword, loginOrgs }) {
   if (dingTalkEnabled && passwordEnabled) {
     return `<div class="auth-methods">
           <input class="auth-tab-input" type="radio" name="auth-tab" id="auth-tab-dingtalk"${preferPassword ? '' : ' checked'} />
@@ -131,26 +146,40 @@ function methodsMarkup({ uid, dingTalkEnabled, passwordEnabled, preferPassword }
             <label class="auth-tab auth-tab--dingtalk" for="auth-tab-dingtalk">钉钉登录</label>
             <label class="auth-tab auth-tab--password" for="auth-tab-password">账号密码登录</label>
           </div>
-          ${dingTalkPanel(uid)}
+          ${dingTalkPanel(uid, loginOrgs)}
           ${passwordPanel(uid)}
         </div>`
   }
-  if (dingTalkEnabled) return dingTalkPanel(uid)
+  if (dingTalkEnabled) return dingTalkPanel(uid, loginOrgs)
   if (passwordEnabled) return passwordPanel(uid)
   return '<p class="auth-hint">当前没有可用的登录方式，请联系管理员。</p>'
 }
 
-export function loginPage({ uid, clientName, dingTalkEnabled, passwordEnabled, mode = 'login', error = '' }) {
+export function loginPage({
+  uid,
+  clientName,
+  dingTalkEnabled,
+  passwordEnabled,
+  mode = 'login',
+  error = '',
+  loginOrgs = [],
+}) {
   const registering = mode === 'register' && passwordEnabled
   const body = `${mainHeader(registering ? '创建账号' : '欢迎回来')}
         <h1 id="auth-title">${registering ? '注册普通账号' : '登录 安墨客'}</h1>
         <p class="auth-lead">${registering
           ? '创建一个用于收藏、排序与最近访问的个人账号。'
-          : '通过企业钉钉一键进入，或使用分配给你的账号。'}</p>
+          : '通过钉钉（个人或已接入组织）一键进入，或使用分配给你的账号。'}</p>
         ${error ? `<p class="auth-error" role="alert">${escapeHtml(error)}</p>` : ''}
         ${registering
           ? registerPanel(uid)
-          : methodsMarkup({ uid, dingTalkEnabled, passwordEnabled, preferPassword: Boolean(error) })}
+          : methodsMarkup({
+            uid,
+            dingTalkEnabled,
+            passwordEnabled,
+            preferPassword: Boolean(error),
+            loginOrgs,
+          })}
         ${footer}`
   return pageShell({ title: registering ? '注册账号' : '统一登录', body })
 }

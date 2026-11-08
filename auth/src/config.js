@@ -73,8 +73,35 @@ export const authConfig = {
   dingtalk: {
     clientId: String(process.env.AUTH_DINGTALK_CLIENT_ID || '').trim(),
     clientSecret: String(process.env.AUTH_DINGTALK_CLIENT_SECRET || ''),
+    /** 钉钉登录可选组织：[{name, corp_id}, ...]；未登记的公司不会出现在登录页 */
+    loginOrgs: normalizeDingTalkLoginOrgs(
+      json(process.env.AUTH_DINGTALK_LOGIN_ORGS, null),
+      process.env.AUTH_DINGTALK_DEFAULT_CORP_ID,
+      process.env.AUTH_DINGTALK_DEFAULT_CORP_NAME,
+    ),
   },
   passwordLoginEnabled: String(process.env.AUTH_PASSWORD_LOGIN_ENABLED || 'false').toLowerCase() === 'true',
+}
+
+function normalizeDingTalkLoginOrgs(raw, legacyCorpId, legacyName) {
+  const out = []
+  const seen = new Set()
+  const push = (name, corpId) => {
+    const id = String(corpId || '').trim()
+    if (!id || seen.has(id)) return
+    seen.add(id)
+    out.push({ name: String(name || '').trim() || id, corp_id: id })
+  }
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      if (!item || typeof item !== 'object') continue
+      push(item.name || item.corpName, item.corp_id || item.corpId)
+    }
+  }
+  if (!out.length) {
+    push(legacyName || '默认组织', legacyCorpId)
+  }
+  return out
 }
 
 if (process.env.NODE_ENV === 'production' && authConfig.cookieKeys.includes('development-cookie-key-change-before-production')) {

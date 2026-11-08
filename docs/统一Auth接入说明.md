@@ -95,9 +95,15 @@ AUTH_PASSWORD_LOGIN_ENABLED=true
 AUTH_COOKIE_KEYS=随机长字符串（生产必填）
 AUTH_DINGTALK_CLIENT_ID=...
 AUTH_DINGTALK_CLIENT_SECRET=...
+# 钉钉登录组织列表（未登记的公司不会出现在登录页；不配则只有「个人钉钉」）
+# AUTH_DINGTALK_LOGIN_ORGS=[{"name":"安托未来","corp_id":"dingxxxxxxxx"}]
+# 或只配一家时可用：
+# AUTH_DINGTALK_DEFAULT_CORP_ID=dingxxxxxxxx
+# AUTH_DINGTALK_DEFAULT_CORP_NAME=安托未来
 AUTH_EXTRA_CLIENTS_JSON=[...]   # 新系统登记，见 3.1
 ```
 
+- 钉钉 Tab：**个人钉钉**始终可用；**按组织登录**只展示 `AUTH_DINGTALK_LOGIN_ORGS`（或 DEFAULT_CORP_*）里登记的公司。其它公司需在钉钉侧授权同一套应用后，把 corpId 加进该列表并重启 Auth。一般**不必**为每家公司另配一套 Client ID。
 - `AUTH_PORTAL_ORIGINS` 决定各客户端允许的 `redirect_uri` 和退出回跳地址，新增访问域名时要加进来并重启 `atuofuture-auth`。
 - 配置了钉钉凭证但 `AUTH_ISSUER` 不是 HTTPS 时，Auth 服务会拒绝启动。
 - 官网 nginx（`/etc/nginx/atuofuture-only.conf`）的 server 块必须保留 `absolute_redirect off;`，否则补斜杠的 301 会带出内部端口 `:18443`，回调换了 origin 后 PKCE / state 丢失，登录静默失败。

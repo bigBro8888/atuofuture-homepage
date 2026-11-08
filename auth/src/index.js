@@ -202,6 +202,7 @@ export async function createAuthService() {
         clientName: client?.clientName || client?.clientId || '内部系统',
         dingTalkEnabled: dingTalkAvailable(request.get('host')),
         passwordEnabled: authConfig.passwordLoginEnabled,
+        loginOrgs: authConfig.dingtalk.loginOrgs,
         mode: request.query.mode === 'register' ? 'register' : 'login',
         error: String(request.query.error || ''),
       }))
@@ -260,9 +261,19 @@ export async function createAuthService() {
       }
       const details = await provider.interactionDetails(request, response)
       if (details.prompt.name !== 'login') throw new Error('当前授权流程不需要重新登录')
+      const requestedCorp = String(request.query.corpId || request.query.corp_id || '').trim()
+      const allowedOrgs = authConfig.dingtalk.loginOrgs || []
+      const allowedIds = new Set(allowedOrgs.map((o) => o.corp_id))
+      if (requestedCorp && allowedIds.size && !allowedIds.has(requestedCorp)) {
+        throw new Error('组织未授权本系统登录')
+      }
       pruneDingTalkStates()
       const state = randomUUID()
-      dingTalkStates.set(state, { uid: details.uid, expiresAt: Date.now() + 5 * 60 * 1000 })
+      dingTalkStates.set(state, {
+        uid: details.uid,
+        corpId: requestedCorp || '',
+        expiresAt: Date.now() + 5 * 60 * 1000,
+      })
       const authorizeUrl = new URL('https://login.dingtalk.com/oauth2/auth')
       authorizeUrl.searchParams.set('redirect_uri', authUrl('/callback/dingtalk'))
       authorizeUrl.searchParams.set('response_type', 'code')
@@ -271,6 +282,8 @@ export async function createAuthService() {
       authorizeUrl.searchParams.set('scope', 'openid Contact.User.Read')
       authorizeUrl.searchParams.set('prompt', 'consent')
       authorizeUrl.searchParams.set('state', state)
+      // 个人登录不传 corpId；组织登录带上已登记的 corpId
+      if (requestedCorp) authorizeUrl.searchParams.set('corpId', requestedCorp)
       response.redirect(authorizeUrl.toString())
     } catch (error) {
       next(error)
