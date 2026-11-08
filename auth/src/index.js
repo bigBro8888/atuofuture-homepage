@@ -196,15 +196,28 @@ export async function createAuthService() {
       }
       if (details.prompt.name !== 'login') throw new Error(`不支持的交互类型：${details.prompt.name}`)
       const client = await provider.Client.find(details.params.client_id)
+      const clientId = String(details.params.client_id || '')
+      const dingTalkEnabled = dingTalkAvailable(request.get('host'))
+      const error = String(request.query.error || '')
+      const loginHint = String(details.params.login_hint || '').toLowerCase()
+      // 官网后台已有完整登录页，钉钉入口不应再套一层「登录安墨客」；直接进钉钉授权
+      const skipToDingTalk = dingTalkEnabled
+        && !error
+        && request.query.mode !== 'register'
+        && (clientId === 'website-admin' || loginHint === 'dingtalk')
+      if (skipToDingTalk) {
+        response.setHeader('Cache-Control', 'no-store')
+        return response.redirect(303, `${authConfig.basePath}/interaction/${encodeURIComponent(details.uid)}/dingtalk`)
+      }
       response.setHeader('Cache-Control', 'no-store')
       response.type('html').send(loginPage({
         uid: details.uid,
         clientName: client?.clientName || client?.clientId || '内部系统',
-        dingTalkEnabled: dingTalkAvailable(request.get('host')),
+        dingTalkEnabled,
         passwordEnabled: authConfig.passwordLoginEnabled,
         loginOrgs: authConfig.dingtalk.loginOrgs,
         mode: request.query.mode === 'register' ? 'register' : 'login',
-        error: String(request.query.error || ''),
+        error,
       }))
     } catch (error) {
       next(error)

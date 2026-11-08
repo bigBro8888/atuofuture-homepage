@@ -69,6 +69,8 @@ adminOidcRouter.get('/start', (request, response) => {
     code_challenge: base64Url(createHash('sha256').update(verifier).digest()),
     code_challenge_method: 'S256',
     prompt: 'login',
+    // 提示统一认证直接走钉钉，避免再弹出第二层登录页
+    login_hint: 'dingtalk',
   }).toString()
   response.redirect(302, authorize.toString())
 })
