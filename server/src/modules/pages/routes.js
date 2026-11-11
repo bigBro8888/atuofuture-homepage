@@ -176,15 +176,32 @@ function audioExtension(type) {
 }
 
 async function saveAssetMediaBuffer(buffer, mimeType, originalName, admin) {
+  const imageType = sniffImageMime(buffer, mimeType)
   const videoType = sniffVideoMime(buffer, mimeType)
   const audioType = sniffAudioMime(buffer, mimeType, originalName)
-  const kind = videoType ? 'video' : audioType ? 'audio' : ''
-  const type = videoType || audioType
-  const extension = videoType
-    ? (videoType === 'video/webm' ? '.webm' : videoType === 'video/quicktime' ? '.mov' : '.mp4')
-    : audioExtension(audioType)
+  let kind = ''
+  let type = ''
+  let extension = ''
+  let uploadBuffer = buffer
+  let uploadSize = buffer?.length || 0
+  if (imageType && imageExtensions.has(imageType)) {
+    kind = 'image'
+    const encoded = await encodeImageAsWebp(buffer)
+    type = encoded.mimeType
+    extension = encoded.extension
+    uploadBuffer = encoded.buffer
+    uploadSize = encoded.bytesOut
+  } else if (videoType) {
+    kind = 'video'
+    type = videoType
+    extension = videoType === 'video/webm' ? '.webm' : videoType === 'video/quicktime' ? '.mov' : '.mp4'
+  } else if (audioType) {
+    kind = 'audio'
+    type = audioType
+    extension = audioExtension(audioType)
+  }
   if (!buffer?.length || !kind || !extension) {
-    const error = new Error('仅支持视频（MP4 / WebM / MOV）或音频（MP3 / WAV / M4A / OGG）')
+    const error = new Error('仅支持图片（JPG / PNG / WebP / GIF）、视频（MP4 / WebM / MOV）或音频（MP3 / WAV / M4A / OGG）')
     error.status = 400
     throw error
   }
@@ -194,7 +211,7 @@ async function saveAssetMediaBuffer(buffer, mimeType, originalName, admin) {
   let objectKey = ''
   if (isOssConfigured()) {
     const uploaded = await uploadPublicObject({
-      buffer,
+      buffer: uploadBuffer,
       contentType: type,
       folder: 'assets',
       filename,
@@ -203,21 +220,21 @@ async function saveAssetMediaBuffer(buffer, mimeType, originalName, admin) {
     objectKey = uploaded.objectKey
     storage = 'oss'
   } else {
-    const folder = kind === 'audio' ? 'audios' : 'videos'
+    const folder = kind === 'image' ? 'images' : kind === 'audio' ? 'audios' : 'videos'
     const directory = path.join(config.uploadDir, folder)
     await mkdir(directory, { recursive: true })
-    await writeFile(path.join(directory, filename), buffer)
+    await writeFile(path.join(directory, filename), uploadBuffer)
     url = `/api/public/uploads/${folder}/${filename}`
   }
   await addAudit(admin, 'media.asset.upload', 'media-assets', {
     filename,
-    size: buffer.length,
+    size: uploadSize,
     mimeType: type,
     kind,
     storage,
     objectKey: objectKey || undefined,
   })
-  return { url, kind, mimeType: type, size: buffer.length, storage, objectKey }
+  return { url, kind, mimeType: type, size: uploadSize, storage, objectKey }
 }
 
 const assetUpload = multer({
@@ -705,9 +722,10 @@ adminPagesRouter.post('/media-assets', requireAuth('config:write'), assetUpload.
       .replace(/\.[^.]+$/, '')
       .trim()
       .slice(0, 120)
+    const fallbackName = uploaded.kind === 'image' ? '图片素材' : uploaded.kind === 'audio' ? '音频素材' : '视频素材'
     const item = createMediaAsset(db(), {
       ...uploaded,
-      name: String(request.body?.name || baseName || (uploaded.kind === 'audio' ? '音频素材' : '视频素材')).slice(0, 160),
+      name: String(request.body?.name || baseName || fallbackName).slice(0, 160),
       createdBy: request.admin?.name || request.admin?.email || '',
     })
     await save()

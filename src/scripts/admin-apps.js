@@ -67,7 +67,7 @@ const titles = {
   'content-solutions': ['内容中心 · 行业解决方案', '路径 /solutions/?id= · 编辑方案详情'],
   'content-agents': ['内容中心 · 空间智能体', '路径 /agent-detail/?id= · 编辑智能体详情'],
   'content-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
-  'content-assets': ['内容中心 · 素材管理', '上传视频 / 音频并复制链接，不自动发布到前台'],
+  'content-assets': ['内容中心 · 素材管理', '上传图片 / 视频 / 音频并复制链接，不自动发布到前台'],
   'page-news': ['内容中心 · 新闻', '路径 /news/ · 编辑新闻稿件'],
   'page-products': ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
   aspace: ['Aspace 空间智能', '路径 /aspace-one/ · 可视化编辑首页与应用广场；另可配知识库'],

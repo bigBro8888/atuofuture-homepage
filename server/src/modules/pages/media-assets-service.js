@@ -28,7 +28,7 @@ export function createMediaAsset(db, payload = {}) {
   const item = {
     id: randomUUID(),
     name: String(payload.name || '未命名素材').trim().slice(0, 160) || '未命名素材',
-    kind: payload.kind === 'audio' ? 'audio' : 'video',
+    kind: payload.kind === 'audio' ? 'audio' : payload.kind === 'image' ? 'image' : 'video',
     mimeType: String(payload.mimeType || '').slice(0, 120),
     size: Number(payload.size) || 0,
     url: String(payload.url || '').trim(),

@@ -28,7 +28,9 @@ function absoluteUrl(url) {
 }
 
 function kindLabel(kind) {
-  return kind === 'audio' ? '音频' : '视频'
+  if (kind === 'audio') return '音频'
+  if (kind === 'image') return '图片'
+  return '视频'
 }
 
 function renderList() {

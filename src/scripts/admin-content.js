@@ -1786,7 +1786,7 @@ export function bindContentCenter(helpers) {
       solutions: ['内容中心 · 行业解决方案', '路径 /solutions/?id= · 编辑方案详情'],
       agents: ['内容中心 · 空间智能体', '路径 /agent-detail/?id= · 可视化编辑智能体详情'],
       products: ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
-      assets: ['内容中心 · 素材管理', '上传视频 / 音频并复制链接，不自动发布到前台'],
+      assets: ['内容中心 · 素材管理', '上传图片 / 视频 / 音频并复制链接，不自动发布到前台'],
     }
     const pair = map[button.dataset.contentKind]
     if (title && pair) title.textContent = pair[0]
