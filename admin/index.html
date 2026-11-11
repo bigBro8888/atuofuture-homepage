@@ -202,6 +202,7 @@
           <button type="button" data-content-kind="solutions">行业解决方案</button>
           <button type="button" data-content-kind="agents">空间智能体</button>
           <button type="button" data-content-kind="products">商品详情</button>
+          <button type="button" data-content-kind="assets">素材管理</button>
         </nav>
 
         <div data-content-pane="news">
@@ -303,6 +304,29 @@
               <button type="button" class="admin-news-compose__publish" data-products-compose-publish>发布上线</button>
             </header>
             <div class="admin-news-compose__body" data-products-compose-body></div>
+          </div>
+        </div>
+
+        <div data-content-pane="assets" hidden>
+          <div class="admin-card admin-home-form">
+            <div class="admin-card__head">
+              <div>
+                <h2>素材管理</h2>
+                <p>上传独立视频 / 音频，获取可复制链接，粘贴到其它位置使用。不会自动发布到前台页面。</p>
+              </div>
+              <div class="admin-home-status"><b data-assets-status>--</b></div>
+            </div>
+            <div class="admin-assets-toolbar">
+              <label class="admin-home-upload admin-assets-upload">
+                上传视频或音频
+                <input type="file" accept="video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp3,audio/wav,audio/mp4,audio/aac,audio/ogg,audio/webm,.mp3,.wav,.m4a,.aac,.ogg" multiple data-assets-upload />
+              </label>
+              <button type="button" data-assets-refresh>刷新列表</button>
+              <span class="admin-assets-progress" data-assets-progress hidden></span>
+            </div>
+            <p class="admin-form-section__hint">支持 MP4 / WebM / MOV 视频，以及 MP3 / WAV / M4A / OGG 音频，单文件不超过 300MB。</p>
+            <div class="admin-home-list" data-assets-list></div>
+            <p class="admin-assets-empty" data-assets-empty hidden>还没有素材，点击上方按钮上传。</p>
           </div>
         </div>
       </section>

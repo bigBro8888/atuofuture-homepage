@@ -3,11 +3,14 @@ import { SPACE_AGENT_PAGE } from '../data/space-agent-page.js'
 import { renderAgentDetail } from '../lib/agent-detail-render.js'
 import { isHttpVideoUrl, mountOnlineVideo, mountOnlineVideosIn } from '../lib/online-video.js'
 
+import { bindMediaAssetsAdmin, loadMediaAssets } from './admin-media-assets.js'
+
 const CONTENT_KINDS = [
   { id: 'news', label: '新闻', desc: '新闻稿件' },
   { id: 'solutions', label: '行业解决方案', desc: '方案详情页' },
   { id: 'agents', label: '空间智能体', desc: '智能体详情页' },
   { id: 'products', label: '商品详情', desc: '硬件商品详情页' },
+  { id: 'assets', label: '素材管理', desc: '音视频素材库' },
 ]
 
 const AGENT_IMAGE_SIZE_GUIDE = [
@@ -62,6 +65,7 @@ const KIND_HASH = {
   solutions: 'content-solutions',
   agents: 'content-agents',
   products: 'content-products',
+  assets: 'content-assets',
 }
 
 let ctx = {
@@ -1205,6 +1209,7 @@ export function showContentKind(kind) {
   if (next === 'products') ctx.loadProductLibrary()
   if (next === 'solutions') loadSolutionsLibrary().catch((error) => ctx.toast(error.message, true))
   if (next === 'agents') loadAgentsLibrary().catch((error) => ctx.toast(error.message, true))
+  if (next === 'assets') loadMediaAssets().catch((error) => ctx.toast(error.message, true))
 }
 
 function bindKind(kind) {
@@ -1781,6 +1786,7 @@ export function bindContentCenter(helpers) {
       solutions: ['内容中心 · 行业解决方案', '路径 /solutions/?id= · 编辑方案详情'],
       agents: ['内容中心 · 空间智能体', '路径 /agent-detail/?id= · 可视化编辑智能体详情'],
       products: ['内容中心 · 商品详情', '路径 /hardware/product/ · 编辑硬件商品详情'],
+      assets: ['内容中心 · 素材管理', '上传视频 / 音频并复制链接，不自动发布到前台'],
     }
     const pair = map[button.dataset.contentKind]
     if (title && pair) title.textContent = pair[0]
@@ -1791,6 +1797,7 @@ export function bindContentCenter(helpers) {
   document.querySelector('[data-agents-form]')?.addEventListener('submit', (event) => event.preventDefault())
   bindKind('solutions')
   bindKind('agents')
+  bindMediaAssetsAdmin(helpers)
 }
 
 export function contentKindFromHash(name) {
@@ -1798,5 +1805,6 @@ export function contentKindFromHash(name) {
   if (name === 'page-products' || name === 'content-products') return 'products'
   if (name === 'content-solutions') return 'solutions'
   if (name === 'content-agents') return 'agents'
+  if (name === 'content-assets') return 'assets'
   return null
 }

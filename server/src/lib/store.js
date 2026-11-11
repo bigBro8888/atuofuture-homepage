@@ -334,6 +334,7 @@ const initialData = {
   aspaceActivities: [],
   downloadEvents: [],
   demoRequests: [],
+  mediaAssets: [],
   adminUsers: [],
   auditLogs: [],
   sourceHealth: { status: 'unknown', checkedAt: null, message: '' },

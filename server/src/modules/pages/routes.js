@@ -6,7 +6,13 @@ import multer from 'multer'
 import { config } from '../../config.js'
 import { encodeImageAsWebp } from '../../lib/image-webp.js'
 import { isOssConfigured, uploadPublicObject } from '../../lib/oss.js'
-import { addAudit, save } from '../../lib/store.js'
+import { addAudit, db, save } from '../../lib/store.js'
+import {
+  createMediaAsset,
+  deleteMediaAsset,
+  listMediaAssets,
+  renameMediaAsset,
+} from './media-assets-service.js'
 import { requireAuth } from '../admin/auth.js'
 import { getHomePageConfig, validateHomeContent } from './home-service.js'
 import { getAboutPageConfig, validateAboutContent } from './about-service.js'
@@ -139,6 +145,85 @@ async function saveVideoBuffer(buffer, mimeType, admin) {
   })
   return url
 }
+
+function sniffAudioMime(buffer, mimeType, originalName = '') {
+  const type = String(mimeType || '').split(';')[0].trim().toLowerCase()
+  if (['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/aac', 'audio/ogg', 'audio/webm'].includes(type)) {
+    return type === 'audio/mp3' ? 'audio/mpeg' : type
+  }
+  const name = String(originalName || '').toLowerCase()
+  if (name.endsWith('.mp3')) return 'audio/mpeg'
+  if (name.endsWith('.wav')) return 'audio/wav'
+  if (name.endsWith('.m4a') || name.endsWith('.aac')) return 'audio/mp4'
+  if (name.endsWith('.ogg')) return 'audio/ogg'
+  if (name.endsWith('.webm')) return 'audio/webm'
+  if (!buffer?.length || buffer.length < 12) return ''
+  if (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33) return 'audio/mpeg'
+  if (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) return 'audio/mpeg'
+  if (buffer.subarray(0, 4).toString('ascii') === 'RIFF' && buffer.subarray(8, 12).toString('ascii') === 'WAVE') return 'audio/wav'
+  if (buffer.subarray(0, 4).toString('ascii') === 'OggS') return 'audio/ogg'
+  if (buffer.subarray(4, 8).toString('ascii') === 'ftyp') return 'audio/mp4'
+  return ''
+}
+
+function audioExtension(type) {
+  if (type === 'audio/mpeg') return '.mp3'
+  if (type === 'audio/wav' || type === 'audio/x-wav') return '.wav'
+  if (type === 'audio/mp4' || type === 'audio/aac') return '.m4a'
+  if (type === 'audio/ogg') return '.ogg'
+  if (type === 'audio/webm') return '.webm'
+  return ''
+}
+
+async function saveAssetMediaBuffer(buffer, mimeType, originalName, admin) {
+  const videoType = sniffVideoMime(buffer, mimeType)
+  const audioType = sniffAudioMime(buffer, mimeType, originalName)
+  const kind = videoType ? 'video' : audioType ? 'audio' : ''
+  const type = videoType || audioType
+  const extension = videoType
+    ? (videoType === 'video/webm' ? '.webm' : videoType === 'video/quicktime' ? '.mov' : '.mp4')
+    : audioExtension(audioType)
+  if (!buffer?.length || !kind || !extension) {
+    const error = new Error('仅支持视频（MP4 / WebM / MOV）或音频（MP3 / WAV / M4A / OGG）')
+    error.status = 400
+    throw error
+  }
+  const filename = `asset-${Date.now()}-${randomUUID()}${extension}`
+  let url = ''
+  let storage = 'local'
+  let objectKey = ''
+  if (isOssConfigured()) {
+    const uploaded = await uploadPublicObject({
+      buffer,
+      contentType: type,
+      folder: 'assets',
+      filename,
+    })
+    url = uploaded.url
+    objectKey = uploaded.objectKey
+    storage = 'oss'
+  } else {
+    const folder = kind === 'audio' ? 'audios' : 'videos'
+    const directory = path.join(config.uploadDir, folder)
+    await mkdir(directory, { recursive: true })
+    await writeFile(path.join(directory, filename), buffer)
+    url = `/api/public/uploads/${folder}/${filename}`
+  }
+  await addAudit(admin, 'media.asset.upload', 'media-assets', {
+    filename,
+    size: buffer.length,
+    mimeType: type,
+    kind,
+    storage,
+    objectKey: objectKey || undefined,
+  })
+  return { url, kind, mimeType: type, size: buffer.length, storage, objectKey }
+}
+
+const assetUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 300 * 1024 * 1024, files: 1 },
+})
 
 const fileUpload = multer({
   storage: multer.memoryStorage(),
@@ -602,6 +687,55 @@ adminPagesRouter.post('/media/video', requireAuth('config:write'), videoUpload.s
     response.status(201).json({ url })
   } catch (error) {
     response.status(error.status || 400).json({ error: 'invalid_video', message: error.message })
+  }
+})
+
+adminPagesRouter.get('/media-assets', requireAuth('config:write'), (_request, response) => {
+  response.json({ items: listMediaAssets(db()) })
+})
+
+adminPagesRouter.post('/media-assets', requireAuth('config:write'), assetUpload.single('file'), async (request, response) => {
+  try {
+    const file = request.file
+    if (!file?.buffer?.length) {
+      return response.status(400).json({ error: 'invalid_file', message: '请选择要上传的文件' })
+    }
+    const uploaded = await saveAssetMediaBuffer(file.buffer, file.mimetype, file.originalname, request.admin)
+    const baseName = String(file.originalname || '')
+      .replace(/\.[^.]+$/, '')
+      .trim()
+      .slice(0, 120)
+    const item = createMediaAsset(db(), {
+      ...uploaded,
+      name: String(request.body?.name || baseName || (uploaded.kind === 'audio' ? '音频素材' : '视频素材')).slice(0, 160),
+      createdBy: request.admin?.name || request.admin?.email || '',
+    })
+    await save()
+    response.status(201).json({ item })
+  } catch (error) {
+    response.status(error.status || 400).json({ error: 'invalid_asset', message: error.message || '上传失败' })
+  }
+})
+
+adminPagesRouter.patch('/media-assets/:id', requireAuth('config:write'), async (request, response) => {
+  try {
+    const item = renameMediaAsset(db(), request.params.id, request.body?.name)
+    await save()
+    await addAudit(request.admin, 'media.asset.rename', item.id, { name: item.name })
+    response.json({ item })
+  } catch (error) {
+    response.status(error.status || 400).json({ error: 'invalid_asset', message: error.message || '重命名失败' })
+  }
+})
+
+adminPagesRouter.delete('/media-assets/:id', requireAuth('config:write'), async (request, response) => {
+  try {
+    const item = deleteMediaAsset(db(), request.params.id)
+    await save()
+    await addAudit(request.admin, 'media.asset.delete', item.id, { name: item.name, url: item.url })
+    response.json({ ok: true, item })
+  } catch (error) {
+    response.status(error.status || 400).json({ error: 'invalid_asset', message: error.message || '删除失败' })
   }
 })
 

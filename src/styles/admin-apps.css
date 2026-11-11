@@ -2195,6 +2195,47 @@ body.admin-modal-open { overflow: hidden; }
   background: #edf4ff;
   font-weight: 600;
 }
+.admin-assets-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 10px;
+}
+.admin-assets-upload {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 9px;
+  background: #1769ff;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.admin-assets-upload input { display: none; }
+.admin-assets-progress { color: #5b6b7f; font-size: 12px; }
+.admin-asset-row { align-items: flex-start; }
+.admin-asset-row__main { min-width: 0; flex: 1; }
+.admin-asset-row__url {
+  display: block;
+  margin-top: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #f3f6fb;
+  color: #345;
+  font-size: 11px;
+}
+.admin-assets-empty {
+  margin: 18px 0 8px;
+  color: #8b97a8;
+  font-size: 13px;
+}
 .admin-product-editor { align-items: start; }
 .admin-product-links {
   display: grid;
