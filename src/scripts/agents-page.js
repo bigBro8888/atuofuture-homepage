@@ -275,10 +275,13 @@ export async function initAgentsPage() {
   for (const agent of AGENTS_OVERVIEW) {
     const hit = (cmsHero?.items || []).find((item) => item.id === agent.id)
     if (!hit) continue
-    if (hit.title) agent.name = hit.title
-    if (hit.summary) agent.blurb = hit.summary
+    // 仅在 CMS href 与 id 一致时采信标题/摘要，避免历史错位配置污染顶栏与频道
+    const hrefId = String(hit.href || '').match(/[?&]id=([^&/#]+)/i)?.[1]
+    const hrefAligned = !hrefId || hrefId === agent.id
+    if (hrefAligned && hit.title) agent.name = hit.title
+    if (hrefAligned && hit.summary) agent.blurb = hit.summary
     if (hit.imageUrl) agent.sceneImage = hit.imageUrl
-    if (hit.href) agent.detailUrl = hit.href
+    agent.detailUrl = `../agent-detail/?id=${agent.id}`
   }
 
   const pageHashes = new Set(['agent-story', 'agent-ecosystem', 'agent-matrix', 'agent-stage', ''])

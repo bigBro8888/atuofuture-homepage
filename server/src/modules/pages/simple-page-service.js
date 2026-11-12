@@ -128,20 +128,25 @@ function cleanLines(value, maxItems = 8, maxLen = 80) {
   return list.map((item) => cleanText(item, '', maxLen)).filter(Boolean).slice(0, maxItems)
 }
 
-function cleanItems(value, catalog) {
+function cleanItems(value, catalog, { forceAgentHref = false } = {}) {
   const saved = Array.isArray(value) ? value : []
   const byId = new Map(saved.map((item) => [String(item.id || '').trim(), item]))
   const source = catalog.length ? catalog : saved
   return source.slice(0, 40).map((item) => {
     const extra = byId.get(item.id) || {}
+    const id = cleanText(extra.id || item.id, item.id, 40)
     const defaultHref = item.href || ''
+    // 空间智能：href 必须与 id 绑定，避免后台按序号错位后顶栏/卡片链到错误详情
+    const href = forceAgentHref && id
+      ? `/agent-detail/?id=${id}`
+      : cleanHref(extra.href, defaultHref)
     return {
-      id: cleanText(extra.id || item.id, item.id, 40),
+      id,
       group: cleanText(extra.group || item.group, item.group || '', 40),
       title: cleanText(extra.title, item.title || '未命名', 80),
       summary: cleanText(extra.summary, item.summary || '', 240),
       imageUrl: cleanUrl(extra.imageUrl || item.imageUrl || '', item.imageUrl || ''),
-      href: cleanHref(extra.href, defaultHref),
+      href,
       detailId: cleanText(extra.detailId, '', 40),
       tag: cleanText(extra.tag, extra.tag || '', 20),
       fullDescription: cleanText(extra.fullDescription, extra.fullDescription || '', 600),
@@ -281,7 +286,7 @@ export function validateSimplePage(key, value = {}) {
     subtitle: cleanText(value.subtitle, fallback.subtitle, 400),
     bannerUrl: cleanUrl(value.bannerUrl, fallback.bannerUrl),
     ctaLabel: cleanText(value.ctaLabel, fallback.ctaLabel, 20),
-    items: cleanItems(value.items, catalog),
+    items: cleanItems(value.items, catalog, { forceAgentHref: key === 'agents' }),
   }
   if (key === 'agents' || fallback.bannerOverlay != null) {
     page.bannerOverlay = bannerOverlay

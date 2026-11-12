@@ -479,6 +479,9 @@ export function initSiteNav() {
         for (const agent of AGENTS_OVERVIEW) {
           const hit = agentsContent.items.find((item) => item.id === agent.id)
           if (!hit) continue
+          // href 与 id 不一致时说明 CMS 条目曾错位，勿用错误标题覆盖顶栏
+          const hrefId = String(hit.href || '').match(/[?&]id=([^&/#]+)/i)?.[1]
+          if (hrefId && hrefId !== agent.id) continue
           if (hit.title) agent.name = hit.title
           if (hit.summary) agent.blurb = hit.summary
         }

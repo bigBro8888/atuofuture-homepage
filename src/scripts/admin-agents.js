@@ -43,10 +43,8 @@ function readEditableText(el) {
 }
 
 function defaultAgentHref(base) {
-  const raw = String(base?.detailUrl || '').trim()
-  if (raw.startsWith('/')) return raw
-  if (raw.includes('agent-detail')) return `/agent-detail/?id=${base.id}`
-  return `/agent-detail/?id=${base?.id || ''}`
+  const id = String(base?.id || '').trim()
+  return id ? `/agent-detail/?id=${id}` : '/agents/'
 }
 
 /** 把草稿写回 AGENTS_OVERVIEW，供生态图 / 任务故事同构渲染 */
@@ -60,7 +58,7 @@ function applyCmsToOverview(content) {
     if (hit.title) agent.name = hit.title
     if (hit.summary) agent.blurb = hit.summary
     if (hit.imageUrl) agent.sceneImage = hit.imageUrl
-    if (hit.href) agent.detailUrl = hit.href
+    agent.detailUrl = defaultAgentHref(agent)
   }
 }
 
@@ -91,7 +89,7 @@ function ensureItems(content) {
       title: hit.title || base.name || '',
       summary: hit.summary || base.blurb || '',
       imageUrl: hit.imageUrl || base.sceneImage || '',
-      href: hit.href || defaultAgentHref(base),
+      href: defaultAgentHref(base),
     }
   })
   return content
