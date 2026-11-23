@@ -1,5 +1,6 @@
 import { renderHomePage } from '../lib/home-page-render.js'
 import { heroMaskTransparency } from '../lib/hero-mask.js'
+import { bindUrlFieldPlainPaste, readEditableText } from '../lib/vedit-nodes.js'
 
 const HOME_SECTIONS = [
   { id: 'hero', label: '首屏轮播' },
@@ -42,10 +43,6 @@ function setNested(target, path, value) {
     if (!cursor[key]) cursor[key] = isIndex ? [] : {}
     cursor = cursor[key]
   })
-}
-
-function readEditableText(el) {
-  return (el.innerText || '').replace(/\u00a0/g, ' ').trim()
 }
 
 function imageModalHtml() {
@@ -373,6 +370,7 @@ export function bindHomeVisualAdmin(helpers) {
   ctx = { ...ctx, ...helpers }
   const editor = document.querySelector('[data-home-editor]')
   if (!editor) return
+  bindUrlFieldPlainPaste(editor)
 
   editor.addEventListener('click', async (event) => {
     if (!document.querySelector('[data-home-visual]')) return
@@ -492,6 +490,16 @@ export function bindHomeVisualAdmin(helpers) {
 
   editor.addEventListener('input', (event) => {
     if (event.target.matches('[data-home-hero-opacity] input[type="range"]')) previewHeroMask(event.target)
+  })
+
+  // 防止拖入/输入法等方式留下 <a> 标题节点：失焦时摊平成纯链接文本
+  editor.addEventListener('focusout', (event) => {
+    const target = event.target?.closest?.('[contenteditable="true"]')
+    if (!target || !target.classList.contains('admin-home-href')) return
+    const value = readEditableText(target)
+    if (target.querySelector('a') || target.innerHTML !== target.textContent) {
+      target.textContent = value
+    }
   })
 
   editor.addEventListener('change', async (event) => {

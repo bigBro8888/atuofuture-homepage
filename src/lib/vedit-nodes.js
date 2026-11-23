@@ -8,6 +8,61 @@ export function esc(str = '') {
     .replace(/"/g, '&quot;')
 }
 
+/** 跳转链接字段：Edge/Chrome 粘贴网址时常变成「页面标题」富文本链接 */
+export function isUrlEditPath(path = '') {
+  return /(^|\.)(href|linkUrl|moreUrl|actionHref|ctaUrl|bottomUrl|applyHref|solutionHref|url)$/i.test(String(path || ''))
+}
+
+export function isUrlEditField(el) {
+  if (!el) return false
+  if (el.dataset?.editPlain === 'url') return true
+  if (el.classList?.contains('admin-home-href')) return true
+  return isUrlEditPath(el.dataset?.editPath || '')
+}
+
+/** 从剪贴板 HTML 取出真实 href（优先于可见标题文案） */
+export function extractHrefFromClipboardHtml(html = '') {
+  const match = String(html || '').match(/<a[^>]+href\s*=\s*["']([^"']+)["']/i)
+  if (!match?.[1]) return ''
+  const href = match[1].trim()
+  if (!href || href === '#' || href.toLowerCase().startsWith('javascript:')) return ''
+  try {
+    return href.replace(/&amp;/g, '&')
+  } catch {
+    return href
+  }
+}
+
+export function readEditableText(el) {
+  if (!el) return ''
+  if (isUrlEditField(el)) {
+    const anchor = el.querySelector?.('a[href]')
+    const href = String(anchor?.getAttribute('href') || '').trim()
+    if (href && href !== '#') return href.replace(/\u00a0/g, ' ').trim()
+  }
+  return (el.innerText || '').replace(/\u00a0/g, ' ').trim()
+}
+
+/** 链接字段粘贴：强制纯文本；若浏览器给的是「标题」富链接则改用 href */
+export function bindUrlFieldPlainPaste(root) {
+  if (!root || root.dataset.urlPlainPasteBound === '1') return
+  root.dataset.urlPlainPasteBound = '1'
+  root.addEventListener('paste', (event) => {
+    const target = event.target?.closest?.('[contenteditable="true"]')
+    if (!target || !root.contains(target) || !isUrlEditField(target)) return
+    event.preventDefault()
+    const html = event.clipboardData?.getData('text/html') || ''
+    const plain = (event.clipboardData?.getData('text/plain') || '').replace(/\u00a0/g, ' ').trim()
+    const fromHtml = extractHrefFromClipboardHtml(html)
+    const looksLikeUrl = /^(https?:\/\/|\/|#|\.\/|\.\.\/|[a-z0-9.-]+\.[a-z]{2,})/i.test(plain)
+    // Edge 常把网址粘成「页面标题」；有富链接时优先用真实 href
+    const value = fromHtml && (!looksLikeUrl || /[\u4e00-\u9fff]/.test(plain))
+      ? fromHtml
+      : (fromHtml || plain)
+    target.textContent = value
+  })
+}
+
 export function textNode(path, value, { editable = false, tag = 'span', className = '', multiline = false, placeholder = '', title = '' } = {}) {
   const safe = esc(value || '')
   const titleAttr = title ? ` title="${esc(title)}"` : ''
@@ -15,10 +70,12 @@ export function textNode(path, value, { editable = false, tag = 'span', classNam
     if (tag === 'span' && !className && !title) return safe
     return `<${tag}${className ? ` class="${className}"` : ''}${titleAttr}>${safe}</${tag}>`
   }
+  const plainUrl = className.includes('admin-home-href') || isUrlEditPath(path)
   const attrs = [
     `contenteditable="true"`,
     `data-edit-path="${esc(path)}"`,
     `spellcheck="false"`,
+    plainUrl ? `data-edit-plain="url"` : '',
     multiline ? `data-edit-multiline="true"` : '',
     placeholder ? `data-placeholder="${esc(placeholder)}"` : '',
     className ? `class="${className}"` : '',
