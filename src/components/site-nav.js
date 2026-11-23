@@ -1,5 +1,5 @@
 import { SITE_NAV_ITEMS, syncAgentNavChildren } from '../data/site-nav.js'
-import { APP_DOWNLOAD_PATH, OFFICIAL_SITE_URL } from '../data/site-links.js'
+import { APP_DOWNLOAD_PATH, LEGACY_SITE_URL, OFFICIAL_SITE_URL } from '../data/site-links.js'
 import { bindSiteAccount, renderSiteAccount } from '../lib/site-account.js'
 import { applyHardwareSimpleCms, applyProductLibraryCms, resolveHardwareMegaGroups } from '../data/hardware-catalog.js'
 import { loadProductLibraryContent, loadSimplePageContent } from '../services/site-settings-api.js'
@@ -255,7 +255,7 @@ function renderAppDownloadHeader(root) {
 }
 
 function renderLegacySiteLink() {
-  return `<a class="site-header__btn site-header__legacy" href="https://www.atuofuture.com" target="_blank" rel="noopener">
+  return `<a class="site-header__btn site-header__legacy" href="${LEGACY_SITE_URL}" target="_blank" rel="noopener">
             <span class="material-symbols-outlined" aria-hidden="true">history</span>访问旧版
           </a>`
 }

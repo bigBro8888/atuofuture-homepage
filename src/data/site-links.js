@@ -9,6 +9,9 @@ export const SHOW_APP_DOWNLOAD = true
 export const APP_DOWNLOAD_PATH = 'app-download/'
 export const OFFICIAL_SITE_URL = 'https://www.atuofuture.com/'
 
+/** 旧官网归档（原 www，切站后挂到 history） */
+export const LEGACY_SITE_URL = 'https://history.atuofuture.com/'
+
 export const SITE_CTA = {
   demoLabel: '预约方案演示',
   downloadLabel: '下载 App',

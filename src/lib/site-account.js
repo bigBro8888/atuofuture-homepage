@@ -1,13 +1,20 @@
 const TOKEN_KEY = 'aspace-one-oidc-tokens'
 const PENDING_KEY = 'aspace-one-oidc-pending'
-/** 钉钉回调只认这个域名；从 IP 或其它端口发起的登录先切过来，否则统一登录页不会出现钉钉入口 */
-const CANONICAL_ORIGIN = 'https://ai.atuofuture.com'
+/** 钉钉回调只认正式主域名；从 IP / ai / 其它端口发起的登录先切过来 */
+const CANONICAL_ORIGIN = 'https://www.atuofuture.com'
 const LOGIN_HANDOFF_PARAM = 'site_login'
 
 /** 发起统一登录应使用的站点地址：线上的 IP 或其它端口统一换成主域名 */
 export function loginOrigin() {
   const { origin, hostname } = window.location
-  if (hostname === 'ai.atuofuture.com' || hostname === '47.103.102.65') return CANONICAL_ORIGIN
+  if (
+    hostname === 'www.atuofuture.com'
+    || hostname === 'atuofuture.com'
+    || hostname === 'ai.atuofuture.com'
+    || hostname === '47.103.102.65'
+  ) {
+    return CANONICAL_ORIGIN
+  }
   return origin
 }
 
