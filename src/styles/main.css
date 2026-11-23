@@ -15823,7 +15823,7 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 .sol-d-deck__stage { position: relative; }
 .sol-d-deck__viewport {
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1600 / 540;
   overflow: hidden;
   background: #0b1c3a;
 }
@@ -15911,8 +15911,8 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
 .sol-d-deck-fs[hidden] { display: none !important; }
 .sol-d-deck-fs__frame {
   margin: 0;
-  width: min(100vw, calc(100vh * 16 / 9));
-  height: min(100vh, calc(100vw * 9 / 16));
+  width: min(100vw, calc(100vh * 1600 / 540));
+  height: min(100vh, calc(100vw * 540 / 1600));
 }
 .sol-d-deck-fs__frame img {
   display: block;

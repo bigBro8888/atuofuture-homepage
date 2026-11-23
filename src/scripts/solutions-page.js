@@ -101,7 +101,7 @@ function renderDeck(s) {
           <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
         </button>
         <figure class="sol-d-deck-fs__frame">
-          <img data-sol-deck-fs-image src="${esc(slides[0])}" alt="${esc(s.name)} 方案介绍" width="1920" height="1080" />
+          <img data-sol-deck-fs-image src="${esc(slides[0])}" alt="${esc(s.name)} 方案介绍" width="1600" height="540" />
         </figure>
         <button type="button" class="sol-d-deck-fs__nav sol-d-deck-fs__nav--next" data-sol-deck-next aria-label="下一页">
           <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
