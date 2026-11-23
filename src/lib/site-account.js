@@ -1,7 +1,9 @@
 const TOKEN_KEY = 'aspace-one-oidc-tokens'
 const PENDING_KEY = 'aspace-one-oidc-pending'
-/** 钉钉回调只认正式主域名；从 IP / ai / 其它端口发起的登录先切过来 */
+/** 官网展示主域；从 IP / 其它端口发起的登录先切到这里 */
 const CANONICAL_ORIGIN = 'https://www.atuofuture.com'
+/** 统一 Auth 枢纽仍在 ai（邀约/会议/能源等业务共用 issuer，不可改） */
+const AUTH_ORIGIN = 'https://ai.atuofuture.com'
 const LOGIN_HANDOFF_PARAM = 'site_login'
 
 /** 发起统一登录应使用的站点地址：线上的 IP 或其它端口统一换成主域名 */
@@ -208,7 +210,7 @@ export async function startSiteLogin({ forceLogin = true } = {}) {
   }
   // 主动登录时强制出现登录页，避免沿用统一认证侧已有会话直接静默回跳
   if (forceLogin) params.prompt = 'login'
-  const authorizeUrl = new URL('/auth/auth', window.location.origin)
+  const authorizeUrl = new URL('/auth/auth', AUTH_ORIGIN)
   authorizeUrl.search = new URLSearchParams(params).toString()
   window.location.href = authorizeUrl.toString()
 }
@@ -226,7 +228,7 @@ export function logoutSiteAccount(redirectPath = '/') {
     window.location.replace(redirectPath)
     return
   }
-  const endUrl = new URL('/auth/session/end', window.location.origin)
+  const endUrl = new URL('/auth/session/end', AUTH_ORIGIN)
   endUrl.searchParams.set('id_token_hint', idToken)
   endUrl.searchParams.set('client_id', 'aspace-one')
   endUrl.searchParams.set('post_logout_redirect_uri', `${window.location.origin}${redirectPath}`)
