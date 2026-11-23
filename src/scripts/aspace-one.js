@@ -3,6 +3,7 @@ import { renderSiteFooter } from '../components/site-footer.js'
 import { alignHelpWithCatalog } from '../lib/aspace-help-categories.js'
 import { defaultDocsListRules, resolveHelpDocList } from '../lib/aspace-help-list.js'
 import {
+  AUTH_ORIGIN,
   canonicalLoginUrl,
   clearPortalTokens,
   consumeLoginHandoff,
@@ -1775,7 +1776,8 @@ async function createPortalLoginUrl({ forceLogin = true } = {}) {
     code_challenge_method: 'S256',
   }
   if (forceLogin) params.prompt = 'login'
-  const authorizeUrl = new URL('/auth/auth', window.location.origin)
+  // 与 site-account 一致：授权必须在 ai，经 www 反代会隐藏钉钉
+  const authorizeUrl = new URL('/auth/auth', AUTH_ORIGIN)
   authorizeUrl.search = new URLSearchParams(params).toString()
   return authorizeUrl.toString()
 }

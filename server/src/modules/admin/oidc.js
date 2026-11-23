@@ -58,7 +58,17 @@ adminOidcRouter.get('/start', (request, response) => {
     path: STATE_COOKIE_PATH,
   })
 
-  const authorize = new URL('/auth/auth', origin)
+  // 钉钉仅在 AUTH_PUBLIC_ORIGIN（ai）域名下可用；经 www 反代时 Host=www 会被隐藏钉钉入口。
+  // 授权必须打到 ai，回调仍回门户 origin（www）上的 /api/admin/oidc/callback。
+  let authOrigin = ''
+  try {
+    authOrigin = config.unifiedAuth.issuer ? new URL(config.unifiedAuth.issuer).origin : ''
+  } catch {
+    authOrigin = ''
+  }
+  if (!authOrigin) return response.status(500).json({ error: 'auth_issuer_missing' })
+
+  const authorize = new URL('/auth/auth', authOrigin)
   authorize.search = new URLSearchParams({
     client_id: CLIENT_ID,
     redirect_uri: `${origin}/api/admin/oidc/callback`,

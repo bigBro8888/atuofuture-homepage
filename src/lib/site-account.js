@@ -3,7 +3,7 @@ const PENDING_KEY = 'aspace-one-oidc-pending'
 /** 官网展示主域；从 IP / 其它端口发起的登录先切到这里 */
 const CANONICAL_ORIGIN = 'https://www.atuofuture.com'
 /** 统一 Auth 枢纽仍在 ai（邀约/会议/能源等业务共用 issuer，不可改） */
-const AUTH_ORIGIN = 'https://ai.atuofuture.com'
+export const AUTH_ORIGIN = 'https://ai.atuofuture.com'
 const LOGIN_HANDOFF_PARAM = 'site_login'
 
 /** 发起统一登录应使用的站点地址：线上的 IP 或其它端口统一换成主域名 */
