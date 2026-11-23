@@ -1,8 +1,23 @@
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
 
+const faviconLinks = `
+<link rel="icon" href="/favicon.ico?v=20261123" sizes="any"/>
+<link rel="icon" type="image/png" href="/favicon-32x32.png?v=20261123" sizes="32x32"/>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=20261123"/>
+`.trim()
+
 export default defineConfig({
   root: '.',
+  plugins: [
+    {
+      name: 'inject-favicon',
+      transformIndexHtml(html) {
+        if (html.includes('rel="icon"')) return html
+        return html.replace(/<head>/i, `<head>\n${faviconLinks}`)
+      },
+    },
+  ],
   build: {
     outDir: 'dist',
     rollupOptions: {

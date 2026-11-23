@@ -59,6 +59,9 @@ function pageShell({ title, body }) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>${escapeHtml(title)} | 安托未来</title>
+  <link rel="icon" href="/favicon.ico?v=20261123" sizes="any" />
+  <link rel="icon" type="image/png" href="/favicon-32x32.png?v=20261123" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=20261123" />
   <link rel="stylesheet" href="${base}/assets/auth.css?v=${cssVersion}" />
 </head>
 <body>
