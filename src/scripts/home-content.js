@@ -86,7 +86,10 @@ export function applyHomeContent(content) {
   text('[data-home-solutions-subtitle]', content.solutions?.subtitle)
   text('[data-home-solutions-more-label]', content.solutions?.moreLabel)
   const solutionsMore = document.querySelector('[data-home-solutions-more]')
-  if (solutionsMore && content.solutions?.moreUrl) solutionsMore.setAttribute('href', content.solutions.moreUrl)
+  if (solutionsMore && content.solutions?.moreUrl) {
+    const moreUrl = content.solutions.moreUrl === '#solutions' ? '/solutions/' : content.solutions.moreUrl
+    solutionsMore.setAttribute('href', moreUrl)
+  }
   if (content.solutions?.items?.length) applyCmsHomeSolutions(content.solutions.items)
   document.querySelectorAll('[data-sol-card]').forEach((card, index) => {
     const item = content.solutions?.items?.[index]

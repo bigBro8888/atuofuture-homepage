@@ -14895,6 +14895,7 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   will-change: transform;
 }
 .sm-sol-card {
+  position: relative;
   flex: 0 0 calc((100% - 64px) / 3);
   min-width: 0;
   background: transparent;
@@ -14947,8 +14948,15 @@ a.ab-contact__row:hover .ab-contact__go { color: #5b4dff; transform: translate(2
   color: #1b1b1b;
   text-decoration: none;
 }
+.sm-sol-card__body a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
 .sm-sol-card__body a .material-symbols-outlined { font-size: 18px; }
 .sm-sol-card__body a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.sm-sol-card:hover .sm-sol-card__body a { text-decoration: underline; text-underline-offset: 3px; }
 
 .sm-sol-pager {
   display: flex;

@@ -12,14 +12,33 @@ function esc(str = '') {
     .replace(/"/g, '&quot;')
 }
 
+const HOME_SOLUTION_LINK_BY_CHIP = {
+  智慧楼宇: '/solutions/?id=building',
+  园区运营: '/solutions/?id=campus',
+  商业资产: '/solutions/?id=commercial',
+  会务接待: '/solutions/?id=building',
+  能源管理: '/solutions/?id=building',
+  安防资产: '/solutions/?id=building',
+}
+
+/** 旧 CMS 占位 #solutions 无对应锚点，按角标回落到真实方案页 */
+function resolveHomeSolutionLink(item = {}) {
+  const raw = String(item.linkUrl || '').trim()
+  if (raw && raw !== '#' && raw !== '#solutions') return raw
+  return HOME_SOLUTION_LINK_BY_CHIP[item.chip] || '/solutions/'
+}
+
 export function applyCmsHomeSolutions(items) {
   const track = document.querySelector('[data-sm-sol-track]')
   if (!track || !items?.length) return
-  track.innerHTML = items.map((item) => `
+  track.innerHTML = items.map((item) => {
+    const href = esc(resolveHomeSolutionLink(item))
+    return `
     <article class="sm-sol-card" data-home-sol-card>
       <div class="sm-sol-card__media"${item.imageUrl ? ` style="background-image:url('${esc(item.imageUrl)}')"` : ''}><span class="sm-sol-card__badge">${esc(item.chip || '')}</span></div>
-      <div class="sm-sol-card__body"><h3>${esc(item.title || '')}</h3><p>${esc(item.description || '')}</p><a href="${esc(item.linkUrl || 'solutions/')}">了解更多信息 <span class="material-symbols-outlined">arrow_forward</span></a></div>
-    </article>`).join('')
+      <div class="sm-sol-card__body"><h3>${esc(item.title || '')}</h3><p>${esc(item.description || '')}</p><a href="${href}">了解更多信息 <span class="material-symbols-outlined">arrow_forward</span></a></div>
+    </article>`
+  }).join('')
   initSolutionsCarousel()
 }
 
