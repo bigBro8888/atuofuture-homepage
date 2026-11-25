@@ -10,6 +10,7 @@ import { initAgentsPage } from './agents-page.js'
 import { initSolutionsPage } from './solutions-page.js'
 import { initNewsPage } from './news-page.js'
 import { initNewsDetailPage } from './news-detail.js'
+import { initSupportArtinkCasePage } from './support-artink-case.js'
 import { initAiTokenStore } from './ai-token-store.js'
 import { initOrder } from './order.js'
 import { initAspaceOne } from './aspace-one.js'
@@ -827,6 +828,9 @@ function bootstrap() {
   }
   if (page === 'news-detail') {
     void initNewsDetailPage()
+  }
+  if (page === 'support-artink-case') {
+    void initSupportArtinkCasePage()
   }
   if (page === 'home') {
     initSiemensHome()

@@ -36,6 +36,7 @@ export default defineConfig({
         aspaceOne: resolve(__dirname, 'aspace-one/index.html'),
         aspaceOneAuthCallback: resolve(__dirname, 'aspace-one/auth/callback/index.html'),
         newsDetail: resolve(__dirname, 'news-detail/index.html'),
+        supportArtinkCase: resolve(__dirname, 'support_Artink_case/index.html'),
         appDownload: resolve(__dirname, 'app-download/index.html'),
         admin: resolve(__dirname, 'admin/index.html'),
       },
