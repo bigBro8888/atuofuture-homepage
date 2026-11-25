@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="refresh" content="0;url=https://mp.weixin.qq.com/s?__biz=MzkyODcxMzgzOA==&mid=2247483850&idx=1&sn=bda08283407a06ee43250d0f626a698e&chksm=c215dccbf56255dd74b894946e7b5837e910e327f8cebaeb18718417b80667bd21a05f3dbe00#rd" />
+  <title>Artink 案例</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: #f5f6f8;
+      color: #1f2329;
+      text-align: center;
+      padding: 28px 20px;
+      box-sizing: border-box;
+    }
+    .card {
+      max-width: 360px;
+      width: 100%;
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 22px 24px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 650;
+    }
+    p {
+      margin: 0;
+      color: #667085;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    a.btn {
+      display: block;
+      margin-top: 20px;
+      padding: 14px 18px;
+      background: #07c160;
+      color: #fff;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 650;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>正在打开微信文章</h1>
+    <p>手机端若页面空白，请点击下方按钮继续阅读。</p>
+    <a class="btn" id="go" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzkyODcxMzgzOA==&mid=2247483850&idx=1&sn=bda08283407a06ee43250d0f626a698e&chksm=c215dccbf56255dd74b894946e7b5837e910e327f8cebaeb18718417b80667bd21a05f3dbe00#rd">打开微信文章</a>
+  </div>
+  <script>
+    (function () {
+      var url = document.getElementById('go').href
+      // 不要清空页面：微信/部分手机浏览器拦截自动跳转时，保留可点按钮
+      setTimeout(function () {
+        try { window.location.replace(url) } catch (e) { window.location.href = url }
+      }, 80)
+    })()
+  </script>
+</body>
+</html>
